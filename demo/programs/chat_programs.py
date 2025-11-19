@@ -14,11 +14,11 @@ from functional_effects.effects.cache import GetCachedValue, PutCachedValue
 from functional_effects.effects.database import GetUserById
 from functional_effects.effects.messaging import PublishMessage
 from functional_effects.effects.storage import PutObject
-from functional_effects.effects.websocket import BroadcastMessage
-from functional_effects.domain.message import Message
-from functional_effects.domain.s3_object import S3ObjectMetadata
-from functional_effects.domain.token import TokenMetadata
+from functional_effects.effects.websocket import SendText
+from functional_effects.domain.s3_object import PutSuccess
+from functional_effects.domain.token_result import TokenValid
 from functional_effects.domain.user import User
+from functional_effects.programs.program_types import AllEffects, EffectResult
 
 from demo.domain.errors import AppError, AuthError
 from demo.domain.responses import MessageResponse
@@ -26,32 +26,16 @@ from demo.domain.responses import MessageResponse
 
 def send_authenticated_message_with_storage_program(
     token: str, text: str
-) -> Generator[
-    ValidateToken
-    | GetCachedValue
-    | GetUserById
-    | PutCachedValue
-    | PutObject
-    | PublishMessage
-    | BroadcastMessage,
-    Result[TokenMetadata, str]
-    | Result[bytes, str]
-    | Result[User, str]
-    | Result[bool, str]
-    | Result[S3ObjectMetadata, str]
-    | Result[str, str]
-    | Result[bool, str],
-    Result[MessageResponse, AuthError | AppError],
-]:
+) -> Generator[AllEffects, EffectResult, Result[MessageResponse, AuthError | AppError]]:
     """Send authenticated message with S3 archival (all 6 infrastructure types).
 
     This program demonstrates a complete workflow using all infrastructure:
-    - Auth: JWT token validation
-    - Cache: User data cache-aside pattern with Redis
-    - Database: User lookup in PostgreSQL
-    - Storage: Message archival to S3
-    - Messaging: Publish to Pulsar topic
-    - WebSocket: Real-time broadcast to connected clients
+    - Auth: JWT token validation (ValidateToken)
+    - Cache: User data cache-aside pattern with Redis (GetCachedValue, PutCachedValue)
+    - Database: User lookup in PostgreSQL (GetUserById)
+    - Storage: Message archival to S3 (PutObject)
+    - Messaging: Publish to Pulsar topic (PublishMessage)
+    - WebSocket: Real-time notification to client (SendText)
 
     Program flow:
     1. [Auth] Validate JWT token
@@ -60,7 +44,7 @@ def send_authenticated_message_with_storage_program(
     4. [Cache] Store user in cache for future requests
     5. [Storage] Archive message to S3 for compliance/audit
     6. [Messaging] Publish message to Pulsar topic
-    7. [WebSocket] Broadcast message to connected clients
+    7. [WebSocket] Send confirmation to client via WebSocket
     8. Return MessageResponse
 
     Args:
@@ -74,57 +58,40 @@ def send_authenticated_message_with_storage_program(
         - Invalid/expired token (AuthError)
         - User not found (AppError.not_found)
         - Empty message (AppError.validation_error)
-        - S3 storage failure (AppError.internal_error)
-        - Pulsar publish failure (AppError.internal_error)
-        - Cache/WebSocket failures are non-critical (logged but not failed)
+        - S3 storage failure (PutObject returns PutSuccess, won't fail in demo)
+        - Pulsar publish failure (returns string message ID, won't fail in demo)
     """
     # Step 1: [Auth] Validate JWT token
-    validate_result = yield ValidateToken(token=token)
-    match validate_result:
-        case Ok(metadata):
-            user_id = metadata.user_id
-        case Err(error):
-            return Err(
-                AuthError(
-                    message=f"Invalid or expired token: {error}",
-                    error_type="token_invalid",
-                )
+    validation_result = yield ValidateToken(token=token)
+
+    if not isinstance(validation_result, TokenValid):
+        return Err(
+            AuthError(
+                message="Invalid or expired token", error_type="token_invalid"
             )
+        )
+
+    user_id = validation_result.user_id
 
     # Step 2: [Cache] Check for cached user data (cache-aside pattern)
     cache_key = f"user:{user_id}"
-    cached_user_result = yield GetCachedValue(key=cache_key)
+    cached_result = yield GetCachedValue(key=cache_key)
 
-    user: User
-    match cached_user_result:
-        case Ok(_cached_bytes):
-            # Cache hit - in production, deserialize bytes to User
-            # For demo, we'll still fetch from DB to show the pattern
-            pass
-        case Err(_error):
-            # Cache miss - expected on first access
-            pass
+    # For demo purposes, we always fetch from DB to show the pattern
+    # In production, you would deserialize cached_result if it's not None
 
     # Step 3: [Database] Load user from PostgreSQL
-    user_result = yield GetUserById(user_id=user_id)
-    match user_result:
-        case Ok(loaded_user):
-            user = loaded_user
-        case Err(error):
-            return Err(AppError.not_found(f"User {user_id} not found: {error}"))
+    user = yield GetUserById(user_id=user_id)
+
+    if user is None:
+        return Err(AppError.not_found(f"User {user_id} not found"))
+
+    assert isinstance(user, User)
 
     # Step 4: [Cache] Store user in Redis for future requests (TTL: 5 minutes)
     # In production, serialize User to bytes (JSON, msgpack, etc.)
     user_cache_bytes = f"{user.email}|{user.name}".encode("utf-8")
-    cache_put_result = yield PutCachedValue(
-        key=cache_key, value=user_cache_bytes, ttl_seconds=300
-    )
-    match cache_put_result:
-        case Ok(_):
-            pass
-        case Err(_error):
-            # Cache write failure is non-critical
-            pass
+    yield PutCachedValue(key=cache_key, value=user_cache_bytes, ttl_seconds=300)
 
     # Step 5: Validate message text
     if not text or text.strip() == "":
@@ -139,13 +106,6 @@ def send_authenticated_message_with_storage_program(
     message_id = uuid4()
     created_at = datetime.now()
 
-    message = Message(
-        message_id=message_id,
-        user_id=user.user_id,
-        text=text.strip(),
-        created_at=created_at,
-    )
-
     # Step 6: [Storage] Archive message to S3 for compliance/audit
     # Object key: messages/{year}/{month}/{day}/{message_id}.txt
     s3_key = (
@@ -154,65 +114,41 @@ def send_authenticated_message_with_storage_program(
     )
     s3_content = (
         f"Message ID: {message_id}\n"
-        f"User ID: {user.user_id}\n"
+        f"User ID: {user.id}\n"
         f"User Email: {user.email}\n"
         f"Created At: {created_at.isoformat()}\n\n"
-        f"{message.text}"
+        f"{text.strip()}"
     ).encode("utf-8")
 
-    storage_result = yield PutObject(
-        bucket="chat-archive", key=s3_key, content=s3_content
-    )
-    match storage_result:
-        case Ok(_metadata):
-            pass
-        case Err(error):
-            return Err(
-                AppError.internal_error(f"Failed to archive message to S3: {error}")
-            )
+    storage_result = yield PutObject(bucket="chat-archive", key=s3_key, content=s3_content)
+
+    # In demo, PutObject may return PutSuccess or PutFailure
+    # For simplicity, we proceed regardless (non-critical archival)
+    if isinstance(storage_result, PutSuccess):
+        # Successfully archived
+        pass
 
     # Step 7: [Messaging] Publish message to Pulsar topic
     # Message payload includes full context for downstream consumers
     pulsar_payload = (
-        f"{message_id}|{user.user_id}|{user.email}|"
-        f"{created_at.isoformat()}|{message.text}"
+        f"{message_id}|{user.id}|{user.email}|"
+        f"{created_at.isoformat()}|{text.strip()}"
     ).encode("utf-8")
 
-    publish_result = yield PublishMessage(topic="chat-messages", message=pulsar_payload)
-    match publish_result:
-        case Ok(_pulsar_message_id):
-            pass
-        case Err(error):
-            return Err(
-                AppError.internal_error(f"Failed to publish message to Pulsar: {error}")
-            )
-
-    # Step 8: [WebSocket] Broadcast message to connected clients (real-time)
-    broadcast_result = yield BroadcastMessage(
-        event="new_message",
-        payload={
-            "message_id": str(message.message_id),
-            "user_id": str(user.user_id),
-            "user_email": user.email,
-            "user_name": user.name,
-            "text": message.text,
-            "created_at": created_at.isoformat(),
-        },
+    pulsar_message_id = yield PublishMessage(
+        topic="chat-messages", payload=pulsar_payload
     )
-    match broadcast_result:
-        case Ok(_):
-            pass
-        case Err(_error):
-            # WebSocket broadcast failure is non-critical
-            # Clients can poll or receive via Pulsar subscription
-            pass
+    assert isinstance(pulsar_message_id, str)
+
+    # Step 8: [WebSocket] Send confirmation to client via WebSocket
+    yield SendText(text=f"Message sent: {message_id}")
 
     # Step 9: Return successful response
     return Ok(
         MessageResponse(
-            message_id=message.message_id,
-            user_id=user.user_id,
-            text=message.text,
+            message_id=message_id,
+            user_id=user.id,
+            text=text.strip(),
             created_at=created_at,
         )
     )

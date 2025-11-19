@@ -1,14 +1,15 @@
 """User management effect programs for demo app.
 
 All programs are pure logic using the functional_effects library.
-Programs yield effects and return Result types for explicit error handling.
+Programs yield effects and receive results directly (not wrapped in Result).
+Program returns are wrapped in Result types for explicit error handling.
 """
 
 from collections.abc import Generator
 from uuid import UUID
 
 from functional_effects.algebraic.result import Err, Ok, Result
-from functional_effects.effects.cache import InvalidateCache, PutCachedValue
+from functional_effects.effects.cache import InvalidateCache
 from functional_effects.effects.database import (
     DeleteUser,
     GetUserById,
@@ -16,17 +17,14 @@ from functional_effects.effects.database import (
     UpdateUser,
 )
 from functional_effects.domain.user import User
+from functional_effects.programs.program_types import AllEffects, EffectResult
 
 from demo.domain.errors import AppError
 
 
 def get_user_program(
     user_id: UUID,
-) -> Generator[
-    GetUserById,
-    Result[User, str],
-    Result[User, AppError],
-]:
+) -> Generator[AllEffects, EffectResult, Result[User, AppError]]:
     """Get user by ID.
 
     Program flow:
@@ -41,29 +39,26 @@ def get_user_program(
 
     Error cases:
         - User not found (AppError.not_found)
-        - Database error (AppError.internal_error)
     """
     # Get user from database
-    user_result = yield GetUserById(user_id=user_id)
-    match user_result:
-        case Ok(user):
-            return Ok(user)
-        case Err(error):
-            return Err(AppError.not_found(f"User {user_id} not found: {error}"))
+    user = yield GetUserById(user_id=user_id)
+
+    if user is None:
+        return Err(AppError.not_found(f"User {user_id} not found"))
+
+    assert isinstance(user, User)
+    return Ok(user)
 
 
 def list_users_program(
     limit: int | None = None, offset: int | None = None
-) -> Generator[
-    ListUsers,
-    Result[list[User], str],
-    Result[list[User], AppError],
-]:
+) -> Generator[AllEffects, EffectResult, Result[list[User], AppError]]:
     """List all users with optional pagination.
 
     Program flow:
-    1. Query database for users with pagination
-    2. Return user list
+    1. Validate pagination parameters
+    2. Query database for users with pagination
+    3. Return user list
 
     Args:
         limit: Maximum number of users to return (optional)
@@ -73,7 +68,6 @@ def list_users_program(
         Result containing list of Users on success, or AppError on failure
 
     Error cases:
-        - Database error (AppError.internal_error)
         - Invalid pagination parameters (AppError.validation_error)
     """
     # Validate pagination parameters
@@ -84,29 +78,30 @@ def list_users_program(
 
     # List users from database
     users_result = yield ListUsers(limit=limit, offset=offset)
-    match users_result:
-        case Ok(users):
-            return Ok(users)
-        case Err(error):
-            return Err(AppError.internal_error(f"Failed to list users: {error}"))
+    assert isinstance(users_result, list)
+
+    # Type narrow to list[User]
+    users: list[User] = []
+    for user in users_result:
+        if isinstance(user, User):
+            users.append(user)
+
+    return Ok(users)
 
 
 def update_user_program(
     user_id: UUID,
     email: str | None = None,
     name: str | None = None,
-) -> Generator[
-    GetUserById | UpdateUser | InvalidateCache,
-    Result[User, str] | Result[bool, str] | Result[bool, str],
-    Result[User, AppError],
-]:
+) -> Generator[AllEffects, EffectResult, Result[User, AppError]]:
     """Update user fields.
 
     Program flow:
-    1. Verify user exists
-    2. Update user in database
-    3. Invalidate user cache
-    4. Return updated user
+    1. Validate inputs
+    2. Verify user exists
+    3. Update user in database
+    4. Invalidate user cache
+    5. Return updated user
 
     Args:
         user_id: UUID of user to update
@@ -119,7 +114,7 @@ def update_user_program(
     Error cases:
         - User not found (AppError.not_found)
         - No fields to update (AppError.validation_error)
-        - Database error (AppError.internal_error)
+        - Invalid email format (AppError.validation_error)
     """
     # Validate that at least one field is being updated
     if email is None and name is None:
@@ -132,53 +127,40 @@ def update_user_program(
         return Err(AppError.validation_error("Invalid email format"))
 
     # Step 1: Verify user exists
-    user_result = yield GetUserById(user_id=user_id)
-    match user_result:
-        case Ok(_user):
-            pass
-        case Err(error):
-            return Err(AppError.not_found(f"User {user_id} not found: {error}"))
+    user = yield GetUserById(user_id=user_id)
+
+    if user is None:
+        return Err(AppError.not_found(f"User {user_id} not found"))
 
     # Step 2: Update user in database
-    update_result = yield UpdateUser(user_id=user_id, email=email, name=name)
-    match update_result:
-        case Ok(True):
-            pass
-        case Ok(False):
-            return Err(AppError.internal_error("User update returned false"))
-        case Err(error):
-            return Err(AppError.internal_error(f"Failed to update user: {error}"))
+    updated_result = yield UpdateUser(user_id=user_id, email=email, name=name)
+
+    # Type narrow: UpdateUser returns bool
+    if not isinstance(updated_result, bool):
+        return Err(AppError.internal_error("User update returned unexpected type"))
+
+    if not updated_result:
+        return Err(AppError.internal_error("User update returned false"))
 
     # Step 3: Invalidate user cache
     cache_key = f"user:{user_id}"
-    invalidate_result = yield InvalidateCache(key=cache_key)
-    match invalidate_result:
-        case Ok(_):
-            pass
-        case Err(_error):
-            # Cache invalidation failure is non-critical, continue
-            pass
+    yield InvalidateCache(key=cache_key)
 
     # Step 4: Get updated user to return
-    updated_user_result = yield GetUserById(user_id=user_id)
-    match updated_user_result:
-        case Ok(updated_user):
-            return Ok(updated_user)
-        case Err(error):
-            return Err(
-                AppError.internal_error(
-                    f"User updated but failed to retrieve: {error}"
-                )
-            )
+    updated_user = yield GetUserById(user_id=user_id)
+
+    if updated_user is None:
+        return Err(
+            AppError.internal_error("User updated but failed to retrieve")
+        )
+
+    assert isinstance(updated_user, User)
+    return Ok(updated_user)
 
 
 def delete_user_program(
     user_id: UUID,
-) -> Generator[
-    GetUserById | DeleteUser | InvalidateCache,
-    Result[User, str] | Result[bool, str] | Result[bool, str],
-    Result[bool, AppError],
-]:
+) -> Generator[AllEffects, EffectResult, Result[bool, AppError]]:
     """Delete user by ID.
 
     Program flow:
@@ -195,34 +177,25 @@ def delete_user_program(
 
     Error cases:
         - User not found (AppError.not_found)
-        - Database error (AppError.internal_error)
     """
     # Step 1: Verify user exists
-    user_result = yield GetUserById(user_id=user_id)
-    match user_result:
-        case Ok(_user):
-            pass
-        case Err(error):
-            return Err(AppError.not_found(f"User {user_id} not found: {error}"))
+    user = yield GetUserById(user_id=user_id)
+
+    if user is None:
+        return Err(AppError.not_found(f"User {user_id} not found"))
 
     # Step 2: Delete user from database
-    delete_result = yield DeleteUser(user_id=user_id)
-    match delete_result:
-        case Ok(True):
-            pass
-        case Ok(False):
-            return Err(AppError.internal_error("User deletion returned false"))
-        case Err(error):
-            return Err(AppError.internal_error(f"Failed to delete user: {error}"))
+    deleted_result = yield DeleteUser(user_id=user_id)
+
+    # Type narrow: DeleteUser returns bool
+    if not isinstance(deleted_result, bool):
+        return Err(AppError.internal_error("User deletion returned unexpected type"))
+
+    if not deleted_result:
+        return Err(AppError.internal_error("User deletion returned false"))
 
     # Step 3: Invalidate user cache
     cache_key = f"user:{user_id}"
-    invalidate_result = yield InvalidateCache(key=cache_key)
-    match invalidate_result:
-        case Ok(_):
-            pass
-        case Err(_error):
-            # Cache invalidation failure is non-critical, continue
-            pass
+    yield InvalidateCache(key=cache_key)
 
     return Ok(True)

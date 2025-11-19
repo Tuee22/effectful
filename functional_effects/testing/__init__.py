@@ -1,40 +1,34 @@
 """Testing utilities for effect programs.
 
-This module provides test doubles and matchers for testing effect programs.
+This module provides matchers for testing effect programs with pytest-mock.
 
-Available test doubles:
-    - FakeMessageProducer / FailingMessageProducer: For messaging tests
-    - FakeMessageConsumer / FailingMessageConsumer: For messaging tests
-    - FakeObjectStorage / FailingObjectStorage: For storage tests
-
-For testing effect programs, use pytest mocks (via pytest-mock):
+For testing effect programs, use generator-based testing with pytest-mock:
 
 Quick Start:
-    >>> from functional_effects.testing import assert_ok, unwrap_ok, FakeObjectStorage
-    >>> from functional_effects import create_composite_interpreter
+    >>> from functional_effects.testing import assert_ok, unwrap_ok
+    >>> from pytest_mock import MockerFixture
     >>>
-    >>> @pytest.mark.asyncio
-    >>> async def test_my_program(mocker):
-    ...     # Create mocks for infrastructure
-    ...     mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-    ...     mock_repo = mocker.AsyncMock(spec=UserRepository)
-    ...     fake_storage = FakeObjectStorage()
+    >>> def test_my_program(mocker: MockerFixture) -> None:
+    ...     # Setup
+    ...     user = User(id=uuid4(), email="test@example.com", name="Alice")
     ...
-    ...     # Create interpreter with mocks
-    ...     interpreter = create_composite_interpreter(
-    ...         websocket_connection=mock_ws,
-    ...         user_repo=mock_repo,
-    ...         object_storage=fake_storage,
-    ...         ...
-    ...     )
+    ...     # Create generator
+    ...     gen = get_user_program(user_id=user.id)
     ...
-    ...     # Run program and assert
-    ...     result = await run_ws_program(my_program(), interpreter)
-    ...     value = unwrap_ok(result)
-    ...     assert value == "expected"
+    ...     # Step 1: Get first effect
+    ...     effect1 = next(gen)
+    ...     assert effect1.__class__.__name__ == "GetUserById"
     ...
-    ...     # Verify mock calls
-    ...     mock_ws.send_text.assert_called_once_with("Hello!")
+    ...     # Step 2: Send mock response
+    ...     try:
+    ...         gen.send(user)
+    ...         pytest.fail("Expected StopIteration")
+    ...     except StopIteration as e:
+    ...         result = e.value
+    ...
+    ...     # Assert result
+    ...     assert isinstance(result, Ok)
+    ...     assert result.value.id == user.id
 
 Available exports:
 
@@ -46,28 +40,8 @@ Matchers (assertions):
     - assert_ok_value: Assert Ok value matches expected
     - assert_err_message: Assert Err message contains substring
 
-Fakes (in-memory test doubles):
-    - FakeMessageProducer: In-memory message publisher
-    - FakeMessageConsumer: In-memory message consumer
-    - FakeObjectStorage: In-memory object storage
-
-Failing variants (for error testing):
-    - FailingMessageProducer: Always fails to publish
-    - FailingMessageConsumer: Always fails to consume
-    - FailingObjectStorage: Always fails storage operations
+For more information, see docs/tutorials/04_testing_guide.md
 """
-
-# Fakes and failing variants
-from functional_effects.testing.fakes import (
-    FakeMessageConsumer,
-    FakeMessageProducer,
-    FakeObjectStorage,
-)
-from functional_effects.testing.failing import (
-    FailingMessageConsumer,
-    FailingMessageProducer,
-    FailingObjectStorage,
-)
 
 # Matchers
 from functional_effects.testing.matchers import (
@@ -87,12 +61,4 @@ __all__ = [
     "unwrap_err",
     "assert_ok_value",
     "assert_err_message",
-    # Fakes
-    "FakeMessageProducer",
-    "FakeMessageConsumer",
-    "FakeObjectStorage",
-    # Failing variants
-    "FailingMessageProducer",
-    "FailingMessageConsumer",
-    "FailingObjectStorage",
 ]

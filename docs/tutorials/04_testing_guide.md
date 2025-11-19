@@ -1,6 +1,6 @@
 # Tutorial 04: Testing Effect Programs
 
-This tutorial teaches you how to test effect programs using pytest-mock without requiring real infrastructure.
+This tutorial teaches you how to test effect programs using **generator-based mocking** with pytest-mock. This approach tests pure programs without requiring interpreters or real infrastructure.
 
 ## Prerequisites
 
@@ -12,10 +12,10 @@ This tutorial teaches you how to test effect programs using pytest-mock without 
 ## Learning Objectives
 
 By the end of this tutorial, you will:
-- Write unit tests for effect programs using pytest-mock
-- Test success paths and error paths
-- Verify mock interactions
-- Test program composition
+- Write unit tests using generator-based mocking (no interpreters needed)
+- Test success paths and error paths with explicit Result types
+- Mock effect responses step-by-step
+- Test program composition with yield from
 - Understand test organization strategies
 
 ## Setup
@@ -43,481 +43,476 @@ your_project/
 
 ---
 
-## Part 1: Basic Program Testing
+## Part 1: Generator-Based Testing Pattern
 
 ### Writing a Testable Program
 
-Let's start with a simple program to test:
+Let's start with a simple program that uses explicit error handling with Result types:
 
 ```python
-# src/programs/greet_user.py
+# src/programs/user_programs.py
 from collections.abc import Generator
 from uuid import UUID
 
-from functional_effects import (
-    AllEffects,
-    EffectResult,
-    GetUserById,
-    SendText,
-)
+from functional_effects import AllEffects, EffectResult, GetUserById
+from functional_effects.algebraic.result import Result, Ok, Err
 from functional_effects.domain.user import User
+from demo.domain.errors import AppError
 
-def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
-    """Greet a user by looking them up and sending a personalized message.
+def get_user_program(
+    user_id: UUID
+) -> Generator[AllEffects, EffectResult, Result[User, AppError]]:
+    """Get user by ID with explicit error handling.
 
     Returns:
-        "greeted" if user found, "not_found" if user doesn't exist
+        Ok(user) if user found
+        Err(AppError) if user not found
     """
     user = yield GetUserById(user_id=user_id)
 
-    match user:
-        case User(name=name):
-            yield SendText(text=f"Hello {name}!")
-            return "greeted"
-        case None:
-            yield SendText(text="User not found")
-            return "not_found"
+    if user is None:
+        return Err(AppError.not_found(f"User {user_id} not found"))
+
+    assert isinstance(user, User)  # Type narrowing
+    return Ok(user)
 ```
 
-### Writing the Test
+### Generator-Based Testing
+
+**Key Concept**: Test effect programs by manually stepping through the generator, mocking each effect's response:
 
 ```python
-# tests/test_programs/test_greet_user.py
+# tests/test_programs/test_user_programs.py
 import pytest
 from pytest_mock import MockerFixture
 from uuid import uuid4
 
-from functional_effects import (
-    run_ws_program,
-    create_composite_interpreter,
-)
-from functional_effects.domain.user import User, UserFound, UserNotFound
-from functional_effects.infrastructure.websocket import WebSocketConnection
-from functional_effects.infrastructure.repositories import (
-    UserRepository,
-    ChatMessageRepository,
-)
-from functional_effects.infrastructure.cache import ProfileCache
-from functional_effects.testing import unwrap_ok
-
-from src.programs.greet_user import greet_user
+from functional_effects.domain.user import User
+from functional_effects.algebraic.result import Ok, Err
+from demo.domain.errors import AppError
+from src.programs.user_programs import get_user_program
 
 
-@pytest.mark.asyncio()
-async def test_greet_user_when_user_exists(mocker: MockerFixture) -> None:
-    """Test greeting succeeds when user exists."""
-    # 1. Create mocks with spec for type safety
-    mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-    mock_ws.is_open.return_value = True
+class TestGetUserProgram:
+    """Test suite for get_user_program."""
 
-    mock_user_repo = mocker.AsyncMock(spec=UserRepository)
-    mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
-    mock_cache = mocker.AsyncMock(spec=ProfileCache)
+    def test_get_user_success(self, mocker: MockerFixture) -> None:
+        """Test successfully retrieving a user."""
+        # Setup: Create test data
+        user_id = uuid4()
+        user = User(id=user_id, email="alice@example.com", name="Alice")
 
-    # 2. Configure mock behavior
-    user_id = uuid4()
-    user = User(id=user_id, email="alice@example.com", name="Alice")
-    mock_user_repo.get_by_id.return_value = UserFound(user=user, source="database")
+        # Step 1: Create generator from program
+        gen = get_user_program(user_id=user_id)
 
-    # 3. Create interpreter with mocks
-    interpreter = create_composite_interpreter(
-        websocket_connection=mock_ws,
-        user_repo=mock_user_repo,
-        message_repo=mock_msg_repo,
-        cache=mock_cache,
-    )
+        # Step 2: Get first effect (GetUserById)
+        effect1 = next(gen)
+        assert effect1.__class__.__name__ == "GetUserById"
+        assert effect1.user_id == user_id
 
-    # 4. Execute program
-    result = await run_ws_program(greet_user(user_id), interpreter)
+        # Step 3: Send mock response to generator
+        try:
+            gen.send(user)
+            pytest.fail("Expected StopIteration")
+        except StopIteration as e:
+            result = e.value  # Extract return value
 
-    # 5. Verify result
-    value = unwrap_ok(result)
-    assert value == "greeted"
+        # Step 4: Verify result
+        assert isinstance(result, Ok)
+        assert isinstance(result.value, User)
+        assert result.value.id == user_id
+        assert result.value.email == "alice@example.com"
 
-    # 6. Verify mock interactions
-    mock_user_repo.get_by_id.assert_called_once_with(user_id)
-    mock_ws.send_text.assert_called_once_with("Hello Alice!")
+    def test_get_user_not_found(self, mocker: MockerFixture) -> None:
+        """Test retrieving non-existent user."""
+        # Setup
+        user_id = uuid4()
 
+        # Create generator
+        gen = get_user_program(user_id=user_id)
 
-@pytest.mark.asyncio()
-async def test_greet_user_when_user_not_found(mocker: MockerFixture) -> None:
-    """Test greeting handles user not found."""
-    # Setup mocks
-    mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-    mock_ws.is_open.return_value = True
+        # Step 1: GetUserById returns None
+        effect1 = next(gen)
 
-    mock_user_repo = mocker.AsyncMock(spec=UserRepository)
-    mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
-    mock_cache = mocker.AsyncMock(spec=ProfileCache)
+        # Send None (user not found)
+        try:
+            gen.send(None)
+            pytest.fail("Expected StopIteration")
+        except StopIteration as e:
+            result = e.value
 
-    # Configure: user not found
-    user_id = uuid4()
-    mock_user_repo.get_by_id.return_value = UserNotFound(
-        user_id=user_id,
-        reason="does_not_exist"
-    )
-
-    interpreter = create_composite_interpreter(
-        websocket_connection=mock_ws,
-        user_repo=mock_user_repo,
-        message_repo=mock_msg_repo,
-        cache=mock_cache,
-    )
-
-    # Execute
-    result = await run_ws_program(greet_user(user_id), interpreter)
-
-    # Verify
-    value = unwrap_ok(result)
-    assert value == "not_found"
-
-    mock_ws.send_text.assert_called_once_with("User not found")
+        # Verify error result
+        assert isinstance(result, Err)
+        assert isinstance(result.error, AppError)
+        assert result.error.error_type == "not_found"
+        assert str(user_id) in result.error.message
 ```
 
 **Key Testing Patterns**:
-1. ✅ Use `mocker.AsyncMock(spec=Protocol)` for type safety
-2. ✅ Configure mock return values before execution
-3. ✅ Use `unwrap_ok` to assert success and extract value
-4. ✅ Verify mock calls with `assert_called_once_with`
+1. ✅ Use `next(gen)` to get the first effect
+2. ✅ Use `gen.send(mock_value)` to provide mock responses
+3. ✅ Catch `StopIteration` to extract the final `Result`
+4. ✅ Use pattern matching or `isinstance` to verify `Ok`/`Err`
+5. ✅ No interpreters, no async/await - just pure generators
 
 ---
 
-## Part 2: Testing Error Paths
+## Part 2: Testing Multi-Step Programs
 
-### Testing Database Errors
+### Testing Programs with Multiple Effects
 
-```python
-from functional_effects.interpreters.errors import DatabaseError
-from functional_effects.testing import assert_err, unwrap_err
-
-
-@pytest.mark.asyncio()
-async def test_greet_user_database_failure(mocker: MockerFixture) -> None:
-    """Test program handles database errors correctly."""
-    # Setup mocks
-    mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-    mock_ws.is_open.return_value = True
-
-    mock_user_repo = mocker.AsyncMock(spec=UserRepository)
-    mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
-    mock_cache = mocker.AsyncMock(spec=ProfileCache)
-
-    # Configure repository to raise exception
-    mock_user_repo.get_by_id.side_effect = Exception("Connection timeout")
-
-    interpreter = create_composite_interpreter(
-        websocket_connection=mock_ws,
-        user_repo=mock_user_repo,
-        message_repo=mock_msg_repo,
-        cache=mock_cache,
-    )
-
-    # Execute
-    result = await run_ws_program(greet_user(uuid4()), interpreter)
-
-    # Verify error
-    assert_err(result, DatabaseError)
-    error = unwrap_err(result)
-    assert "Connection timeout" in error.db_error
-    assert error.is_retryable is True
-
-    # Verify program stopped before sending message
-    mock_ws.send_text.assert_not_called()
-```
-
-### Testing WebSocket Errors
+Let's test a program that validates input, fetches data, and performs an update:
 
 ```python
-from functional_effects.interpreters.errors import WebSocketClosedError
+# src/programs/user_programs.py
+import re
+from uuid import UUID
+from functional_effects import AllEffects, EffectResult, GetUserById, UpdateUser, InvalidateCache
+from functional_effects.algebraic.result import Result, Ok, Err
+from functional_effects.domain.user import User
+from demo.domain.errors import AppError
 
+def update_user_program(
+    user_id: UUID,
+    email: str | None = None,
+    name: str | None = None
+) -> Generator[AllEffects, EffectResult, Result[User, AppError]]:
+    """Update user with validation and cache invalidation."""
+    # Validation 1: At least one field
+    if email is None and name is None:
+        return Err(AppError.validation_error("At least one field must be provided"))
 
-@pytest.mark.asyncio()
-async def test_greet_user_websocket_closed(mocker: MockerFixture) -> None:
-    """Test program handles closed WebSocket connections."""
-    # Setup mocks
-    mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-    mock_ws.is_open.return_value = False  # Connection closed!
+    # Validation 2: Email format
+    if email is not None and "@" not in email:
+        return Err(AppError.validation_error("Invalid email format"))
 
-    mock_user_repo = mocker.AsyncMock(spec=UserRepository)
-    mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
-    mock_cache = mocker.AsyncMock(spec=ProfileCache)
-
-    # User lookup succeeds, but WebSocket is closed
-    user_id = uuid4()
-    user = User(id=user_id, email="alice@example.com", name="Alice")
-    mock_user_repo.get_by_id.return_value = UserFound(user=user, source="database")
-
-    interpreter = create_composite_interpreter(
-        websocket_connection=mock_ws,
-        user_repo=mock_user_repo,
-        message_repo=mock_msg_repo,
-        cache=mock_cache,
-    )
-
-    # Execute
-    result = await run_ws_program(greet_user(user_id), interpreter)
-
-    # Verify error
-    assert_err(result, WebSocketClosedError)
-    error = unwrap_err(result)
-    assert error.close_code == 1006  # Abnormal closure
-```
-
----
-
-## Part 3: Testing with Sequential Returns
-
-Use `side_effect` for mocks that return different values on subsequent calls:
-
-```python
-from functional_effects import GetCachedProfile, PutCachedProfile
-from functional_effects.domain.cache_result import CacheHit, CacheMiss
-from functional_effects.domain.profile import ProfileData
-
-
-def cache_aware_program(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
-    """Check cache first, fallback to database."""
-    # Try cache
-    cached = yield GetCachedProfile(user_id=user_id)
-
-    match cached:
-        case ProfileData(name=name):
-            yield SendText(text=f"Hello {name} (cached)")
-            return "cache_hit"
-        case None:
-            # Cache miss - fetch from database
-            user = yield GetUserById(user_id=user_id)
-
-            match user:
-                case User(id=uid, name=name):
-                    # Populate cache
-                    profile = ProfileData(id=str(uid), name=name)
-                    yield PutCachedProfile(user_id=user_id, profile_data=profile)
-                    yield SendText(text=f"Hello {name}")
-                    return "db_hit"
-                case None:
-                    return "not_found"
-
-
-@pytest.mark.asyncio()
-async def test_cache_aware_program_cache_miss_then_hit(mocker: MockerFixture) -> None:
-    """Test cache miss followed by cache hit on second call."""
-    # Setup mocks
-    mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-    mock_ws.is_open.return_value = True
-
-    mock_user_repo = mocker.AsyncMock(spec=UserRepository)
-    mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
-    mock_cache = mocker.AsyncMock(spec=ProfileCache)
-
-    # Configure cache: first call miss, second call hit
-    user_id = uuid4()
-    profile = ProfileData(id=str(user_id), name="Bob")
-
-    mock_cache.get_profile.side_effect = [
-        CacheMiss(key=str(user_id), reason="not_found"),  # First call
-        CacheHit(value=profile, ttl_remaining=300),       # Second call
-    ]
-
-    # Configure user repo for cache miss path
-    user = User(id=user_id, email="bob@example.com", name="Bob")
-    mock_user_repo.get_by_id.return_value = UserFound(user=user, source="database")
-
-    interpreter = create_composite_interpreter(
-        websocket_connection=mock_ws,
-        user_repo=mock_user_repo,
-        message_repo=mock_msg_repo,
-        cache=mock_cache,
-    )
-
-    # First execution - cache miss
-    result1 = await run_ws_program(cache_aware_program(user_id), interpreter)
-    value1 = unwrap_ok(result1)
-    assert value1 == "db_hit"
-    mock_cache.put_profile.assert_called_once_with(user_id, profile, 300)
-
-    # Reset WebSocket mock for second execution
-    mock_ws.reset_mock()
-
-    # Second execution - cache hit
-    result2 = await run_ws_program(cache_aware_program(user_id), interpreter)
-    value2 = unwrap_ok(result2)
-    assert value2 == "cache_hit"
-
-    # Verify database not called on cache hit
-    assert mock_user_repo.get_by_id.call_count == 1  # Only from first execution
-```
-
----
-
-## Part 4: Testing with Stateful Behavior
-
-Use closures for stateful mock behavior:
-
-```python
-@pytest.mark.asyncio()
-async def test_program_connection_closes_midway(mocker: MockerFixture) -> None:
-    """Test program stops when connection closes during execution."""
-    # Setup mocks
-    mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-
-    # Stateful behavior: first call returns True, subsequent calls return False
-    call_count = {"count": 0}
-
-    def is_open_side_effect() -> bool:
-        call_count["count"] += 1
-        return call_count["count"] == 1
-
-    mock_ws.is_open.side_effect = is_open_side_effect
-
-    interpreter = create_composite_interpreter(
-        websocket_connection=mock_ws,
-        user_repo=mocker.AsyncMock(spec=UserRepository),
-        message_repo=mocker.AsyncMock(spec=ChatMessageRepository),
-        cache=mocker.AsyncMock(spec=ProfileCache),
-    )
-
-    # Program that sends multiple messages
-    def multi_message_program() -> Generator[AllEffects, EffectResult, str]:
-        yield SendText(text="First")   # Succeeds
-        yield SendText(text="Second")  # Fails - connection closed
-        yield SendText(text="Third")   # Never reached
-        return "never"
-
-    # Execute
-    result = await run_ws_program(multi_message_program(), interpreter)
-
-    # Verify error
-    assert_err(result, WebSocketClosedError)
-
-    # Verify only first message sent (program stopped after connection closed)
-    mock_ws.send_text.assert_called_once_with("First")
-```
-
----
-
-## Part 5: Testing Program Composition
-
-Test programs that use `yield from`:
-
-```python
-def lookup_user_sub_program(user_id: UUID) -> Generator[AllEffects, EffectResult, User | None]:
-    """Reusable sub-program: lookup user."""
+    # Effect 1: Verify user exists
     user = yield GetUserById(user_id=user_id)
-    return user
+    if user is None:
+        return Err(AppError.not_found(f"User {user_id} not found"))
 
+    # Effect 2: Update user
+    updated_result = yield UpdateUser(user_id=user_id, email=email, name=name)
+    assert isinstance(updated_result, bool)
+    if not updated_result:
+        return Err(AppError.internal_error("Failed to update user"))
 
-def greet_user_composite(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
-    """Main program using sub-program."""
-    # Delegate to sub-program
-    user = yield from lookup_user_sub_program(user_id)
+    # Effect 3: Invalidate cache
+    yield InvalidateCache(key=f"user:{user_id}")
 
-    match user:
-        case User(name=name):
-            yield SendText(text=f"Hello {name}!")
-            return "greeted"
-        case None:
-            yield SendText(text="User not found")
-            return "not_found"
+    # Effect 4: Get updated user
+    updated_user = yield GetUserById(user_id=user_id)
+    assert isinstance(updated_user, User)
 
+    return Ok(updated_user)
+```
 
-@pytest.mark.asyncio()
-async def test_composite_program_success(mocker: MockerFixture) -> None:
-    """Test program composition with yield from."""
-    # Setup mocks
-    mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-    mock_ws.is_open.return_value = True
+### Testing Multi-Step Success Path
 
-    mock_user_repo = mocker.AsyncMock(spec=UserRepository)
-
+```python
+def test_update_user_success(self, mocker: MockerFixture) -> None:
+    """Test successfully updating a user."""
+    # Setup
     user_id = uuid4()
-    user = User(id=user_id, email="alice@example.com", name="Alice")
-    mock_user_repo.get_by_id.return_value = UserFound(user=user, source="database")
+    original_user = User(id=user_id, email="alice@example.com", name="Alice")
+    updated_user = User(id=user_id, email="alice.new@example.com", name="Alice")
 
-    interpreter = create_composite_interpreter(
-        websocket_connection=mock_ws,
-        user_repo=mock_user_repo,
-        message_repo=mocker.AsyncMock(spec=ChatMessageRepository),
-        cache=mocker.AsyncMock(spec=ProfileCache),
-    )
+    # Create generator
+    gen = update_user_program(user_id=user_id, email="alice.new@example.com")
 
-    # Execute
-    result = await run_ws_program(greet_user_composite(user_id), interpreter)
+    # Step 1: GetUserById returns original user
+    effect1 = next(gen)
+    assert effect1.__class__.__name__ == "GetUserById"
+    result1 = gen.send(original_user)
 
-    # Verify
-    value = unwrap_ok(result)
-    assert value == "greeted"
+    # Step 2: UpdateUser returns True
+    effect2 = result1
+    assert effect2.__class__.__name__ == "UpdateUser"
+    assert effect2.user_id == user_id
+    assert effect2.email == "alice.new@example.com"
+    result2 = gen.send(True)
 
-    # Verify both sub-program and main program effects executed
-    mock_user_repo.get_by_id.assert_called_once_with(user_id)
-    mock_ws.send_text.assert_called_once_with("Hello Alice!")
+    # Step 3: InvalidateCache
+    effect3 = result2
+    assert effect3.__class__.__name__ == "InvalidateCache"
+    assert f"user:{user_id}" in effect3.key
+    result3 = gen.send(True)
+
+    # Step 4: GetUserById returns updated user
+    effect4 = result3
+    assert effect4.__class__.__name__ == "GetUserById"
+
+    try:
+        gen.send(updated_user)
+        pytest.fail("Expected StopIteration")
+    except StopIteration as e:
+        result = e.value
+
+    # Verify final result
+    assert isinstance(result, Ok)
+    assert result.value.email == "alice.new@example.com"
+```
+
+### Testing Validation Errors (No Effects Yielded)
+
+```python
+def test_update_user_no_fields(self, mocker: MockerFixture) -> None:
+    """Test update fails when no fields provided."""
+    # Create generator
+    gen = update_user_program(user_id=uuid4())
+
+    # No effects should be yielded - validation fails immediately
+    try:
+        next(gen)
+        pytest.fail("Expected StopIteration")
+    except StopIteration as e:
+        result = e.value
+
+    # Verify error result
+    assert isinstance(result, Err)
+    assert isinstance(result.error, AppError)
+    assert result.error.error_type == "validation_error"
+    assert "at least one field" in result.error.message.lower()
+
+def test_update_user_invalid_email(self, mocker: MockerFixture) -> None:
+    """Test update fails with invalid email format."""
+    gen = update_user_program(user_id=uuid4(), email="invalid-email")
+
+    # Validation happens before any effects
+    try:
+        next(gen)
+        pytest.fail("Expected StopIteration")
+    except StopIteration as e:
+        result = e.value
+
+    assert isinstance(result, Err)
+    assert result.error.error_type == "validation_error"
+    assert "email" in result.error.message.lower()
 ```
 
 ---
 
-## Part 6: Test Organization
+## Part 3: Testing Complex Workflows (All 6 Infrastructure Types)
 
-### Fixture Reuse
+### Testing Programs Using Multiple Infrastructure Types
 
-Create reusable fixtures in `conftest.py`:
+Let's test a complex program that demonstrates auth, cache, database, storage, messaging, and WebSocket:
 
 ```python
-# tests/conftest.py
-import pytest
-from pytest_mock import MockerFixture
+# src/programs/chat_programs.py
+from collections.abc import Generator
+from uuid import uuid4
+from datetime import datetime, timezone
 
-from functional_effects import create_composite_interpreter
-from functional_effects.infrastructure.websocket import WebSocketConnection
-from functional_effects.infrastructure.repositories import UserRepository, ChatMessageRepository
-from functional_effects.infrastructure.cache import ProfileCache
+from functional_effects import (
+    AllEffects, EffectResult,
+    ValidateToken, GetCachedValue, PutCachedValue, GetUserById,
+    PutObject, PublishMessage, SendText
+)
+from functional_effects.algebraic.result import Result, Ok, Err
+from functional_effects.domain.token_result import TokenValid, TokenInvalid
+from functional_effects.domain.user import User
+from demo.domain.errors import AuthError, AppError
+from demo.domain.responses import MessageResponse
 
+def send_authenticated_message_with_storage_program(
+    token: str, text: str
+) -> Generator[AllEffects, EffectResult, Result[MessageResponse, AuthError | AppError]]:
+    """Send message using all 6 infrastructure types."""
+    # Step 1: [Auth] Validate JWT token
+    validation_result = yield ValidateToken(token=token)
 
-@pytest.fixture
-def mock_interpreter(mocker: MockerFixture):
-    """Create interpreter with all mocks."""
-    mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-    mock_ws.is_open.return_value = True
+    match validation_result:
+        case TokenInvalid():
+            return Err(AuthError(message="Invalid token", error_type="token_invalid"))
+        case TokenValid(user_id=user_id):
+            pass
 
-    mock_user_repo = mocker.AsyncMock(spec=UserRepository)
-    mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
-    mock_cache = mocker.AsyncMock(spec=ProfileCache)
+    # Step 2-4: [Cache + Database] Cache-aside pattern
+    cached_result = yield GetCachedValue(key=f"user:{user_id}")
 
-    interpreter = create_composite_interpreter(
-        websocket_connection=mock_ws,
-        user_repo=mock_user_repo,
-        message_repo=mock_msg_repo,
-        cache=mock_cache,
-    )
+    if cached_result is None:
+        # Cache miss - load from database
+        user = yield GetUserById(user_id=user_id)
+        if user is None:
+            return Err(AppError.not_found(f"User {user_id} not found"))
 
-    return {
-        "interpreter": interpreter,
-        "ws": mock_ws,
-        "user_repo": mock_user_repo,
-        "msg_repo": mock_msg_repo,
-        "cache": mock_cache,
-    }
+        # Store in cache
+        yield PutCachedValue(key=f"user:{user_id}", value=b"...", ttl_seconds=300)
+
+    # Validation
+    if not text or text.strip() == "":
+        return Err(AppError.validation_error("Message text cannot be empty"))
+
+    # Step 5: [Storage] Archive to S3
+    message_id = uuid4()
+    s3_key = f"messages/{user_id}/{message_id}.json"
+    storage_result = yield PutObject(bucket="chat-archive", key=s3_key, content=b"...")
+
+    # Step 6: [Messaging] Publish to Pulsar
+    pulsar_message_id = yield PublishMessage(topic="chat-messages", payload=b"...")
+
+    # Step 7: [WebSocket] Send confirmation
+    yield SendText(text=f"Message sent: {message_id}")
+
+    return Ok(MessageResponse(
+        message_id=message_id,
+        user_id=user_id,
+        text=text,
+        created_at=datetime.now(timezone.utc)
+    ))
 ```
 
-Use in tests:
+### Testing the Complete Success Path
 
 ```python
-@pytest.mark.asyncio()
-async def test_with_fixture(mock_interpreter) -> None:
-    """Test using reusable fixture."""
-    interpreter = mock_interpreter["interpreter"]
-    mock_user_repo = mock_interpreter["user_repo"]
+from functional_effects.domain.s3_object import PutSuccess
 
-    # Configure mock
+def test_send_authenticated_message_success(self, mocker: MockerFixture) -> None:
+    """Test successful message send using all 6 infrastructure types."""
+    # Setup
     user_id = uuid4()
+    token_valid = TokenValid(user_id=user_id, claims={"email": "alice@example.com"})
     user = User(id=user_id, email="alice@example.com", name="Alice")
-    mock_user_repo.get_by_id.return_value = UserFound(user=user, source="database")
+    message_text = "Hello from all 6 infrastructure types!"
 
-    # Execute
-    result = await run_ws_program(greet_user(user_id), interpreter)
+    # Create generator
+    gen = send_authenticated_message_with_storage_program(
+        token="valid_token_123", text=message_text
+    )
 
-    # Verify
-    value = unwrap_ok(result)
-    assert value == "greeted"
+    # Step 1: [Auth] ValidateToken
+    effect1 = next(gen)
+    assert effect1.__class__.__name__ == "ValidateToken"
+    assert effect1.token == "valid_token_123"
+    result1 = gen.send(token_valid)
+
+    # Step 2: [Cache] GetCachedValue (cache miss)
+    effect2 = result1
+    assert effect2.__class__.__name__ == "GetCachedValue"
+    assert f"user:{user_id}" in effect2.key
+    result2 = gen.send(None)  # Cache miss
+
+    # Step 3: [Database] GetUserById
+    effect3 = result2
+    assert effect3.__class__.__name__ == "GetUserById"
+    assert effect3.user_id == user_id
+    result3 = gen.send(user)
+
+    # Step 4: [Cache] PutCachedValue
+    effect4 = result3
+    assert effect4.__class__.__name__ == "PutCachedValue"
+    assert f"user:{user_id}" in effect4.key
+    assert effect4.ttl_seconds == 300
+    result4 = gen.send(True)
+
+    # Step 5: [Storage] PutObject to S3
+    effect5 = result4
+    assert effect5.__class__.__name__ == "PutObject"
+    assert effect5.bucket == "chat-archive"
+    put_success = PutSuccess(key=effect5.key, bucket="chat-archive", version_id="v1")
+    result5 = gen.send(put_success)
+
+    # Step 6: [Messaging] PublishMessage to Pulsar
+    effect6 = result5
+    assert effect6.__class__.__name__ == "PublishMessage"
+    assert effect6.topic == "chat-messages"
+    result6 = gen.send("pulsar_message_id_123")
+
+    # Step 7: [WebSocket] SendText
+    effect7 = result6
+    assert effect7.__class__.__name__ == "SendText"
+    assert "Message sent:" in effect7.text
+
+    try:
+        gen.send(None)
+        pytest.fail("Expected StopIteration")
+    except StopIteration as e:
+        result = e.value
+
+    # Verify final result
+    assert isinstance(result, Ok)
+    assert isinstance(result.value, MessageResponse)
+    assert result.value.user_id == user_id
+    assert result.value.text == message_text
+```
+
+---
+
+## Part 4: Testing Early Returns
+
+Programs can return early when encountering validation errors or missing data:
+
+```python
+def test_send_authenticated_message_invalid_token(
+    self, mocker: MockerFixture
+) -> None:
+    """Test send fails with invalid token."""
+    # Setup
+    token_invalid = TokenInvalid(token="bad_token", reason="malformed")
+
+    # Create generator
+    gen = send_authenticated_message_with_storage_program(
+        token="bad_token", text="Hello"
+    )
+
+    # Step 1: ValidateToken returns TokenInvalid
+    effect1 = next(gen)
+
+    try:
+        gen.send(token_invalid)
+        pytest.fail("Expected StopIteration")
+    except StopIteration as e:
+        result = e.value
+
+    # Verify error - program stopped after first effect
+    assert isinstance(result, Err)
+    assert isinstance(result.error, AuthError)
+    assert result.error.error_type == "token_invalid"
+```
+
+**Key Pattern**: When a program returns `Err`, it stops immediately. No subsequent effects are yielded.
+
+---
+
+## Part 5: Test Organization
+
+### Organizing Tests by Test Suite
+
+Group related tests in classes:
+
+```python
+class TestSendMessageProgram:
+    """Test suite for send_message_program."""
+
+    def test_send_message_success(self, mocker: MockerFixture) -> None:
+        """Test successfully sending a message."""
+        # ...
+
+    def test_send_message_user_not_found(self, mocker: MockerFixture) -> None:
+        """Test sending message fails when user doesn't exist."""
+        # ...
+
+    def test_send_message_empty_text(self, mocker: MockerFixture) -> None:
+        """Test sending message fails with empty text."""
+        # ...
+
+    def test_send_message_text_too_long(self, mocker: MockerFixture) -> None:
+        """Test sending message fails when text exceeds max length."""
+        # ...
+```
+
+### Directory Structure
+
+```
+tests/
+├── test_demo/
+│   ├── __init__.py
+│   ├── test_auth_programs.py      # 13 tests
+│   ├── test_user_programs.py      # 10 tests
+│   ├── test_message_programs.py   # 6 tests
+│   └── test_chat_programs.py      # 5 tests (all 6 infrastructure types)
+└── conftest.py
 ```
 
 ---
@@ -526,76 +521,126 @@ async def test_with_fixture(mock_interpreter) -> None:
 
 ### ✅ DO
 
-1. **Use `spec=` for Type Safety**
+1. **Test Programs as Pure Generators**
    ```python
-   mock_repo = mocker.AsyncMock(spec=UserRepository)  # Type-safe
+   # ✅ No interpreters, no infrastructure
+   gen = get_user_program(user_id=user_id)
+   effect = next(gen)
+   result = gen.send(mock_value)
    ```
 
-2. **Verify Mock Calls**
+2. **Use Result Types for Explicit Error Handling**
    ```python
-   mock_ws.send_text.assert_called_once_with("Hello")
-   mock_repo.get_by_id.assert_called_once_with(user_id)
+   # ✅ Return Result[T, E] from programs
+   def get_user(...) -> Generator[..., Result[User, AppError]]:
+       # ...
+       return Ok(user)  # or Err(AppError(...))
    ```
 
 3. **Test One Behavior Per Test**
    ```python
-   def test_user_found_sends_greeting() -> None: ...
-   def test_user_not_found_sends_error() -> None: ...
+   def test_user_found_returns_ok() -> None: ...
+   def test_user_not_found_returns_err() -> None: ...
+   def test_validation_fails_returns_err() -> None: ...
    ```
 
-4. **Use Descriptive Test Names**
+4. **Verify Effect Properties**
    ```python
-   def test_greet_user_when_database_fails_returns_error() -> None: ...
+   effect = next(gen)
+   assert effect.__class__.__name__ == "GetUserById"
+   assert effect.user_id == expected_user_id
    ```
 
-5. **Reset Mocks Between Calls**
+5. **Use Pattern Matching or isinstance for Results**
    ```python
-   mock_ws.reset_mock()
+   # Pattern matching
+   match result:
+       case Ok(user): assert user.id == user_id
+       case Err(error): pytest.fail(f"Unexpected error: {error}")
+
+   # isinstance
+   assert isinstance(result, Ok)
+   assert isinstance(result.value, User)
+   ```
+
+6. **Test Early Returns (Validation Errors)**
+   ```python
+   gen = update_user_program(user_id=uuid4())  # No fields
+   try:
+       next(gen)  # Should stop immediately
+       pytest.fail("Expected StopIteration")
+   except StopIteration as e:
+       assert isinstance(e.value, Err)
    ```
 
 ### ❌ DON'T
 
-1. **Don't Create Mocks Without spec**
+1. **Don't Use Fakes or Test Doubles**
    ```python
-   mock_repo = mocker.AsyncMock()  # No type safety
+   # ❌ Forbidden
+   interpreter = MessagingInterpreter(producer=FakeMessageProducer())
+
+   # ✅ Use generator-based testing instead
+   gen = send_message_program(...)
+   effect = next(gen)
+   result = gen.send(mock_response)
    ```
 
-2. **Don't Skip Mock Verification**
+2. **Don't Skip Result Type Verification**
    ```python
-   result = await run_ws_program(program(), interpreter)
-   assert_ok(result)
-   # Missing: verify mocks were called correctly
+   # ❌ Missing Result type check
+   result = e.value
+   assert result.value.id == user_id  # Assumes Ok
+
+   # ✅ Verify Result type first
+   assert isinstance(result, Ok)
+   assert result.value.id == user_id
    ```
 
-3. **Don't Test Multiple Behaviors**
+3. **Don't Test Multiple Behaviors in One Test**
    ```python
-   def test_greet_user() -> None:
-       # Tests both found AND not found - too much!
+   # ❌ Too much in one test
+   def test_get_user() -> None:
+       # Tests both found AND not found - split into 2 tests!
        ...
    ```
 
-4. **Don't Use Real Infrastructure**
+4. **Don't Use Real Infrastructure in Unit Tests**
    ```python
    # ❌ Don't do this in unit tests
    db_conn = await asyncpg.connect(DATABASE_URL)
+   redis_client = await aioredis.from_url(REDIS_URL)
+   ```
+
+5. **Don't Use pytest.skip()**
+   ```python
+   # ❌ Forbidden - creates false confidence
+   @pytest.mark.skip(reason="Not implemented yet")
+   def test_complex_workflow() -> None: ...
+
+   # ✅ Let tests FAIL to expose gaps, or delete test
    ```
 
 ---
 
 ## Next Steps
 
-- Read [API Reference: Testing](../api/testing.md) for complete testing utilities
-- Read [Tutorial 05: Production Deployment](./05_production_deployment.md) for deploying tested programs
-- Explore test examples in `tests/test_programs/` and `tests/test_integration/`
+- Explore the demo application in `/demo` for complete working examples
+- Read [demo/README.md](../../demo/README.md) for comprehensive documentation
+- Study real tests in `tests/test_demo/` (35 tests with 100% pass rate)
+- Review [ARCHITECTURE.md](../../ARCHITECTURE.md) for system design
 
 ## Summary
 
 You learned how to:
-- ✅ Write unit tests using pytest-mock
-- ✅ Test success and error paths
-- ✅ Use `side_effect` for sequential returns
-- ✅ Test stateful mock behavior
-- ✅ Test program composition
-- ✅ Organize tests with fixtures
+- ✅ Test effect programs using generator-based mocking
+- ✅ Use `next(gen)` and `gen.send()` to mock effect responses
+- ✅ Test multi-step programs with multiple effects
+- ✅ Test validation errors that occur before effects
+- ✅ Use Result types for explicit error handling
+- ✅ Test complex workflows using all 6 infrastructure types
+- ✅ Organize tests by test suite
+
+**Key Takeaway**: Test effect programs as pure generators without requiring interpreters or real infrastructure. This provides fast, reliable, type-safe tests that verify program logic in isolation.
 
 Happy testing! 🧪
