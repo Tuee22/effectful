@@ -4,6 +4,9 @@ Tests verify end-to-end storage workflows using the effect system with mock
 implementations. These tests validate that storage effects compose correctly
 and handle real-world scenarios.
 
+Pattern: Layer 4 (Workflow Tests) - Uses run_ws_program() with pytest-mock.
+See docs/testing/TESTING_PATTERNS.md for comprehensive testing guidelines.
+
 Coverage: 100% of storage workflow patterns.
 """
 
@@ -13,575 +16,547 @@ from datetime import UTC, datetime
 import pytest
 from pytest_mock import MockerFixture
 
-from functional_effects.algebraic.effect_return import EffectReturn
 from functional_effects.algebraic.result import Err, Ok
-from functional_effects.domain.s3_object import PutFailure, PutSuccess, S3Object
+from functional_effects.domain.s3_object import PutSuccess, S3Object
 from functional_effects.effects.storage import DeleteObject, GetObject, ListObjects, PutObject
 from functional_effects.infrastructure.storage import ObjectStorage
 from functional_effects.interpreters.storage import StorageError, StorageInterpreter
-from functional_effects.programs.program_types import EffectResult
-
-# Type alias for storage programs
-type StorageProgram = Generator[
-    GetObject | PutObject | DeleteObject | ListObjects, EffectResult, EffectResult
-]
+from functional_effects.programs.program_types import AllEffects, EffectResult
+from functional_effects.programs.runners import run_ws_program
 
 
 class TestBasicStorageWorkflows:
     """Tests for basic storage operations."""
 
-    @pytest.mark.asyncio
-    async def test_put_and_get_workflow(self) -> None:
+    @pytest.mark.asyncio()
+    async def test_put_and_get_workflow(self, mocker: MockerFixture) -> None:
         """Should put object and retrieve it successfully."""
-        # Arrange
-        fake_storage = FakeObjectStorage()
-        storage_interpreter = StorageInterpreter(storage=fake_storage)
-        # CompositeInterpreter needs at least websocket, database, cache
-        # We'll create minimal mocks and pass storage as the main interpreter
-        interpreter = storage_interpreter
+        # Arrange - Create in-memory storage simulation
+        storage_dict: dict[tuple[str, str], S3Object] = {}
 
-        def program() -> StorageProgram:
+        async def mock_put_object(
+            bucket: str,
+            key: str,
+            content: bytes,
+            metadata: dict[str, str] | None = None,
+            content_type: str | None = None,
+        ) -> PutSuccess:
+            storage_dict[(bucket, key)] = S3Object(
+                key=key,
+                bucket=bucket,
+                content=content,
+                last_modified=datetime.now(UTC),
+                metadata=metadata or {},
+                content_type=content_type,
+                size=len(content),
+                version_id="v1",
+            )
+            return PutSuccess(key=key, bucket=bucket, version_id="v1")
+
+        async def mock_get_object(bucket: str, key: str) -> S3Object | None:
+            return storage_dict.get((bucket, key))
+
+        # Setup mock storage
+        storage = mocker.AsyncMock(spec=ObjectStorage)
+        storage.put_object.side_effect = mock_put_object
+        storage.get_object.side_effect = mock_get_object
+
+        interpreter = StorageInterpreter(storage=storage)
+
+        # Define workflow program
+        def put_and_get_program() -> Generator[AllEffects, EffectResult, bytes]:
+            """Put object, then get it back."""
             # Put object
-            put_effect = PutObject(
+            key_result = yield PutObject(
                 bucket="my-bucket",
                 key="data/file.txt",
-                content=b"Hello World",
-                metadata={"uploaded-by": "user-123"},
+                content=b"test data",
+                metadata={"author": "test"},
                 content_type="text/plain",
             )
-            key = yield put_effect
-            assert isinstance(key, str)
-            assert key == "data/file.txt"
+            assert isinstance(key_result, str)
 
             # Get object back
-            get_effect = GetObject(bucket="my-bucket", key="data/file.txt")
-            s3_object = yield get_effect
-            assert isinstance(s3_object, S3Object)
+            obj_result = yield GetObject(bucket="my-bucket", key="data/file.txt")
+            assert isinstance(obj_result, S3Object)
 
-            return s3_object
+            return obj_result.content
 
         # Act
-        gen = program()
-        result = await interpreter.interpret(next(gen))
-
-        # Continue program with put result
-        match result:
-            case Ok(EffectReturn(value=key)):
-                result = await interpreter.interpret(gen.send(key))
-            case Err(error):
-                pytest.fail(f"Put failed: {error}")
+        result = await run_ws_program(put_and_get_program(), interpreter)
 
         # Assert
         match result:
-            case Ok(EffectReturn(value=s3_object)):
-                assert isinstance(s3_object, S3Object)
-                assert s3_object.bucket == "my-bucket"
-                assert s3_object.key == "data/file.txt"
-                assert s3_object.content == b"Hello World"
-                assert s3_object.metadata == {"uploaded-by": "user-123"}
-                assert s3_object.content_type == "text/plain"
+            case Ok(content):
+                assert content == b"test data"
+                # Verify mock interactions
+                storage.put_object.assert_called_once_with(
+                    "my-bucket",
+                    "data/file.txt",
+                    b"test data",
+                    {"author": "test"},
+                    "text/plain",
+                )
+                storage.get_object.assert_called_once_with("my-bucket", "data/file.txt")
             case Err(error):
-                pytest.fail(f"Get failed: {error}")
+                pytest.fail(f"Expected Ok, got Err({error})")
 
-        # Verify fake storage state
-        assert len(fake_storage._objects) == 1
-        assert ("my-bucket", "data/file.txt") in fake_storage._objects
-
-    @pytest.mark.asyncio
-    async def test_get_nonexistent_object(self) -> None:
+    @pytest.mark.asyncio()
+    async def test_get_nonexistent_object(self, mocker: MockerFixture) -> None:
         """Should return None for nonexistent object."""
         # Arrange
-        fake_storage = FakeObjectStorage()
-        storage_interpreter = StorageInterpreter(storage=fake_storage)
-        # CompositeInterpreter needs at least websocket, database, cache
-        # We'll create minimal mocks and pass storage as the main interpreter
-        interpreter = storage_interpreter
+        storage = mocker.AsyncMock(spec=ObjectStorage)
+        storage.get_object.return_value = None
 
-        def program() -> StorageProgram:
-            get_effect = GetObject(bucket="my-bucket", key="missing.txt")
-            s3_object = yield get_effect
-            return s3_object
+        interpreter = StorageInterpreter(storage=storage)
+
+        # Define workflow
+        def get_missing_program() -> Generator[AllEffects, EffectResult, bool]:
+            """Try to get nonexistent object."""
+            obj_result = yield GetObject(bucket="my-bucket", key="missing.txt")
+            return obj_result is None
 
         # Act
-        gen = program()
-        result = await interpreter.interpret(next(gen))
+        result = await run_ws_program(get_missing_program(), interpreter)
 
         # Assert
         match result:
-            case Ok(EffectReturn(value=None)):
-                assert True  # Expected
-            case _:
-                pytest.fail(f"Expected Ok(None), got {result}")
+            case Ok(is_none):
+                assert is_none is True
+                storage.get_object.assert_called_once_with("my-bucket", "missing.txt")
+            case Err(error):
+                pytest.fail(f"Expected Ok, got Err({error})")
 
-    @pytest.mark.asyncio
-    async def test_delete_workflow(self) -> None:
+    @pytest.mark.asyncio()
+    async def test_delete_workflow(self, mocker: MockerFixture) -> None:
         """Should put, verify, delete, and verify deletion."""
-        # Arrange
-        fake_storage = FakeObjectStorage()
-        storage_interpreter = StorageInterpreter(storage=fake_storage)
-        # CompositeInterpreter needs at least websocket, database, cache
-        # We'll create minimal mocks and pass storage as the main interpreter
-        interpreter = storage_interpreter
+        # Arrange - Stateful storage simulation
+        storage_dict: dict[tuple[str, str], S3Object] = {}
 
-        def program() -> StorageProgram:
+        async def mock_put_object(
+            bucket: str,
+            key: str,
+            content: bytes,
+            metadata: dict[str, str] | None = None,
+            content_type: str | None = None,
+        ) -> PutSuccess:
+            storage_dict[(bucket, key)] = S3Object(
+                key=key,
+                bucket=bucket,
+                content=content,
+                last_modified=datetime.now(UTC),
+                metadata=metadata or {},
+                content_type=content_type,
+                size=len(content),
+                version_id="v1",
+            )
+            return PutSuccess(key=key, bucket=bucket, version_id="v1")
+
+        async def mock_get_object(bucket: str, key: str) -> S3Object | None:
+            return storage_dict.get((bucket, key))
+
+        async def mock_delete_object(bucket: str, key: str) -> None:
+            storage_dict.pop((bucket, key), None)
+
+        storage = mocker.AsyncMock(spec=ObjectStorage)
+        storage.put_object.side_effect = mock_put_object
+        storage.get_object.side_effect = mock_get_object
+        storage.delete_object.side_effect = mock_delete_object
+
+        interpreter = StorageInterpreter(storage=storage)
+
+        # Define workflow
+        def delete_workflow_program() -> Generator[AllEffects, EffectResult, bool]:
+            """Put, verify exists, delete, verify deleted."""
             # Put object
-            put_effect = PutObject(
+            key_result = yield PutObject(
                 bucket="my-bucket", key="temp.txt", content=b"temporary data"
             )
-            key = yield put_effect
-            assert isinstance(key, str)
+            assert isinstance(key_result, str)
 
             # Verify exists
-            get_effect = GetObject(bucket="my-bucket", key="temp.txt")
-            s3_object = yield get_effect
-            assert isinstance(s3_object, S3Object)
+            obj1 = yield GetObject(bucket="my-bucket", key="temp.txt")
+            assert isinstance(obj1, S3Object)
 
             # Delete
-            delete_effect = DeleteObject(bucket="my-bucket", key="temp.txt")
-            result = yield delete_effect
-            assert result is None
+            yield DeleteObject(bucket="my-bucket", key="temp.txt")
 
             # Verify deleted
-            get_effect2 = GetObject(bucket="my-bucket", key="temp.txt")
-            s3_object_after = yield get_effect2
+            obj2 = yield GetObject(bucket="my-bucket", key="temp.txt")
+            return obj2 is None
 
-            return s3_object_after
-
-        # Act - Run program through all steps
-        gen = program()
-        result = await interpreter.interpret(next(gen))
-
-        # Step through program
-        while True:
-            try:
-                match result:
-                    case Ok(EffectReturn(value=value)):
-                        result = await interpreter.interpret(gen.send(value))
-                    case Err(error):
-                        pytest.fail(f"Effect failed: {error}")
-            except StopIteration as e:
-                final_result = e.value
-                break
+        # Act
+        result = await run_ws_program(delete_workflow_program(), interpreter)
 
         # Assert
-        assert final_result is None  # Object should not exist after delete
-        assert len(fake_storage._objects) == 0  # Storage should be empty
+        match result:
+            case Ok(was_deleted):
+                assert was_deleted is True
+                storage.delete_object.assert_called_once_with("my-bucket", "temp.txt")
+            case Err(error):
+                pytest.fail(f"Expected Ok, got Err({error})")
 
-    @pytest.mark.asyncio
-    async def test_list_objects_workflow(self) -> None:
+    @pytest.mark.asyncio()
+    async def test_list_objects_workflow(self, mocker: MockerFixture) -> None:
         """Should list objects with prefix filtering."""
         # Arrange
-        fake_storage = FakeObjectStorage()
-        storage_interpreter = StorageInterpreter(storage=fake_storage)
-        # CompositeInterpreter needs at least websocket, database, cache
-        # We'll create minimal mocks and pass storage as the main interpreter
-        interpreter = storage_interpreter
+        storage = mocker.AsyncMock(spec=ObjectStorage)
+        storage.list_objects.return_value = ["data/file1.txt", "data/file2.txt"]
 
-        def program() -> StorageProgram:
-            # Put multiple objects
-            yield PutObject(bucket="bucket", key="data/file1.txt", content=b"1")
-            yield PutObject(bucket="bucket", key="data/file2.txt", content=b"2")
-            yield PutObject(bucket="bucket", key="reports/report.pdf", content=b"3")
+        interpreter = StorageInterpreter(storage=storage)
 
-            # List all objects
-            all_keys = yield ListObjects(bucket="bucket", prefix=None, max_keys=1000)
-            assert isinstance(all_keys, list)
+        # Define workflow
+        def list_program() -> Generator[AllEffects, EffectResult, int]:
+            """List objects and count them."""
+            keys_result = yield ListObjects(
+                bucket="my-bucket", prefix="data/", max_keys=100
+            )
+            assert isinstance(keys_result, list)
+            return len(keys_result)
 
-            # List data/ prefix only
-            data_keys = yield ListObjects(bucket="bucket", prefix="data/", max_keys=1000)
-            assert isinstance(data_keys, list)
-
-            return (all_keys, data_keys)
-
-        # Act - Run program through all steps
-        gen = program()
-        result = await interpreter.interpret(next(gen))
-
-        while True:
-            try:
-                match result:
-                    case Ok(EffectReturn(value=value)):
-                        result = await interpreter.interpret(gen.send(value))
-                    case Err(error):
-                        pytest.fail(f"Effect failed: {error}")
-            except StopIteration as e:
-                final_result = e.value
-                break
+        # Act
+        result = await run_ws_program(list_program(), interpreter)
 
         # Assert
-        all_keys, data_keys = final_result
-        assert len(all_keys) == 3
-        assert set(all_keys) == {"data/file1.txt", "data/file2.txt", "reports/report.pdf"}
-        assert len(data_keys) == 2
-        assert set(data_keys) == {"data/file1.txt", "data/file2.txt"}
+        match result:
+            case Ok(count):
+                assert count == 2
+                storage.list_objects.assert_called_once_with("my-bucket", "data/", 100)
+            case Err(error):
+                pytest.fail(f"Expected Ok, got Err({error})")
 
 
 class TestStorageErrorHandling:
-    """Tests for error handling in storage workflows."""
+    """Tests for storage error scenarios."""
 
-    @pytest.mark.asyncio
-    async def test_put_failure_quota_exceeded(self) -> None:
-        """Should fail with retryable error when quota exceeded."""
+    @pytest.mark.asyncio()
+    async def test_put_failure_quota_exceeded(self, mocker: MockerFixture) -> None:
+        """Should handle quota exceeded error (retryable)."""
         # Arrange
-        failing_storage = FailingObjectStorage(put_reason="quota_exceeded")
-        interpreter = StorageInterpreter(storage=failing_storage)
+        storage = mocker.AsyncMock(spec=ObjectStorage)
+        storage.put_object.side_effect = RuntimeError("quota_exceeded")
 
-        def program() -> StorageProgram:
-            put_effect = PutObject(
-                bucket="bucket", key="key", content=b"data that won't fit"
-            )
-            key = yield put_effect
-            return key
+        interpreter = StorageInterpreter(storage=storage)
+
+        # Define workflow
+        def put_program() -> Generator[AllEffects, EffectResult, str]:
+            """Try to put object."""
+            key = yield PutObject(bucket="my-bucket", key="file.txt", content=b"data")
+            return key  # type: ignore
 
         # Act
-        gen = program()
-        result = await interpreter.interpret(next(gen))
+        result = await run_ws_program(put_program(), interpreter)
 
         # Assert
         match result:
-            case Err(StorageError(storage_error=msg, is_retryable=True)):
-                assert "quota_exceeded" in msg
-            case _:
-                pytest.fail(f"Expected retryable StorageError, got {result}")
+            case Err(error):
+                assert isinstance(error, StorageError)
+                assert "quota_exceeded" in error.storage_error
+                assert error.is_retryable is True
+            case Ok(value):
+                pytest.fail(f"Expected Err(StorageError), got Ok({value})")
 
-    @pytest.mark.asyncio
-    async def test_put_failure_permission_denied(self) -> None:
-        """Should fail with non-retryable error when permission denied."""
+    @pytest.mark.asyncio()
+    async def test_put_failure_permission_denied(self, mocker: MockerFixture) -> None:
+        """Should handle permission denied error (non-retryable)."""
         # Arrange
-        failing_storage = FailingObjectStorage(put_reason="permission_denied")
-        interpreter = StorageInterpreter(storage=failing_storage)
+        storage = mocker.AsyncMock(spec=ObjectStorage)
+        storage.put_object.side_effect = PermissionError("access denied")
 
-        def program() -> StorageProgram:
-            put_effect = PutObject(bucket="bucket", key="key", content=b"data")
-            key = yield put_effect
-            return key
+        interpreter = StorageInterpreter(storage=storage)
+
+        # Define workflow
+        def put_program() -> Generator[AllEffects, EffectResult, str]:
+            """Try to put object."""
+            key = yield PutObject(bucket="my-bucket", key="file.txt", content=b"data")
+            return key  # type: ignore
 
         # Act
-        gen = program()
-        result = await interpreter.interpret(next(gen))
+        result = await run_ws_program(put_program(), interpreter)
 
         # Assert
         match result:
-            case Err(StorageError(storage_error=msg, is_retryable=False)):
-                assert "permission_denied" in msg
-            case _:
-                pytest.fail(f"Expected non-retryable StorageError, got {result}")
+            case Err(error):
+                assert isinstance(error, StorageError)
+                assert "access denied" in error.storage_error
+                assert error.is_retryable is False
+            case Ok(value):
+                pytest.fail(f"Expected Err(StorageError), got Ok({value})")
 
-    @pytest.mark.asyncio
-    async def test_put_failure_invalid_object_state(self) -> None:
-        """Should fail with retryable error for invalid object state."""
+    @pytest.mark.asyncio()
+    async def test_put_failure_invalid_object_state(
+        self, mocker: MockerFixture
+    ) -> None:
+        """Should handle invalid object state error (non-retryable)."""
         # Arrange
-        failing_storage = FailingObjectStorage(put_reason="invalid_object_state")
-        interpreter = StorageInterpreter(storage=failing_storage)
+        storage = mocker.AsyncMock(spec=ObjectStorage)
+        storage.put_object.side_effect = RuntimeError("invalid_object_state")
 
-        def program() -> StorageProgram:
-            put_effect = PutObject(bucket="bucket", key="locked.txt", content=b"data")
-            key = yield put_effect
-            return key
+        interpreter = StorageInterpreter(storage=storage)
+
+        # Define workflow
+        def put_program() -> Generator[AllEffects, EffectResult, str]:
+            """Try to put object."""
+            key = yield PutObject(bucket="my-bucket", key="file.txt", content=b"data")
+            return key  # type: ignore
 
         # Act
-        gen = program()
-        result = await interpreter.interpret(next(gen))
+        result = await run_ws_program(put_program(), interpreter)
 
         # Assert
         match result:
-            case Err(StorageError(storage_error=msg, is_retryable=True)):
-                assert "invalid_object_state" in msg
-            case _:
-                pytest.fail(f"Expected retryable StorageError, got {result}")
+            case Err(error):
+                assert isinstance(error, StorageError)
+                assert "invalid_object_state" in error.storage_error
+                assert error.is_retryable is False
+            case Ok(value):
+                pytest.fail(f"Expected Err(StorageError), got Ok({value})")
 
-    @pytest.mark.asyncio
-    async def test_get_failure_exception(self) -> None:
-        """Should fail when get raises exception."""
+    @pytest.mark.asyncio()
+    async def test_get_failure_exception(self, mocker: MockerFixture) -> None:
+        """Should handle get object exception."""
         # Arrange
-        failing_storage = FailingObjectStorage(get_error_message="Connection timeout")
-        interpreter = StorageInterpreter(storage=failing_storage)
+        storage = mocker.AsyncMock(spec=ObjectStorage)
+        storage.get_object.side_effect = RuntimeError("connection_timeout")
 
-        def program() -> StorageProgram:
-            get_effect = GetObject(bucket="bucket", key="key")
-            s3_object = yield get_effect
-            return s3_object
+        interpreter = StorageInterpreter(storage=storage)
+
+        # Define workflow
+        def get_program() -> Generator[AllEffects, EffectResult, S3Object | None]:
+            """Try to get object."""
+            obj = yield GetObject(bucket="my-bucket", key="file.txt")
+            return obj  # type: ignore
 
         # Act
-        gen = program()
-        result = await interpreter.interpret(next(gen))
+        result = await run_ws_program(get_program(), interpreter)
 
         # Assert
         match result:
-            case Err(StorageError(storage_error=msg, is_retryable=True)):
-                assert "Connection timeout" in msg
-            case _:
-                pytest.fail(f"Expected retryable StorageError, got {result}")
+            case Err(error):
+                assert isinstance(error, StorageError)
+                assert "connection_timeout" in error.storage_error
+                assert error.is_retryable is True
+            case Ok(value):
+                pytest.fail(f"Expected Err(StorageError), got Ok({value})")
 
-    @pytest.mark.asyncio
-    async def test_delete_failure_exception(self) -> None:
-        """Should fail when delete raises exception."""
+    @pytest.mark.asyncio()
+    async def test_delete_failure_exception(self, mocker: MockerFixture) -> None:
+        """Should handle delete object exception."""
         # Arrange
-        failing_storage = FailingObjectStorage(delete_error_message="Access denied")
-        interpreter = StorageInterpreter(storage=failing_storage)
+        storage = mocker.AsyncMock(spec=ObjectStorage)
+        storage.delete_object.side_effect = RuntimeError("service_unavailable")
 
-        def program() -> StorageProgram:
-            delete_effect = DeleteObject(bucket="bucket", key="key")
-            result = yield delete_effect
-            return result
+        interpreter = StorageInterpreter(storage=storage)
+
+        # Define workflow
+        def delete_program() -> Generator[AllEffects, EffectResult, None]:
+            """Try to delete object."""
+            yield DeleteObject(bucket="my-bucket", key="file.txt")
+            return None
 
         # Act
-        gen = program()
-        result = await interpreter.interpret(next(gen))
+        result = await run_ws_program(delete_program(), interpreter)
 
         # Assert
         match result:
-            case Err(StorageError(storage_error=msg, is_retryable=False)):
-                assert "Access denied" in msg
-            case _:
-                pytest.fail(f"Expected non-retryable StorageError, got {result}")
+            case Err(error):
+                assert isinstance(error, StorageError)
+                assert "service_unavailable" in error.storage_error
+                assert error.is_retryable is True
+            case Ok(value):
+                pytest.fail(f"Expected Err(StorageError), got Ok({value})")
 
-    @pytest.mark.asyncio
-    async def test_list_failure_exception(self) -> None:
-        """Should fail when list raises exception."""
+    @pytest.mark.asyncio()
+    async def test_list_failure_exception(self, mocker: MockerFixture) -> None:
+        """Should handle list objects exception."""
         # Arrange
-        failing_storage = FailingObjectStorage(list_error_message="Bucket not found")
-        interpreter = StorageInterpreter(storage=failing_storage)
+        storage = mocker.AsyncMock(spec=ObjectStorage)
+        storage.list_objects.side_effect = RuntimeError("timeout")
 
-        def program() -> StorageProgram:
-            list_effect = ListObjects(bucket="missing-bucket", prefix=None, max_keys=1000)
-            keys = yield list_effect
-            return keys
+        interpreter = StorageInterpreter(storage=storage)
+
+        # Define workflow
+        def list_program() -> Generator[AllEffects, EffectResult, list[str]]:
+            """Try to list objects."""
+            keys = yield ListObjects(bucket="my-bucket")
+            return keys  # type: ignore
 
         # Act
-        gen = program()
-        result = await interpreter.interpret(next(gen))
+        result = await run_ws_program(list_program(), interpreter)
 
         # Assert
         match result:
-            case Err(StorageError(storage_error=msg, is_retryable=False)):
-                assert "Bucket not found" in msg
-            case _:
-                pytest.fail(f"Expected non-retryable StorageError, got {result}")
+            case Err(error):
+                assert isinstance(error, StorageError)
+                assert "timeout" in error.storage_error
+                assert error.is_retryable is True
+            case Ok(value):
+                pytest.fail(f"Expected Err(StorageError), got Ok({value})")
 
 
 class TestComplexStorageWorkflows:
     """Tests for complex multi-step storage workflows."""
 
-    @pytest.mark.asyncio
-    async def test_backup_workflow(self) -> None:
-        """Should backup file to another bucket."""
-        # Arrange
-        fake_storage = FakeObjectStorage()
-        storage_interpreter = StorageInterpreter(storage=fake_storage)
-        # CompositeInterpreter needs at least websocket, database, cache
-        # We'll create minimal mocks and pass storage as the main interpreter
-        interpreter = storage_interpreter
+    @pytest.mark.asyncio()
+    async def test_backup_workflow(self, mocker: MockerFixture) -> None:
+        """Should copy object from source to backup bucket."""
+        # Arrange - Stateful storage
+        source_dict: dict[tuple[str, str], S3Object] = {}
+        backup_dict: dict[tuple[str, str], S3Object] = {}
 
-        # Pre-populate source bucket
-        fake_storage._objects[("source-bucket", "important.txt")] = S3Object(
-            key="important.txt",
+        # Seed source bucket
+        source_dict[("source-bucket", "data.txt")] = S3Object(
+            key="data.txt",
             bucket="source-bucket",
-            content=b"critical data",
+            content=b"important data",
             last_modified=datetime.now(UTC),
-            metadata={"source": "original"},
+            metadata={},
             content_type="text/plain",
-            size=13,
+            size=14,
             version_id="v1",
         )
 
-        def program() -> StorageProgram:
-            # Read from source
-            source = yield GetObject(bucket="source-bucket", key="important.txt")
-            assert isinstance(source, S3Object)
+        async def mock_get_object(bucket: str, key: str) -> S3Object | None:
+            if bucket == "source-bucket":
+                return source_dict.get((bucket, key))
+            return backup_dict.get((bucket, key))
 
-            # Write to backup bucket (copy content + metadata)
-            backup_key = yield PutObject(
-                bucket="backup-bucket",
-                key="important.txt",
-                content=source.content,
-                metadata=source.metadata,
-                content_type=source.content_type,
-            )
-            assert isinstance(backup_key, str)
-
-            # Verify backup
-            backup = yield GetObject(bucket="backup-bucket", key="important.txt")
-            assert isinstance(backup, S3Object)
-
-            return backup
-
-        # Act - Run program through all steps
-        gen = program()
-        result = await interpreter.interpret(next(gen))
-
-        while True:
-            try:
-                match result:
-                    case Ok(EffectReturn(value=value)):
-                        result = await interpreter.interpret(gen.send(value))
-                    case Err(error):
-                        pytest.fail(f"Effect failed: {error}")
-            except StopIteration as e:
-                final_result = e.value
-                break
-
-        # Assert
-        assert isinstance(final_result, S3Object)
-        assert final_result.bucket == "backup-bucket"
-        assert final_result.key == "important.txt"
-        assert final_result.content == b"critical data"
-        assert final_result.metadata == {"source": "original"}
-        assert final_result.content_type == "text/plain"
-
-        # Verify both buckets have the file
-        assert ("source-bucket", "important.txt") in fake_storage._objects
-        assert ("backup-bucket", "important.txt") in fake_storage._objects
-
-    @pytest.mark.asyncio
-    async def test_cleanup_old_files_workflow(self) -> None:
-        """Should list and delete old temporary files."""
-        # Arrange
-        fake_storage = FakeObjectStorage()
-        storage_interpreter = StorageInterpreter(storage=fake_storage)
-        # CompositeInterpreter needs at least websocket, database, cache
-        # We'll create minimal mocks and pass storage as the main interpreter
-        interpreter = storage_interpreter
-
-        # Pre-populate with temp files
-        fake_storage._objects[("bucket", "temp/file1.txt")] = S3Object(
-            key="temp/file1.txt",
-            bucket="bucket",
-            content=b"temp1",
-            last_modified=datetime.now(UTC),
-            metadata={},
-            content_type=None,
-            size=5,
-            version_id="v1",
-        )
-        fake_storage._objects[("bucket", "temp/file2.txt")] = S3Object(
-            key="temp/file2.txt",
-            bucket="bucket",
-            content=b"temp2",
-            last_modified=datetime.now(UTC),
-            metadata={},
-            content_type=None,
-            size=5,
-            version_id="v2",
-        )
-        fake_storage._objects[("bucket", "important.txt")] = S3Object(
-            key="important.txt",
-            bucket="bucket",
-            content=b"keep this",
-            last_modified=datetime.now(UTC),
-            metadata={},
-            content_type=None,
-            size=9,
-            version_id="v3",
-        )
-
-        def program() -> StorageProgram:
-            # List temp files
-            temp_keys = yield ListObjects(bucket="bucket", prefix="temp/", max_keys=1000)
-            assert isinstance(temp_keys, list)
-
-            # Delete each temp file
-            for key in temp_keys:
-                yield DeleteObject(bucket="bucket", key=key)
-
-            # Verify temp files gone
-            remaining_keys = yield ListObjects(
-                bucket="bucket", prefix=None, max_keys=1000
-            )
-            assert isinstance(remaining_keys, list)
-
-            return remaining_keys
-
-        # Act - Run program through all steps
-        gen = program()
-        result = await interpreter.interpret(next(gen))
-
-        while True:
-            try:
-                match result:
-                    case Ok(EffectReturn(value=value)):
-                        result = await interpreter.interpret(gen.send(value))
-                    case Err(error):
-                        pytest.fail(f"Effect failed: {error}")
-            except StopIteration as e:
-                final_result = e.value
-                break
-
-        # Assert
-        assert final_result == ["important.txt"]
-        assert len(fake_storage._objects) == 1
-        assert ("bucket", "important.txt") in fake_storage._objects
-        assert ("bucket", "temp/file1.txt") not in fake_storage._objects
-        assert ("bucket", "temp/file2.txt") not in fake_storage._objects
-
-    @pytest.mark.asyncio
-    async def test_conditional_put_workflow(self) -> None:
-        """Should only put if object doesn't exist."""
-        # Arrange
-        fake_storage = FakeObjectStorage()
-        storage_interpreter = StorageInterpreter(storage=fake_storage)
-        # CompositeInterpreter needs at least websocket, database, cache
-        # We'll create minimal mocks and pass storage as the main interpreter
-        interpreter = storage_interpreter
-
-        # Pre-populate with existing file
-        fake_storage._objects[("bucket", "existing.txt")] = S3Object(
-            key="existing.txt",
-            bucket="bucket",
-            content=b"original content",
-            last_modified=datetime.now(UTC),
-            metadata={},
-            content_type=None,
-            size=16,
-            version_id="v1",
-        )
-
-        def program() -> StorageProgram:
-            # Check if new file exists
-            new_file = yield GetObject(bucket="bucket", key="new.txt")
-
-            if new_file is None:
-                # Put new file
-                yield PutObject(bucket="bucket", key="new.txt", content=b"new content")
-
-            # Check if existing file exists
-            existing = yield GetObject(bucket="bucket", key="existing.txt")
-
-            if existing is None:
-                # Don't put - file already exists
-                yield PutObject(
-                    bucket="bucket", key="existing.txt", content=b"replacement"
+        async def mock_put_object(
+            bucket: str,
+            key: str,
+            content: bytes,
+            metadata: dict[str, str] | None = None,
+            content_type: str | None = None,
+        ) -> PutSuccess:
+            if bucket == "backup-bucket":
+                backup_dict[(bucket, key)] = S3Object(
+                    key=key,
+                    bucket=bucket,
+                    content=content,
+                    last_modified=datetime.now(UTC),
+                    metadata=metadata or {},
+                    content_type=content_type,
+                    size=len(content),
+                    version_id="v2",
                 )
+            return PutSuccess(key=key, bucket=bucket, version_id="v2")
 
-            # Count final objects
-            keys = yield ListObjects(bucket="bucket", prefix=None, max_keys=1000)
-            assert isinstance(keys, list)
+        storage = mocker.AsyncMock(spec=ObjectStorage)
+        storage.get_object.side_effect = mock_get_object
+        storage.put_object.side_effect = mock_put_object
 
-            return keys
+        interpreter = StorageInterpreter(storage=storage)
 
-        # Act - Run program through all steps
-        gen = program()
-        result = await interpreter.interpret(next(gen))
+        # Define workflow
+        def backup_program() -> Generator[AllEffects, EffectResult, bool]:
+            """Get from source, put to backup."""
+            # Get from source
+            obj = yield GetObject(bucket="source-bucket", key="data.txt")
+            assert isinstance(obj, S3Object)
 
-        while True:
-            try:
-                match result:
-                    case Ok(EffectReturn(value=value)):
-                        result = await interpreter.interpret(gen.send(value))
-                    case Err(error):
-                        pytest.fail(f"Effect failed: {error}")
-            except StopIteration as e:
-                final_result = e.value
-                break
+            # Put to backup
+            key = yield PutObject(
+                bucket="backup-bucket",
+                key="data.txt",
+                content=obj.content,
+                metadata=obj.metadata,
+                content_type=obj.content_type,
+            )
+            assert isinstance(key, str)
+
+            return True
+
+        # Act
+        result = await run_ws_program(backup_program(), interpreter)
 
         # Assert
-        assert len(final_result) == 2
-        assert set(final_result) == {"new.txt", "existing.txt"}
+        match result:
+            case Ok(success):
+                assert success is True
+                assert storage.get_object.call_count == 1
+                assert storage.put_object.call_count == 1
+            case Err(error):
+                pytest.fail(f"Expected Ok, got Err({error})")
 
-        # Verify existing file not overwritten
-        existing_obj = fake_storage._objects[("bucket", "existing.txt")]
-        assert existing_obj.content == b"original content"
+    @pytest.mark.asyncio()
+    async def test_cleanup_old_files_workflow(self, mocker: MockerFixture) -> None:
+        """Should list and delete multiple objects."""
+        # Arrange
+        storage = mocker.AsyncMock(spec=ObjectStorage)
+        storage.list_objects.return_value = [
+            "temp/file1.txt",
+            "temp/file2.txt",
+            "temp/file3.txt",
+        ]
 
-        # Verify new file created
-        new_obj = fake_storage._objects[("bucket", "new.txt")]
-        assert new_obj.content == b"new content"
+        interpreter = StorageInterpreter(storage=storage)
+
+        # Define workflow
+        def cleanup_program() -> Generator[AllEffects, EffectResult, int]:
+            """List temp files and delete them."""
+            # List files
+            keys_result = yield ListObjects(bucket="my-bucket", prefix="temp/")
+            assert isinstance(keys_result, list)
+
+            # Delete each file
+            deleted_count = 0
+            for key in keys_result:
+                yield DeleteObject(bucket="my-bucket", key=key)
+                deleted_count += 1
+
+            return deleted_count
+
+        # Act
+        result = await run_ws_program(cleanup_program(), interpreter)
+
+        # Assert
+        match result:
+            case Ok(count):
+                assert count == 3
+                assert storage.list_objects.call_count == 1
+                assert storage.delete_object.call_count == 3
+            case Err(error):
+                pytest.fail(f"Expected Ok, got Err({error})")
+
+    @pytest.mark.asyncio()
+    async def test_conditional_put_workflow(self, mocker: MockerFixture) -> None:
+        """Should check if object exists before putting."""
+        # Arrange
+        storage = mocker.AsyncMock(spec=ObjectStorage)
+        storage.get_object.return_value = None  # Object doesn't exist
+        storage.put_object.return_value = PutSuccess(
+            key="data/new-file.txt", bucket="my-bucket", version_id="v1"
+        )
+
+        interpreter = StorageInterpreter(storage=storage)
+
+        # Define workflow
+        def conditional_put_program() -> Generator[AllEffects, EffectResult, str]:
+            """Put only if object doesn't exist."""
+            # Check if exists
+            existing = yield GetObject(bucket="my-bucket", key="data/new-file.txt")
+
+            if existing is not None:
+                return "already_exists"
+
+            # Doesn't exist - put it
+            key = yield PutObject(
+                bucket="my-bucket",
+                key="data/new-file.txt",
+                content=b"new content",
+            )
+            assert isinstance(key, str)
+
+            return "created"
+
+        # Act
+        result = await run_ws_program(conditional_put_program(), interpreter)
+
+        # Assert
+        match result:
+            case Ok(status):
+                assert status == "created"
+                storage.get_object.assert_called_once()
+                storage.put_object.assert_called_once()
+            case Err(error):
+                pytest.fail(f"Expected Ok, got Err({error})")

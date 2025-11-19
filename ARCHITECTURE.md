@@ -16,50 +16,73 @@ We achieve this through:
 
 ## Architecture Layers
 
+The system is organized in 5 layers with clear separation of concerns:
+
+```mermaid
+flowchart TB
+    App[Layer 1: Application Layer<br/>User programs using effects<br/>def my_program Generator AllEffects EffectResult T<br/>yield GetUserById user_id<br/>yield SaveChatMessage text<br/>yield SendText message]
+
+    Runner[Layer 2: Program Runner<br/>Effect execution loop<br/>run_ws_program program interpreter Result T E<br/>Advances generator with next and send<br/>Interprets each yielded effect<br/>Fail-fast on first Err result]
+
+    Composite[Layer 3: Composite Interpreter<br/>Effect routing to handlers<br/>CompositeInterpreter.interpret effect Result T E<br/>Routes effects to specialized interpreters]
+
+    Specialized[Layer 4: Specialized Interpreters<br/>Infrastructure-specific handlers<br/>WebSocketInterpreter connection<br/>DatabaseInterpreter repos<br/>CacheInterpreter cache<br/>MessagingInterpreter producer consumer<br/>StorageInterpreter storage<br/>AuthInterpreter auth]
+
+    Infra[Layer 5: Infrastructure Layer<br/>External systems and protocols<br/>WebSocketConnection<br/>UserRepository<br/>ProfileCache<br/>MessageProducer MessageConsumer<br/>StorageAdapter<br/>TokenValidator<br/>Real implementations or Test fakes]
+
+    App --> Runner
+    Runner --> Composite
+    Composite --> Specialized
+    Specialized --> Infra
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Application Layer                        │
-│              (User programs using effects)                  │
-│  def my_program() -> Generator[AllEffects, EffectResult, T] │
-│      user_result = yield GetUserById(user_id=...)           │
-│      message = yield SaveChatMessage(...)                   │
-│      yield SendText(...)                                    │
-└─────────────────────────────────────────────────────────────┘
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      Program Runner                          │
-│                  (Effect execution loop)                     │
-│     run_ws_program(program, interpreter) -> Result[T, E]    │
-│         - Advances generator with next()/send()             │
-│         - Interprets each yielded effect                    │
-│         - Fail-fast on first Err result                     │
-└─────────────────────────────────────────────────────────────┘
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  Composite Interpreter                       │
-│              (Effect routing to handlers)                    │
-│    CompositeInterpreter.interpret(effect) -> Result[T, E]   │
-│         - Routes WebSocket effects to WebSocketInterpreter  │
-│         - Routes Database effects to DatabaseInterpreter    │
-│         - Routes Cache effects to CacheInterpreter          │
-└─────────────────────────────────────────────────────────────┘
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Specialized Interpreters                        │
-│           (Infrastructure-specific handlers)                 │
-│  WebSocketInterpreter(connection: WebSocketConnection)      │
-│  DatabaseInterpreter(user_repo, message_repo)               │
-│  CacheInterpreter(cache: ProfileCache)                      │
-└─────────────────────────────────────────────────────────────┘
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                 Infrastructure Layer                         │
-│              (External systems & protocols)                  │
-│  WebSocketConnection, UserRepository, ProfileCache          │
-│  - Real implementations (PostgreSQL, Redis, FastAPI WS)     │
-│  - Test fakes (in-memory, no I/O)                           │
-└─────────────────────────────────────────────────────────────┘
+
+**Layer Responsibilities:**
+
+1. **Application Layer**: Pure effect programs (business logic as generators)
+2. **Program Runner**: Execution engine (generator protocol, fail-fast semantics)
+3. **Composite Interpreter**: Effect routing (pattern matching to specialized handlers)
+4. **Specialized Interpreters**: Infrastructure integration (WebSocket, Database, Cache, Messaging, Storage, Auth)
+5. **Infrastructure Layer**: External systems (PostgreSQL, Redis, FastAPI, Apache Pulsar, AWS S3, JWT auth, or test fakes)
+
+**Key Properties:**
+- **Unidirectional flow**: Data flows down through layers, results flow back up
+- **Separation of concerns**: Each layer has single responsibility
+- **Testability**: Replace Layer 5 with fakes for unit tests
+- **Type safety**: All boundaries have explicit Result types
+
+### Visual Data Flow
+
+The following diagram shows how data flows through the architecture layers:
+
+```mermaid
+flowchart TB
+    Program[Application Layer<br/>Effect Program Generator]
+    Runner[Program Runner<br/>Effect Execution Loop]
+    Composite[Composite Interpreter<br/>Effect Routing]
+    WSInterp[WebSocket Interpreter]
+    DBInterp[Database Interpreter]
+    CacheInterp[Cache Interpreter]
+    WS[Infrastructure<br/>FastAPI WebSocket]
+    DB[Infrastructure<br/>PostgreSQL asyncpg]
+    Redis[Infrastructure<br/>Redis Cache]
+
+    Program -->|yields effects| Runner
+    Runner -->|interprets each effect| Composite
+    Composite -->|routes WebSocket effects| WSInterp
+    Composite -->|routes Database effects| DBInterp
+    Composite -->|routes Cache effects| CacheInterp
+    WSInterp -->|uses connection| WS
+    DBInterp -->|uses repositories| DB
+    CacheInterp -->|uses cache| Redis
+    Runner -->|sends results back| Program
 ```
+
+**Key Points:**
+- Programs yield effects (pure data) to the runner
+- Runner calls interpreter for each effect
+- Composite interpreter routes to specialized handlers
+- Specialized interpreters interact with infrastructure
+- Results flow back up through the same path (fail-fast on errors)
 
 ## Core Abstractions
 
@@ -196,6 +219,80 @@ result = await interpret(effect)    # Execute effect
 next_effect = program.send(result)  # Send result, get next effect
 # Repeat until StopIteration
 ```
+
+**Effect Execution Flow:**
+
+The following diagram shows how the runner executes a program using the generator protocol:
+
+```mermaid
+sequenceDiagram
+    participant Program as Program Generator
+    participant Runner as run_ws_program
+    participant Interpreter as Interpreter
+
+    Runner->>Program: next() - get first effect
+    Program-->>Runner: Effect (GetUserById)
+
+    loop Until StopIteration
+        Runner->>Interpreter: interpret(effect)
+        alt Effect Success
+            Interpreter-->>Runner: Ok(EffectReturn)
+            Runner->>Program: send(value)
+            Program-->>Runner: Next Effect
+        else Effect Failure
+            Interpreter-->>Runner: Err(InterpreterError)
+            Note over Runner: Fail-fast - return Err immediately
+        end
+    end
+
+    Program-->>Runner: StopIteration(final_value)
+    Note over Runner: Return Ok(final_value)
+```
+
+**Key Behavior:**
+- Runner uses `next()` to get the first effect from the program
+- For each effect, runner calls `interpreter.interpret(effect)`
+- On success (`Ok`), runner sends the value back to the program using `send()`
+- On failure (`Err`), runner immediately returns the error (fail-fast semantics)
+- When program completes (`StopIteration`), runner returns `Ok(final_value)`
+
+**Error Propagation State Machine:**
+
+The following diagram shows the fail-fast error propagation semantics:
+
+```mermaid
+flowchart TB
+    Start([Start Program])
+    Running[Running State]
+    YieldEffect[Yield Effect]
+    InterpretEffect[Interpret Effect]
+    CheckResult{Check Result}
+    SendValue[Send Value to Program]
+    Complete[StopIteration Raised]
+    Failed[Error Occurred]
+    ReturnOk([Return Ok with final value])
+    ReturnErr([Return Err with error])
+
+    Start --> Running
+    Running --> YieldEffect
+    YieldEffect --> InterpretEffect
+    InterpretEffect --> CheckResult
+
+    CheckResult -->|Ok result| SendValue
+    CheckResult -->|Err result| Failed
+
+    SendValue --> Running
+    Running --> Complete
+
+    Complete --> ReturnOk
+    Failed --> ReturnErr
+```
+
+**Critical Properties:**
+- **Fail-Fast**: First error immediately stops execution and returns `Err`
+- **No Cleanup**: Program does not continue after error (no finally blocks)
+- **No Retry**: Errors are returned as-is (retry logic in application layer)
+- **Deterministic**: Same error at same point always produces same result
 
 ### 5. Interpreters (Effect Handlers)
 
@@ -354,13 +451,22 @@ type UserLookupResult = UserFound | UserNotFound
 
 ### Test Pyramid
 
+The following diagram shows our testing strategy organized by test type:
+
+```mermaid
+flowchart TB
+    E2E[E2E Tests<br/>Real Infrastructure<br/>Full Integration<br/>Smoke Tests Only]
+    Integration[Integration Tests<br/>Real DB and Redis<br/>Fake WebSocket<br/>Multi-Effect Workflows]
+    Unit[Unit Tests<br/>All Fakes<br/>No I/O<br/>Fastest - Most Coverage]
+
+    E2E --> Integration
+    Integration --> Unit
 ```
-        /\
-       /  \       E2E (real infrastructure, full integration)
-      /────\      Integration (real DB, real Redis, fake WebSocket)
-     /──────\     Unit (all fakes, no I/O)
-    /────────\
-```
+
+**Test Distribution:**
+- **Few** E2E tests (slowest, real infrastructure)
+- **Some** Integration tests (moderate speed, partial real infrastructure)
+- **Many** Unit tests (fastest, all fakes, most coverage)
 
 **Unit tests** (fastest, most coverage):
 - Use `FakeWebSocketConnection`, `FakeUserRepository`, etc.

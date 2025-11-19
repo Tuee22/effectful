@@ -235,6 +235,40 @@ async def workflow_with_optional_cache(
 
 **Pattern**: Retry failed operations with increasing delays.
 
+**Retry Flow Diagram:**
+
+The following diagram shows the retry algorithm with exponential backoff:
+
+```mermaid
+flowchart TB
+    Start[Start Retry Loop<br/>attempt = 0<br/>delay = initial_delay]
+    RunProgram[Run Program]
+    CheckResult{Check Result}
+    Success[Return Ok value]
+    CheckRetryable{Error<br/>Retryable?}
+    CheckAttempts{Attempts<br/>Exhausted?}
+    Wait[Sleep delay seconds<br/>delay = delay × backoff_factor<br/>attempt = attempt + 1]
+    Failed[Return Err error]
+
+    Start --> RunProgram
+    RunProgram --> CheckResult
+    CheckResult -->|Ok| Success
+    CheckResult -->|Err| CheckRetryable
+    CheckRetryable -->|Not Retryable| Failed
+    CheckRetryable -->|Retryable| CheckAttempts
+    CheckAttempts -->|Max Retries Reached| Failed
+    CheckAttempts -->|Can Retry| Wait
+    Wait --> RunProgram
+```
+
+**Algorithm Properties:**
+- **Exponential backoff**: Delay doubles each retry (1s → 2s → 4s → 8s...)
+- **Retryability check**: Only retries if error has `is_retryable=True`
+- **Max attempts**: Fails after exhausting retry limit
+- **Immediate success**: Returns on first Ok result
+
+**Example Implementation:**
+
 ```python
 import asyncio
 from typing import Callable
@@ -356,6 +390,47 @@ async def process_users_parallel(
 ### Pipeline Pattern
 
 **Pattern**: Chain multiple processing steps together.
+
+**Pipeline Flow Diagram:**
+
+The following diagram shows the multi-step pipeline with early returns on validation failures:
+
+```mermaid
+flowchart TB
+    Start[Start Pipeline]
+    ValidateEmpty{Validate<br/>Empty Message?}
+    ValidateLength{Validate<br/>Message Length?}
+    LookupUser[Step 2: Lookup User]
+    UserExists{User<br/>Found?}
+    SaveMessage[Step 3: Save Message<br/>SaveChatMessage]
+    CacheProfile[Step 4: Cache Profile<br/>cache_profile]
+    NotifySuccess[Step 5: Notify User<br/>Message saved]
+
+    ErrorEmpty[Notify: Empty message<br/>Return error_empty_message]
+    ErrorLength[Notify: Message too long<br/>Return error_message_too_long]
+    ErrorUser[Notify: User not found<br/>Return error_user_not_found]
+    Success[Return message_saved]
+
+    Start --> ValidateEmpty
+    ValidateEmpty -->|Empty| ErrorEmpty
+    ValidateEmpty -->|Valid| ValidateLength
+    ValidateLength -->|Too Long| ErrorLength
+    ValidateLength -->|Valid| LookupUser
+    LookupUser --> UserExists
+    UserExists -->|Not Found| ErrorUser
+    UserExists -->|Found| SaveMessage
+    SaveMessage --> CacheProfile
+    CacheProfile --> NotifySuccess
+    NotifySuccess --> Success
+```
+
+**Key Features:**
+- **Early returns**: Validation failures exit pipeline immediately
+- **Sequential steps**: Each step depends on previous step success
+- **Composed helpers**: Uses `yield from` to delegate to reusable components
+- **Type narrowing**: Pattern matching ensures type safety at each step
+
+**Example Implementation:**
 
 ```python
 from functional_effects import SaveChatMessage

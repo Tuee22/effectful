@@ -59,6 +59,40 @@ ruff check functional_effects tests
 
 **CRITICAL**: This project maintains `mypy --strict` with zero errors. All code must pass strict type checking.
 
+#### Type Safety Workflow
+
+The following diagram shows our type safety enforcement process:
+
+```mermaid
+flowchart LR
+    Code[Write Code] --> MyPy[mypy strict check]
+    MyPy -->|Pass| Pytest[Run Tests]
+    MyPy -->|Fail| Errors{Type Error?}
+
+    Errors -->|Any types| Forbidden1[FORBIDDEN - Fix Required]
+    Errors -->|cast calls| Forbidden2[FORBIDDEN - Fix Required]
+    Errors -->|type ignore| Forbidden3[FORBIDDEN - Fix Required]
+    Errors -->|Mutable dataclass| Forbidden4[FORBIDDEN - Fix Required]
+    Errors -->|Non-exhaustive match| Forbidden5[FORBIDDEN - Fix Required]
+
+    Forbidden1 --> Fix[Fix Code]
+    Forbidden2 --> Fix
+    Forbidden3 --> Fix
+    Forbidden4 --> Fix
+    Forbidden5 --> Fix
+    Fix --> MyPy
+
+    Pytest -->|Pass| Success[Ready for Review]
+    Pytest -->|Fail| FixTests[Fix Implementation]
+    FixTests --> Pytest
+```
+
+**Key Points:**
+- Type checking is mandatory before tests can run
+- Zero tolerance for escape hatches (Any, cast, type: ignore)
+- All type errors must be fixed, never suppressed
+- MyPy acts as a gate, not a suggestion tool
+
 #### Forbidden Constructs
 
 ```python
@@ -196,6 +230,27 @@ pytest --cov=functional_effects --cov-report=term-missing
 
 # Must show 100% coverage for all modules
 ```
+
+### Test Strategy Pyramid
+
+The following diagram shows our testing approach organized by type:
+
+```mermaid
+flowchart TB
+    E2E[E2E Tests<br/>Real Infrastructure<br/>Full Integration<br/>Smoke Tests Only]
+    Integration[Integration Tests<br/>Real DB and Redis<br/>Fake WebSocket<br/>Multi-Effect Workflows]
+    Unit[Unit Tests<br/>All Fakes<br/>No I/O<br/>Fastest - Most Coverage]
+
+    E2E --> Integration
+    Integration --> Unit
+```
+
+**Test Distribution:**
+- **Many** Unit tests (all fakes, no I/O, fastest execution)
+- **Some** Integration tests (real DB/Redis, fake WebSocket)
+- **Few** E2E tests (real infrastructure, smoke tests only)
+
+**Philosophy**: Push testing down to the unit level. Most bugs should be caught by fast unit tests with fakes, not slow integration tests with real infrastructure.
 
 ### Test Organization
 

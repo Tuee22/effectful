@@ -16,6 +16,34 @@ type Result[T, E] = Ok[T] | Err[E]
 - `T` - The success value type
 - `E` - The error type
 
+### Result Type Structure
+
+The following diagram shows the Result type structure as an Algebraic Data Type (ADT):
+
+```mermaid
+flowchart TB
+    Result[Result T E<br/>Union Type]
+
+    Ok[Ok T<br/>Success Variant]
+    Err[Err E<br/>Failure Variant]
+
+    Result --> Ok
+    Result --> Err
+
+    Ok --> OkMethods[Methods<br/>is_ok returns true<br/>is_err returns false<br/>map transforms value<br/>flat_map chains operations<br/>unwrap extracts value]
+
+    Err --> ErrMethods[Methods<br/>is_ok returns false<br/>is_err returns true<br/>map_err transforms error<br/>unwrap_err extracts error<br/>unwrap_or returns default]
+
+    OkMethods --> Immutable[Immutable frozen dataclass]
+    ErrMethods --> Immutable
+```
+
+**Key Properties:**
+- **Sum Type**: A Result is exactly one of two variants (Ok or Err)
+- **Immutable**: Both variants are frozen dataclasses
+- **Type Safe**: Pattern matching ensures all cases handled
+- **Composable**: Methods like `map` and `flat_map` enable chaining
+
 ## Ok[T] - Success Variant
 
 ### Construction

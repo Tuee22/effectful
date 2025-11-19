@@ -16,6 +16,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from functional_effects.algebraic.effect_return import EffectReturn
+from functional_effects.algebraic.result import Err, Ok
 from functional_effects.domain.message_envelope import (
     MessageEnvelope,
     PublishFailure,

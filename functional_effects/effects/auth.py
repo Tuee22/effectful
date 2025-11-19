@@ -40,11 +40,13 @@ class GenerateToken:
 
     Attributes:
         user_id: UUID of the user to generate token for
-        metadata: Additional metadata to include in the token
+        claims: Claims to include in the token (user metadata, roles, etc.)
+        ttl_seconds: Time-to-live in seconds for the token
     """
 
     user_id: UUID
-    metadata: dict[str, str]
+    claims: dict[str, str]
+    ttl_seconds: int
 
 
 @dataclass(frozen=True)

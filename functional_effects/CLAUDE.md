@@ -6,6 +6,40 @@
 
 **Core Philosophy**: Make invalid states unrepresentable through the type system.
 
+## Type Safety Workflow
+
+The following diagram shows our zero-tolerance type safety enforcement:
+
+```mermaid
+flowchart LR
+    Code[Write Code] --> MyPy[mypy strict check]
+    MyPy -->|Pass| Pytest[Run Tests]
+    MyPy -->|Fail| Errors{Type Error?}
+
+    Errors -->|Any types| Forbidden1[FORBIDDEN - Fix Required]
+    Errors -->|cast calls| Forbidden2[FORBIDDEN - Fix Required]
+    Errors -->|type ignore| Forbidden3[FORBIDDEN - Fix Required]
+    Errors -->|Mutable dataclass| Forbidden4[FORBIDDEN - Fix Required]
+    Errors -->|Non-exhaustive match| Forbidden5[FORBIDDEN - Fix Required]
+
+    Forbidden1 --> Fix[Fix Code]
+    Forbidden2 --> Fix
+    Forbidden3 --> Fix
+    Forbidden4 --> Fix
+    Forbidden5 --> Fix
+    Fix --> MyPy
+
+    Pytest -->|Pass| Success[Ready for Review]
+    Pytest -->|Fail| FixTests[Fix Implementation]
+    FixTests --> Pytest
+```
+
+**Enforcement:**
+- `mypy --strict` with `disallow_any_explicit = true`
+- Zero tolerance for escape hatches
+- All errors must be fixed before tests run
+- Type checking is a gate, not a suggestion
+
 ## Type Safety Doctrines
 
 ### 1. NO Escape Hatches
@@ -195,6 +229,37 @@ def program() -> Generator[AllEffects, EffectResult, str]:
 ```
 
 **Why**: Union types require explicit narrowing. Type checker ensures runtime type safety.
+
+**Type Narrowing Flow:**
+
+The following diagram shows how type narrowing enables type-safe access to union type members:
+
+```mermaid
+flowchart TB
+    Yield[Yield Effect<br/>SaveChatMessage]
+    Receive[Receive EffectResult<br/>Union Type]
+    Method{Narrowing Method}
+
+    Yield --> Receive
+    Receive --> Method
+
+    Method -->|isinstance check| Assert[assert isinstance msg ChatMessage]
+    Method -->|Pattern Match| Match[match msg:<br/>case ChatMessage id=id]
+
+    Assert --> Narrowed1[Type Narrowed<br/>msg: ChatMessage]
+    Match --> Narrowed2[Type Narrowed<br/>id: UUID]
+
+    Narrowed1 --> Access1[Access msg.text - Valid]
+    Narrowed2 --> Access2[Access id - Valid]
+
+    Receive -->|No Narrowing| Error[Access msg.text<br/>MyPy Error]
+```
+
+**Required Practices:**
+- Always narrow union types before accessing variant-specific attributes
+- Use `isinstance` for single-variant narrowing
+- Use pattern matching for multi-variant ADTs
+- MyPy will error if you forget to narrow - this is intentional
 
 ### 7. Generic Type Parameters
 

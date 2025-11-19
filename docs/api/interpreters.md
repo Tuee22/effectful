@@ -62,6 +62,36 @@ interpreter = create_composite_interpreter(
 result = await run_ws_program(my_program(), interpreter)
 ```
 
+### Effect Routing
+
+The CompositeInterpreter routes effects to specialized interpreters using pattern matching:
+
+```mermaid
+flowchart TB
+    Start[Effect Received]
+    Start --> Match{Pattern Match<br/>Effect Type}
+
+    Match -->|SendText<br/>ReceiveText<br/>Close| WS[WebSocketInterpreter]
+    Match -->|GetUserById<br/>SaveChatMessage| DB[DatabaseInterpreter]
+    Match -->|GetCachedProfile<br/>PutCachedProfile| Cache[CacheInterpreter]
+    Match -->|Unknown Effect| Error[Return Err<br/>UnhandledEffectError]
+
+    WS --> Execute1[Execute Effect]
+    DB --> Execute2[Execute Effect]
+    Cache --> Execute3[Execute Effect]
+
+    Execute1 --> Return[Return Result<br/>Ok or Err]
+    Execute2 --> Return
+    Execute3 --> Return
+    Error --> Return
+```
+
+**Routing Logic:**
+- CompositeInterpreter uses exhaustive pattern matching on effect type
+- Each specialized interpreter handles effects for its domain
+- Unknown effects return `UnhandledEffectError`
+- All interpreters return `Result[EffectReturn, InterpreterError]`
+
 ---
 
 ## Individual Interpreters

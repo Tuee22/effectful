@@ -82,13 +82,17 @@ def login_program(
 
     # Step 3: Generate access token
     access_token = yield GenerateToken(
-        user_id=user.id, metadata={"email": user.email, "name": user.name}
+        user_id=user.id,
+        claims={"email": user.email, "name": user.name},
+        ttl_seconds=3600,  # 1 hour
     )
     assert isinstance(access_token, str)
 
     # Step 4: Generate refresh token (longer TTL)
     refresh_token = yield GenerateToken(
-        user_id=user.id, metadata={"email": user.email, "token_type": "refresh"}
+        user_id=user.id,
+        claims={"email": user.email, "token_type": "refresh"},
+        ttl_seconds=604800,  # 7 days
     )
     assert isinstance(refresh_token, str)
 
@@ -181,13 +185,17 @@ def refresh_program(
 
     # Step 3: Generate new access token
     access_token = yield GenerateToken(
-        user_id=user.id, metadata={"email": user.email, "name": user.name}
+        user_id=user.id,
+        claims={"email": user.email, "name": user.name},
+        ttl_seconds=3600,  # 1 hour
     )
     assert isinstance(access_token, str)
 
     # Step 4: Generate new refresh token
     new_refresh_token = yield GenerateToken(
-        user_id=user.id, metadata={"email": user.email, "token_type": "refresh"}
+        user_id=user.id,
+        claims={"email": user.email, "token_type": "refresh"},
+        ttl_seconds=604800,  # 7 days
     )
     assert isinstance(new_refresh_token, str)
 

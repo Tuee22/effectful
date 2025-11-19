@@ -16,6 +16,7 @@ Type Safety:
 """
 
 from dataclasses import dataclass
+from uuid import UUID
 
 from functional_effects.algebraic.effect_return import EffectReturn
 from functional_effects.algebraic.result import Err, Ok, Result
@@ -23,38 +24,12 @@ from functional_effects.domain.token_result import TokenExpired, TokenInvalid, T
 from functional_effects.effects.auth import GenerateToken, RefreshToken, RevokeToken, ValidateToken
 from functional_effects.effects.base import Effect
 from functional_effects.infrastructure.auth import AuthService
-from functional_effects.interpreters.errors import InterpreterError, UnhandledEffectError
+from functional_effects.interpreters.errors import (
+    AuthError,
+    InterpreterError,
+    UnhandledEffectError,
+)
 from functional_effects.programs.program_types import EffectResult
-
-
-@dataclass(frozen=True)
-class AuthError:
-    """Auth operation failed.
-
-    This error type represents infrastructure-level failures when executing
-    auth effects (Redis connection errors, JWT encoding failures, etc.).
-
-    Domain-level failures (token expired, token invalid) are handled via
-    TokenValidationResult ADT, not this error type.
-
-    Attributes:
-        effect: The auth effect that was being interpreted
-        auth_error: Error message from auth service or infrastructure
-        is_retryable: Whether retry might succeed (connection vs invalid token)
-
-    Example:
-        >>> match result:
-        ...     case Err(AuthError(auth_error=msg, is_retryable=True)):
-        ...         # Retry with backoff
-        ...         await retry_with_backoff(program)
-        ...     case Err(AuthError(auth_error=msg, is_retryable=False)):
-        ...         # Permanent failure - log and alert
-        ...         logger.error(f"Non-retryable error: {msg}")
-    """
-
-    effect: Effect
-    auth_error: str
-    is_retryable: bool
 
 
 @dataclass(frozen=True)
@@ -137,7 +112,7 @@ class AuthInterpreter:
             )
 
     async def _handle_generate_token(
-        self, user_id, claims, ttl_seconds, effect: Effect
+        self, user_id: UUID, claims: dict[str, str], ttl_seconds: int, effect: Effect
     ) -> Result[EffectReturn[EffectResult], InterpreterError]:
         """Handle GenerateToken effect.
 

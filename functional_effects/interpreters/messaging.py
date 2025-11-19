@@ -28,38 +28,12 @@ from functional_effects.effects.messaging import (
     PublishMessage,
 )
 from functional_effects.infrastructure.messaging import MessageConsumer, MessageProducer
-from functional_effects.interpreters.errors import InterpreterError, UnhandledEffectError
+from functional_effects.interpreters.errors import (
+    InterpreterError,
+    MessagingError,
+    UnhandledEffectError,
+)
 from functional_effects.programs.program_types import EffectResult
-
-
-@dataclass(frozen=True)
-class MessagingError:
-    """Messaging operation failed.
-
-    This error type represents infrastructure-level failures when executing
-    messaging effects (connection errors, broker unavailable, etc.).
-
-    Domain-level failures (publish timeout, topic not found) are handled via
-    PublishResult ADT, not this error type.
-
-    Attributes:
-        effect: The messaging effect that was being interpreted
-        messaging_error: Error message from Pulsar or infrastructure
-        is_retryable: Whether retry might succeed (connection/timeout vs config error)
-
-    Example:
-        >>> match result:
-        ...     case Err(MessagingError(messaging_error=msg, is_retryable=True)):
-        ...         # Retry with backoff
-        ...         await retry_with_backoff(program)
-        ...     case Err(MessagingError(messaging_error=msg, is_retryable=False)):
-        ...         # Permanent failure - log and alert
-        ...         logger.error(f"Non-retryable error: {msg}")
-    """
-
-    effect: Effect
-    messaging_error: str
-    is_retryable: bool
 
 
 @dataclass(frozen=True)

@@ -47,6 +47,43 @@ async def get_user(user_id: UUID) -> UserLookupResult:
 - Caller **forced to handle** all cases (type checker enforces)
 - Easy to **add new cases** (type errors guide refactoring)
 
+### Visual Comparison: Optional vs ADT
+
+The following diagram illustrates why ADTs are superior to Optional types:
+
+```mermaid
+flowchart TB
+    subgraph Optional[Optional Pattern - Ambiguous]
+        O1[Return User or None]
+        O2{Why None?}
+        O3[Not Found?]
+        O4[Deleted?]
+        O5[Access Denied?]
+        O6[Database Error?]
+        O1 --> O2
+        O2 --> O3
+        O2 --> O4
+        O2 --> O5
+        O2 --> O6
+    end
+
+    subgraph ADT[ADT Pattern - Explicit]
+        A1[Return UserLookupResult]
+        A2[UserFound<br/>Contains user and source]
+        A3[UserNotFound<br/>Contains user_id and reason]
+        A1 --> A2
+        A1 --> A3
+    end
+```
+
+**Key Differences:**
+- **Optional**: Single `None` value, many possible meanings (ambiguous)
+- **ADT**: Distinct types for each case, explicit data for each scenario
+- **Optional**: No guidance on why failure occurred
+- **ADT**: Each variant carries context (reason, source, metadata)
+- **Optional**: Easy to forget to check for `None`
+- **ADT**: Type checker enforces exhaustive pattern matching
+
 ## Defining ADTs
 
 ### Basic Pattern

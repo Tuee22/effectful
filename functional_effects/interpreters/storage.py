@@ -23,38 +23,12 @@ from functional_effects.domain.s3_object import PutFailure, PutSuccess
 from functional_effects.effects.base import Effect
 from functional_effects.effects.storage import DeleteObject, GetObject, ListObjects, PutObject
 from functional_effects.infrastructure.storage import ObjectStorage
-from functional_effects.interpreters.errors import InterpreterError, UnhandledEffectError
+from functional_effects.interpreters.errors import (
+    InterpreterError,
+    StorageError,
+    UnhandledEffectError,
+)
 from functional_effects.programs.program_types import EffectResult
-
-
-@dataclass(frozen=True)
-class StorageError:
-    """Storage operation failed.
-
-    This error type represents infrastructure-level failures when executing
-    storage effects (network errors, S3 unavailable, etc.).
-
-    Domain-level failures (quota exceeded, permission denied) are handled via
-    PutResult ADT, not this error type.
-
-    Attributes:
-        effect: The storage effect that was being interpreted
-        storage_error: Error message from S3 or infrastructure
-        is_retryable: Whether retry might succeed (network vs config error)
-
-    Example:
-        >>> match result:
-        ...     case Err(StorageError(storage_error=msg, is_retryable=True)):
-        ...         # Retry with backoff
-        ...         await retry_with_backoff(program)
-        ...     case Err(StorageError(storage_error=msg, is_retryable=False)):
-        ...         # Permanent failure - log and alert
-        ...         logger.error(f"Non-retryable error: {msg}")
-    """
-
-    effect: Effect
-    storage_error: str
-    is_retryable: bool
 
 
 @dataclass(frozen=True)

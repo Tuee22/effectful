@@ -77,6 +77,30 @@ from functional_effects.domain.profile import (
     ProfileNotFound,
 )
 
+# Domain models - Auth Token
+from functional_effects.domain.token_result import (
+    TokenExpired,
+    TokenInvalid,
+    TokenValid,
+    TokenValidationResult,
+)
+
+# Domain models - Messaging
+from functional_effects.domain.message_envelope import (
+    MessageEnvelope,
+    PublishFailure,
+    PublishResult,
+    PublishSuccess,
+)
+
+# Domain models - Storage
+from functional_effects.domain.s3_object import (
+    PutFailure,
+    PutResult,
+    PutSuccess,
+    S3Object,
+)
+
 # Domain models - User
 from functional_effects.domain.user import (
     User,
@@ -95,6 +119,33 @@ from functional_effects.effects.cache import (
 from functional_effects.effects.database import (
     GetUserById,
     SaveChatMessage,
+)
+
+# Effect definitions - Auth
+from functional_effects.effects.auth import (
+    GenerateToken,
+    GetUserByEmail,
+    HashPassword,
+    RefreshToken,
+    RevokeToken,
+    ValidatePassword,
+    ValidateToken,
+)
+
+# Effect definitions - Messaging
+from functional_effects.effects.messaging import (
+    AcknowledgeMessage,
+    ConsumeMessage,
+    NegativeAcknowledge,
+    PublishMessage,
+)
+
+# Effect definitions - Storage
+from functional_effects.effects.storage import (
+    DeleteObject,
+    GetObject,
+    ListObjects,
+    PutObject,
 )
 
 # Effect definitions - WebSocket
@@ -116,6 +167,7 @@ from functional_effects.infrastructure.repositories import (
 
 # Infrastructure protocols (for dependency injection)
 from functional_effects.infrastructure.websocket import WebSocketConnection
+from functional_effects.interpreters.auth import AuthInterpreter
 from functional_effects.interpreters.cache import CacheInterpreter
 
 # Interpreters - Factory
@@ -124,12 +176,17 @@ from functional_effects.interpreters.database import DatabaseInterpreter
 
 # Interpreter errors
 from functional_effects.interpreters.errors import (
+    AuthError,
     CacheError,
     DatabaseError,
     InterpreterError,
+    MessagingError,
+    StorageError,
     UnhandledEffectError,
     WebSocketClosedError,
 )
+from functional_effects.interpreters.messaging import MessagingInterpreter
+from functional_effects.interpreters.storage import StorageInterpreter
 
 # Interpreters - Individual (for testing/customization)
 from functional_effects.interpreters.websocket import WebSocketInterpreter
@@ -150,6 +207,30 @@ __all__ = [
     "Err",
     "Result",
     "EffectReturn",
+    # Auth effects
+    "ValidateToken",
+    "GenerateToken",
+    "RefreshToken",
+    "RevokeToken",
+    "GetUserByEmail",
+    "ValidatePassword",
+    "HashPassword",
+    # Cache effects
+    "GetCachedProfile",
+    "PutCachedProfile",
+    # Database effects
+    "GetUserById",
+    "SaveChatMessage",
+    # Messaging effects
+    "PublishMessage",
+    "ConsumeMessage",
+    "AcknowledgeMessage",
+    "NegativeAcknowledge",
+    # Storage effects
+    "GetObject",
+    "PutObject",
+    "DeleteObject",
+    "ListObjects",
     # WebSocket effects
     "SendText",
     "ReceiveText",
@@ -159,35 +240,50 @@ __all__ = [
     "CloseGoingAway",
     "CloseProtocolError",
     "ClosePolicyViolation",
-    # Database effects
-    "GetUserById",
-    "SaveChatMessage",
-    # Cache effects
-    "GetCachedProfile",
-    "PutCachedProfile",
-    # Domain - User
-    "User",
-    "UserFound",
-    "UserNotFound",
-    "UserLookupResult",
+    # Domain - Auth Token
+    "TokenValid",
+    "TokenExpired",
+    "TokenInvalid",
+    "TokenValidationResult",
     # Domain - Message
     "ChatMessage",
+    # Domain - Messaging
+    "MessageEnvelope",
+    "PublishSuccess",
+    "PublishFailure",
+    "PublishResult",
     # Domain - Profile
     "ProfileData",
     "ProfileFound",
     "ProfileNotFound",
     "ProfileLookupResult",
+    # Domain - Storage
+    "S3Object",
+    "PutSuccess",
+    "PutFailure",
+    "PutResult",
+    # Domain - User
+    "User",
+    "UserFound",
+    "UserNotFound",
+    "UserLookupResult",
     # Interpreters
     "create_composite_interpreter",
-    "WebSocketInterpreter",
-    "DatabaseInterpreter",
+    "AuthInterpreter",
     "CacheInterpreter",
+    "DatabaseInterpreter",
+    "MessagingInterpreter",
+    "StorageInterpreter",
+    "WebSocketInterpreter",
     # Errors
     "InterpreterError",
     "UnhandledEffectError",
-    "DatabaseError",
-    "WebSocketClosedError",
+    "AuthError",
     "CacheError",
+    "DatabaseError",
+    "MessagingError",
+    "StorageError",
+    "WebSocketClosedError",
     # Program types
     "AllEffects",
     "EffectResult",

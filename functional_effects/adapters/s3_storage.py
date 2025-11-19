@@ -66,7 +66,7 @@ class S3ObjectStorage(ObjectStorage):
         ...         print(f"Stored {key} version {vid}")
     """
 
-    def __init__(self, s3_client: "boto3.client") -> None:  # type: ignore
+    def __init__(self, s3_client: "boto3.client") -> None:
         """Initialize storage with boto3 S3 client.
 
         Args:
@@ -163,7 +163,7 @@ class S3ObjectStorage(ObjectStorage):
                 put_params["ContentType"] = content_type
 
             # Put object
-            response = self._s3_client.put_object(**put_params)  # type: ignore
+            response = self._s3_client.put_object(**put_params)
 
             # Extract version ID if versioning enabled
             version_id = response.get("VersionId")
@@ -243,7 +243,7 @@ class S3ObjectStorage(ObjectStorage):
             if prefix is not None:
                 list_params["Prefix"] = prefix
 
-            response = self._s3_client.list_objects_v2(**list_params)  # type: ignore
+            response = self._s3_client.list_objects_v2(**list_params)
 
             # Extract keys from response
             if "Contents" in response:

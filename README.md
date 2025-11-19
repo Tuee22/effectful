@@ -212,6 +212,40 @@ match result:
 
 ## Available Effects
 
+The following diagram shows all available effect types organized by category:
+
+```mermaid
+flowchart TB
+    AllEffects[AllEffects<br/>Union of All Effect Types]
+
+    AllEffects --> WebSocket[WebSocket Effects]
+    AllEffects --> Database[Database Effects]
+    AllEffects --> Cache[Cache Effects]
+    AllEffects --> Messaging[Messaging Effects]
+    AllEffects --> Storage[Storage Effects]
+    AllEffects --> Auth[Auth Effects]
+
+    WebSocket --> SendText[SendText<br/>Send text message]
+    WebSocket --> ReceiveText[ReceiveText<br/>Receive text message]
+    WebSocket --> Close[Close<br/>Close connection]
+
+    Database --> GetUser[GetUserById<br/>Lookup user by ID]
+    Database --> SaveMsg[SaveChatMessage<br/>Save chat message]
+
+    Cache --> GetCache[GetCachedProfile<br/>Get cached profile]
+    Cache --> PutCache[PutCachedProfile<br/>Cache profile with TTL]
+
+    Messaging --> PublishMessage[PublishMessage<br/>Publish to topic]
+    Messaging --> ConsumeMessage[ConsumeMessage<br/>Consume from subscription]
+    Messaging --> AckMessage[AcknowledgeMessage<br/>Ack successful processing]
+    Messaging --> NackMessage[NegativeAcknowledge<br/>Reject for redelivery]
+
+    Storage --> GetObject[GetObject<br/>Retrieve from S3]
+    Storage --> PutObject[PutObject<br/>Store in S3]
+    Storage --> DeleteObject[DeleteObject<br/>Remove from S3]
+    Storage --> ListObjects[ListObjects<br/>List objects in bucket]
+```
+
 ### WebSocket Effects
 - `SendText(text: str)` - Send text message
 - `ReceiveText()` - Receive text message
@@ -224,6 +258,22 @@ match result:
 ### Cache Effects
 - `GetCachedProfile(user_id: UUID)` - Get cached profile
 - `PutCachedProfile(user_id: UUID, profile_data: ProfileData, ttl_seconds: int)` - Cache profile
+
+### Messaging Effects
+- `PublishMessage(topic: str, payload: bytes, key: str | None, properties: dict[str, str] | None)` - Publish message to Apache Pulsar topic
+- `ConsumeMessage(subscription: str, timeout_ms: int)` - Consume message from Pulsar subscription
+- `AcknowledgeMessage(message_id: str)` - Acknowledge successful message processing
+- `NegativeAcknowledge(message_id: str, delay_seconds: int | None)` - Reject message for redelivery
+
+See [Tutorial 08: Messaging Effects](docs/tutorials/08_messaging_effects.md) for comprehensive examples and patterns.
+
+### Storage Effects
+- `GetObject(bucket: str, key: str)` - Retrieve object from S3
+- `PutObject(bucket: str, key: str, content: bytes, metadata: dict[str, str] | None, content_type: str | None)` - Store object in S3
+- `DeleteObject(bucket: str, key: str)` - Remove object from S3
+- `ListObjects(bucket: str, prefix: str | None, max_keys: int)` - List objects in S3 bucket
+
+See [Tutorial 09: Storage Effects](docs/tutorials/09_storage_effects.md) for comprehensive examples and patterns.
 
 ## Testing Utilities
 

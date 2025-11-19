@@ -11,6 +11,44 @@ functional_effects provides messaging effects for pub/sub communication:
 - **AcknowledgeMessage** - Acknowledge successful processing
 - **NegativeAcknowledge** - Reject message for redelivery
 
+### Message Lifecycle
+
+The following diagram shows the complete pub/sub message lifecycle:
+
+```mermaid
+sequenceDiagram
+    participant Publisher as Publisher Program
+    participant Pulsar as Apache Pulsar
+    participant Consumer as Consumer Program
+
+    Publisher->>Pulsar: PublishMessage(topic, payload)
+    Pulsar-->>Publisher: message_id
+
+    Note over Pulsar: Message queued<br/>for subscribers
+
+    Consumer->>Pulsar: ConsumeMessage(subscription)
+    Pulsar-->>Consumer: MessageEnvelope or None
+
+    alt Processing Success
+        Consumer->>Consumer: Process message payload
+        Consumer->>Pulsar: AcknowledgeMessage(message_id)
+        Note over Pulsar: Message removed<br/>from queue
+    else Processing Failure
+        Consumer->>Consumer: Processing error
+        Consumer->>Pulsar: NegativeAcknowledge(message_id, delay_ms)
+        Note over Pulsar: Message redelivered<br/>after delay
+    else Timeout
+        Consumer->>Consumer: No message available
+        Note over Consumer: Return None<br/>Not an error
+    end
+```
+
+**Key Properties:**
+- **At-Least-Once Delivery**: Messages redelivered if not acknowledged
+- **Timeout Handling**: `ConsumeMessage` returns `None` on timeout (not an error)
+- **Redelivery Control**: Use `NegativeAcknowledge` with `delay_ms` for backoff
+- **Idempotency**: Consumers must handle duplicate messages
+
 ## PublishMessage
 
 Publish a message to a Pulsar topic.

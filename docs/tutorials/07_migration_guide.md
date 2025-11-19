@@ -156,6 +156,54 @@ def chat_program(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 - ✅ Type-safe - all values have known types
 - ✅ Composable - can be used in larger workflows
 
+### Visual Comparison: Imperative vs Functional
+
+The following diagrams show the key architectural differences:
+
+```mermaid
+flowchart TB
+    subgraph Imperative[Imperative Pattern - Direct I/O]
+        I1[WebSocket Handler]
+        I2[Direct DB Connection]
+        I3[Try-Except Blocks]
+        I4[Mutable State]
+        I5[Direct WebSocket Send/Receive]
+        I6[Resource Cleanup in Finally]
+
+        I1 --> I2
+        I2 --> I3
+        I3 --> I4
+        I4 --> I5
+        I5 --> I6
+    end
+
+    subgraph Functional[Functional Pattern - Effects]
+        F1[Effect Program Generator]
+        F2[Yield Effects Pure Data]
+        F3[Pattern Match on Results]
+        F4[Immutable Values Only]
+        F5[Interpreter Handles I/O]
+        F6[Automatic Resource Management]
+
+        F1 --> F2
+        F2 --> F3
+        F3 --> F4
+        F4 --> F5
+        F5 --> F6
+    end
+```
+
+**Key Differences:**
+
+| Aspect | Imperative | Functional |
+|--------|-----------|-----------|
+| **I/O** | Direct (websocket.send, db.query) | Declarative (yield SendText, yield GetUserById) |
+| **Errors** | Exceptions (try/except) | Result types (Ok/Err with pattern matching) |
+| **State** | Mutable (db_conn variable) | Immutable (all values frozen dataclasses) |
+| **Testing** | Requires mocks for WebSocket/DB | Generator-based testing (no mocks needed) |
+| **Composition** | Difficult (async callbacks) | Easy (yield from) |
+| **Type Safety** | Partial (exceptions not in types) | Full (Result types, exhaustive matching) |
+
 ---
 
 ## Part 2: Step-by-Step Migration

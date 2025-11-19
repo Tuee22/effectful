@@ -81,6 +81,44 @@ def get_user_program(
 
 **Key Concept**: Test effect programs by manually stepping through the generator, mocking each effect's response:
 
+**Testing Flow Diagram:**
+
+The following diagram shows how generator-based testing works:
+
+```mermaid
+sequenceDiagram
+    participant Test as Test Code
+    participant Gen as Program Generator
+    participant Assert as Assertions
+
+    Test->>Gen: gen = program(args)
+    Test->>Gen: next(gen)
+    Gen-->>Test: effect1 (GetUserById)
+    Test->>Assert: Verify effect type and params
+
+    Test->>Gen: gen.send(mock_user)
+
+    alt More Effects
+        Gen-->>Test: effect2
+        Test->>Assert: Verify effect2
+        Test->>Gen: gen.send(mock_response)
+    else Program Complete
+        Gen-->>Test: StopIteration(result)
+        Test->>Assert: Verify final result
+    end
+```
+
+**Test Execution Steps:**
+1. **Create generator**: Call program function to get generator instance
+2. **Get first effect**: Use `next(gen)` to yield first effect
+3. **Assert effect**: Verify effect type and parameters
+4. **Send mock response**: Use `gen.send(mock_value)` to provide mocked data
+5. **Repeat**: Continue for each effect in the program
+6. **Catch StopIteration**: Extract final return value from exception
+7. **Assert result**: Verify program returned expected Result type
+
+**Example Test:**
+
 ```python
 # tests/test_programs/test_user_programs.py
 import pytest
