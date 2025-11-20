@@ -10,7 +10,7 @@ import asyncio
 from collections.abc import Generator
 from uuid import UUID, uuid4
 
-from functional_effects import (
+from effectful import (
     AllEffects,
     EffectResult,
     GetUserById,
@@ -18,9 +18,9 @@ from functional_effects import (
     User,
     run_ws_program,
 )
-from functional_effects.algebraic.result import Err, Ok
-from functional_effects.interpreters.errors import DatabaseError
-from functional_effects.testing import (
+from effectful.algebraic.result import Err, Ok
+from effectful.interpreters.errors import DatabaseError
+from effectful.testing import (
     FailingUserRepository,
     FakeUserRepository,
     create_test_interpreter,

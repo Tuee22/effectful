@@ -1,0 +1,170 @@
+version: '3.8'
+
+services:
+  # Main Effectful service with two entrypoints
+  effectful:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: development
+    container_name: effectful
+    command: ["bash", "-c", "sleep infinity"]  # Keep container alive for exec commands
+    volumes:
+      - ..:/app  # Mount source code for development
+    environment:
+      # PostgreSQL
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: effectful_test
+      POSTGRES_USER: effectful
+      POSTGRES_PASSWORD: effectful_pass
+      DATABASE_URL: postgresql+asyncpg://effectful:effectful_pass@postgres:5432/effectful_test
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_URL: redis://redis:6379/0
+
+      # MinIO S3
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: effectful-test
+      MINIO_USE_SSL: "false"
+
+      # Pulsar
+      PULSAR_URL: pulsar://pulsar:6650
+      PULSAR_ADMIN_URL: http://pulsar:8080
+
+      # Python environment
+      PYTHONPATH: /app
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      pulsar:
+        condition: service_healthy
+    networks:
+      - effectful-network
+
+  # Mock client service (same container, different entrypoint)
+  mock-client:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: development
+    container_name: effectful-mock-client
+    entrypoint: ["effectful-mock-client"]
+    volumes:
+      - ..:/app
+    environment:
+      # WebSocket connection to effectful service
+      EFFECTFUL_WS_URL: ws://effectful:8765
+      PYTHONPATH: /app
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      - effectful
+    networks:
+      - effectful-network
+    profiles:
+      - integration-tests  # Only start when running integration tests
+
+  # PostgreSQL database
+  postgres:
+    image: postgres:15-alpine
+    container_name: effectful-postgres
+    environment:
+      POSTGRES_DB: effectful_test
+      POSTGRES_USER: effectful
+      POSTGRES_PASSWORD: effectful_pass
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    volumes:
+      - pgdata:/var/lib/postgresql/data  # Named volume (NOT bind mount)
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U effectful -d effectful_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - effectful-network
+
+  # Redis cache
+  redis:
+    image: redis:7-alpine
+    container_name: effectful-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redisdata:/data  # Named volume for persistence
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - effectful-network
+
+  # MinIO S3-compatible storage
+  minio:
+    image: minio/minio:latest
+    container_name: effectful-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - miniodata:/data  # Named volume for object storage
+    ports:
+      - "9000:9000"  # S3 API
+      - "9001:9001"  # Web console
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - effectful-network
+
+  # Apache Pulsar messaging
+  pulsar:
+    image: apachepulsar/pulsar:3.1.0
+    container_name: effectful-pulsar
+    command: bin/pulsar standalone
+    environment:
+      PULSAR_MEM: "-Xms512m -Xmx512m"
+      PULSAR_GC: "-XX:MaxDirectMemorySize=256m"
+    volumes:
+      - pulsardata:/pulsar/data  # Named volume for message persistence
+    ports:
+      - "6650:6650"  # Pulsar protocol
+      - "8080:8080"  # Admin API
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/admin/v2/brokers"]
+      interval: 10s
+      timeout: 5s
+      retries: 30  # Pulsar takes longer to initialize
+    networks:
+      - effectful-network
+
+# Named volumes for data persistence
+# CRITICAL: Use named volumes, NOT bind mounts on macOS (see CLAUDE.md Anti-Pattern #21)
+volumes:
+  pgdata:
+    driver: local
+  redisdata:
+    driver: local
+  miniodata:
+    driver: local
+  pulsardata:
+    driver: local
+
+networks:
+  effectful-network:
+    driver: bridge

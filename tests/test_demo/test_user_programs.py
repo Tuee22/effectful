@@ -16,8 +16,10 @@ from demo.programs.user_programs import (
     list_users_program,
     update_user_program,
 )
-from functional_effects.algebraic.result import Err, Ok
-from functional_effects.domain.user import User
+from effectful.algebraic.result import Err, Ok
+from effectful.domain.user import User
+from effectful.effects.cache import InvalidateCache
+from effectful.effects.database import DeleteUser, GetUserById, ListUsers, UpdateUser
 
 
 class TestGetUserProgram:
@@ -34,7 +36,7 @@ class TestGetUserProgram:
 
         # Step 1: GetUserById returns user
         effect1 = next(gen)
-        assert effect1.__class__.__name__ == "GetUserById"
+        assert isinstance(effect1, GetUserById)
         assert effect1.user_id == user_id
 
         try:
@@ -89,7 +91,7 @@ class TestListUsersProgram:
 
         # Step 1: ListUsers returns user list
         effect1 = next(gen)
-        assert effect1.__class__.__name__ == "ListUsers"
+        assert isinstance(effect1, ListUsers)
         assert effect1.limit is None
         assert effect1.offset is None
 
@@ -114,7 +116,7 @@ class TestListUsersProgram:
 
         # Step 1: ListUsers returns user list
         effect1 = next(gen)
-        assert effect1.__class__.__name__ == "ListUsers"
+        assert isinstance(effect1, ListUsers)
         assert effect1.limit == 10
         assert effect1.offset == 5
 
@@ -180,25 +182,25 @@ class TestUpdateUserProgram:
 
         # Step 1: GetUserById returns original user
         effect1 = next(gen)
-        assert effect1.__class__.__name__ == "GetUserById"
+        assert isinstance(effect1, GetUserById)
         result1 = gen.send(original_user)
 
         # Step 2: UpdateUser returns True
         effect2 = result1
-        assert effect2.__class__.__name__ == "UpdateUser"
+        assert isinstance(effect2, UpdateUser)
         assert effect2.user_id == user_id
         assert effect2.email == "alice.new@example.com"
         result2 = gen.send(True)
 
         # Step 3: InvalidateCache
         effect3 = result2
-        assert effect3.__class__.__name__ == "InvalidateCache"
+        assert isinstance(effect3, InvalidateCache)
         assert f"user:{user_id}" in effect3.key
         result3 = gen.send(True)
 
         # Step 4: GetUserById returns updated user
         effect4 = result3
-        assert effect4.__class__.__name__ == "GetUserById"
+        assert isinstance(effect4, GetUserById)
 
         try:
             gen.send(updated_user)
@@ -289,18 +291,18 @@ class TestDeleteUserProgram:
 
         # Step 1: GetUserById returns user
         effect1 = next(gen)
-        assert effect1.__class__.__name__ == "GetUserById"
+        assert isinstance(effect1, GetUserById)
         result1 = gen.send(user)
 
         # Step 2: DeleteUser returns True
         effect2 = result1
-        assert effect2.__class__.__name__ == "DeleteUser"
+        assert isinstance(effect2, DeleteUser)
         assert effect2.user_id == user_id
         result2 = gen.send(True)
 
         # Step 3: InvalidateCache
         effect3 = result2
-        assert effect3.__class__.__name__ == "InvalidateCache"
+        assert isinstance(effect3, InvalidateCache)
 
         try:
             gen.send(True)

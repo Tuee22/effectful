@@ -17,23 +17,32 @@ from uuid import uuid4
 import pytest
 from pytest_mock import MockerFixture
 
-from functional_effects.algebraic.effect_return import EffectReturn
-from functional_effects.algebraic.result import Err, Ok
-from functional_effects.domain.cache_result import CacheHit
-from functional_effects.domain.message import ChatMessage
-from functional_effects.domain.profile import ProfileData
-from functional_effects.domain.user import User, UserFound
-from functional_effects.effects.cache import GetCachedProfile, PutCachedProfile
-from functional_effects.effects.database import GetUserById, SaveChatMessage
-from functional_effects.effects.websocket import Close, CloseNormal, ReceiveText, SendText
-from functional_effects.infrastructure.cache import ProfileCache
-from functional_effects.infrastructure.repositories import ChatMessageRepository, UserRepository
-from functional_effects.infrastructure.websocket import WebSocketConnection
-from functional_effects.interpreters.composite import (
+from effectful.algebraic.effect_return import EffectReturn
+from effectful.algebraic.result import Err, Ok
+from effectful.domain.cache_result import CacheHit
+from effectful.domain.message import ChatMessage
+from effectful.domain.profile import ProfileData
+from effectful.domain.user import User, UserFound
+from effectful.domain.message_envelope import MessageEnvelope, PublishSuccess
+from effectful.domain.s3_object import PutSuccess, S3Object
+from effectful.domain.token_result import TokenValid
+from effectful.effects.auth import ValidateToken
+from effectful.effects.cache import GetCachedProfile, PutCachedProfile
+from effectful.effects.database import GetUserById, SaveChatMessage
+from effectful.effects.messaging import PublishMessage
+from effectful.effects.storage import GetObject, PutObject
+from effectful.effects.websocket import Close, CloseNormal, ReceiveText, SendText
+from effectful.infrastructure.auth import AuthService
+from effectful.infrastructure.cache import ProfileCache
+from effectful.infrastructure.messaging import MessageConsumer, MessageProducer
+from effectful.infrastructure.repositories import ChatMessageRepository, UserRepository
+from effectful.infrastructure.storage import ObjectStorage
+from effectful.infrastructure.websocket import WebSocketConnection
+from effectful.interpreters.composite import (
     CompositeInterpreter,
     create_composite_interpreter,
 )
-from functional_effects.interpreters.errors import UnhandledEffectError
+from effectful.interpreters.errors import UnhandledEffectError
 
 
 class TestCompositeInterpreter:
@@ -329,3 +338,197 @@ class TestCompositeInterpreter:
         assert interpreter.websocket is not None
         assert interpreter.database is not None
         assert interpreter.cache is not None
+
+    @pytest.mark.asyncio()
+    async def test_interpret_messaging_effect(self, mocker: MockerFixture) -> None:
+        """Composite interpreter should delegate Messaging effects when configured."""
+        # Create mocks
+        mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
+        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
+        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
+        mock_cache = mocker.AsyncMock(spec=ProfileCache)
+        mock_producer = mocker.AsyncMock(spec=MessageProducer)
+        mock_consumer = mocker.AsyncMock(spec=MessageConsumer)
+
+        # Configure producer mock
+        mock_producer.publish.return_value = PublishSuccess(
+            message_id="msg-123", topic="test-topic"
+        )
+
+        interpreter = create_composite_interpreter(
+            websocket_connection=mock_ws,
+            user_repo=mock_user_repo,
+            message_repo=mock_msg_repo,
+            cache=mock_cache,
+            message_producer=mock_producer,
+            message_consumer=mock_consumer,
+        )
+
+        effect = PublishMessage(topic="test-topic", payload=b"test data")
+        result = await interpreter.interpret(effect)
+
+        # Verify result - messaging interpreter returns message_id string, not PublishSuccess
+        match result:
+            case Ok(EffectReturn(value=msg_id, effect_name="PublishMessage")):
+                assert msg_id == "msg-123"
+            case _:
+                pytest.fail(f"Expected Ok with PublishMessage, got {result}")
+
+        # Verify producer was used
+        mock_producer.publish.assert_called_once_with("test-topic", b"test data", None)
+
+    @pytest.mark.asyncio()
+    async def test_interpret_storage_effect(self, mocker: MockerFixture) -> None:
+        """Composite interpreter should delegate Storage effects when configured."""
+        # Create mocks
+        mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
+        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
+        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
+        mock_cache = mocker.AsyncMock(spec=ProfileCache)
+        mock_storage = mocker.AsyncMock(spec=ObjectStorage)
+
+        # Configure storage mock
+        mock_storage.put_object.return_value = PutSuccess(
+            key="test-key", bucket="test-bucket", version_id="v1"
+        )
+
+        interpreter = create_composite_interpreter(
+            websocket_connection=mock_ws,
+            user_repo=mock_user_repo,
+            message_repo=mock_msg_repo,
+            cache=mock_cache,
+            object_storage=mock_storage,
+        )
+
+        effect = PutObject(
+            bucket="test-bucket", key="test-key", content=b"test content"
+        )
+        result = await interpreter.interpret(effect)
+
+        # Verify result - storage interpreter returns key string, not PutSuccess
+        match result:
+            case Ok(EffectReturn(value=object_key, effect_name="PutObject")):
+                assert object_key == "test-key"
+            case _:
+                pytest.fail(f"Expected Ok with PutObject, got {result}")
+
+        # Verify storage was used
+        mock_storage.put_object.assert_called_once_with(
+            "test-bucket", "test-key", b"test content", None, None
+        )
+
+    @pytest.mark.asyncio()
+    async def test_interpret_auth_effect(self, mocker: MockerFixture) -> None:
+        """Composite interpreter should delegate Auth effects when configured."""
+        # Create mocks
+        mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
+        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
+        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
+        mock_cache = mocker.AsyncMock(spec=ProfileCache)
+        mock_auth = mocker.AsyncMock(spec=AuthService)
+
+        # Configure auth mock
+        user_id = uuid4()
+        mock_auth.validate_token.return_value = TokenValid(
+            user_id=user_id, claims={"role": "admin"}
+        )
+
+        interpreter = create_composite_interpreter(
+            websocket_connection=mock_ws,
+            user_repo=mock_user_repo,
+            message_repo=mock_msg_repo,
+            cache=mock_cache,
+            auth_service=mock_auth,
+        )
+
+        effect = ValidateToken(token="test.jwt.token")
+        result = await interpreter.interpret(effect)
+
+        # Verify result
+        match result:
+            case Ok(EffectReturn(value=token_result, effect_name="ValidateToken")):
+                assert isinstance(token_result, TokenValid)
+                assert token_result.user_id == user_id
+            case _:
+                pytest.fail(f"Expected Ok with ValidateToken, got {result}")
+
+        # Verify auth service was used
+        mock_auth.validate_token.assert_called_once_with("test.jwt.token")
+
+    @pytest.mark.asyncio()
+    async def test_unhandled_effect_with_all_interpreters(
+        self, mocker: MockerFixture
+    ) -> None:
+        """Unhandled effect should list all configured interpreters."""
+
+        @dataclass(frozen=True)
+        class UnknownEffect:
+            """Custom effect not handled by any interpreter."""
+
+            data: str
+
+        # Create all mocks including optional ones
+        mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
+        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
+        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
+        mock_cache = mocker.AsyncMock(spec=ProfileCache)
+        mock_producer = mocker.AsyncMock(spec=MessageProducer)
+        mock_consumer = mocker.AsyncMock(spec=MessageConsumer)
+        mock_storage = mocker.AsyncMock(spec=ObjectStorage)
+        mock_auth = mocker.AsyncMock(spec=AuthService)
+
+        interpreter = create_composite_interpreter(
+            websocket_connection=mock_ws,
+            user_repo=mock_user_repo,
+            message_repo=mock_msg_repo,
+            cache=mock_cache,
+            message_producer=mock_producer,
+            message_consumer=mock_consumer,
+            object_storage=mock_storage,
+            auth_service=mock_auth,
+        )
+
+        effect = UnknownEffect(data="test")
+        result = await interpreter.interpret(effect)
+
+        # Verify all interpreters are listed
+        match result:
+            case Err(UnhandledEffectError(available_interpreters=interpreters)):
+                assert "WebSocketInterpreter" in interpreters
+                assert "DatabaseInterpreter" in interpreters
+                assert "CacheInterpreter" in interpreters
+                assert "MessagingInterpreter" in interpreters
+                assert "StorageInterpreter" in interpreters
+                assert "AuthInterpreter" in interpreters
+            case _:
+                pytest.fail(f"Expected UnhandledEffectError, got {result}")
+
+    def test_create_composite_interpreter_with_all_optional(
+        self, mocker: MockerFixture
+    ) -> None:
+        """Factory function should configure all optional interpreters."""
+        # Create all mocks
+        mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
+        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
+        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
+        mock_cache = mocker.AsyncMock(spec=ProfileCache)
+        mock_producer = mocker.AsyncMock(spec=MessageProducer)
+        mock_consumer = mocker.AsyncMock(spec=MessageConsumer)
+        mock_storage = mocker.AsyncMock(spec=ObjectStorage)
+        mock_auth = mocker.AsyncMock(spec=AuthService)
+
+        interpreter = create_composite_interpreter(
+            websocket_connection=mock_ws,
+            user_repo=mock_user_repo,
+            message_repo=mock_msg_repo,
+            cache=mock_cache,
+            message_producer=mock_producer,
+            message_consumer=mock_consumer,
+            object_storage=mock_storage,
+            auth_service=mock_auth,
+        )
+
+        assert isinstance(interpreter, CompositeInterpreter)
+        assert interpreter.messaging is not None
+        assert interpreter.storage is not None
+        assert interpreter.auth is not None

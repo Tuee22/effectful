@@ -16,19 +16,19 @@ from uuid import uuid4
 import pytest
 from pytest_mock import MockerFixture
 
-from functional_effects.algebraic.effect_return import EffectReturn
-from functional_effects.algebraic.result import Err, Ok
-from functional_effects.effects.database import GetUserById
-from functional_effects.effects.websocket import (
+from effectful.algebraic.effect_return import EffectReturn
+from effectful.algebraic.result import Err, Ok
+from effectful.effects.database import GetUserById
+from effectful.effects.websocket import (
     Close,
     CloseNormal,
     CloseProtocolError,
     ReceiveText,
     SendText,
 )
-from functional_effects.infrastructure.websocket import WebSocketConnection
-from functional_effects.interpreters.errors import UnhandledEffectError, WebSocketClosedError
-from functional_effects.interpreters.websocket import WebSocketInterpreter
+from effectful.infrastructure.websocket import WebSocketConnection
+from effectful.interpreters.errors import UnhandledEffectError, WebSocketClosedError
+from effectful.interpreters.websocket import WebSocketInterpreter
 
 
 class TestWebSocketInterpreter:

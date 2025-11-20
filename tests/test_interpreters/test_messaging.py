@@ -15,23 +15,23 @@ from uuid import uuid4
 import pytest
 from pytest_mock import MockerFixture
 
-from functional_effects.algebraic.effect_return import EffectReturn
-from functional_effects.algebraic.result import Err, Ok
-from functional_effects.domain.message_envelope import (
+from effectful.algebraic.effect_return import EffectReturn
+from effectful.algebraic.result import Err, Ok
+from effectful.domain.message_envelope import (
     MessageEnvelope,
     PublishFailure,
     PublishSuccess,
 )
-from functional_effects.effects.messaging import (
+from effectful.effects.messaging import (
     AcknowledgeMessage,
     ConsumeMessage,
     NegativeAcknowledge,
     PublishMessage,
 )
-from functional_effects.effects.websocket import SendText
-from functional_effects.infrastructure.messaging import MessageConsumer, MessageProducer
-from functional_effects.interpreters.errors import UnhandledEffectError
-from functional_effects.interpreters.messaging import MessagingError, MessagingInterpreter
+from effectful.effects.websocket import SendText
+from effectful.infrastructure.messaging import MessageConsumer, MessageProducer
+from effectful.interpreters.errors import MessagingError, UnhandledEffectError
+from effectful.interpreters.messaging import MessagingInterpreter
 
 
 class TestMessagingInterpreterPublish:

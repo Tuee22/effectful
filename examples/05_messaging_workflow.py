@@ -10,18 +10,18 @@ import asyncio
 from collections.abc import Generator
 from datetime import UTC, datetime
 
-from functional_effects.algebraic.result import Err, Ok
-from functional_effects.domain.message_envelope import MessageEnvelope
-from functional_effects.effects.messaging import (
+from effectful.algebraic.result import Err, Ok
+from effectful.domain.message_envelope import MessageEnvelope
+from effectful.effects.messaging import (
     AcknowledgeMessage,
     ConsumeMessage,
     NegativeAcknowledge,
     PublishMessage,
 )
-from functional_effects.interpreters.messaging import MessagingInterpreter
-from functional_effects.programs.program_types import AllEffects, EffectResult
-from functional_effects.programs.runners import run_ws_program
-from functional_effects.testing.fakes import FakeMessageConsumer, FakeMessageProducer
+from effectful.interpreters.messaging import MessagingInterpreter
+from effectful.programs.program_types import AllEffects, EffectResult
+from effectful.programs.runners import run_ws_program
+from effectful.testing.fakes import FakeMessageConsumer, FakeMessageProducer
 
 
 def publish_events(events: list[str]) -> Generator[AllEffects, EffectResult, int]:

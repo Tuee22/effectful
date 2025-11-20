@@ -8,7 +8,7 @@ Coverage: 100% of storage effects module.
 
 import pytest
 
-from functional_effects.effects.storage import (
+from effectful.effects.storage import (
     DeleteObject,
     GetObject,
     ListObjects,

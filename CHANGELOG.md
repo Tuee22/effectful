@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to **functional_effects** will be documented in this file.
+All notable changes to **effectful** will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -64,14 +64,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **README.md** - Complete library overview with examples
 - **ARCHITECTURE.md** - Design rationale and patterns
 - **CONTRIBUTING.md** - Development workflow and standards
-- **functional_effects/CLAUDE.md** - Type safety guidelines
+- **effectful/CLAUDE.md** - Type safety guidelines
 - **docs/tutorials/01_quickstart.md** - Getting started guide
 - **docs/tutorials/02_effect_types.md** - Complete effect reference
 - **docs/tutorials/03_adts_and_results.md** - Type safety deep dive
 
 #### Infrastructure
-- **Public API** (`functional_effects/__init__.py`) - ~50 exports
-- **Testing API** (`functional_effects/testing/__init__.py`) - 24 testing utilities
+- **Public API** (`effectful/__init__.py`) - ~50 exports
+- **Testing API** (`effectful/testing/__init__.py`) - 24 testing utilities
 - **Type Checking** - 100% mypy --strict compliance
 - **Test Coverage** - 29 tests with zero mypy errors
 
@@ -189,7 +189,7 @@ def test_workflow(mocker: MockerFixture) -> None:
 - **Better errors**: Clear assertion messages from pytest-mock
 
 **Migration Guide**:
-1. Replace `from functional_effects.testing import ...` with `from pytest_mock import MockerFixture`
+1. Replace `from effectful.testing import ...` with `from pytest_mock import MockerFixture`
 2. Replace fake fixtures with `mocker: MockerFixture` parameter
 3. Create mocks using `mocker.AsyncMock(spec=Protocol)`
 4. Configure behavior using `.return_value` or `.side_effect`
@@ -216,11 +216,11 @@ def test_workflow(mocker: MockerFixture) -> None:
   - Untested adapters: 0-57% coverage (postgres, pulsar, redis, s3)
 
 **Breaking Changes**:
-- **Removed**: All fake classes from `functional_effects/testing/fakes.py`
+- **Removed**: All fake classes from `effectful/testing/fakes.py`
 - **Removed**: All failing fake variants
 - **Removed**: `create_test_interpreter()` factory function
 - **Removed**: Fake-related pytest fixtures
-- **Removed**: `functional_effects/testing/__init__.py` exports for fakes
+- **Removed**: `effectful/testing/__init__.py` exports for fakes
 - **Kept**: Testing matchers (`assert_ok`, `unwrap_ok`, etc.) - still useful
 
 **If your tests break**:
@@ -270,5 +270,5 @@ Before each release:
 
 ---
 
-[Unreleased]: https://github.com/your-org/functional_effects/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/your-org/functional_effects/releases/tag/v0.1.0
+[Unreleased]: https://github.com/your-org/effectful/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/your-org/effectful/releases/tag/v0.1.0

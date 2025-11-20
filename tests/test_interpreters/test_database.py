@@ -17,19 +17,19 @@ from uuid import uuid4
 import pytest
 from pytest_mock import MockerFixture
 
-from functional_effects.algebraic.effect_return import EffectReturn
-from functional_effects.algebraic.result import Err, Ok
-from functional_effects.domain.message import ChatMessage
-from functional_effects.domain.user import User, UserFound, UserNotFound
-from functional_effects.effects.database import (
+from effectful.algebraic.effect_return import EffectReturn
+from effectful.algebraic.result import Err, Ok
+from effectful.domain.message import ChatMessage
+from effectful.domain.user import User, UserFound, UserNotFound
+from effectful.effects.database import (
     GetUserById,
     ListMessagesForUser,
     SaveChatMessage,
 )
-from functional_effects.effects.websocket import SendText
-from functional_effects.infrastructure.repositories import ChatMessageRepository, UserRepository
-from functional_effects.interpreters.database import DatabaseInterpreter
-from functional_effects.interpreters.errors import DatabaseError, UnhandledEffectError
+from effectful.effects.websocket import SendText
+from effectful.infrastructure.repositories import ChatMessageRepository, UserRepository
+from effectful.interpreters.database import DatabaseInterpreter
+from effectful.interpreters.errors import DatabaseError, UnhandledEffectError
 
 
 class TestDatabaseInterpreter:
@@ -193,7 +193,9 @@ class TestDatabaseInterpreter:
             case Ok(EffectReturn(value=msgs, effect_name="ListMessagesForUser")):
                 assert isinstance(msgs, list)
                 assert len(msgs) == 2
-                assert all(m.user_id == user_id for m in msgs)
+                for m in msgs:
+                    assert isinstance(m, ChatMessage)
+                    assert m.user_id == user_id
                 assert msgs == messages
             case _:
                 pytest.fail(f"Expected Ok with messages, got {result}")

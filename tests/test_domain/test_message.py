@@ -6,7 +6,7 @@ from uuid import uuid4
 
 import pytest
 
-from functional_effects.domain.message import ChatMessage
+from effectful.domain.message import ChatMessage
 
 
 class TestChatMessage:

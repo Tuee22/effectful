@@ -11,7 +11,7 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from functional_effects.algebraic.effect_return import EffectReturn
+from effectful.algebraic.effect_return import EffectReturn
 
 
 class TestEffectReturnConstruction:

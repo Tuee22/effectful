@@ -1,18 +1,45 @@
 """Type stubs for asyncpg.
 
 Minimal stubs for the asyncpg library to satisfy mypy strict mode.
-Only includes types actually used by functional_effects.
+Only includes types actually used by effectful.
 """
 
-from typing import Any, Protocol
+from typing import Protocol
+from datetime import datetime
+from uuid import UUID
+
+class Record(Protocol):
+    """Protocol for asyncpg Record (row result)."""
+
+    def __getitem__(self, key: str) -> UUID | str | datetime | int | None: ...
 
 class Connection(Protocol):
     """Protocol for asyncpg Connection."""
 
-    async def execute(self, query: str, *args: Any, timeout: float | None = None) -> str: ...
-    async def fetch(self, query: str, *args: Any, timeout: float | None = None) -> list[Any]: ...
-    async def fetchrow(self, query: str, *args: Any, timeout: float | None = None) -> Any: ...
-    async def fetchval(self, query: str, *args: Any, timeout: float | None = None) -> Any: ...
+    async def execute(
+        self,
+        query: str,
+        *args: UUID | str | datetime | int | None,
+        timeout: float | None = None,
+    ) -> str: ...
+    async def fetch(
+        self,
+        query: str,
+        *args: UUID | str | datetime | int | None,
+        timeout: float | None = None,
+    ) -> list[Record]: ...
+    async def fetchrow(
+        self,
+        query: str,
+        *args: UUID | str | datetime | int | None,
+        timeout: float | None = None,
+    ) -> Record | None: ...
+    async def fetchval(
+        self,
+        query: str,
+        *args: UUID | str | datetime | int | None,
+        timeout: float | None = None,
+    ) -> UUID | str | datetime | int | None: ...
     async def close(self) -> None: ...
 
 async def connect(
@@ -24,5 +51,4 @@ async def connect(
     password: str | None = None,
     database: str | None = None,
     timeout: float = 60.0,
-    **kwargs: Any,
 ) -> Connection: ...

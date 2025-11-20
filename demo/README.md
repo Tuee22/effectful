@@ -1,6 +1,6 @@
 # Demo Application - Pure Functional Effect Programs
 
-This demo application demonstrates how to build complex business logic using the `functional_effects` library with **pure functions**, **algebraic data types (ADTs)**, and **explicit error handling**.
+This demo application demonstrates how to build complex business logic using the `effectful` library with **pure functions**, **algebraic data types (ADTs)**, and **explicit error handling**.
 
 ## Overview
 
@@ -34,7 +34,7 @@ demo/
 
 ### Infrastructure Types
 
-The demo uses all 6 infrastructure types from `functional_effects`:
+The demo uses all 6 infrastructure types from `effectful`:
 
 1. **Auth** (Redis): JWT token generation/validation
 2. **Cache** (Redis): User data caching with TTL
@@ -61,7 +61,7 @@ Authenticate user with email/password and return JWT tokens.
 **Example**:
 ```python
 from demo.programs.auth_programs import login_program
-from functional_effects.algebraic.result import Ok, Err
+from effectful.algebraic.result import Ok, Err
 
 result = await run_program(login_program("alice@example.com", "secret123"))
 
@@ -357,7 +357,7 @@ See `CLAUDE.md` in the project root for comprehensive anti-patterns documentatio
 
 ## References
 
-- **Main README**: `/packages/functional/README.md` - Library overview
-- **Architecture**: `/packages/functional/ARCHITECTURE.md` - System design
-- **Contributing**: `/packages/functional/CONTRIBUTING.md` - Development guidelines
-- **Testing Guide**: `/packages/functional/docs/tutorials/04_testing_guide.md` - Testing patterns
+- **Main README**: [README.md](../README.md) - Library overview
+- **Architecture**: [ARCHITECTURE.md](../ARCHITECTURE.md) - System design
+- **Contributing**: [CONTRIBUTING.md](../CONTRIBUTING.md) - Development guidelines
+- **Testing Guide**: [documents/tutorials/04_testing_guide.md](../documents/tutorials/04_testing_guide.md) - Testing patterns

@@ -1,6 +1,6 @@
 # Architecture
 
-**functional_effects** - A pure functional effect system for Python with algebraic data types and explicit error handling.
+**effectful** - A pure functional effect system for Python with algebraic data types and explicit error handling.
 
 ## Design Philosophy
 

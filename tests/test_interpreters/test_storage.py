@@ -10,14 +10,14 @@ Coverage: 100% of storage interpreter module.
 import pytest
 from pytest_mock import MockerFixture
 
-from functional_effects.algebraic.effect_return import EffectReturn
-from functional_effects.algebraic.result import Err, Ok
-from functional_effects.domain.s3_object import PutFailure, PutSuccess, S3Object
-from functional_effects.effects.base import Effect
-from functional_effects.effects.storage import DeleteObject, GetObject, ListObjects, PutObject
-from functional_effects.infrastructure.storage import ObjectStorage
-from functional_effects.interpreters.errors import UnhandledEffectError
-from functional_effects.interpreters.storage import StorageError, StorageInterpreter
+from effectful.algebraic.effect_return import EffectReturn
+from effectful.algebraic.result import Err, Ok
+from effectful.domain.s3_object import PutFailure, PutSuccess, S3Object
+from effectful.effects.base import Effect
+from effectful.effects.storage import DeleteObject, GetObject, ListObjects, PutObject
+from effectful.infrastructure.storage import ObjectStorage
+from effectful.interpreters.errors import StorageError, UnhandledEffectError
+from effectful.interpreters.storage import StorageInterpreter
 
 
 class TestStorageInterpreterGetObject:
@@ -46,7 +46,9 @@ class TestStorageInterpreterGetObject:
 
         match result:
             case Ok(EffectReturn(value=obj, effect_name="GetObject")):
-                assert obj is s3_object
+                from effectful.domain.s3_object import S3Object as S3Obj
+
+                assert isinstance(obj, S3Obj)
                 assert obj.key == "data/file.txt"
             case _:
                 pytest.fail(f"Expected Ok with S3Object, got {result}")

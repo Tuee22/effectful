@@ -17,21 +17,21 @@ from uuid import UUID, uuid4
 import pytest
 from pytest_mock import MockerFixture
 
-from functional_effects.algebraic.result import Err, Ok
-from functional_effects.domain.cache_result import CacheHit, CacheMiss
-from functional_effects.domain.message import ChatMessage
-from functional_effects.domain.profile import ProfileData
-from functional_effects.domain.user import User, UserFound, UserNotFound
-from functional_effects.effects.cache import GetCachedProfile, PutCachedProfile
-from functional_effects.effects.database import GetUserById, SaveChatMessage
-from functional_effects.effects.websocket import Close, CloseNormal, SendText
-from functional_effects.infrastructure.cache import ProfileCache
-from functional_effects.infrastructure.repositories import ChatMessageRepository, UserRepository
-from functional_effects.infrastructure.websocket import WebSocketConnection
-from functional_effects.interpreters.composite import create_composite_interpreter
-from functional_effects.interpreters.errors import DatabaseError
-from functional_effects.programs.program_types import AllEffects, EffectResult
-from functional_effects.programs.runners import run_ws_program
+from effectful.algebraic.result import Err, Ok
+from effectful.domain.cache_result import CacheHit, CacheMiss
+from effectful.domain.message import ChatMessage
+from effectful.domain.profile import ProfileData
+from effectful.domain.user import User, UserFound, UserNotFound
+from effectful.effects.cache import GetCachedProfile, PutCachedProfile
+from effectful.effects.database import GetUserById, SaveChatMessage
+from effectful.effects.websocket import Close, CloseNormal, SendText
+from effectful.infrastructure.cache import ProfileCache
+from effectful.infrastructure.repositories import ChatMessageRepository, UserRepository
+from effectful.infrastructure.websocket import WebSocketConnection
+from effectful.interpreters.composite import create_composite_interpreter
+from effectful.interpreters.errors import DatabaseError
+from effectful.programs.program_types import AllEffects, EffectResult
+from effectful.programs.runners import run_ws_program
 
 
 class TestChatWorkflowIntegration:

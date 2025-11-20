@@ -8,17 +8,17 @@ from collections.abc import Generator
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from functional_effects.algebraic.result import Err, Ok, Result
-from functional_effects.effects.auth import ValidateToken
-from functional_effects.effects.cache import GetCachedValue, PutCachedValue
-from functional_effects.effects.database import GetUserById
-from functional_effects.effects.messaging import PublishMessage
-from functional_effects.effects.storage import PutObject
-from functional_effects.effects.websocket import SendText
-from functional_effects.domain.s3_object import PutSuccess
-from functional_effects.domain.token_result import TokenValid
-from functional_effects.domain.user import User
-from functional_effects.programs.program_types import AllEffects, EffectResult
+from effectful.algebraic.result import Err, Ok, Result
+from effectful.effects.auth import ValidateToken
+from effectful.effects.cache import GetCachedValue, PutCachedValue
+from effectful.effects.database import GetUserById
+from effectful.effects.messaging import PublishMessage
+from effectful.effects.storage import PutObject
+from effectful.effects.websocket import SendText
+from effectful.domain.s3_object import PutSuccess
+from effectful.domain.token_result import TokenValid
+from effectful.domain.user import User
+from effectful.programs.program_types import AllEffects, EffectResult
 
 from demo.domain.errors import AppError, AuthError
 from demo.domain.responses import MessageResponse

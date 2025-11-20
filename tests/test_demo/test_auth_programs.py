@@ -17,9 +17,18 @@ from demo.programs.auth_programs import (
     refresh_program,
     register_program,
 )
-from functional_effects.algebraic.result import Err, Ok
-from functional_effects.domain.token_result import TokenExpired, TokenInvalid, TokenValid
-from functional_effects.domain.user import User
+from effectful.algebraic.result import Err, Ok
+from effectful.domain.token_result import TokenExpired, TokenInvalid, TokenValid
+from effectful.domain.user import User
+from effectful.effects.auth import (
+    GenerateToken,
+    GetUserByEmail,
+    HashPassword,
+    RevokeToken,
+    ValidatePassword,
+    ValidateToken,
+)
+from effectful.effects.database import CreateUser, GetUserById
 
 
 class TestLoginProgram:
@@ -36,25 +45,25 @@ class TestLoginProgram:
 
         # Step 1: GetUserByEmail returns user
         effect1 = next(gen)
-        assert effect1.__class__.__name__ == "GetUserByEmail"
+        assert isinstance(effect1, GetUserByEmail)
         assert effect1.email == "alice@example.com"
         result1 = gen.send(user)
 
         # Step 2: ValidatePassword returns True
         effect2 = result1
-        assert effect2.__class__.__name__ == "ValidatePassword"
+        assert isinstance(effect2, ValidatePassword)
         assert effect2.password == "secret123"
         result2 = gen.send(True)
 
         # Step 3: GenerateToken for access token
         effect3 = result2
-        assert effect3.__class__.__name__ == "GenerateToken"
+        assert isinstance(effect3, GenerateToken)
         assert effect3.user_id == user_id
         result3 = gen.send("access_token_123")
 
         # Step 4: GenerateToken for refresh token
         effect4 = result3
-        assert effect4.__class__.__name__ == "GenerateToken"
+        assert isinstance(effect4, GenerateToken)
         assert effect4.user_id == user_id
 
         # Final result
@@ -79,7 +88,7 @@ class TestLoginProgram:
 
         # Step 1: GetUserByEmail returns None
         effect1 = next(gen)
-        assert effect1.__class__.__name__ == "GetUserByEmail"
+        assert isinstance(effect1, GetUserByEmail)
 
         try:
             gen.send(None)
@@ -108,7 +117,7 @@ class TestLoginProgram:
 
         # Step 2: ValidatePassword returns False
         effect2 = result1
-        assert effect2.__class__.__name__ == "ValidatePassword"
+        assert isinstance(effect2, ValidatePassword)
 
         try:
             gen.send(False)
@@ -137,13 +146,13 @@ class TestLogoutProgram:
 
         # Step 1: ValidateToken returns TokenValid
         effect1 = next(gen)
-        assert effect1.__class__.__name__ == "ValidateToken"
+        assert isinstance(effect1, ValidateToken)
         assert effect1.token == "valid_token_123"
         result1 = gen.send(token_valid)
 
         # Step 2: RevokeToken
         effect2 = result1
-        assert effect2.__class__.__name__ == "RevokeToken"
+        assert isinstance(effect2, RevokeToken)
         assert effect2.token == "valid_token_123"
 
         # Final result
@@ -219,23 +228,23 @@ class TestRefreshProgram:
 
         # Step 1: ValidateToken returns TokenValid
         effect1 = next(gen)
-        assert effect1.__class__.__name__ == "ValidateToken"
+        assert isinstance(effect1, ValidateToken)
         result1 = gen.send(token_valid)
 
         # Step 2: GetUserById returns user
         effect2 = result1
-        assert effect2.__class__.__name__ == "GetUserById"
+        assert isinstance(effect2, GetUserById)
         assert effect2.user_id == user_id
         result2 = gen.send(user)
 
         # Step 3: GenerateToken for new access token
         effect3 = result2
-        assert effect3.__class__.__name__ == "GenerateToken"
+        assert isinstance(effect3, GenerateToken)
         result3 = gen.send("new_access_token")
 
         # Step 4: GenerateToken for new refresh token
         effect4 = result3
-        assert effect4.__class__.__name__ == "GenerateToken"
+        assert isinstance(effect4, GenerateToken)
 
         # Final result
         try:
@@ -288,7 +297,7 @@ class TestRefreshProgram:
 
         # Step 2: GetUserById returns None (user deleted)
         effect2 = result1
-        assert effect2.__class__.__name__ == "GetUserById"
+        assert isinstance(effect2, GetUserById)
 
         try:
             gen.send(None)
@@ -317,19 +326,19 @@ class TestRegisterProgram:
 
         # Step 1: GetUserByEmail returns None (user doesn't exist yet)
         effect1 = next(gen)
-        assert effect1.__class__.__name__ == "GetUserByEmail"
+        assert isinstance(effect1, GetUserByEmail)
         assert effect1.email == "bob@example.com"
         result1 = gen.send(None)
 
         # Step 2: HashPassword returns hash
         effect2 = result1
-        assert effect2.__class__.__name__ == "HashPassword"
+        assert isinstance(effect2, HashPassword)
         assert effect2.password == "secret123"
         result2 = gen.send("$2b$12$hashed_password")
 
         # Step 3: CreateUser returns user_id
         effect3 = result2
-        assert effect3.__class__.__name__ == "CreateUser"
+        assert isinstance(effect3, CreateUser)
         assert effect3.email == "bob@example.com"
         assert effect3.name == "Bob"
         assert effect3.password_hash == "$2b$12$hashed_password"
@@ -337,7 +346,7 @@ class TestRegisterProgram:
 
         # Step 4: GetUserById returns created user
         effect4 = result3
-        assert effect4.__class__.__name__ == "GetUserById"
+        assert isinstance(effect4, GetUserById)
         assert effect4.user_id == user_id
 
         # Final result

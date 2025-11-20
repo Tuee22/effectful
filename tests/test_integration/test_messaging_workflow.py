@@ -17,22 +17,23 @@ from uuid import uuid4
 import pytest
 from pytest_mock import MockerFixture
 
-from functional_effects.algebraic.result import Err, Ok
-from functional_effects.domain.message_envelope import (
+from effectful.algebraic.result import Err, Ok
+from effectful.domain.message_envelope import (
     MessageEnvelope,
     PublishFailure,
     PublishSuccess,
 )
-from functional_effects.effects.messaging import (
+from effectful.effects.messaging import (
     AcknowledgeMessage,
     ConsumeMessage,
     NegativeAcknowledge,
     PublishMessage,
 )
-from functional_effects.infrastructure.messaging import MessageConsumer, MessageProducer
-from functional_effects.interpreters.messaging import MessagingError, MessagingInterpreter
-from functional_effects.programs.program_types import AllEffects, EffectResult
-from functional_effects.programs.runners import run_ws_program
+from effectful.infrastructure.messaging import MessageConsumer, MessageProducer
+from effectful.interpreters.errors import MessagingError
+from effectful.interpreters.messaging import MessagingInterpreter
+from effectful.programs.program_types import AllEffects, EffectResult
+from effectful.programs.runners import run_ws_program
 
 
 class TestMessagingWorkflowIntegration:
@@ -227,6 +228,8 @@ class TestMessagingWorkflowIntegration:
                 case MessageEnvelope(message_id=msg_id):
                     yield AcknowledgeMessage(message_id=msg_id)
                     return "success"
+                case _:
+                    return "unexpected"
 
         # Act
         result = await run_ws_program(consume_timeout_program(), interpreter)

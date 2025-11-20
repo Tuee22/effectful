@@ -9,14 +9,14 @@ Run:
 import asyncio
 from collections.abc import Generator
 
-from functional_effects import (
+from effectful import (
     AllEffects,
     EffectResult,
     SendText,
     run_ws_program,
 )
-from functional_effects.algebraic.result import Err, Ok
-from functional_effects.testing import create_test_interpreter
+from effectful.algebraic.result import Err, Ok
+from effectful.testing import create_test_interpreter
 
 
 def hello_world() -> Generator[AllEffects, EffectResult, str]:

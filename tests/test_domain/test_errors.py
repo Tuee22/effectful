@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import pytest
 
-from functional_effects.domain.errors import InvalidMessageError, UserNotFoundError
+from effectful.domain.errors import InvalidMessageError, UserNotFoundError
 
 
 class TestUserNotFoundError:

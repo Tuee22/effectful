@@ -1,4 +1,4 @@
-"""Example programs demonstrating functional_effects patterns.
+"""Example programs demonstrating effectful patterns.
 
 This package contains complete, runnable examples:
 

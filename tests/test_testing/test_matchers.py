@@ -4,10 +4,10 @@ from uuid import uuid4
 
 import pytest
 
-from functional_effects.algebraic.result import Err, Ok, Result
-from functional_effects.effects.database import GetUserById
-from functional_effects.interpreters.errors import DatabaseError
-from functional_effects.testing.matchers import (
+from effectful.algebraic.result import Err, Ok, Result
+from effectful.effects.database import GetUserById
+from effectful.interpreters.errors import DatabaseError, InterpreterError
+from effectful.testing.matchers import (
     assert_err,
     assert_err_message,
     assert_ok,
@@ -26,6 +26,13 @@ class TestAssertOk:
 
         # Should not raise
         assert_ok(result)
+
+    def test_raises_for_err_result(self) -> None:
+        """assert_ok should raise for Err result."""
+        result: Result[int, str] = Err("failed")
+
+        with pytest.raises(pytest.fail.Exception, match="Expected Ok, got Err"):
+            assert_ok(result)
 
 
 class TestAssertErr:
@@ -47,6 +54,20 @@ class TestAssertErr:
         # Should not raise
         assert_err(result, DatabaseError)
 
+    def test_raises_for_ok_result(self) -> None:
+        """assert_err should raise for Ok result."""
+        result: Result[int, str] = Ok(42)
+
+        with pytest.raises(pytest.fail.Exception, match="Expected Err, got Ok"):
+            assert_err(result)
+
+    def test_raises_for_wrong_error_type(self) -> None:
+        """assert_err should raise when error type doesn't match."""
+        result: Result[int, str] = Err("string error")
+
+        with pytest.raises(pytest.fail.Exception, match="Expected Err.*got Err"):
+            assert_err(result, DatabaseError)
+
 
 class TestUnwrapOk:
     """Tests for unwrap_ok matcher."""
@@ -59,6 +80,13 @@ class TestUnwrapOk:
 
         assert value == 42
 
+    def test_raises_for_err_result(self) -> None:
+        """unwrap_ok should raise for Err result."""
+        result: Result[int, str] = Err("failed")
+
+        with pytest.raises(pytest.fail.Exception, match="Expected Ok, got Err"):
+            unwrap_ok(result)
+
 
 class TestUnwrapErr:
     """Tests for unwrap_err matcher."""
@@ -70,6 +98,13 @@ class TestUnwrapErr:
         error = unwrap_err(result)
 
         assert error == "failed"
+
+    def test_raises_for_ok_result(self) -> None:
+        """unwrap_err should raise for Ok result."""
+        result: Result[int, str] = Ok(42)
+
+        with pytest.raises(pytest.fail.Exception, match="Expected Err, got Ok"):
+            unwrap_err(result)
 
 
 class TestAssertOkValue:
@@ -89,6 +124,13 @@ class TestAssertOkValue:
         with pytest.raises(AssertionError, match="Expected Ok\\(100\\), got Ok\\(42\\)"):
             assert_ok_value(result, 100)
 
+    def test_raises_for_err_result(self) -> None:
+        """assert_ok_value should raise for Err result."""
+        result: Result[int, str] = Err("failed")
+
+        with pytest.raises(pytest.fail.Exception, match="Expected Ok\\(42\\), got Err"):
+            assert_ok_value(result, 42)
+
 
 class TestAssertErrMessage:
     """Tests for assert_err_message matcher."""
@@ -97,16 +139,23 @@ class TestAssertErrMessage:
         """assert_err_message should pass when message contains substring."""
         effect = GetUserById(user_id=uuid4())
         error = DatabaseError(effect=effect, db_error="Connection timeout error", is_retryable=True)
-        result: Result[int, DatabaseError] = Err(error)
+        result: Result[int, InterpreterError] = Err(error)
 
         # Should not raise
-        assert_err_message(result, "Connection timeout")  # type: ignore[arg-type]
+        assert_err_message(result, "Connection timeout")
 
     def test_fails_for_non_matching_substring(self) -> None:
         """assert_err_message should fail when message doesn't contain substring."""
         effect = GetUserById(user_id=uuid4())
         error = DatabaseError(effect=effect, db_error="Connection timeout", is_retryable=True)
-        result: Result[int, DatabaseError] = Err(error)
+        result: Result[int, InterpreterError] = Err(error)
 
         with pytest.raises(AssertionError, match="Expected error message containing"):
-            assert_err_message(result, "Deadlock")  # type: ignore[arg-type]
+            assert_err_message(result, "Deadlock")
+
+    def test_raises_for_ok_result(self) -> None:
+        """assert_err_message should raise for Ok result."""
+        result: Result[int, InterpreterError] = Ok(42)
+
+        with pytest.raises(pytest.fail.Exception, match="Expected Err.*got Ok"):
+            assert_err_message(result, "some error")

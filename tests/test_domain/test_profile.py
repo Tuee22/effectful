@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import pytest
 
-from functional_effects.domain.profile import (
+from effectful.domain.profile import (
     ProfileData,
     ProfileFound,
     ProfileLookupResult,

@@ -12,10 +12,15 @@ from pytest_mock import MockerFixture
 from demo.domain.errors import AppError, AuthError
 from demo.domain.responses import MessageResponse
 from demo.programs.chat_programs import send_authenticated_message_with_storage_program
-from functional_effects.algebraic.result import Err, Ok
-from functional_effects.domain.s3_object import PutSuccess
-from functional_effects.domain.token_result import TokenInvalid, TokenValid
-from functional_effects.domain.user import User
+from effectful.algebraic.result import Err, Ok
+from effectful.domain.token_result import TokenInvalid, TokenValid
+from effectful.domain.user import User
+from effectful.effects.auth import ValidateToken
+from effectful.effects.cache import GetCachedValue, PutCachedValue
+from effectful.effects.database import GetUserById
+from effectful.effects.messaging import PublishMessage
+from effectful.effects.storage import PutObject
+from effectful.effects.websocket import SendText
 
 
 class TestSendAuthenticatedMessageWithStorageProgram:
@@ -36,47 +41,47 @@ class TestSendAuthenticatedMessageWithStorageProgram:
 
         # Step 1: [Auth] ValidateToken
         effect1 = next(gen)
-        assert effect1.__class__.__name__ == "ValidateToken"
+        assert isinstance(effect1, ValidateToken)
         assert effect1.token == "valid_token_123"
         result1 = gen.send(token_valid)
 
         # Step 2: [Cache] GetCachedValue (cache miss)
         effect2 = result1
-        assert effect2.__class__.__name__ == "GetCachedValue"
+        assert isinstance(effect2, GetCachedValue)
         assert f"user:{user_id}" in effect2.key
         result2 = gen.send(None)  # Cache miss
 
         # Step 3: [Database] GetUserById
         effect3 = result2
-        assert effect3.__class__.__name__ == "GetUserById"
+        assert isinstance(effect3, GetUserById)
         assert effect3.user_id == user_id
         result3 = gen.send(user)
 
         # Step 4: [Cache] PutCachedValue
         effect4 = result3
-        assert effect4.__class__.__name__ == "PutCachedValue"
+        assert isinstance(effect4, PutCachedValue)
         assert f"user:{user_id}" in effect4.key
         assert effect4.ttl_seconds == 300
         result4 = gen.send(True)
 
         # Step 5: [Storage] PutObject to S3
         effect5 = result4
-        assert effect5.__class__.__name__ == "PutObject"
+        assert isinstance(effect5, PutObject)
         assert effect5.bucket == "chat-archive"
         assert b"Hello from all 6 infrastructure types!" in effect5.content
-        put_success = PutSuccess(key=effect5.key, bucket="chat-archive", version_id="v1")
-        result5 = gen.send(put_success)
+        # PutObject returns the key as a string
+        result5 = gen.send(effect5.key)
 
         # Step 6: [Messaging] PublishMessage to Pulsar
         effect6 = result5
-        assert effect6.__class__.__name__ == "PublishMessage"
+        assert isinstance(effect6, PublishMessage)
         assert effect6.topic == "chat-messages"
         assert b"Hello from all 6 infrastructure types!" in effect6.payload
         result6 = gen.send("pulsar_message_id_123")
 
         # Step 7: [WebSocket] SendText
         effect7 = result6
-        assert effect7.__class__.__name__ == "SendText"
+        assert isinstance(effect7, SendText)
         assert "Message sent:" in effect7.text
 
         try:

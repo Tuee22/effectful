@@ -16,13 +16,14 @@ from datetime import UTC, datetime
 import pytest
 from pytest_mock import MockerFixture
 
-from functional_effects.algebraic.result import Err, Ok
-from functional_effects.domain.s3_object import PutSuccess, S3Object
-from functional_effects.effects.storage import DeleteObject, GetObject, ListObjects, PutObject
-from functional_effects.infrastructure.storage import ObjectStorage
-from functional_effects.interpreters.storage import StorageError, StorageInterpreter
-from functional_effects.programs.program_types import AllEffects, EffectResult
-from functional_effects.programs.runners import run_ws_program
+from effectful.algebraic.result import Err, Ok
+from effectful.domain.s3_object import PutSuccess, S3Object
+from effectful.effects.storage import DeleteObject, GetObject, ListObjects, PutObject
+from effectful.infrastructure.storage import ObjectStorage
+from effectful.interpreters.errors import StorageError
+from effectful.interpreters.storage import StorageInterpreter
+from effectful.programs.program_types import AllEffects, EffectResult
+from effectful.programs.runners import run_ws_program
 
 
 class TestBasicStorageWorkflows:
@@ -501,6 +502,7 @@ class TestComplexStorageWorkflows:
             # Delete each file
             deleted_count = 0
             for key in keys_result:
+                assert isinstance(key, str)
                 yield DeleteObject(bucket="my-bucket", key=key)
                 deleted_count += 1
 

@@ -15,15 +15,15 @@ from uuid import uuid4
 import pytest
 from pytest_mock import MockerFixture
 
-from functional_effects.algebraic.effect_return import EffectReturn
-from functional_effects.algebraic.result import Err, Ok
-from functional_effects.domain.cache_result import CacheHit, CacheMiss
-from functional_effects.domain.profile import ProfileData
-from functional_effects.effects.cache import GetCachedProfile, PutCachedProfile
-from functional_effects.effects.websocket import SendText
-from functional_effects.infrastructure.cache import ProfileCache
-from functional_effects.interpreters.cache import CacheInterpreter
-from functional_effects.interpreters.errors import CacheError, UnhandledEffectError
+from effectful.algebraic.effect_return import EffectReturn
+from effectful.algebraic.result import Err, Ok
+from effectful.domain.cache_result import CacheHit, CacheMiss
+from effectful.domain.profile import ProfileData
+from effectful.effects.cache import GetCachedProfile, PutCachedProfile
+from effectful.effects.websocket import SendText
+from effectful.infrastructure.cache import ProfileCache
+from effectful.interpreters.cache import CacheInterpreter
+from effectful.interpreters.errors import CacheError, UnhandledEffectError
 
 
 class TestCacheInterpreter:

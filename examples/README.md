@@ -1,6 +1,6 @@
 # Examples
 
-This directory contains complete, runnable examples demonstrating **functional_effects** patterns.
+This directory contains complete, runnable examples demonstrating **effectful** patterns.
 
 ## Running Examples
 
@@ -137,7 +137,7 @@ Cached profiles: 1
 
 ```python
 from collections.abc import Generator
-from functional_effects import AllEffects, EffectResult
+from effectful import AllEffects, EffectResult
 
 def my_program() -> Generator[AllEffects, EffectResult, str]:
     # Yield effects
@@ -154,8 +154,8 @@ def my_program() -> Generator[AllEffects, EffectResult, str]:
 ### Running Programs
 
 ```python
-from functional_effects import run_ws_program
-from functional_effects.testing import create_test_interpreter
+from effectful import run_ws_program
+from effectful.testing import create_test_interpreter
 
 async def main():
     interpreter = create_test_interpreter()
@@ -171,7 +171,7 @@ async def main():
 ### Setting Up Test Data
 
 ```python
-from functional_effects.testing import (
+from effectful.testing import (
     FakeUserRepository,
     FakeProfileCache,
     create_test_interpreter,
@@ -195,7 +195,7 @@ interpreter = create_test_interpreter(
 
 ```python
 # Testing database failures
-from functional_effects.testing import FailingUserRepository
+from effectful.testing import FailingUserRepository
 
 failing_repo = FailingUserRepository(error_message="Connection timeout")
 interpreter = create_test_interpreter(user_repo=failing_repo)
@@ -215,9 +215,9 @@ match result:
 
 After exploring these examples:
 
-1. **Read the tutorials** - [docs/tutorials/](../docs/tutorials/)
+1. **Read the tutorials** - [documents/tutorials/](../documents/tutorials/)
 2. **Study the architecture** - [ARCHITECTURE.md](../ARCHITECTURE.md)
-3. **Review type safety guidelines** - [functional_effects/CLAUDE.md](../functional_effects/CLAUDE.md)
+3. **Review type safety guidelines** - [effectful/CLAUDE.md](../effectful/CLAUDE.md)
 4. **Write your own programs** - See [CONTRIBUTING.md](../CONTRIBUTING.md)
 
 ## Testing Examples
@@ -225,7 +225,7 @@ After exploring these examples:
 All examples use test fakes (in-memory implementations). For production:
 
 ```python
-from functional_effects import create_composite_interpreter
+from effectful import create_composite_interpreter
 
 # Replace fakes with real infrastructure
 interpreter = create_composite_interpreter(
@@ -236,7 +236,7 @@ interpreter = create_composite_interpreter(
 )
 ```
 
-See [Tutorial 05: Production Deployment](../docs/tutorials/05_production_deployment.md) for details.
+See [Tutorial 05: Production Deployment](../documents/tutorials/05_production_deployment.md) for details.
 
 ---
 

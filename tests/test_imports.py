@@ -1,6 +1,6 @@
 """Tests for public API imports.
 
-This module verifies that all exported symbols in functional_effects/__init__.py
+This module verifies that all exported symbols in effectful/__init__.py
 are importable and have correct types. These tests ensure the public API contract
 is maintained.
 """
@@ -15,13 +15,13 @@ class TestPublicAPIImports:
 
     def test_import_core_execution(self) -> None:
         """run_ws_program should be importable from root."""
-        from functional_effects import run_ws_program
+        from effectful import run_ws_program
 
         assert callable(run_ws_program)
 
     def test_import_result_types(self) -> None:
         """Result types (Ok, Err, Result, EffectReturn) should be importable."""
-        from functional_effects import EffectReturn, Err, Ok, Result
+        from effectful import EffectReturn, Err, Ok, Result
 
         # Test Ok/Err constructors
         ok_result = Ok(42)
@@ -42,7 +42,7 @@ class TestPublicAPIImports:
 
     def test_import_websocket_effects(self) -> None:
         """WebSocket effects should be importable."""
-        from functional_effects import (
+        from effectful import (
             Close,
             CloseGoingAway,
             CloseNormal,
@@ -66,7 +66,7 @@ class TestPublicAPIImports:
         """Database effects should be importable."""
         from uuid import uuid4
 
-        from functional_effects import GetUserById, SaveChatMessage
+        from effectful import GetUserById, SaveChatMessage
 
         user_id = uuid4()
         get_user = GetUserById(user_id=user_id)
@@ -79,8 +79,8 @@ class TestPublicAPIImports:
         """Cache effects should be importable."""
         from uuid import uuid4
 
-        from functional_effects import GetCachedProfile, PutCachedProfile
-        from functional_effects.domain.profile import ProfileData
+        from effectful import GetCachedProfile, PutCachedProfile
+        from effectful.domain.profile import ProfileData
 
         user_id = uuid4()
         get_profile = GetCachedProfile(user_id=user_id)
@@ -94,7 +94,7 @@ class TestPublicAPIImports:
         """Domain models should be importable."""
         from uuid import uuid4
 
-        from functional_effects import (
+        from effectful import (
             ChatMessage,
             ProfileData,
             ProfileFound,
@@ -134,7 +134,7 @@ class TestPublicAPIImports:
 
     def test_import_interpreters(self) -> None:
         """Interpreters should be importable."""
-        from functional_effects import (
+        from effectful import (
             CacheInterpreter,
             DatabaseInterpreter,
             WebSocketInterpreter,
@@ -152,16 +152,16 @@ class TestPublicAPIImports:
         """Interpreter errors should be importable."""
         from uuid import uuid4
 
-        from functional_effects import (
+        from effectful import (
             CacheError,
             DatabaseError,
             WebSocketClosedError,
         )
-        from functional_effects.effects.cache import GetCachedProfile
+        from effectful.effects.cache import GetCachedProfile
 
         # Test error construction (errors include 'effect' field)
-        from functional_effects.effects.database import GetUserById
-        from functional_effects.effects.websocket import SendText
+        from effectful.effects.database import GetUserById
+        from effectful.effects.websocket import SendText
 
         effect_db = GetUserById(user_id=uuid4())
         db_error = DatabaseError(effect=effect_db, db_error="Connection failed", is_retryable=True)
@@ -183,7 +183,7 @@ class TestPublicAPIImports:
 
     def test_import_program_types(self) -> None:
         """Program types should be importable."""
-        from functional_effects import AllEffects, EffectResult, WSProgram
+        from effectful import AllEffects, EffectResult, WSProgram
 
         # These are type aliases, so we can't instantiate them
         # Just verify they're importable
@@ -193,7 +193,7 @@ class TestPublicAPIImports:
 
     def test_import_infrastructure_protocols(self) -> None:
         """Infrastructure protocols should be importable."""
-        from functional_effects import (
+        from effectful import (
             ChatMessageRepository,
             ProfileCache,
             UserRepository,
@@ -215,7 +215,7 @@ class TestPublicAPIUsage:
         """Verify a simple program can be written using only public API."""
         from collections.abc import Generator
 
-        from functional_effects import (
+        from effectful import (
             AllEffects,
             EffectResult,
             Err,
@@ -224,12 +224,12 @@ class TestPublicAPIUsage:
             create_composite_interpreter,
             run_ws_program,
         )
-        from functional_effects.infrastructure.cache import ProfileCache
-        from functional_effects.infrastructure.repositories import (
+        from effectful.infrastructure.cache import ProfileCache
+        from effectful.infrastructure.repositories import (
             ChatMessageRepository,
             UserRepository,
         )
-        from functional_effects.infrastructure.websocket import WebSocketConnection
+        from effectful.infrastructure.websocket import WebSocketConnection
 
         # Create mocks
         mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
@@ -264,23 +264,23 @@ class TestPublicAPIUsage:
 
     def test_version_attribute(self) -> None:
         """Package should export __version__."""
-        import functional_effects
+        import effectful
 
-        assert hasattr(functional_effects, "__version__")
-        assert isinstance(functional_effects.__version__, str)
-        assert functional_effects.__version__ == "0.1.0"
+        assert hasattr(effectful, "__version__")
+        assert isinstance(effectful.__version__, str)
+        assert effectful.__version__ == "0.1.0"
 
     def test_all_exports_in_module(self) -> None:
         """Verify __all__ matches actual exports."""
-        import functional_effects
+        import effectful
 
         # All items in __all__ should be importable
-        for name in functional_effects.__all__:
-            assert hasattr(functional_effects, name), f"Missing export: {name}"
+        for name in effectful.__all__:
+            assert hasattr(effectful, name), f"Missing export: {name}"
 
     def test_no_unwanted_exports(self) -> None:
         """Verify we don't accidentally export internal modules."""
-        import functional_effects
+        import effectful
 
         # These should NOT be in __all__
         unwanted = [
@@ -293,4 +293,4 @@ class TestPublicAPIUsage:
         ]
 
         for name in unwanted:
-            assert name not in functional_effects.__all__, f"Unwanted export: {name}"
+            assert name not in effectful.__all__, f"Unwanted export: {name}"

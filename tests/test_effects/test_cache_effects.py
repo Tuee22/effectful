@@ -12,8 +12,8 @@ from uuid import uuid4
 
 import pytest
 
-from functional_effects.domain.profile import ProfileData
-from functional_effects.effects.cache import GetCachedProfile, PutCachedProfile
+from effectful.domain.profile import ProfileData
+from effectful.effects.cache import GetCachedProfile, PutCachedProfile
 
 
 class TestGetCachedProfile:

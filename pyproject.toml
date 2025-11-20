@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "functional-effects"
+name = "effectful"
 version = "0.1.0"
-description = "Reference implementation of functional effect system for Python backends"
-authors = ["Shipnorth Team"]
+description = "Pure functional effect system for Python with algebraic data types and explicit error handling"
+authors = ["Effectful Team"]
 readme = "README.md"
-packages = [{include = "functional_effects"}]
+packages = [{include = "effectful"}]
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -20,6 +20,19 @@ pytest-mock = "^3.12.0"
 mypy = "^1.7.0"
 black = "^23.11.0"
 ruff = "^0.1.6"
+boto3 = "^1.41.0"
+pre-commit = "^4.4.0"
+mypy-boto3-s3 = "^1.41.0"
+pulsar-client = "^3.8.0"
+
+[tool.poetry.scripts]
+# Code quality
+check-code = "tools.check_code:main"
+
+# Testing
+test-all = "tools.test_runner:run_all"
+test-unit = "tools.test_runner:run_unit"
+test-integration = "tools.test_runner:run_integration"
 
 [build-system]
 requires = ["poetry-core"]
@@ -31,11 +44,15 @@ asyncio_mode = "auto"
 addopts = [
     "--strict-markers",
     "--strict-config",
-    "--cov=functional_effects",
+    "--cov=effectful",
     "--cov-report=term-missing:skip-covered",
     "--cov-report=html",
     "--cov-report=xml",
     "--cov-fail-under=45",
+]
+markers = [
+    "integration: marks tests as integration tests requiring real infrastructure",
+    "unit: marks tests as unit tests using mocks only",
 ]
 
 [tool.mypy]
@@ -77,7 +94,7 @@ ignore = [
 
 [tool.coverage.run]
 branch = true
-source = ["functional_effects"]
+source = ["effectful"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -93,6 +110,7 @@ exclude_lines = [
     "\\.\\.\\.",
 ]
 omit = [
-    "functional_effects/infrastructure/*",
-    "functional_effects/interpreters/base.py",
+    "effectful/infrastructure/*",
+    "effectful/interpreters/base.py",
+    "effectful/adapters/*",
 ]

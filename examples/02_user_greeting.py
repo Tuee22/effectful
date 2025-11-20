@@ -10,7 +10,7 @@ import asyncio
 from collections.abc import Generator
 from uuid import UUID, uuid4
 
-from functional_effects import (
+from effectful import (
     AllEffects,
     ChatMessage,
     EffectResult,
@@ -20,8 +20,8 @@ from functional_effects import (
     User,
     run_ws_program,
 )
-from functional_effects.algebraic.result import Err, Ok
-from functional_effects.testing import FakeUserRepository, create_test_interpreter
+from effectful.algebraic.result import Err, Ok
+from effectful.testing import FakeUserRepository, create_test_interpreter
 
 
 def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:

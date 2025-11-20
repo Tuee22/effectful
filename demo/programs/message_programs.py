@@ -9,12 +9,12 @@ from collections.abc import Generator
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from functional_effects.algebraic.result import Err, Ok, Result
-from functional_effects.effects.database import GetUserById
-from functional_effects.effects.messaging import PublishMessage
-from functional_effects.domain.message import ChatMessage
-from functional_effects.domain.user import User
-from functional_effects.programs.program_types import AllEffects, EffectResult
+from effectful.algebraic.result import Err, Ok, Result
+from effectful.effects.database import GetUserById
+from effectful.effects.messaging import PublishMessage
+from effectful.domain.message import ChatMessage
+from effectful.domain.user import User
+from effectful.programs.program_types import AllEffects, EffectResult
 
 from demo.domain.errors import AppError
 from demo.domain.responses import MessageResponse

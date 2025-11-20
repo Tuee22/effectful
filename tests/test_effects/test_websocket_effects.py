@@ -11,7 +11,7 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from functional_effects.effects.websocket import (
+from effectful.effects.websocket import (
     Close,
     CloseGoingAway,
     CloseNormal,

@@ -8,7 +8,7 @@ Coverage: 100% of messaging effects module.
 
 import pytest
 
-from functional_effects.effects.messaging import (
+from effectful.effects.messaging import (
     AcknowledgeMessage,
     ConsumeMessage,
     NegativeAcknowledge,

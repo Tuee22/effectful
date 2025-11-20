@@ -12,8 +12,10 @@ from pytest_mock import MockerFixture
 from demo.domain.errors import AppError
 from demo.domain.responses import MessageResponse
 from demo.programs.message_programs import get_message_program, send_message_program
-from functional_effects.algebraic.result import Err, Ok
-from functional_effects.domain.user import User
+from effectful.algebraic.result import Err, Ok
+from effectful.domain.user import User
+from effectful.effects.database import GetUserById, ListMessagesForUser
+from effectful.effects.messaging import PublishMessage
 
 
 class TestSendMessageProgram:
@@ -31,13 +33,13 @@ class TestSendMessageProgram:
 
         # Step 1: GetUserById returns user
         effect1 = next(gen)
-        assert effect1.__class__.__name__ == "GetUserById"
+        assert isinstance(effect1, GetUserById)
         assert effect1.user_id == user_id
         result1 = gen.send(user)
 
         # Step 2: PublishMessage to Pulsar
         effect2 = result1
-        assert effect2.__class__.__name__ == "PublishMessage"
+        assert isinstance(effect2, PublishMessage)
         assert effect2.topic == "chat-messages"
         assert b"Hello, world!" in effect2.payload
 

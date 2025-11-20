@@ -1,4 +1,4 @@
-# functional_effects
+# effectful
 
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Type Checked: mypy](https://img.shields.io/badge/type_checked-mypy-blue.svg)](http://mypy-lang.org/)
@@ -21,13 +21,13 @@ A pure functional effect system for Python that brings algebraic data types, exp
 ## Installation
 
 ```bash
-pip install functional-effects
+pip install effectful
 ```
 
 Or with Poetry:
 
 ```bash
-poetry add functional-effects
+poetry add effectful
 ```
 
 ## Quick Start
@@ -36,7 +36,7 @@ poetry add functional-effects
 
 ```python
 from collections.abc import Generator
-from functional_effects import (
+from effectful import (
     AllEffects,
     EffectResult,
     SendText,
@@ -63,7 +63,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 ### Running Programs
 
 ```python
-from functional_effects import create_composite_interpreter
+from effectful import create_composite_interpreter
 
 # Production: use real infrastructure
 interpreter = create_composite_interpreter(
@@ -85,7 +85,7 @@ match result:
 ### Testing Programs
 
 ```python
-from functional_effects.testing import (
+from effectful.testing import (
     create_test_interpreter,
     FakeUserRepository,
     unwrap_ok,
@@ -160,7 +160,7 @@ interpreter = create_composite_interpreter(
 )
 
 # Testing: fake infrastructure
-from functional_effects.testing import create_test_interpreter
+from effectful.testing import create_test_interpreter
 test_interpreter = create_test_interpreter()
 ```
 
@@ -169,7 +169,7 @@ test_interpreter = create_test_interpreter()
 Explicit error handling instead of exceptions:
 
 ```python
-from functional_effects.algebraic.result import Result, Ok, Err
+from effectful.algebraic.result import Result, Ok, Err
 
 # Errors visible in signature
 def divide(a: int, b: int) -> Result[float, str]:
@@ -265,7 +265,7 @@ flowchart TB
 - `AcknowledgeMessage(message_id: str)` - Acknowledge successful message processing
 - `NegativeAcknowledge(message_id: str, delay_seconds: int | None)` - Reject message for redelivery
 
-See [Tutorial 08: Messaging Effects](docs/tutorials/08_messaging_effects.md) for comprehensive examples and patterns.
+See [Tutorial 08: Messaging Effects](documents/tutorials/08_messaging_effects.md) for comprehensive examples and patterns.
 
 ### Storage Effects
 - `GetObject(bucket: str, key: str)` - Retrieve object from S3
@@ -273,12 +273,12 @@ See [Tutorial 08: Messaging Effects](docs/tutorials/08_messaging_effects.md) for
 - `DeleteObject(bucket: str, key: str)` - Remove object from S3
 - `ListObjects(bucket: str, prefix: str | None, max_keys: int)` - List objects in S3 bucket
 
-See [Tutorial 09: Storage Effects](docs/tutorials/09_storage_effects.md) for comprehensive examples and patterns.
+See [Tutorial 09: Storage Effects](documents/tutorials/09_storage_effects.md) for comprehensive examples and patterns.
 
 ## Testing Utilities
 
 ```python
-from functional_effects.testing import (
+from effectful.testing import (
     # Fakes (in-memory test doubles)
     FakeWebSocketConnection,
     FakeUserRepository,
@@ -306,30 +306,30 @@ from functional_effects.testing import (
 ### Tutorials (Step-by-Step Guides)
 
 **Getting Started**:
-- **[01. Quickstart Guide](docs/tutorials/01_quickstart.md)** - Get running in 10 minutes
-- **[02. Effect Types](docs/tutorials/02_effect_types.md)** - Learn all available effects
-- **[03. ADTs and Result Types](docs/tutorials/03_adts_and_results.md)** - Master type safety
+- **[01. Quickstart Guide](documents/tutorials/01_quickstart.md)** - Get running in 10 minutes
+- **[02. Effect Types](documents/tutorials/02_effect_types.md)** - Learn all available effects
+- **[03. ADTs and Result Types](documents/tutorials/03_adts_and_results.md)** - Master type safety
 
 **Advanced Topics**:
-- **[04. Testing Guide](docs/tutorials/04_testing_guide.md)** - Comprehensive testing strategies
-- **[05. Production Deployment](docs/tutorials/05_production_deployment.md)** - Deploy with Docker, PostgreSQL, Redis
-- **[06. Advanced Composition](docs/tutorials/06_advanced_composition.md)** - Build complex workflows
-- **[07. Migration Guide](docs/tutorials/07_migration_guide.md)** - Migrate from imperative code
+- **[04. Testing Guide](documents/tutorials/04_testing_guide.md)** - Comprehensive testing strategies
+- **[05. Production Deployment](documents/tutorials/05_production_deployment.md)** - Deploy with Docker, PostgreSQL, Redis
+- **[06. Advanced Composition](documents/tutorials/06_advanced_composition.md)** - Build complex workflows
+- **[07. Migration Guide](documents/tutorials/07_migration_guide.md)** - Migrate from imperative code
 
 ### API Reference
 
-- **[API Documentation](docs/api/)** - Complete API reference
-  - [Effects API](docs/api/effects.md) - All effect types
-  - [Result Type API](docs/api/result.md) - Result[T, E] and error handling
-  - [Interpreters API](docs/api/interpreters.md) - Executing programs
-  - [Programs API](docs/api/programs.md) - Program types and composition
-  - [Testing API](docs/api/testing.md) - Testing utilities and patterns
+- **[API Documentation](documents/api/)** - Complete API reference
+  - [Effects API](documents/api/effects.md) - All effect types
+  - [Result Type API](documents/api/result.md) - Result[T, E] and error handling
+  - [Interpreters API](documents/api/interpreters.md) - Executing programs
+  - [Programs API](documents/api/programs.md) - Program types and composition
+  - [Testing API](documents/api/testing.md) - Testing utilities and patterns
 
 ### Architecture and Contributing
 
 - **[Architecture](ARCHITECTURE.md)** - Design rationale and patterns
 - **[Contributing](CONTRIBUTING.md)** - Development workflow and standards
-- **[Type Safety Guidelines](functional_effects/CLAUDE.md)** - Zero-tolerance type safety
+- **[Type Safety Guidelines](effectful/CLAUDE.md)** - Zero-tolerance type safety
 
 ## Examples
 
@@ -341,8 +341,8 @@ See [`examples/`](examples/) directory for complete working programs.
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/functional_effects.git
-cd functional_effects
+git clone https://github.com/your-org/effectful.git
+cd effectful
 
 # Install dependencies
 poetry install
@@ -351,10 +351,10 @@ poetry install
 poetry run pytest
 
 # Type check
-poetry run mypy functional_effects
+poetry run mypy effectful
 
 # Format code
-poetry run black functional_effects tests
+poetry run black effectful tests
 ```
 
 ### Running Tests
@@ -364,32 +364,32 @@ poetry run black functional_effects tests
 pytest
 
 # With coverage
-pytest --cov=functional_effects --cov-report=term-missing
+pytest --cov=effectful --cov-report=term-missing
 
 # Specific file
 pytest tests/test_programs/test_runners.py
 
 # Type checking
-mypy --strict functional_effects
+mypy --strict effectful
 ```
 
 ### Code Quality
 
 ```bash
 # Format
-black functional_effects tests
+black effectful tests
 
 # Lint
-ruff check functional_effects tests
+ruff check effectful tests
 
 # Type check (must pass with zero errors)
-mypy --strict functional_effects
+mypy --strict effectful
 ```
 
 ## Project Structure
 
 ```
-functional_effects/
+effectful/
 ├── algebraic/          # Result[T, E], EffectReturn[T]
 ├── domain/             # User, ChatMessage, ProfileData
 ├── effects/            # Effect definitions (SendText, GetUserById, etc.)
@@ -407,7 +407,7 @@ tests/
 ├── test_integration/   # Multi-effect workflow tests
 └── test_testing/       # Testing utilities tests
 
-docs/
+documents/
 ├── tutorials/          # Step-by-step guides (7 tutorials)
 └── api/                # Complete API reference (5 references)
 ```
@@ -421,7 +421,7 @@ This library maintains **zero tolerance** for type safety violations:
 - ❌ **NO** `# type: ignore` comments
 - ✅ **100%** `mypy --strict` compliance
 
-See [CLAUDE.md](functional_effects/CLAUDE.md) for complete type safety guidelines.
+See [CLAUDE.md](effectful/CLAUDE.md) for complete type safety guidelines.
 
 ## Philosophy
 
@@ -448,8 +448,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Support
 
-- **Questions?** Open a [discussion](https://github.com/your-org/functional_effects/discussions)
-- **Bug reports?** File an [issue](https://github.com/your-org/functional_effects/issues)
+- **Questions?** Open a [discussion](https://github.com/your-org/effectful/discussions)
+- **Bug reports?** File an [issue](https://github.com/your-org/effectful/issues)
 - **Contributing?** See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---

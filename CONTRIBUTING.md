@@ -1,6 +1,6 @@
-# Contributing to functional_effects
+# Contributing to effectful
 
-Thank you for considering contributing to **functional_effects**! This guide will help you understand our development workflow, code standards, and testing practices.
+Thank you for considering contributing to **effectful**! This guide will help you understand our development workflow, code standards, and testing practices.
 
 ## Table of Contents
 
@@ -23,15 +23,37 @@ Thank you for considering contributing to **functional_effects**! This guide wil
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/functional_effects.git
-cd functional_effects
+git clone https://github.com/your-org/effectful.git
+cd effectful
 
 # Install dependencies
 poetry install
 
+# Install pre-commit hooks
+poetry run pre-commit install
+
 # Verify setup
 poetry run pytest
-poetry run mypy functional_effects
+poetry run mypy effectful
+```
+
+### Pre-commit Hooks
+
+This project uses pre-commit hooks to enforce code quality. After installation, hooks run automatically on `git commit`:
+
+- **Black**: Code formatting
+- **Ruff**: Fast linting with auto-fix
+- **MyPy**: Strict type checking
+- **General**: Trailing whitespace, YAML validation, etc.
+
+To run hooks manually:
+
+```bash
+# Run on all files
+poetry run pre-commit run --all-files
+
+# Run specific hook
+poetry run pre-commit run mypy --all-files
 ```
 
 ### Development Environment
@@ -44,13 +66,13 @@ poetry shell
 pytest
 
 # Type check
-mypy functional_effects
+mypy effectful
 
 # Format code
-black functional_effects tests
+black effectful tests
 
 # Lint
-ruff check functional_effects tests
+ruff check effectful tests
 ```
 
 ## Code Standards
@@ -117,7 +139,7 @@ def broken_function():  # type: ignore  # FORBIDDEN
 ```python
 # ✅ Always use explicit types
 from uuid import UUID
-from functional_effects.algebraic.result import Result, Ok, Err
+from effectful.algebraic.result import Result, Ok, Err
 
 def process(user_id: UUID) -> Result[User, str]:
     if not isinstance(user_id, UUID):
@@ -177,7 +199,7 @@ async def save_data(data: str) -> bool:
     return True
 
 # ✅ CORRECT - Errors explicit in signature
-from functional_effects.algebraic.result import Result, Ok, Err
+from effectful.algebraic.result import Result, Ok, Err
 
 async def save_data(data: str) -> Result[bool, DatabaseError]:
     try:
@@ -207,13 +229,13 @@ class User:
 
 ```bash
 # Format code before committing
-black functional_effects tests
+black effectful tests
 
 # Check formatting
-black --check functional_effects tests
+black --check effectful tests
 
 # Lint
-ruff check functional_effects tests
+ruff check effectful tests
 ```
 
 **Configuration**: See `pyproject.toml` for Black/Ruff settings.
@@ -226,7 +248,7 @@ All code must have 100% test coverage. No exceptions.
 
 ```bash
 # Run tests with coverage
-pytest --cov=functional_effects --cov-report=term-missing
+pytest --cov=effectful --cov-report=term-missing
 
 # Must show 100% coverage for all modules
 ```
@@ -293,7 +315,7 @@ async def test_user_lookup():
         ...
 
 # ✅ CORRECT - Use fakes
-from functional_effects.testing import FakeUserRepository
+from effectful.testing import FakeUserRepository
 
 @pytest.mark.asyncio
 async def test_user_lookup():
@@ -332,7 +354,7 @@ def test_user_lookup():
     assert_ok(result)
 
 # ✅ CORRECT - Test error cases
-from functional_effects.testing import FailingUserRepository
+from effectful.testing import FailingUserRepository
 
 def test_user_lookup_database_failure():
     failing_repo = FailingUserRepository(error_message="Connection timeout")
@@ -349,10 +371,10 @@ def test_user_lookup_database_failure():
 
 ### Testing Utilities
 
-Use the `functional_effects.testing` module:
+Use the `effectful.testing` module:
 
 ```python
-from functional_effects.testing import (
+from effectful.testing import (
     # Fakes
     FakeWebSocketConnection,
     FakeUserRepository,
@@ -393,20 +415,20 @@ async def test_my_program():
 
 1. **Run full test suite**:
    ```bash
-   pytest --cov=functional_effects --cov-report=term-missing
+   pytest --cov=effectful --cov-report=term-missing
    ```
    Must show 100% coverage, zero failures.
 
 2. **Type check**:
    ```bash
-   mypy functional_effects
+   mypy effectful
    ```
    Must show zero errors.
 
 3. **Format code**:
    ```bash
-   black functional_effects tests
-   ruff check functional_effects tests
+   black effectful tests
+   ruff check effectful tests
    ```
 
 4. **Update documentation** if adding features:
@@ -463,7 +485,7 @@ Brief description of changes.
 
 1. **Define effect** (frozen dataclass):
    ```python
-   # functional_effects/effects/new_category.py
+   # effectful/effects/new_category.py
    from dataclasses import dataclass
 
    @dataclass(frozen=True)
@@ -474,15 +496,15 @@ Brief description of changes.
 
 2. **Add to effect union**:
    ```python
-   # functional_effects/programs/types.py
+   # effectful/programs/types.py
    type NewCategoryEffect = NewEffect | OtherNewEffect
    type AllEffects = WebSocketEffect | DatabaseEffect | CacheEffect | NewCategoryEffect
    ```
 
 3. **Create interpreter**:
    ```python
-   # functional_effects/interpreters/new_category.py
-   from functional_effects.algebraic.result import Result, Ok, Err
+   # effectful/interpreters/new_category.py
+   from effectful.algebraic.result import Result, Ok, Err
 
    class NewCategoryInterpreter:
        async def interpret(self, effect: NewCategoryEffect) -> Result[EffectReturn, InterpreterError]:
@@ -494,7 +516,7 @@ Brief description of changes.
 
 4. **Add to composite interpreter**:
    ```python
-   # functional_effects/interpreters/composite.py
+   # effectful/interpreters/composite.py
    async def interpret(self, effect: AllEffects) -> Result[EffectReturn, InterpreterError]:
        match effect:
            case NewEffect() | OtherNewEffect():
@@ -503,7 +525,7 @@ Brief description of changes.
 
 5. **Create test fake**:
    ```python
-   # functional_effects/testing/fakes.py
+   # effectful/testing/fakes.py
    @dataclass
    class FakeNewCategoryService:
        _state: dict[str, str] = field(default_factory=dict)
@@ -527,7 +549,7 @@ Brief description of changes.
 
 1. **Define ADT variants**:
    ```python
-   # functional_effects/domain/new_model.py
+   # effectful/domain/new_model.py
    from dataclasses import dataclass
 
    @dataclass(frozen=True)
@@ -545,8 +567,8 @@ Brief description of changes.
 
 2. **Export from root**:
    ```python
-   # functional_effects/__init__.py
-   from functional_effects.domain.new_model import (
+   # effectful/__init__.py
+   from effectful.domain.new_model import (
        NewModel,
        NewModelFound,
        NewModelNotFound,
@@ -577,7 +599,7 @@ pytest tests/test_programs/test_runners.py
 pytest tests/test_programs/test_runners.py::TestRunWSProgram::test_immediate_return
 
 # With coverage
-pytest --cov=functional_effects --cov-report=term-missing
+pytest --cov=effectful --cov-report=term-missing
 
 # Verbose
 pytest -v
@@ -587,29 +609,29 @@ pytest -v
 
 ```bash
 # Check entire project
-mypy functional_effects
+mypy effectful
 
 # Check specific file
-mypy functional_effects/programs/runners.py
+mypy effectful/programs/runners.py
 
 # Strict mode (required)
-mypy --strict functional_effects
+mypy --strict effectful
 ```
 
 ### Code Formatting
 
 ```bash
 # Format all code
-black functional_effects tests
+black effectful tests
 
 # Check formatting (CI)
-black --check functional_effects tests
+black --check effectful tests
 
 # Lint
-ruff check functional_effects tests
+ruff check effectful tests
 
 # Auto-fix lint issues
-ruff check --fix functional_effects tests
+ruff check --fix effectful tests
 ```
 
 ### Building Documentation
@@ -627,9 +649,9 @@ open _build/html/index.html
 
 1. Update version in `pyproject.toml`
 2. Update `CHANGELOG.md`
-3. Run full test suite: `pytest --cov=functional_effects`
-4. Type check: `mypy --strict functional_effects`
-5. Format: `black functional_effects tests`
+3. Run full test suite: `pytest --cov=effectful`
+4. Type check: `mypy --strict effectful`
+5. Format: `black effectful tests`
 6. Commit: `git commit -m "Release v0.2.0"`
 7. Tag: `git tag v0.2.0`
 8. Push: `git push && git push --tags`
@@ -638,10 +660,10 @@ open _build/html/index.html
 
 ## Getting Help
 
-- **Documentation**: See `docs/` directory
+- **Documentation**: See `documents/` directory
 - **Examples**: See `examples/` directory
 - **Architecture**: See `ARCHITECTURE.md`
-- **Type Safety**: See `functional_effects/CLAUDE.md`
+- **Type Safety**: See `effectful/CLAUDE.md`
 - **Issues**: GitHub Issues
 - **Discussions**: GitHub Discussions
 

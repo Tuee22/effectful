@@ -11,7 +11,7 @@ from uuid import uuid4
 
 import pytest
 
-from functional_effects.domain.user import User
+from effectful.domain.user import User
 
 
 class TestUser:

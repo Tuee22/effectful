@@ -8,16 +8,16 @@ Program returns are wrapped in Result types for explicit error handling.
 from collections.abc import Generator
 from uuid import UUID
 
-from functional_effects.algebraic.result import Err, Ok, Result
-from functional_effects.effects.cache import InvalidateCache
-from functional_effects.effects.database import (
+from effectful.algebraic.result import Err, Ok, Result
+from effectful.effects.cache import InvalidateCache
+from effectful.effects.database import (
     DeleteUser,
     GetUserById,
     ListUsers,
     UpdateUser,
 )
-from functional_effects.domain.user import User
-from functional_effects.programs.program_types import AllEffects, EffectResult
+from effectful.domain.user import User
+from effectful.programs.program_types import AllEffects, EffectResult
 
 from demo.domain.errors import AppError
 

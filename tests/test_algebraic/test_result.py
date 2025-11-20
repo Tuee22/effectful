@@ -14,7 +14,7 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from functional_effects.algebraic.result import Err, Ok, Result, fold_result
+from effectful.algebraic.result import Err, Ok, Result, fold_result
 
 
 class TestOkConstruction:
