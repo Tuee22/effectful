@@ -156,6 +156,4 @@ class NegativeAcknowledge:
 
 
 # Type alias: Union of all messaging effects (PEP 695)
-type MessagingEffect = (
-    PublishMessage | ConsumeMessage | AcknowledgeMessage | NegativeAcknowledge
-)
+type MessagingEffect = (PublishMessage | ConsumeMessage | AcknowledgeMessage | NegativeAcknowledge)

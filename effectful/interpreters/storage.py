@@ -85,9 +85,7 @@ class StorageInterpreter:
                 metadata=metadata,
                 content_type=content_type,
             ):
-                return await self._handle_put(
-                    bucket, key, content, metadata, content_type, effect
-                )
+                return await self._handle_put(bucket, key, content, metadata, content_type, effect)
             case DeleteObject(bucket=bucket, key=key):
                 return await self._handle_delete(bucket, key, effect)
             case ListObjects(bucket=bucket, prefix=prefix, max_keys=max_keys):
@@ -139,9 +137,7 @@ class StorageInterpreter:
             Domain failures (quota, permissions) are handled by PutResult ADT.
         """
         try:
-            put_result = await self.storage.put_object(
-                bucket, key, content, metadata, content_type
-            )
+            put_result = await self.storage.put_object(bucket, key, content, metadata, content_type)
 
             # Pattern match on PutResult ADT
             match put_result:

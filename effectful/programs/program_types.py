@@ -9,12 +9,13 @@ This module defines type aliases for effect programs including:
 from collections.abc import Generator
 from uuid import UUID
 
+from effectful.domain.cache_result import CacheMiss
 from effectful.domain.message import ChatMessage
-from effectful.domain.message_envelope import MessageEnvelope
+from effectful.domain.message_envelope import ConsumeTimeout, MessageEnvelope
 from effectful.domain.profile import ProfileData
 from effectful.domain.s3_object import S3Object
 from effectful.domain.token_result import TokenValidationResult
-from effectful.domain.user import User
+from effectful.domain.user import User, UserNotFound
 from effectful.effects.auth import AuthEffect
 from effectful.effects.cache import CacheEffect
 from effectful.effects.database import DatabaseEffect
@@ -29,17 +30,28 @@ type AllEffects = (
 
 # Union of all possible return values from effects
 # This replaces 'Any' for strict type safety
+# ADT types are used instead of None for explicit domain semantics
 type EffectResult = (
     None  # Most effects return None (SendText, Close, PutCachedProfile, AcknowledgeMessage, NegativeAcknowledge, DeleteObject, RevokeToken)
-    | str  # ReceiveText, PublishMessage, PutObject, GenerateToken, RefreshToken return str (RefreshToken can also return None)
+    | str  # ReceiveText, PublishMessage, PutObject, GenerateToken, RefreshToken return str
     | bool  # ValidatePassword, UpdateUser, DeleteUser return bool
     | UUID  # CreateUser returns UUID
-    | User  # GetUserById, GetUserByEmail returns Optional[User] (None handled in union)
+    # User ADTs
+    | User  # GetUserById, GetUserByEmail returns User on success
+    | UserNotFound  # GetUserById, GetUserByEmail returns UserNotFound when not found
+    # Message types
     | ChatMessage  # SaveChatMessage returns ChatMessage
-    | ProfileData  # GetCachedProfile returns Optional[ProfileData]
-    | MessageEnvelope  # ConsumeMessage returns Optional[MessageEnvelope]
-    | S3Object  # GetObject returns Optional[S3Object]
+    # Cache ADTs
+    | ProfileData  # GetCachedProfile returns ProfileData on cache hit
+    | CacheMiss  # GetCachedProfile returns CacheMiss on cache miss
+    # Messaging ADTs
+    | MessageEnvelope  # ConsumeMessage returns MessageEnvelope on success
+    | ConsumeTimeout  # ConsumeMessage returns ConsumeTimeout on timeout
+    # Storage types
+    | S3Object  # GetObject returns S3Object on success (None for not found)
+    # Token ADTs
     | TokenValidationResult  # ValidateToken returns TokenValidationResult ADT (TokenValid | TokenExpired | TokenInvalid)
+    # List types
     | list[ChatMessage]  # ListMessagesForUser returns list[ChatMessage]
     | list[str]  # ListObjects returns list[str] (object keys)
     | list[User]  # ListUsers returns list[User]

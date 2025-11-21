@@ -18,9 +18,7 @@ class TestRedisProfileCache:
     """Tests for RedisProfileCache."""
 
     @pytest.mark.asyncio
-    async def test_get_profile_returns_cache_hit_when_found(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_get_profile_returns_cache_hit_when_found(self, mocker: MockerFixture) -> None:
         """Test successful cache lookup returns CacheHit with ProfileData."""
         # Setup
         user_id = uuid4()
@@ -68,9 +66,7 @@ class TestRedisProfileCache:
         assert result.reason == "not_found"
 
     @pytest.mark.asyncio
-    async def test_get_profile_returns_cache_miss_when_expired(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_get_profile_returns_cache_miss_when_expired(self, mocker: MockerFixture) -> None:
         """Test cache lookup returns CacheMiss when TTL indicates expired."""
         # Setup
         user_id = uuid4()
@@ -92,9 +88,7 @@ class TestRedisProfileCache:
         assert result.reason == "expired"
 
     @pytest.mark.asyncio
-    async def test_get_profile_handles_no_expiration(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_get_profile_handles_no_expiration(self, mocker: MockerFixture) -> None:
         """Test cache lookup handles -1 TTL (no expiration set)."""
         # Setup
         user_id = uuid4()
@@ -115,9 +109,7 @@ class TestRedisProfileCache:
         assert result.ttl_remaining == 0  # Normalized to 0
 
     @pytest.mark.asyncio
-    async def test_put_profile_stores_with_ttl(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_put_profile_stores_with_ttl(self, mocker: MockerFixture) -> None:
         """Test storing profile sets correct key, value, and TTL."""
         # Setup
         user_id = uuid4()
@@ -142,9 +134,7 @@ class TestRedisProfileCache:
         assert call_args.args[2] == expected_json
 
     @pytest.mark.asyncio
-    async def test_put_profile_serializes_profile_correctly(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_put_profile_serializes_profile_correctly(self, mocker: MockerFixture) -> None:
         """Test that profile is correctly serialized to JSON."""
         # Setup
         user_id = uuid4()

@@ -98,8 +98,39 @@ class Err[E]:
 type Result[T, E] = Ok[T] | Err[E]
 
 
+def assert_never(value: Never) -> Never:
+    """Assert that a code path is unreachable.
+
+    Use this in exhaustive match statements to ensure all cases are handled.
+    If this function is ever called at runtime, it indicates a bug in the type system
+    or a missing case in pattern matching.
+
+    Args:
+        value: A value that should be of type Never (unreachable)
+
+    Raises:
+        AssertionError: Always raises with information about the unexpected value
+
+    Example:
+        >>> type Status = Active | Inactive | Pending
+        >>> def handle(status: Status) -> str:
+        ...     match status:
+        ...         case Active():
+        ...             return "active"
+        ...         case Inactive():
+        ...             return "inactive"
+        ...         case Pending():
+        ...             return "pending"
+        ...         case _ as unreachable:
+        ...             assert_never(unreachable)
+    """
+    raise AssertionError(f"Unexpected value: {value!r} of type {type(value).__name__}")
+
+
 def fold_result(
-    result: Result[T, E], on_ok: Callable[[T], U], on_err: Callable[[E], U],
+    result: Result[T, E],
+    on_ok: Callable[[T], U],
+    on_err: Callable[[E], U],
 ) -> U:
     """Fold pattern for exhaustive Result handling.
 

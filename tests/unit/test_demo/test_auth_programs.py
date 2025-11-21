@@ -369,9 +369,7 @@ class TestRegisterProgram:
         existing_user = User(id=uuid4(), email="alice@example.com", name="Alice")
 
         # Mock the program execution
-        gen = register_program(
-            email="alice@example.com", name="Alice2", password="secret123"
-        )
+        gen = register_program(email="alice@example.com", name="Alice2", password="secret123")
 
         # Step 1: GetUserByEmail returns existing user
         effect1 = next(gen)

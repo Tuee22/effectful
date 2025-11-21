@@ -41,23 +41,28 @@ Layer 5: Infrastructure Layer (PostgreSQL, Redis, S3, Pulsar, or test doubles)
 
 ## 📋 Command Reference
 
-**Base pattern**: `docker compose -f docker/docker-compose.yml exec effectful poetry run <command>`
+**All commands run inside Docker**: `docker compose -f docker/docker-compose.yml exec effectful poetry run <command>`
+
+**Important**: Poetry is NOT set up as a virtual environment. Running `poetry install` outside the container should not create a `.venv` directory. All development happens inside Docker.
 
 | Task | Command |
 |------|---------|
 | Start services | `docker compose -f docker/docker-compose.yml up -d` |
 | View logs | `docker compose -f docker/docker-compose.yml logs -f effectful` |
-| Check code quality | `poetry run check-code` |
-| Type check | `poetry run mypy effectful` |
-| Format code | `poetry run black effectful tests` |
-| Lint code | `poetry run ruff check effectful tests` |
-| Test all | `poetry run test-all` |
-| Test unit | `poetry run test-unit` |
-| Test integration | `poetry run test-integration` |
-| Test with coverage | `poetry run pytest --cov=effectful` |
-| Install deps | `poetry install` |
-| Build package | `poetry build` |
+| Check code quality | `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code` |
+| Test all | `docker compose -f docker/docker-compose.yml exec effectful poetry run test-all` |
+| Test unit | `docker compose -f docker/docker-compose.yml exec effectful poetry run test-unit` |
+| Test integration | `docker compose -f docker/docker-compose.yml exec effectful poetry run test-integration` |
 | Python shell | `docker compose -f docker/docker-compose.yml exec effectful poetry run python` |
+| Build package | `docker compose -f docker/docker-compose.yml exec effectful poetry build` |
+
+**Entrypoints**:
+- `check-code` - Black formatter + MyPy strict type checking
+- `test-unit` - Unit tests only (pytest-mock, no I/O)
+- `test-integration` - Integration tests (real PostgreSQL, Redis, MinIO, Pulsar)
+- `test-all` - Complete test suite
+
+**Test Isolation**: Each test is responsible for creating reproducible starting conditions (e.g., TRUNCATE + seed in fixtures).
 
 **With output capture**: Add `> /tmp/test-output.txt 2>&1` to any test command (see Test Output Management).
 
@@ -203,17 +208,16 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest > /
 
 **Usage**: `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code` (see Command Reference)
 
-### MyPy + Black + Ruff Workflow
+### Black + MyPy Workflow
 
-Runs MyPy (strict type checker) → Black (formatter) → Ruff (linter) with fail-fast behavior.
+Runs Black (formatter) → MyPy (strict type checker) with fail-fast behavior.
 
 **Behavior**:
-1. **MyPy**: Strict type checking with 20+ strict settings, disallow_any_explicit=true
-2. **Black**: Auto-formats Python code (line-length=100)
-3. **Ruff**: Extensive linting (100+ rules enabled)
-4. **Fail-fast**: Exits on first failure
+1. **Black**: Auto-formats Python code (line-length=100)
+2. **MyPy**: Strict type checking with 30+ strict settings, disallow_any_explicit=true
+3. **Fail-fast**: Exits on first failure
 
-Must meet Universal Success Criteria (exit code 0, zero MyPy errors, zero Ruff violations, Black formatting applied).
+Must meet Universal Success Criteria (exit code 0, Black formatting applied, zero MyPy errors).
 
 ## 🛡️ Type Safety Doctrines
 

@@ -18,6 +18,7 @@ from effectful import (
     SaveChatMessage,
     SendText,
     User,
+    UserNotFound,
     run_ws_program,
 )
 from effectful.algebraic.result import Err, Ok
@@ -41,7 +42,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 
     # Pattern match on result
     match user_result:
-        case None:
+        case UserNotFound():
             # User not found
             yield SendText(text="Error: User not found")
             return "not_found"
@@ -61,6 +62,9 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
             yield SendText(text=f"Message saved with ID: {message.id}")
 
             return "success"
+
+        case unexpected:
+            raise AssertionError(f"Unexpected type: {type(unexpected)}")
 
 
 async def main() -> None:

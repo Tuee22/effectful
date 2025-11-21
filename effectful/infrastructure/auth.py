@@ -28,9 +28,7 @@ class AuthService(Protocol):
         """
         ...
 
-    async def generate_token(
-        self, user_id: UUID, claims: dict[str, str], ttl_seconds: int
-    ) -> str:
+    async def generate_token(self, user_id: UUID, claims: dict[str, str], ttl_seconds: int) -> str:
         """Generate new JWT token for user.
 
         Args:

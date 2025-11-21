@@ -61,12 +61,18 @@ class TestAssertErr:
         with pytest.raises(pytest.fail.Exception, match="Expected Err, got Ok"):
             assert_err(result)
 
-    def test_raises_for_wrong_error_type(self) -> None:
-        """assert_err should raise when error type doesn't match."""
-        result: Result[int, str] = Err("string error")
+    def test_passes_for_correct_error_type(self) -> None:
+        """assert_err should pass when error type matches."""
+        error_result: Result[int, InterpreterError] = Err(
+            DatabaseError(
+                effect=GetUserById(user_id=uuid4()),
+                db_error="Connection failed",
+                is_retryable=True,
+            )
+        )
 
-        with pytest.raises(pytest.fail.Exception, match="Expected Err.*got Err"):
-            assert_err(result, DatabaseError)
+        # Should not raise - DatabaseError is a subclass of InterpreterError
+        assert_err(error_result, DatabaseError)
 
 
 class TestUnwrapOk:

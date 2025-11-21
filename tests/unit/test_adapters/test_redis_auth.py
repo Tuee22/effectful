@@ -18,9 +18,7 @@ class TestRedisAuthServiceValidateToken:
     """Tests for RedisAuthService.validate_token."""
 
     @pytest.mark.asyncio
-    async def test_validate_token_returns_valid_for_good_token(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_validate_token_returns_valid_for_good_token(self, mocker: MockerFixture) -> None:
         """Test valid token returns TokenValid with user_id and claims."""
         # Setup
         user_id = uuid4()
@@ -156,9 +154,7 @@ class TestRedisAuthServiceGenerateToken:
     """Tests for RedisAuthService.generate_token."""
 
     @pytest.mark.asyncio
-    async def test_generate_token_creates_valid_jwt(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_generate_token_creates_valid_jwt(self, mocker: MockerFixture) -> None:
         """Test generating token creates a valid JWT."""
         # Setup
         user_id = uuid4()
@@ -180,9 +176,7 @@ class TestRedisAuthServiceGenerateToken:
         assert "exp" in decoded
 
     @pytest.mark.asyncio
-    async def test_generate_token_stores_session_in_redis(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_generate_token_stores_session_in_redis(self, mocker: MockerFixture) -> None:
         """Test generating token stores session in Redis."""
         # Setup
         user_id = uuid4()
@@ -202,9 +196,7 @@ class TestRedisAuthServiceGenerateToken:
         assert call_args.args[2] == token
 
     @pytest.mark.asyncio
-    async def test_generate_token_sets_correct_expiration(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_generate_token_sets_correct_expiration(self, mocker: MockerFixture) -> None:
         """Test token has correct expiration time."""
         # Setup
         user_id = uuid4()
@@ -262,7 +254,7 @@ class TestRedisAuthServiceRefreshToken:
         new_token = await auth_service.refresh_token(refresh_token)
 
         # Assert
-        assert new_token is not None
+        assert isinstance(new_token, str)
         # New token will have different expiration (1 hour from now vs 30 minutes)
         # so it should be different
         decoded_old = jwt.decode(refresh_token, secret, algorithms=["HS256"])
@@ -318,9 +310,7 @@ class TestRedisAuthServiceRevokeToken:
     """Tests for RedisAuthService.revoke_token."""
 
     @pytest.mark.asyncio
-    async def test_revoke_token_adds_to_blacklist(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_revoke_token_adds_to_blacklist(self, mocker: MockerFixture) -> None:
         """Test revoking token adds it to Redis blacklist."""
         # Setup
         user_id = uuid4()

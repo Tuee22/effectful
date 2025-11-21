@@ -22,7 +22,7 @@ from effectful.adapters.redis_cache import RedisProfileCache
 from effectful.adapters.s3_storage import S3ObjectStorage
 from effectful.domain.cache_result import CacheHit, CacheMiss
 from effectful.domain.profile import ProfileData
-from effectful.domain.s3_object import PutSuccess
+from effectful.domain.s3_object import PutSuccess, S3Object
 from effectful.domain.user import User, UserFound, UserNotFound
 
 
@@ -30,9 +30,7 @@ class TestPostgresUserRepository:
     """Integration tests for PostgresUserRepository with real PostgreSQL."""
 
     @pytest.mark.asyncio
-    async def test_get_user_not_found(
-        self, user_repo: PostgresUserRepository
-    ) -> None:
+    async def test_get_user_not_found(self, user_repo: PostgresUserRepository) -> None:
         """get_by_id returns UserNotFound for nonexistent user."""
         user_id = uuid4()
         result = await user_repo.get_by_id(user_id)
@@ -110,9 +108,7 @@ class TestPostgresChatMessageRepository:
         assert messages[1].text == "World"
 
     @pytest.mark.asyncio
-    async def test_list_messages_empty(
-        self, message_repo: PostgresChatMessageRepository
-    ) -> None:
+    async def test_list_messages_empty(self, message_repo: PostgresChatMessageRepository) -> None:
         """list_messages_for_user returns empty list for user with no messages."""
         user_id = uuid4()
         messages = await message_repo.list_messages_for_user(user_id)
@@ -136,9 +132,7 @@ class TestRedisProfileCache:
                 pytest.fail("Expected CacheMiss, got CacheHit")
 
     @pytest.mark.asyncio
-    async def test_put_and_get_profile(
-        self, profile_cache: RedisProfileCache
-    ) -> None:
+    async def test_put_and_get_profile(self, profile_cache: RedisProfileCache) -> None:
         """put_profile stores and get_profile retrieves with TTL."""
         user_id = uuid4()
         profile = ProfileData(id=str(user_id), name="Alice")
@@ -174,6 +168,7 @@ class TestRedisProfileCache:
 
         # Wait for expiration
         import asyncio
+
         await asyncio.sleep(1.5)
 
         # Should be expired
@@ -219,7 +214,7 @@ class TestS3ObjectStorage:
 
         # Get object
         obj = await object_storage.get_object(s3_bucket, key)
-        assert obj is not None
+        assert isinstance(obj, S3Object)
         assert obj.content == content
         assert obj.key == key
         assert obj.bucket == s3_bucket
@@ -228,9 +223,7 @@ class TestS3ObjectStorage:
         assert obj.size == len(content)
 
     @pytest.mark.asyncio
-    async def test_delete_object(
-        self, object_storage: S3ObjectStorage, s3_bucket: str
-    ) -> None:
+    async def test_delete_object(self, object_storage: S3ObjectStorage, s3_bucket: str) -> None:
         """delete_object removes object from storage."""
         key = f"test/{uuid4()}/to-delete.txt"
 
@@ -238,7 +231,8 @@ class TestS3ObjectStorage:
         await object_storage.put_object(s3_bucket, key, b"delete me")
 
         # Verify it exists
-        assert await object_storage.get_object(s3_bucket, key) is not None
+        obj = await object_storage.get_object(s3_bucket, key)
+        assert isinstance(obj, S3Object)
 
         # Delete
         await object_storage.delete_object(s3_bucket, key)
@@ -255,9 +249,7 @@ class TestS3ObjectStorage:
         await object_storage.delete_object(s3_bucket, "nonexistent/key.txt")
 
     @pytest.mark.asyncio
-    async def test_list_objects(
-        self, object_storage: S3ObjectStorage, s3_bucket: str
-    ) -> None:
+    async def test_list_objects(self, object_storage: S3ObjectStorage, s3_bucket: str) -> None:
         """list_objects returns keys matching prefix."""
         prefix = f"list-test/{uuid4()}"
 

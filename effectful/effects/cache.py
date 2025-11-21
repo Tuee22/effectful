@@ -85,9 +85,5 @@ class PutCachedValue:
 
 # ADT: Union of all cache effects using PEP 695 type statement
 type CacheEffect = (
-    GetCachedProfile
-    | PutCachedProfile
-    | InvalidateCache
-    | GetCachedValue
-    | PutCachedValue
+    GetCachedProfile | PutCachedProfile | InvalidateCache | GetCachedValue | PutCachedValue
 )

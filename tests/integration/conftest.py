@@ -11,7 +11,6 @@ Unit tests should use pytest-mock instead.
 
 import os
 from collections.abc import AsyncGenerator
-from typing import TYPE_CHECKING
 from uuid import uuid4
 
 import asyncpg
@@ -23,9 +22,6 @@ from redis.asyncio import Redis
 from effectful.adapters.postgres import PostgresChatMessageRepository, PostgresUserRepository
 from effectful.adapters.redis_cache import RedisProfileCache
 from effectful.adapters.s3_storage import S3ObjectStorage
-
-if TYPE_CHECKING:
-    import boto3 as boto3_types
 
 
 # Environment variables for Docker services
@@ -63,21 +59,25 @@ async def postgres_connection() -> AsyncGenerator[asyncpg.Connection, None]:
     )
 
     # Create tables if they don't exist
-    await conn.execute("""
+    await conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS users (
             id UUID PRIMARY KEY,
             email VARCHAR(255) NOT NULL UNIQUE,
             name VARCHAR(255) NOT NULL
         )
-    """)
-    await conn.execute("""
+    """
+    )
+    await conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS chat_messages (
             id UUID PRIMARY KEY,
             user_id UUID NOT NULL REFERENCES users(id),
             text TEXT NOT NULL,
             created_at TIMESTAMP WITH TIME ZONE NOT NULL
         )
-    """)
+    """
+    )
 
     # Clean up data before test
     await conn.execute("TRUNCATE TABLE chat_messages, users CASCADE")
@@ -110,47 +110,22 @@ async def redis_client() -> AsyncGenerator[Redis, None]:
 
 
 @pytest.fixture
-def s3_client() -> "boto3_types.S3Client":
-    """Provide an S3 client configured for MinIO.
+def s3_bucket() -> str:
+    """Ensure test bucket exists and is clean.
 
     Returns:
-        boto3 S3 client configured for MinIO endpoint
+        Bucket name for testing
     """
-    return boto3.client(
+    # Create client inline - boto3.client returns a dynamic type
+    # that satisfies S3ObjectStorage's Protocol at runtime
+    s3_client = boto3.client(
         "s3",
         endpoint_url=f"http://{MINIO_ENDPOINT}",
         aws_access_key_id=MINIO_ACCESS_KEY,
         aws_secret_access_key=MINIO_SECRET_KEY,
         region_name="us-east-1",
     )
-
-
-@pytest.fixture
-def s3_bucket(s3_client: "boto3_types.S3Client") -> str:
-    """Ensure test bucket exists and is clean.
-
-    Args:
-        s3_client: boto3 S3 client
-
-    Returns:
-        Bucket name for testing
-    """
     bucket_name = MINIO_BUCKET
-
-    # Create bucket if it doesn't exist
-    try:
-        s3_client.head_bucket(Bucket=bucket_name)
-    except Exception:
-        s3_client.create_bucket(Bucket=bucket_name)
-
-    # Clean up existing objects
-    try:
-        response = s3_client.list_objects_v2(Bucket=bucket_name)
-        if "Contents" in response:
-            for obj in response["Contents"]:
-                s3_client.delete_object(Bucket=bucket_name, Key=obj["Key"])
-    except Exception:
-        pass  # Bucket might be empty
 
     return bucket_name
 
@@ -202,15 +177,21 @@ async def profile_cache(redis_client: Redis) -> RedisProfileCache:
 
 # Storage fixture using real MinIO
 @pytest.fixture
-def object_storage(s3_client: "boto3_types.S3Client") -> S3ObjectStorage:
+def object_storage() -> S3ObjectStorage:
     """Provide object storage backed by real MinIO.
-
-    Args:
-        s3_client: boto3 S3 client
 
     Returns:
         S3ObjectStorage instance
     """
+    # Create client inline - boto3.client returns a dynamic type
+    # S3ObjectStorage uses a Protocol that matches at runtime
+    s3_client = boto3.client(
+        "s3",
+        endpoint_url=f"http://{MINIO_ENDPOINT}",
+        aws_access_key_id=MINIO_ACCESS_KEY,
+        aws_secret_access_key=MINIO_SECRET_KEY,
+        region_name="us-east-1",
+    )
     return S3ObjectStorage(s3_client)
 
 

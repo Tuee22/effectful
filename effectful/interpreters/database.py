@@ -71,19 +71,19 @@ class DatabaseInterpreter:
     ) -> Result[EffectReturn[EffectResult], InterpreterError]:
         """Handle GetUserById effect.
 
-        Returns the User if found, None if not found (following ADT pattern).
-        The interpreter unwraps UserLookupResult ADT to Optional[User] for EffectResult.
+        Returns the User if found, UserNotFound ADT if not found.
+        ADT types provide explicit semantics instead of None.
         """
         try:
             lookup_result = await self.user_repo.get_by_id(user_id)
-            # Pattern match on UserLookupResult ADT and unwrap to Optional[User]
+            # Pattern match on UserLookupResult ADT and return appropriate type
             match lookup_result:
                 case UserFound(user=user, source=_):
                     # User found - return the User object
                     return Ok(EffectReturn(value=user, effect_name="GetUserById"))
-                case UserNotFound(user_id=_, reason=_):
-                    # User not found - return None (part of EffectResult union)
-                    return Ok(EffectReturn(value=None, effect_name="GetUserById"))
+                case UserNotFound() as not_found:
+                    # User not found - return the ADT type directly
+                    return Ok(EffectReturn(value=not_found, effect_name="GetUserById"))
         except Exception as e:
             return Err(
                 DatabaseError(

@@ -12,6 +12,7 @@ from uuid import UUID, uuid4
 
 from effectful import (
     AllEffects,
+    CacheMiss,
     EffectResult,
     GetCachedProfile,
     GetUserById,
@@ -19,6 +20,7 @@ from effectful import (
     PutCachedProfile,
     SendText,
     User,
+    UserNotFound,
     run_ws_program,
 )
 from effectful.algebraic.result import Err, Ok
@@ -56,14 +58,14 @@ def get_profile_with_caching(user_id: UUID) -> Generator[AllEffects, EffectResul
             yield SendText(text=f"Profile: {name} ({email}) [from cache]")
             return "cache_hit"
 
-        case _:
+        case CacheMiss():
             # Cache miss - lookup user in database
             yield SendText(text="Cache miss - querying database...")
 
             user_result = yield GetUserById(user_id=user_id)
 
             match user_result:
-                case None:
+                case UserNotFound():
                     # User not found
                     yield SendText(text="Error: User not found")
                     return "not_found"
@@ -78,6 +80,12 @@ def get_profile_with_caching(user_id: UUID) -> Generator[AllEffects, EffectResul
                     yield SendText(text=f"Profile: {name} ({email}) [from database]")
 
                     return "cache_miss"
+
+                case unexpected:
+                    raise AssertionError(f"Unexpected user result: {type(unexpected)}")
+
+        case unexpected:
+            raise AssertionError(f"Unexpected cache result: {type(unexpected)}")
 
 
 async def main() -> None:

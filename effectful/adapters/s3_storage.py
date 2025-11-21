@@ -24,9 +24,7 @@ try:
     import boto3
     from botocore.exceptions import ClientError
 except ImportError:
-    raise ImportError(
-        "S3 support requires boto3 library. " "Install with: pip install boto3"
-    )
+    raise ImportError("S3 support requires boto3 library. " "Install with: pip install boto3")
 
 if TYPE_CHECKING:
     from mypy_boto3_s3.client import S3Client
@@ -35,7 +33,9 @@ else:
     class S3Client(Protocol):
         """Protocol for S3 client operations."""
 
-        def get_object(self, Bucket: str, Key: str) -> dict[str, object]: ...
+        def get_object(self, Bucket: str, Key: str) -> dict[str, object]:
+            ...
+
         def put_object(
             self,
             Bucket: str,
@@ -43,11 +43,15 @@ else:
             Body: bytes,
             ContentType: str = ...,
             Metadata: dict[str, str] = ...,
-        ) -> dict[str, object]: ...
-        def delete_object(self, Bucket: str, Key: str) -> dict[str, object]: ...
-        def list_objects_v2(
-            self, Bucket: str, Prefix: str = ...
-        ) -> dict[str, object]: ...
+        ) -> dict[str, object]:
+            ...
+
+        def delete_object(self, Bucket: str, Key: str) -> dict[str, object]:
+            ...
+
+        def list_objects_v2(self, Bucket: str, Prefix: str = ...) -> dict[str, object]:
+            ...
+
 
 from effectful.domain.s3_object import (
     PutFailure,
@@ -120,10 +124,14 @@ class S3ObjectStorage(ObjectStorage):
             metadata: dict[str, str] = metadata_obj if isinstance(metadata_obj, dict) else {}
 
             content_type_obj = response.get("ContentType")
-            content_type: str | None = content_type_obj if isinstance(content_type_obj, str) else None
+            content_type: str | None = (
+                content_type_obj if isinstance(content_type_obj, str) else None
+            )
 
             last_modified_obj = response.get("LastModified")
-            last_modified: datetime | None = last_modified_obj if isinstance(last_modified_obj, datetime) else None
+            last_modified: datetime | None = (
+                last_modified_obj if isinstance(last_modified_obj, datetime) else None
+            )
 
             version_id_obj = response.get("VersionId")
             version_id: str | None = version_id_obj if isinstance(version_id_obj, str) else None
@@ -138,9 +146,7 @@ class S3ObjectStorage(ObjectStorage):
                 key=key,
                 bucket=bucket,
                 content=content,
-                last_modified=last_modified.astimezone(UTC)
-                if last_modified
-                else datetime.now(UTC),
+                last_modified=last_modified.astimezone(UTC) if last_modified else datetime.now(UTC),
                 metadata=metadata,
                 content_type=content_type,
                 size=content_length,
@@ -230,9 +236,7 @@ class S3ObjectStorage(ObjectStorage):
                     return PutFailure(key=key, bucket=bucket, reason="permission_denied")
                 case "ObjectLockConfigurationNotFoundError" | "InvalidObjectState":
                     # Object state issues
-                    return PutFailure(
-                        key=key, bucket=bucket, reason="invalid_object_state"
-                    )
+                    return PutFailure(key=key, bucket=bucket, reason="invalid_object_state")
                 case _:
                     # Unknown error - raise for infrastructure layer to handle
                     raise

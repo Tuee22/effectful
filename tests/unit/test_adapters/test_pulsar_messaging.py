@@ -24,9 +24,7 @@ class TestPulsarMessageProducer:
     """Tests for PulsarMessageProducer."""
 
     @pytest.mark.asyncio
-    async def test_publish_returns_success_with_message_id(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_publish_returns_success_with_message_id(self, mocker: MockerFixture) -> None:
         """Test successful publish returns PublishSuccess."""
         # Setup
         topic = "user-events"
@@ -57,9 +55,7 @@ class TestPulsarMessageProducer:
         mock_producer.send.assert_called_once_with(payload, properties=properties)
 
     @pytest.mark.asyncio
-    async def test_publish_reuses_producer_for_same_topic(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_publish_reuses_producer_for_same_topic(self, mocker: MockerFixture) -> None:
         """Test producer is cached and reused for same topic."""
         # Setup
         mock_msg_id = mocker.MagicMock()
@@ -80,9 +76,7 @@ class TestPulsarMessageProducer:
         assert mock_producer.send.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_publish_returns_failure_for_timeout(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_publish_returns_failure_for_timeout(self, mocker: MockerFixture) -> None:
         """Test publish timeout returns PublishFailure."""
         # Setup
         mock_producer = mocker.MagicMock()
@@ -102,9 +96,7 @@ class TestPulsarMessageProducer:
         assert result.reason == "timeout"
 
     @pytest.mark.asyncio
-    async def test_publish_returns_failure_for_queue_full(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_publish_returns_failure_for_queue_full(self, mocker: MockerFixture) -> None:
         """Test publish with full queue returns PublishFailure."""
         # Setup
         mock_producer = mocker.MagicMock()
@@ -148,9 +140,7 @@ class TestPulsarMessageConsumer:
     """Tests for PulsarMessageConsumer."""
 
     @pytest.mark.asyncio
-    async def test_receive_returns_message_envelope(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_receive_returns_message_envelope(self, mocker: MockerFixture) -> None:
         """Test successful receive returns MessageEnvelope."""
         # Setup
         subscription = "user-events/my-subscription"
@@ -179,7 +169,6 @@ class TestPulsarMessageConsumer:
         result = await consumer.receive(subscription, timeout_ms=1000)
 
         # Assert
-        assert result is not None
         assert isinstance(result, MessageEnvelope)
         assert "msg-456" in result.message_id
         assert result.payload == b'{"event": "login"}'
@@ -194,9 +183,7 @@ class TestPulsarMessageConsumer:
         mock_consumer.receive.assert_called_once_with(timeout_millis=1000)
 
     @pytest.mark.asyncio
-    async def test_receive_returns_none_on_timeout(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_receive_returns_none_on_timeout(self, mocker: MockerFixture) -> None:
         """Test receive timeout returns None."""
         # Setup
         mock_consumer = mocker.MagicMock()
@@ -243,9 +230,7 @@ class TestPulsarMessageConsumer:
         assert mock_consumer.receive.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_acknowledge_calls_consumer_acknowledge(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_acknowledge_calls_consumer_acknowledge(self, mocker: MockerFixture) -> None:
         """Test acknowledge calls consumer.acknowledge with correct message."""
         # Setup
         mock_msg = mocker.MagicMock()
@@ -267,7 +252,7 @@ class TestPulsarMessageConsumer:
 
         # Receive message first
         envelope = await consumer.receive("topic/sub", timeout_ms=100)
-        assert envelope is not None
+        assert isinstance(envelope, MessageEnvelope)
 
         # Execute
         await consumer.acknowledge(envelope.message_id)
@@ -276,9 +261,7 @@ class TestPulsarMessageConsumer:
         mock_consumer.acknowledge.assert_called_once_with(mock_msg)
 
     @pytest.mark.asyncio
-    async def test_acknowledge_raises_for_unknown_message(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_acknowledge_raises_for_unknown_message(self, mocker: MockerFixture) -> None:
         """Test acknowledge raises KeyError for unknown message_id."""
         # Setup
         mock_client = mocker.MagicMock()
@@ -289,9 +272,7 @@ class TestPulsarMessageConsumer:
             await consumer.acknowledge("unknown-msg-id")
 
     @pytest.mark.asyncio
-    async def test_negative_acknowledge_calls_consumer_nack(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_negative_acknowledge_calls_consumer_nack(self, mocker: MockerFixture) -> None:
         """Test negative_acknowledge calls consumer.negative_acknowledge."""
         # Setup
         mock_msg = mocker.MagicMock()
@@ -313,7 +294,7 @@ class TestPulsarMessageConsumer:
 
         # Receive message first
         envelope = await consumer.receive("topic/sub", timeout_ms=100)
-        assert envelope is not None
+        assert isinstance(envelope, MessageEnvelope)
 
         # Execute
         await consumer.negative_acknowledge(envelope.message_id, delay_ms=1000)
@@ -335,9 +316,7 @@ class TestPulsarMessageConsumer:
             await consumer.negative_acknowledge("unknown-msg-id")
 
     @pytest.mark.asyncio
-    async def test_receive_handles_simple_subscription_name(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_receive_handles_simple_subscription_name(self, mocker: MockerFixture) -> None:
         """Test receive handles subscription without '/' separator."""
         # Setup
         mock_msg = mocker.MagicMock()

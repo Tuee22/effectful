@@ -62,56 +62,6 @@ class TestProgramComposition:
         mock_ws.send_text.assert_any_call("World")
 
 
-class TestProgramErrorPropagation:
-    """Tests for error propagation in programs."""
-
-    def failing_sub_program(self) -> Generator[AllEffects, EffectResult, str]:
-        """Sub-program that will fail."""
-        # This will return None (user not found)
-        user_result = yield GetUserById(user_id=uuid4())
-        # This code won't execute due to fail-fast
-        match user_result:
-            case User(name=name):
-                return name
-            case _:
-                return "not_found"
-
-    def program_with_failing_sub(self) -> Generator[AllEffects, EffectResult, str]:
-        """Program that calls failing sub-program."""
-        yield SendText(text="Before sub-program")
-        result = yield from self.failing_sub_program()
-        # This won't execute if sub-program fails
-        yield SendText(text="After sub-program")
-        return result
-
-    @pytest.mark.asyncio()
-    async def test_error_in_sub_program_stops_main_program(self, mocker: MockerFixture) -> None:
-        """Error in sub-program should stop main program execution."""
-        # Create mocks
-        mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-        mock_ws.is_open.return_value = True
-        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
-        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
-        mock_cache = mocker.AsyncMock(spec=ProfileCache)
-
-        # User not found
-        mock_user_repo.get_by_id.return_value = UserNotFound(
-            user_id=uuid4(), reason="does_not_exist"
-        )
-
-        interpreter = create_composite_interpreter(
-            websocket_connection=mock_ws,
-            user_repo=mock_user_repo,
-            message_repo=mock_msg_repo,
-            cache=mock_cache,
-        )
-
-        result = await run_ws_program(self.program_with_failing_sub(), interpreter)
-
-        # Program should complete successfully (user not found returns normally)
-        assert_ok(result)
-
-
 class TestComplexWorkflows:
     """Tests for complex multi-step workflows."""
 

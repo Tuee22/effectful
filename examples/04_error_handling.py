@@ -16,6 +16,7 @@ from effectful import (
     GetUserById,
     SendText,
     User,
+    UserNotFound,
     run_ws_program,
 )
 from effectful.algebraic.result import Err, Ok
@@ -47,13 +48,16 @@ def safe_user_lookup(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
     user_result = yield GetUserById(user_id=user_id)
 
     match user_result:
-        case None:
+        case UserNotFound():
             yield SendText(text="User not found - please check the ID")
             return "not_found"
 
         case User(name=name, email=email):
             yield SendText(text=f"Found user: {name} ({email})")
             return "success"
+
+        case unexpected:
+            raise AssertionError(f"Unexpected type: {type(unexpected)}")
 
 
 async def demo_user_not_found() -> None:
@@ -146,11 +150,13 @@ def multi_user_lookup(user_ids: list[UUID]) -> Generator[AllEffects, EffectResul
         user_result = yield GetUserById(user_id=user_id)
 
         match user_result:
-            case None:
+            case UserNotFound():
                 stats["not_found"] += 1
             case User(name=name):
                 stats["found"] += 1
                 yield SendText(text=f"Found: {name}")
+            case unexpected:
+                raise AssertionError(f"Unexpected type: {type(unexpected)}")
 
     # Summary
     yield SendText(text=f"Lookup complete: {stats['found']} found, {stats['not_found']} not found")

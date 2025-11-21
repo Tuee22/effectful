@@ -19,6 +19,7 @@ from pytest_mock import MockerFixture
 
 from effectful.algebraic.result import Err, Ok
 from effectful.domain.message_envelope import (
+    ConsumeTimeout,
     MessageEnvelope,
     PublishFailure,
     PublishSuccess,
@@ -40,9 +41,7 @@ class TestMessagingWorkflowIntegration:
     """Integration tests for complete messaging workflows."""
 
     @pytest.mark.asyncio()
-    async def test_publish_consume_acknowledge_workflow(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_publish_consume_acknowledge_workflow(self, mocker: MockerFixture) -> None:
         """Complete workflow: publish message, consume it, acknowledge processing."""
         # Create mocks
         mock_producer = mocker.AsyncMock(spec=MessageProducer)
@@ -113,9 +112,7 @@ class TestMessagingWorkflowIntegration:
         mock_consumer = mocker.AsyncMock(spec=MessageConsumer)
 
         # Configure publish to timeout
-        mock_producer.publish.return_value = PublishFailure(
-            topic="test-topic", reason="timeout"
-        )
+        mock_producer.publish.return_value = PublishFailure(topic="test-topic", reason="timeout")
 
         interpreter = MessagingInterpreter(producer=mock_producer, consumer=mock_consumer)
 
@@ -223,13 +220,13 @@ class TestMessagingWorkflowIntegration:
             envelope = yield ConsumeMessage(subscription="test-sub", timeout_ms=1000)
 
             match envelope:
-                case None:
+                case ConsumeTimeout():
                     return "timeout"
                 case MessageEnvelope(message_id=msg_id):
                     yield AcknowledgeMessage(message_id=msg_id)
                     return "success"
-                case _:
-                    return "unexpected"
+                case unexpected:
+                    raise AssertionError(f"Unexpected type: {type(unexpected)}")
 
         # Act
         result = await run_ws_program(consume_timeout_program(), interpreter)
@@ -268,9 +265,7 @@ class TestMessagingWorkflowIntegration:
         def nack_workflow() -> Generator[AllEffects, EffectResult, str]:
             """Consume message, fail processing, negative acknowledge."""
             # 1. Consume message
-            envelope_result = yield ConsumeMessage(
-                subscription="test-sub", timeout_ms=1000
-            )
+            envelope_result = yield ConsumeMessage(subscription="test-sub", timeout_ms=1000)
             assert isinstance(envelope_result, MessageEnvelope)
             envelope = envelope_result
 
@@ -406,9 +401,7 @@ class TestMessagingWorkflowIntegration:
         # Define workflow
         def ack_exception_program() -> Generator[AllEffects, EffectResult, str]:
             """Consume message, try to acknowledge, handle error."""
-            envelope_result = yield ConsumeMessage(
-                subscription="test-sub", timeout_ms=1000
-            )
+            envelope_result = yield ConsumeMessage(subscription="test-sub", timeout_ms=1000)
             assert isinstance(envelope_result, MessageEnvelope)
 
             # This will fail

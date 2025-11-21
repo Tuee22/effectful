@@ -44,7 +44,7 @@ class TestReceiveText:
     def test_receive_text_creates_effect(self) -> None:
         """ReceiveText should be constructable."""
         effect = ReceiveText()
-        assert effect is not None
+        assert isinstance(effect, ReceiveText)
 
     def test_receive_text_is_immutable(self) -> None:
         """ReceiveText should be frozen (immutable)."""
@@ -59,7 +59,7 @@ class TestCloseReasonNormal:
     def test_close_normal_creates_reason(self) -> None:
         """CloseNormal should be constructable."""
         reason = CloseNormal()
-        assert reason is not None
+        assert isinstance(reason, CloseNormal)
 
     def test_close_normal_is_immutable(self) -> None:
         """CloseNormal should be frozen (immutable)."""
@@ -73,7 +73,7 @@ class TestCloseReasonGoingAway:
     def test_close_going_away_creates_reason(self) -> None:
         """CloseGoingAway should be constructable."""
         reason = CloseGoingAway()
-        assert reason is not None
+        assert isinstance(reason, CloseGoingAway)
 
     def test_close_going_away_is_immutable(self) -> None:
         """CloseGoingAway should be frozen (immutable)."""

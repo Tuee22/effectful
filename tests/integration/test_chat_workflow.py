@@ -74,7 +74,7 @@ class TestChatWorkflowIntegration:
             user_result = yield GetUserById(user_id=user_id)
 
             match user_result:
-                case None:
+                case UserNotFound():
                     yield SendText(text="Error: User not found")
                     return False
                 case User(name=name):
@@ -89,8 +89,8 @@ class TestChatWorkflowIntegration:
                     # 4. Confirm success
                     yield SendText(text=f"Message saved with ID: {message.id}")
                     return True
-                case _:
-                    return False
+                case unexpected:
+                    raise AssertionError(f"Unexpected type: {type(unexpected)}")
 
         # Act
         result = await run_ws_program(greet_user_program(user_id), interpreter)
@@ -138,14 +138,14 @@ class TestChatWorkflowIntegration:
         ) -> Generator[AllEffects, EffectResult, bool]:
             user_result = yield GetUserById(user_id=user_id)
             match user_result:
-                case None:
+                case UserNotFound():
                     yield SendText(text="Error: User not found")
                     return False
                 case User(name=name):
                     yield SendText(text=f"Hello {name}!")
                     return True
-                case _:
-                    return False
+                case unexpected:
+                    raise AssertionError(f"Unexpected type: {type(unexpected)}")
 
         # Act
         result = await run_ws_program(greet_user_program(nonexistent_id), interpreter)
@@ -197,11 +197,11 @@ class TestChatWorkflowIntegration:
             cached_profile = yield GetCachedProfile(user_id=user_id)
 
             match cached_profile:
-                case None:
+                case CacheMiss():
                     # 2. Cache miss - fetch from database
                     user_result = yield GetUserById(user_id=user_id)
                     match user_result:
-                        case None:
+                        case UserNotFound():
                             yield SendText(text="User not found")
                             return "not_found"
                         case User(id=uid, name=name):
@@ -210,14 +210,14 @@ class TestChatWorkflowIntegration:
                             yield PutCachedProfile(user_id=user_id, profile_data=profile)
                             yield SendText(text=f"Hello {name} (from DB, cached)")
                             return "db_hit"
-                        case _:
-                            return "error"
+                        case unexpected:
+                            raise AssertionError(f"Unexpected user result: {type(unexpected)}")
                 case ProfileData(name=name):
                     # Cache hit
                     yield SendText(text=f"Hello {name} (from cache)")
                     return "cache_hit"
-                case _:
-                    return "error"
+                case unexpected:
+                    raise AssertionError(f"Unexpected cache result: {type(unexpected)}")
 
         # Act - First call (cache miss)
         result1 = await run_ws_program(cache_aware_greeting(user_id), interpreter)

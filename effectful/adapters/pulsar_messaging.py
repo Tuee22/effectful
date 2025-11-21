@@ -22,8 +22,7 @@ try:
     import pulsar
 except ImportError:
     raise ImportError(
-        "Pulsar support requires pulsar-client library. "
-        "Install with: pip install pulsar-client"
+        "Pulsar support requires pulsar-client library. " "Install with: pip install pulsar-client"
     )
 
 from effectful.domain.message_envelope import (

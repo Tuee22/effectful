@@ -96,17 +96,13 @@ class TestSendAuthenticatedMessageWithStorageProgram:
         assert result.value.user_id == user_id
         assert result.value.text == message_text
 
-    def test_send_authenticated_message_invalid_token(
-        self, mocker: MockerFixture
-    ) -> None:
+    def test_send_authenticated_message_invalid_token(self, mocker: MockerFixture) -> None:
         """Test send fails with invalid token."""
         # Setup
         token_invalid = TokenInvalid(token="bad_token", reason="malformed")
 
         # Mock the program execution
-        gen = send_authenticated_message_with_storage_program(
-            token="bad_token", text="Hello"
-        )
+        gen = send_authenticated_message_with_storage_program(token="bad_token", text="Hello")
 
         # Step 1: ValidateToken returns TokenInvalid
         effect1 = next(gen)
@@ -122,18 +118,14 @@ class TestSendAuthenticatedMessageWithStorageProgram:
         assert isinstance(result.error, AuthError)
         assert result.error.error_type == "token_invalid"
 
-    def test_send_authenticated_message_user_not_found(
-        self, mocker: MockerFixture
-    ) -> None:
+    def test_send_authenticated_message_user_not_found(self, mocker: MockerFixture) -> None:
         """Test send fails when user doesn't exist."""
         # Setup
         user_id = uuid4()
         token_valid = TokenValid(user_id=user_id, claims={"email": "alice@example.com"})
 
         # Mock the program execution
-        gen = send_authenticated_message_with_storage_program(
-            token="valid_token_123", text="Hello"
-        )
+        gen = send_authenticated_message_with_storage_program(token="valid_token_123", text="Hello")
 
         # Step 1: ValidateToken
         effect1 = next(gen)
@@ -165,9 +157,7 @@ class TestSendAuthenticatedMessageWithStorageProgram:
         user = User(id=user_id, email="alice@example.com", name="Alice")
 
         # Mock the program execution
-        gen = send_authenticated_message_with_storage_program(
-            token="valid_token_123", text=""
-        )
+        gen = send_authenticated_message_with_storage_program(token="valid_token_123", text="")
 
         # Step 1: ValidateToken
         effect1 = next(gen)
@@ -196,9 +186,7 @@ class TestSendAuthenticatedMessageWithStorageProgram:
         assert result.error.error_type == "validation_error"
         assert "empty" in result.error.message.lower()
 
-    def test_send_authenticated_message_text_too_long(
-        self, mocker: MockerFixture
-    ) -> None:
+    def test_send_authenticated_message_text_too_long(self, mocker: MockerFixture) -> None:
         """Test send fails when message text exceeds max length."""
         # Setup
         user_id = uuid4()

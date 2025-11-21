@@ -15,7 +15,12 @@ from uuid import UUID
 
 from redis.asyncio import Redis
 
-from effectful.domain.token_result import TokenExpired, TokenInvalid, TokenValid, TokenValidationResult
+from effectful.domain.token_result import (
+    TokenExpired,
+    TokenInvalid,
+    TokenValid,
+    TokenValidationResult,
+)
 from effectful.infrastructure.auth import AuthService
 
 
@@ -112,9 +117,7 @@ class RedisAuthService(AuthService):
             # Malformed token, invalid signature, etc.
             return TokenInvalid(token=token, reason=str(e))
 
-    async def generate_token(
-        self, user_id: UUID, claims: dict[str, str], ttl_seconds: int
-    ) -> str:
+    async def generate_token(self, user_id: UUID, claims: dict[str, str], ttl_seconds: int) -> str:
         """Generate new JWT token for user.
 
         Args:

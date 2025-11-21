@@ -13,9 +13,7 @@ class TestRealWebSocketConnection:
     """Tests for RealWebSocketConnection."""
 
     @pytest.mark.asyncio
-    async def test_send_text_calls_ws_send(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_send_text_calls_ws_send(self, mocker: MockerFixture) -> None:
         """Test send_text delegates to underlying WebSocket."""
         # Setup
         mock_ws = mocker.AsyncMock()
@@ -28,9 +26,7 @@ class TestRealWebSocketConnection:
         mock_ws.send.assert_called_once_with("Hello, World!")
 
     @pytest.mark.asyncio
-    async def test_receive_text_returns_string(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_receive_text_returns_string(self, mocker: MockerFixture) -> None:
         """Test receive_text returns string from underlying WebSocket."""
         # Setup
         mock_ws = mocker.AsyncMock()
@@ -46,9 +42,7 @@ class TestRealWebSocketConnection:
         mock_ws.recv.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_receive_text_converts_to_string(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_receive_text_converts_to_string(self, mocker: MockerFixture) -> None:
         """Test receive_text converts non-string messages to string."""
         # Setup
         mock_ws = mocker.AsyncMock()
@@ -64,9 +58,7 @@ class TestRealWebSocketConnection:
         assert "Binary message" in result
 
     @pytest.mark.asyncio
-    async def test_close_calls_ws_close_with_normal_code(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_close_calls_ws_close_with_normal_code(self, mocker: MockerFixture) -> None:
         """Test close calls underlying WebSocket with code 1000."""
         # Setup
         mock_ws = mocker.AsyncMock()
@@ -79,9 +71,7 @@ class TestRealWebSocketConnection:
         mock_ws.close.assert_called_once_with(code=1000, reason="Normal closure")
 
     @pytest.mark.asyncio
-    async def test_is_open_returns_true_when_open(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_is_open_returns_true_when_open(self, mocker: MockerFixture) -> None:
         """Test is_open returns True when WebSocket is open."""
         # Setup
         mock_ws = mocker.AsyncMock()
@@ -96,9 +86,7 @@ class TestRealWebSocketConnection:
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_is_open_returns_false_when_closed(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_is_open_returns_false_when_closed(self, mocker: MockerFixture) -> None:
         """Test is_open returns False when WebSocket is closed."""
         # Setup
         mock_ws = mocker.AsyncMock()
@@ -113,9 +101,7 @@ class TestRealWebSocketConnection:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_multiple_send_operations(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_multiple_send_operations(self, mocker: MockerFixture) -> None:
         """Test multiple send operations work correctly."""
         # Setup
         mock_ws = mocker.AsyncMock()
@@ -133,9 +119,7 @@ class TestRealWebSocketConnection:
         mock_ws.send.assert_any_call("Message 3")
 
     @pytest.mark.asyncio
-    async def test_multiple_receive_operations(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_multiple_receive_operations(self, mocker: MockerFixture) -> None:
         """Test multiple receive operations return correct values."""
         # Setup
         mock_ws = mocker.AsyncMock()

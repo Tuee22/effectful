@@ -99,3 +99,29 @@ class PublishFailure:
 
 # Type alias: ADT for publish results (PEP 695)
 type PublishResult = PublishSuccess | PublishFailure
+
+
+@dataclass(frozen=True)
+class ConsumeTimeout:
+    """No message received within timeout period.
+
+    This ADT variant replaces None for consume operations, making timeout
+    handling explicit in the type system.
+
+    Attributes:
+        subscription: The subscription that was polled
+        timeout_ms: How long we waited before timeout
+
+    Example:
+        >>> result = ConsumeTimeout(subscription="my-sub", timeout_ms=1000)
+        >>> match result:
+        ...     case ConsumeTimeout(subscription=sub, timeout_ms=ms):
+        ...         print(f"No message on {sub} after {ms}ms")
+    """
+
+    subscription: str
+    timeout_ms: int
+
+
+# ADT: Union of consume results (no Optional!)
+type ConsumeResult = MessageEnvelope | ConsumeTimeout

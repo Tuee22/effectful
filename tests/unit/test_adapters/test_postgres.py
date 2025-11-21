@@ -22,9 +22,7 @@ class TestPostgresUserRepository:
     """Tests for PostgresUserRepository."""
 
     @pytest.mark.asyncio
-    async def test_get_by_id_returns_user_found_when_exists(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_get_by_id_returns_user_found_when_exists(self, mocker: MockerFixture) -> None:
         """Test successful user lookup returns UserFound."""
         # Setup
         user_id = uuid4()
@@ -75,9 +73,7 @@ class TestPostgresUserRepository:
         assert result.reason == "does_not_exist"
 
     @pytest.mark.asyncio
-    async def test_get_by_id_raises_on_invalid_id_type(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_get_by_id_raises_on_invalid_id_type(self, mocker: MockerFixture) -> None:
         """Test that invalid row types raise RuntimeError."""
         # Setup
         user_id = uuid4()
@@ -96,9 +92,7 @@ class TestPostgresUserRepository:
             await repo.get_by_id(user_id)
 
     @pytest.mark.asyncio
-    async def test_get_by_id_raises_on_invalid_email_type(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_get_by_id_raises_on_invalid_email_type(self, mocker: MockerFixture) -> None:
         """Test that invalid email type raises RuntimeError."""
         # Setup
         user_id = uuid4()
@@ -117,9 +111,7 @@ class TestPostgresUserRepository:
             await repo.get_by_id(user_id)
 
     @pytest.mark.asyncio
-    async def test_get_by_id_raises_on_invalid_name_type(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_get_by_id_raises_on_invalid_name_type(self, mocker: MockerFixture) -> None:
         """Test that invalid name type raises RuntimeError."""
         # Setup
         user_id = uuid4()
@@ -142,9 +134,7 @@ class TestPostgresChatMessageRepository:
     """Tests for PostgresChatMessageRepository."""
 
     @pytest.mark.asyncio
-    async def test_save_message_returns_chat_message(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_save_message_returns_chat_message(self, mocker: MockerFixture) -> None:
         """Test saving a message returns ChatMessage with generated fields."""
         # Setup
         user_id = uuid4()
@@ -180,9 +170,7 @@ class TestPostgresChatMessageRepository:
         assert "RETURNING" in call_args.args[0]
 
     @pytest.mark.asyncio
-    async def test_save_message_raises_on_no_returning_row(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_save_message_raises_on_no_returning_row(self, mocker: MockerFixture) -> None:
         """Test that missing RETURNING row raises RuntimeError."""
         # Setup
         user_id = uuid4()
@@ -196,9 +184,7 @@ class TestPostgresChatMessageRepository:
             await repo.save_message(user_id, "Hello")
 
     @pytest.mark.asyncio
-    async def test_save_message_raises_on_invalid_id_type(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_save_message_raises_on_invalid_id_type(self, mocker: MockerFixture) -> None:
         """Test that invalid id type in result raises RuntimeError."""
         # Setup
         user_id = uuid4()
@@ -218,9 +204,7 @@ class TestPostgresChatMessageRepository:
             await repo.save_message(user_id, "Hello")
 
     @pytest.mark.asyncio
-    async def test_list_messages_for_user_returns_messages(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_list_messages_for_user_returns_messages(self, mocker: MockerFixture) -> None:
         """Test listing messages returns list of ChatMessages."""
         # Setup
         user_id = uuid4()
@@ -267,9 +251,7 @@ class TestPostgresChatMessageRepository:
         assert "ORDER BY created_at ASC" in call_args.args[0]
 
     @pytest.mark.asyncio
-    async def test_list_messages_for_user_returns_empty_list(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_list_messages_for_user_returns_empty_list(self, mocker: MockerFixture) -> None:
         """Test listing messages for user with no messages returns empty list."""
         # Setup
         user_id = uuid4()
@@ -285,9 +267,7 @@ class TestPostgresChatMessageRepository:
         assert result == []
 
     @pytest.mark.asyncio
-    async def test_list_messages_skips_invalid_rows(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_list_messages_skips_invalid_rows(self, mocker: MockerFixture) -> None:
         """Test that rows with invalid types are skipped."""
         # Setup
         user_id = uuid4()

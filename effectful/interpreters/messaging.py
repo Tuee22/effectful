@@ -19,7 +19,7 @@ from dataclasses import dataclass
 
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok, Result
-from effectful.domain.message_envelope import PublishFailure, PublishSuccess
+from effectful.domain.message_envelope import ConsumeTimeout, PublishFailure, PublishSuccess
 from effectful.effects.base import Effect
 from effectful.effects.messaging import (
     AcknowledgeMessage,
@@ -153,12 +153,16 @@ class MessagingInterpreter:
 
         Returns:
             Ok with MessageEnvelope on successful receive.
-            Ok with None on timeout (not an error - queue empty).
+            Ok with ConsumeTimeout ADT on timeout (not an error - queue empty).
             Err(MessagingError) on infrastructure failure.
         """
         try:
             envelope = await self.consumer.receive(subscription, timeout_ms)
-            # Timeout (None) is not an error - it's a normal outcome
+            # Return appropriate ADT based on result
+            if envelope is None:
+                # Timeout - return the ADT type for explicit semantics
+                timeout = ConsumeTimeout(subscription=subscription, timeout_ms=timeout_ms)
+                return Ok(EffectReturn(value=timeout, effect_name="ConsumeMessage"))
             return Ok(EffectReturn(value=envelope, effect_name="ConsumeMessage"))
         except Exception as e:
             return Err(

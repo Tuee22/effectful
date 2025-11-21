@@ -1,14 +1,10 @@
-version: '3.8'
-
 services:
   # Main Effectful service with two entrypoints
   effectful:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-      target: development
     container_name: effectful
-    command: ["bash", "-c", "sleep infinity"]  # Keep container alive for exec commands
     volumes:
       - ..:/app  # Mount source code for development
     environment:
@@ -50,28 +46,6 @@ services:
         condition: service_healthy
     networks:
       - effectful-network
-
-  # Mock client service (same container, different entrypoint)
-  mock-client:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
-      target: development
-    container_name: effectful-mock-client
-    entrypoint: ["effectful-mock-client"]
-    volumes:
-      - ..:/app
-    environment:
-      # WebSocket connection to effectful service
-      EFFECTFUL_WS_URL: ws://effectful:8765
-      PYTHONPATH: /app
-      PYTHONUNBUFFERED: "1"
-    depends_on:
-      - effectful
-    networks:
-      - effectful-network
-    profiles:
-      - integration-tests  # Only start when running integration tests
 
   # PostgreSQL database
   postgres:

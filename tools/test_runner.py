@@ -14,7 +14,6 @@ Usage:
 
 import subprocess
 import sys
-from typing import List
 
 
 def run_unit() -> int:
@@ -31,7 +30,7 @@ def run_unit() -> int:
     print("=" * 80)
 
     result = subprocess.run(
-        ["pytest", "-m", "unit", "-v"],
+        ["pytest", "tests/unit", "-v"],
         check=False,
     )
 
@@ -63,7 +62,7 @@ def run_integration() -> int:
     print("=" * 80)
 
     result = subprocess.run(
-        ["pytest", "-m", "integration", "-v"],
+        ["pytest", "tests/integration", "-v"],
         check=False,
     )
 

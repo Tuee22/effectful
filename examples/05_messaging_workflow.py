@@ -11,7 +11,7 @@ from collections.abc import Generator
 from datetime import UTC, datetime
 
 from effectful.algebraic.result import Err, Ok
-from effectful.domain.message_envelope import MessageEnvelope
+from effectful.domain.message_envelope import ConsumeTimeout, MessageEnvelope
 from effectful.effects.messaging import (
     AcknowledgeMessage,
     ConsumeMessage,
@@ -74,7 +74,7 @@ def consume_and_process() -> Generator[AllEffects, EffectResult, str]:
     envelope = yield ConsumeMessage(subscription="test-subscription", timeout_ms=1000)
 
     match envelope:
-        case None:
+        case ConsumeTimeout():
             # Timeout - no message available
             print("  ⏱ No message available (timeout)")
             return "timeout"
@@ -105,6 +105,9 @@ def consume_and_process() -> Generator[AllEffects, EffectResult, str]:
                 print(f"  ✗ Processing error: {e}")
                 yield NegativeAcknowledge(message_id=msg_id, delay_ms=1000)
                 return "failed"
+
+        case unexpected:
+            raise AssertionError(f"Unexpected type: {type(unexpected)}")
 
 
 def pubsub_workflow(messages: list[str]) -> Generator[AllEffects, EffectResult, dict[str, int]]:

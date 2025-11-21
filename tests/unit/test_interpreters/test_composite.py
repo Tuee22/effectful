@@ -335,9 +335,13 @@ class TestCompositeInterpreter:
         )
 
         assert isinstance(interpreter, CompositeInterpreter)
-        assert interpreter.websocket is not None
-        assert interpreter.database is not None
-        assert interpreter.cache is not None
+        from effectful.interpreters.websocket import WebSocketInterpreter
+        from effectful.interpreters.database import DatabaseInterpreter
+        from effectful.interpreters.cache import CacheInterpreter
+
+        assert isinstance(interpreter.websocket, WebSocketInterpreter)
+        assert isinstance(interpreter.database, DatabaseInterpreter)
+        assert isinstance(interpreter.cache, CacheInterpreter)
 
     @pytest.mark.asyncio()
     async def test_interpret_messaging_effect(self, mocker: MockerFixture) -> None:
@@ -400,9 +404,7 @@ class TestCompositeInterpreter:
             object_storage=mock_storage,
         )
 
-        effect = PutObject(
-            bucket="test-bucket", key="test-key", content=b"test content"
-        )
+        effect = PutObject(bucket="test-bucket", key="test-key", content=b"test content")
         result = await interpreter.interpret(effect)
 
         # Verify result - storage interpreter returns key string, not PutSuccess
@@ -456,9 +458,7 @@ class TestCompositeInterpreter:
         mock_auth.validate_token.assert_called_once_with("test.jwt.token")
 
     @pytest.mark.asyncio()
-    async def test_unhandled_effect_with_all_interpreters(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_unhandled_effect_with_all_interpreters(self, mocker: MockerFixture) -> None:
         """Unhandled effect should list all configured interpreters."""
 
         @dataclass(frozen=True)
@@ -503,9 +503,7 @@ class TestCompositeInterpreter:
             case _:
                 pytest.fail(f"Expected UnhandledEffectError, got {result}")
 
-    def test_create_composite_interpreter_with_all_optional(
-        self, mocker: MockerFixture
-    ) -> None:
+    def test_create_composite_interpreter_with_all_optional(self, mocker: MockerFixture) -> None:
         """Factory function should configure all optional interpreters."""
         # Create all mocks
         mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
@@ -529,6 +527,10 @@ class TestCompositeInterpreter:
         )
 
         assert isinstance(interpreter, CompositeInterpreter)
-        assert interpreter.messaging is not None
-        assert interpreter.storage is not None
-        assert interpreter.auth is not None
+        from effectful.interpreters.messaging import MessagingInterpreter
+        from effectful.interpreters.storage import StorageInterpreter
+        from effectful.interpreters.auth import AuthInterpreter
+
+        assert isinstance(interpreter.messaging, MessagingInterpreter)
+        assert isinstance(interpreter.storage, StorageInterpreter)
+        assert isinstance(interpreter.auth, AuthInterpreter)

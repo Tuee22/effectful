@@ -17,9 +17,7 @@ class TestS3ObjectStorageGetObject:
     """Tests for S3ObjectStorage.get_object."""
 
     @pytest.mark.asyncio
-    async def test_get_object_returns_s3_object_when_found(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_get_object_returns_s3_object_when_found(self, mocker: MockerFixture) -> None:
         """Test successful object retrieval returns S3Object."""
         # Setup
         bucket = "test-bucket"
@@ -48,7 +46,6 @@ class TestS3ObjectStorageGetObject:
         result = await storage.get_object(bucket, key)
 
         # Assert
-        assert result is not None
         assert isinstance(result, S3Object)
         assert result.key == key
         assert result.bucket == bucket
@@ -62,9 +59,7 @@ class TestS3ObjectStorageGetObject:
         mock_client.get_object.assert_called_once_with(Bucket=bucket, Key=key)
 
     @pytest.mark.asyncio
-    async def test_get_object_returns_none_when_not_found(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_get_object_returns_none_when_not_found(self, mocker: MockerFixture) -> None:
         """Test object retrieval returns None for NoSuchKey."""
         # Setup
         mock_client = mocker.MagicMock()
@@ -81,9 +76,7 @@ class TestS3ObjectStorageGetObject:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_get_object_raises_on_permission_error(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_get_object_raises_on_permission_error(self, mocker: MockerFixture) -> None:
         """Test object retrieval raises exception for permission errors."""
         # Setup
         mock_client = mocker.MagicMock()
@@ -98,9 +91,7 @@ class TestS3ObjectStorageGetObject:
             await storage.get_object("test-bucket", "secret.txt")
 
     @pytest.mark.asyncio
-    async def test_get_object_handles_missing_optional_fields(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_get_object_handles_missing_optional_fields(self, mocker: MockerFixture) -> None:
         """Test object retrieval handles missing optional metadata."""
         # Setup
         mock_body = mocker.MagicMock()
@@ -122,7 +113,7 @@ class TestS3ObjectStorageGetObject:
         result = await storage.get_object("bucket", "key")
 
         # Assert
-        assert result is not None
+        assert isinstance(result, S3Object)
         assert result.metadata == {}
         assert result.content_type is None
         assert result.version_id is None
@@ -132,9 +123,7 @@ class TestS3ObjectStoragePutObject:
     """Tests for S3ObjectStorage.put_object."""
 
     @pytest.mark.asyncio
-    async def test_put_object_returns_success_with_version(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_put_object_returns_success_with_version(self, mocker: MockerFixture) -> None:
         """Test successful object storage returns PutSuccess."""
         # Setup
         bucket = "test-bucket"
@@ -149,9 +138,7 @@ class TestS3ObjectStoragePutObject:
         storage = S3ObjectStorage(mock_client)
 
         # Execute
-        result = await storage.put_object(
-            bucket, key, content, metadata, content_type
-        )
+        result = await storage.put_object(bucket, key, content, metadata, content_type)
 
         # Assert
         assert isinstance(result, PutSuccess)
@@ -211,9 +198,7 @@ class TestS3ObjectStoragePutObject:
         assert result.reason == "permission_denied"
 
     @pytest.mark.asyncio
-    async def test_put_object_raises_for_unknown_errors(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_put_object_raises_for_unknown_errors(self, mocker: MockerFixture) -> None:
         """Test storage raises exception for unknown errors."""
         # Setup
         mock_client = mocker.MagicMock()
@@ -232,9 +217,7 @@ class TestS3ObjectStorageDeleteObject:
     """Tests for S3ObjectStorage.delete_object."""
 
     @pytest.mark.asyncio
-    async def test_delete_object_succeeds(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_delete_object_succeeds(self, mocker: MockerFixture) -> None:
         """Test successful object deletion."""
         # Setup
         mock_client = mocker.MagicMock()
@@ -249,9 +232,7 @@ class TestS3ObjectStorageDeleteObject:
         mock_client.delete_object.assert_called_once_with(Bucket="bucket", Key="key")
 
     @pytest.mark.asyncio
-    async def test_delete_object_handles_nonexistent_key(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_delete_object_handles_nonexistent_key(self, mocker: MockerFixture) -> None:
         """Test deletion of nonexistent object doesn't raise."""
         # Setup
         mock_client = mocker.MagicMock()
@@ -265,9 +246,7 @@ class TestS3ObjectStorageDeleteObject:
         await storage.delete_object("bucket", "nonexistent")
 
     @pytest.mark.asyncio
-    async def test_delete_object_raises_for_other_errors(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_delete_object_raises_for_other_errors(self, mocker: MockerFixture) -> None:
         """Test deletion raises for non-404 errors."""
         # Setup
         mock_client = mocker.MagicMock()
@@ -286,9 +265,7 @@ class TestS3ObjectStorageListObjects:
     """Tests for S3ObjectStorage.list_objects."""
 
     @pytest.mark.asyncio
-    async def test_list_objects_returns_keys(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_list_objects_returns_keys(self, mocker: MockerFixture) -> None:
         """Test listing objects returns list of keys."""
         # Setup
         mock_client = mocker.MagicMock()
@@ -316,9 +293,7 @@ class TestS3ObjectStorageListObjects:
         )
 
     @pytest.mark.asyncio
-    async def test_list_objects_with_prefix(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_list_objects_with_prefix(self, mocker: MockerFixture) -> None:
         """Test listing objects with prefix filter."""
         # Setup
         mock_client = mocker.MagicMock()
@@ -362,9 +337,7 @@ class TestS3ObjectStorageListObjects:
         assert result == []
 
     @pytest.mark.asyncio
-    async def test_list_objects_raises_for_errors(
-        self, mocker: MockerFixture
-    ) -> None:
+    async def test_list_objects_raises_for_errors(self, mocker: MockerFixture) -> None:
         """Test listing raises for bucket errors."""
         # Setup
         mock_client = mocker.MagicMock()

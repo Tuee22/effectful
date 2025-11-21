@@ -143,11 +143,6 @@ class TestPublicAPIImports:
 
         assert callable(create_composite_interpreter)
 
-        # Test interpreter classes exist
-        assert CacheInterpreter is not None
-        assert DatabaseInterpreter is not None
-        assert WebSocketInterpreter is not None
-
     def test_import_errors(self) -> None:
         """Interpreter errors should be importable."""
         from uuid import uuid4
@@ -185,11 +180,10 @@ class TestPublicAPIImports:
         """Program types should be importable."""
         from effectful import AllEffects, EffectResult, WSProgram
 
-        # These are type aliases, so we can't instantiate them
-        # Just verify they're importable
-        assert AllEffects is not None
-        assert EffectResult is not None
-        assert WSProgram is not None
+        # These are type aliases - import verification is sufficient
+        _ = AllEffects
+        _ = EffectResult
+        _ = WSProgram
 
     def test_import_infrastructure_protocols(self) -> None:
         """Infrastructure protocols should be importable."""
@@ -200,11 +194,11 @@ class TestPublicAPIImports:
             WebSocketConnection,
         )
 
-        # These are protocols (interfaces), verify they're importable
-        assert WebSocketConnection is not None
-        assert UserRepository is not None
-        assert ChatMessageRepository is not None
-        assert ProfileCache is not None
+        # These are protocols - import verification is sufficient
+        _ = WebSocketConnection
+        _ = UserRepository
+        _ = ChatMessageRepository
+        _ = ProfileCache
 
 
 class TestPublicAPIUsage:

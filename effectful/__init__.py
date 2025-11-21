@@ -64,7 +64,10 @@ from effectful.adapters.websocket_connection import RealWebSocketConnection
 from effectful.algebraic.effect_return import EffectReturn
 
 # Result types - Algebraic Data Types for error handling
-from effectful.algebraic.result import Err, Ok, Result
+from effectful.algebraic.result import Err, Ok, Result, assert_never
+
+# Domain models - Cache
+from effectful.domain.cache_result import CacheHit, CacheLookupResult, CacheMiss
 
 # Domain models - Message
 from effectful.domain.message import ChatMessage
@@ -87,6 +90,8 @@ from effectful.domain.token_result import (
 
 # Domain models - Messaging
 from effectful.domain.message_envelope import (
+    ConsumeResult,
+    ConsumeTimeout,
     MessageEnvelope,
     PublishFailure,
     PublishResult,
@@ -207,6 +212,7 @@ __all__ = [
     "Err",
     "Result",
     "EffectReturn",
+    "assert_never",
     # Auth effects
     "ValidateToken",
     "GenerateToken",
@@ -249,9 +255,15 @@ __all__ = [
     "ChatMessage",
     # Domain - Messaging
     "MessageEnvelope",
+    "ConsumeTimeout",
+    "ConsumeResult",
     "PublishSuccess",
     "PublishFailure",
     "PublishResult",
+    # Domain - Cache
+    "CacheHit",
+    "CacheMiss",
+    "CacheLookupResult",
     # Domain - Profile
     "ProfileData",
     "ProfileFound",

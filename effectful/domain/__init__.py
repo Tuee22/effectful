@@ -12,9 +12,12 @@ This package contains immutable domain entities and value objects:
 - DomainError: Domain-level error types
 """
 
+from effectful.domain.cache_result import CacheHit, CacheLookupResult, CacheMiss
 from effectful.domain.errors import DomainError, InvalidMessageError, UserNotFoundError
 from effectful.domain.message import ChatMessage
 from effectful.domain.message_envelope import (
+    ConsumeResult,
+    ConsumeTimeout,
     MessageEnvelope,
     PublishFailure,
     PublishResult,
@@ -33,27 +36,43 @@ from effectful.domain.token_result import (
     TokenValid,
     TokenValidationResult,
 )
-from effectful.domain.user import User
+from effectful.domain.user import User, UserFound, UserLookupResult, UserNotFound
 
 __all__ = [
+    # User ADTs
     "User",
+    "UserFound",
+    "UserNotFound",
+    "UserLookupResult",
+    # Message
     "ChatMessage",
+    # Profile ADTs
     "ProfileData",
     "ProfileFound",
     "ProfileNotFound",
     "ProfileLookupResult",
+    # Cache ADTs
+    "CacheHit",
+    "CacheMiss",
+    "CacheLookupResult",
+    # Messaging ADTs
     "MessageEnvelope",
+    "ConsumeTimeout",
+    "ConsumeResult",
     "PublishSuccess",
     "PublishFailure",
     "PublishResult",
+    # Storage ADTs
     "S3Object",
     "PutSuccess",
     "PutFailure",
     "PutResult",
+    # Token ADTs
     "TokenValid",
     "TokenExpired",
     "TokenInvalid",
     "TokenValidationResult",
+    # Errors
     "UserNotFoundError",
     "InvalidMessageError",
     "DomainError",

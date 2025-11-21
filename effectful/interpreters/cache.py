@@ -61,19 +61,19 @@ class CacheInterpreter:
     ) -> Result[EffectReturn[EffectResult], InterpreterError]:
         """Handle GetCachedProfile effect.
 
-        Returns ProfileData if cache hit, None if cache miss (following ADT pattern).
-        The interpreter unwraps CacheLookupResult ADT to Optional[ProfileData] for EffectResult.
+        Returns ProfileData if cache hit, CacheMiss ADT if cache miss.
+        ADT types provide explicit semantics instead of None.
         """
         try:
             lookup_result = await self.cache.get_profile(user_id)
-            # Pattern match on CacheLookupResult ADT and unwrap to Optional[ProfileData]
+            # Pattern match on CacheLookupResult ADT and return appropriate type
             match lookup_result:
                 case CacheHit(value=profile, ttl_remaining=_):
                     # Cache hit - return the ProfileData object
                     return Ok(EffectReturn(value=profile, effect_name="GetCachedProfile"))
-                case CacheMiss(key=_, reason=_):
-                    # Cache miss - return None (part of EffectResult union)
-                    return Ok(EffectReturn(value=None, effect_name="GetCachedProfile"))
+                case CacheMiss() as miss:
+                    # Cache miss - return the ADT type directly
+                    return Ok(EffectReturn(value=miss, effect_name="GetCachedProfile"))
         except Exception as e:
             return Err(
                 CacheError(
