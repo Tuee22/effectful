@@ -1,4 +1,4 @@
-"""functional_effects: Type-safe effect systems for Python.
+"""effectful: Type-safe effect systems for Python.
 
 A library for building composable, testable applications using algebraic effects,
 with strict type safety and no runtime exceptions for business logic errors.
@@ -64,7 +64,7 @@ from effectful.adapters.websocket_connection import RealWebSocketConnection
 from effectful.algebraic.effect_return import EffectReturn
 
 # Result types - Algebraic Data Types for error handling
-from effectful.algebraic.result import Err, Ok, Result, assert_never
+from effectful.algebraic.result import Err, Ok, Result, assert_never, unreachable
 
 # Domain models - Cache
 from effectful.domain.cache_result import CacheHit, CacheLookupResult, CacheMiss
@@ -117,13 +117,21 @@ from effectful.domain.user import (
 # Effect definitions - Cache
 from effectful.effects.cache import (
     GetCachedProfile,
+    GetCachedValue,
+    InvalidateCache,
     PutCachedProfile,
+    PutCachedValue,
 )
 
 # Effect definitions - Database
 from effectful.effects.database import (
+    CreateUser,
+    DeleteUser,
     GetUserById,
+    ListMessagesForUser,
+    ListUsers,
     SaveChatMessage,
+    UpdateUser,
 )
 
 # Effect definitions - Auth
@@ -164,11 +172,14 @@ from effectful.effects.websocket import (
     ReceiveText,
     SendText,
 )
+from effectful.infrastructure.auth import AuthService
 from effectful.infrastructure.cache import ProfileCache
+from effectful.infrastructure.messaging import MessageConsumer, MessageProducer
 from effectful.infrastructure.repositories import (
     ChatMessageRepository,
     UserRepository,
 )
+from effectful.infrastructure.storage import ObjectStorage
 
 # Infrastructure protocols (for dependency injection)
 from effectful.infrastructure.websocket import WebSocketConnection
@@ -213,6 +224,7 @@ __all__ = [
     "Result",
     "EffectReturn",
     "assert_never",
+    "unreachable",
     # Auth effects
     "ValidateToken",
     "GenerateToken",
@@ -224,9 +236,17 @@ __all__ = [
     # Cache effects
     "GetCachedProfile",
     "PutCachedProfile",
+    "GetCachedValue",
+    "PutCachedValue",
+    "InvalidateCache",
     # Database effects
     "GetUserById",
     "SaveChatMessage",
+    "ListMessagesForUser",
+    "ListUsers",
+    "CreateUser",
+    "UpdateUser",
+    "DeleteUser",
     # Messaging effects
     "PublishMessage",
     "ConsumeMessage",
@@ -305,6 +325,10 @@ __all__ = [
     "UserRepository",
     "ChatMessageRepository",
     "ProfileCache",
+    "AuthService",
+    "MessageProducer",
+    "MessageConsumer",
+    "ObjectStorage",
     # Infrastructure adapters (real implementations)
     "PostgresUserRepository",
     "PostgresChatMessageRepository",

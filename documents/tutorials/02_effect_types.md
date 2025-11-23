@@ -2,49 +2,22 @@
 
 This tutorial covers all available effect types in **effectful** and how to use them.
 
+> **Core Doctrine**: For the complete architecture including effect hierarchy diagrams, see [ARCHITECTURE.md](../core/ARCHITECTURE.md).
+
 ## Effect Categories
 
-effectful provides three categories of effects:
+effectful provides six categories of effects:
 
 1. **WebSocket Effects** - Real-time communication
 2. **Database Effects** - Data persistence
 3. **Cache Effects** - Performance optimization
+4. **Messaging Effects** - Pub/sub messaging
+5. **Storage Effects** - Object storage
+6. **Auth Effects** - Authentication
 
 ### Effect Type Hierarchy
 
-The following diagram shows the complete effect type hierarchy:
-
-```mermaid
-flowchart TB
-    AllEffects[AllEffects<br/>Union of All Effect Types]
-
-    AllEffects --> WebSocket[WebSocket Effects]
-    AllEffects --> Database[Database Effects]
-    AllEffects --> Cache[Cache Effects]
-    AllEffects --> Messaging[Messaging Effects]
-    AllEffects --> Storage[Storage Effects]
-    AllEffects --> Auth[Auth Effects]
-
-    WebSocket --> SendText[SendText<br/>Send text message]
-    WebSocket --> ReceiveText[ReceiveText<br/>Receive text message]
-    WebSocket --> Close[Close<br/>Close with reason]
-
-    Database --> GetUser[GetUserById<br/>Lookup user by ID]
-    Database --> SaveMsg[SaveChatMessage<br/>Save chat message]
-
-    Cache --> GetCache[GetCachedProfile<br/>Get cached profile]
-    Cache --> PutCache[PutCachedProfile<br/>Cache profile with TTL]
-
-    Messaging --> PublishMessage[PublishMessage<br/>Publish to topic]
-    Messaging --> ConsumeMessage[ConsumeMessage<br/>Consume from subscription]
-    Messaging --> AckMessage[AcknowledgeMessage<br/>Ack successful processing]
-    Messaging --> NackMessage[NegativeAcknowledge<br/>Reject for redelivery]
-
-    Storage --> GetObject[GetObject<br/>Retrieve from S3]
-    Storage --> PutObject[PutObject<br/>Store in S3]
-    Storage --> DeleteObject[DeleteObject<br/>Remove from S3]
-    Storage --> ListObjects[ListObjects<br/>List objects in bucket]
-```
+> **Diagram**: See the complete Effect Type Hierarchy diagram in [ARCHITECTURE.md](../core/ARCHITECTURE.md#effect-type-hierarchy).
 
 **Key Points:**
 - All effects are frozen dataclasses (immutable)
@@ -157,14 +130,15 @@ Look up a user by UUID.
 ```python
 from uuid import UUID
 from effectful import GetUserById, User
+from effectful.domain.user import UserNotFound
 
 def lookup_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
     # Yield effect
     user_result = yield GetUserById(user_id=user_id)
 
-    # Handle result (can be User or None)
+    # Handle result (User or UserNotFound ADT)
     match user_result:
-        case None:
+        case UserNotFound():
             return "User not found"
         case User(name=name, email=email):
             return f"{name} ({email})"
@@ -177,7 +151,7 @@ class GetUserById:
     user_id: UUID
 ```
 
-**Returns:** `User | None`
+**Returns:** `User | UserNotFound`
 
 **Errors:** `DatabaseError` if query fails
 
@@ -342,8 +316,11 @@ def get_profile_cached(user_id: UUID) -> Generator[AllEffects, EffectResult, Pro
 
     # Cache miss - query database
     user = yield GetUserById(user_id=user_id)
-    if user is None:
-        return None  # User not found
+    match user:
+        case UserNotFound():
+            return None  # User not found
+        case User():
+            pass  # Continue below
 
     # Update cache
     profile = ProfileData(id=str(user_id), name=user.name, email=user.email)
@@ -562,6 +539,96 @@ def process_document(input_key: str) -> Generator[AllEffects, EffectResult, str]
 
 See [Tutorial 09: Storage Effects](09_storage_effects.md) for comprehensive coverage including `DeleteObject` and `ListObjects`.
 
+## Auth Effects
+
+### ValidateToken
+
+Validate a JWT token and extract user claims.
+
+```python
+from effectful import ValidateToken, TokenValid, TokenExpired, TokenInvalid
+
+def authenticate(token: str) -> Generator[AllEffects, EffectResult, UUID | None]:
+    result = yield ValidateToken(token=token)
+
+    match result:
+        case TokenValid(user_id=uid, claims=claims):
+            yield SendText(text=f"Authenticated: {uid}")
+            return uid
+        case TokenExpired(expired_at=exp):
+            yield SendText(text=f"Token expired at {exp}")
+            return None
+        case TokenInvalid(reason=reason):
+            yield SendText(text=f"Invalid token: {reason}")
+            return None
+```
+
+**Effect Signature:**
+```python
+@dataclass(frozen=True)
+class ValidateToken:
+    token: str
+```
+
+**Returns:** `TokenValidationResult` (ADT: `TokenValid | TokenExpired | TokenInvalid`)
+
+**Errors:** `AuthError` if validation fails
+
+### GenerateToken
+
+Generate a new JWT token for a user.
+
+```python
+from effectful import GenerateToken
+
+def create_session(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
+    token = yield GenerateToken(
+        user_id=user_id,
+        claims={"role": "user", "type": "access"},
+        ttl_seconds=3600
+    )
+
+    assert isinstance(token, str)
+    return token
+```
+
+**Effect Signature:**
+```python
+@dataclass(frozen=True)
+class GenerateToken:
+    user_id: UUID
+    claims: dict[str, str]
+    ttl_seconds: int
+```
+
+**Returns:** `str` (encoded JWT token)
+
+**Errors:** `AuthError` if generation fails
+
+### Password Operations
+
+Hash and validate passwords with bcrypt:
+
+```python
+from effectful import HashPassword, ValidatePassword
+
+def register(password: str) -> Generator[AllEffects, EffectResult, str]:
+    # Hash password
+    hashed = yield HashPassword(password=password)
+    assert isinstance(hashed, str)
+    return hashed
+
+def login(password: str, stored_hash: str) -> Generator[AllEffects, EffectResult, bool]:
+    # Validate password
+    is_valid = yield ValidatePassword(
+        password=password,
+        password_hash=stored_hash
+    )
+    return is_valid
+```
+
+See [Tutorial 10: Auth Effects](10_auth_effects.md) for comprehensive coverage including `RefreshToken`, `RevokeToken`, and `GetUserByEmail`.
+
 ## Composing Effects
 
 ### Sequential Effects
@@ -606,7 +673,7 @@ def conditional_cache(user_id: UUID) -> Generator[AllEffects, EffectResult, str]
             # Cache miss - lookup user
             user_result = yield GetUserById(user_id=user_id)
             match user_result:
-                case None:
+                case UserNotFound():
                     yield SendText(text="User not found")
                     return "not_found"
                 case User(name=name):
@@ -627,7 +694,7 @@ def lookup_and_cache(user_id: UUID) -> Generator[AllEffects, EffectResult, Profi
     user_result = yield GetUserById(user_id=user_id)
 
     match user_result:
-        case None:
+        case UserNotFound():
             return None
         case User(id=uid, name=name, email=email):
             profile = ProfileData(id=str(uid), name=name, email=email)
@@ -639,12 +706,13 @@ def greet_with_caching(user_id: UUID) -> Generator[AllEffects, EffectResult, str
     # Delegate to sub-program
     profile = yield from lookup_and_cache(user_id)
 
-    if profile is None:
-        yield SendText(text="User not found")
-        return "error"
-
-    yield SendText(text=f"Hello {profile.name}!")
-    return "success"
+    match profile:
+        case None:
+            yield SendText(text="User not found")
+            return "error"
+        case ProfileData(name=name):
+            yield SendText(text=f"Hello {name}!")
+            return "success"
 ```
 
 ## Error Handling
@@ -760,7 +828,7 @@ flowchart TB
    match user_result:
        case User(name=name):
            # mypy knows name is str
-       case None:
+       case UserNotFound():
            # mypy enforces handling all cases
    ```
 
@@ -773,7 +841,7 @@ def program() -> Generator[AllEffects, EffectResult, str]:
     user_result = yield GetUserById(user_id=user_id)
 
     match user_result:
-        case None:
+        case UserNotFound():
             return "not_found"
         case User(name=name):
             return f"found: {name}"

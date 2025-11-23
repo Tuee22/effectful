@@ -22,9 +22,13 @@ from effectful.algebraic.result import Err, Ok
 from effectful.domain.message import ChatMessage
 from effectful.domain.user import User, UserFound, UserNotFound
 from effectful.effects.database import (
+    CreateUser,
+    DeleteUser,
     GetUserById,
     ListMessagesForUser,
+    ListUsers,
     SaveChatMessage,
+    UpdateUser,
 )
 from effectful.effects.websocket import SendText
 from effectful.infrastructure.repositories import ChatMessageRepository, UserRepository
@@ -78,12 +82,17 @@ class TestDatabaseInterpreter:
         effect = GetUserById(user_id=user_id)
         result = await interpreter.interpret(effect)
 
-        # Verify result
+        # Verify result - UserNotFound ADT returned instead of None
         match result:
-            case Ok(EffectReturn(value=None, effect_name="GetUserById")):
+            case Ok(
+                EffectReturn(
+                    value=UserNotFound(user_id=_, reason="does_not_exist"),
+                    effect_name="GetUserById",
+                )
+            ):
                 pass  # Success
             case _:
-                pytest.fail(f"Expected Ok with None, got {result}")
+                pytest.fail(f"Expected Ok with UserNotFound, got {result}")
 
         # Verify mock was called correctly
         mock_user_repo.get_by_id.assert_called_once_with(user_id)
@@ -286,7 +295,7 @@ class TestDatabaseInterpreter:
         interpreter = DatabaseInterpreter(user_repo=mock_user_repo, message_repo=mock_msg_repo)
 
         with pytest.raises(FrozenInstanceError):
-            interpreter.user_repo = mocker.AsyncMock(spec=UserRepository)  # type: ignore[misc]
+            setattr(interpreter, "user_repo", mocker.AsyncMock(spec=UserRepository))
 
     def test_is_retryable_error_detects_retryable_patterns(self, mocker: MockerFixture) -> None:
         """_is_retryable_error should detect retryable error patterns."""
@@ -308,3 +317,251 @@ class TestDatabaseInterpreter:
         assert not interpreter._is_retryable_error(Exception("Invalid SQL syntax"))
         assert not interpreter._is_retryable_error(Exception("Foreign key violation"))
         assert not interpreter._is_retryable_error(Exception("Unknown error"))
+
+    @pytest.mark.asyncio()
+    async def test_list_users_success(self, mocker: MockerFixture) -> None:
+        """Interpreter should list users successfully."""
+        users = [
+            User(id=uuid4(), email="alice@example.com", name="Alice"),
+            User(id=uuid4(), email="bob@example.com", name="Bob"),
+        ]
+
+        # Create mocks
+        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
+        mock_user_repo.list_users.return_value = users
+        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
+
+        interpreter = DatabaseInterpreter(user_repo=mock_user_repo, message_repo=mock_msg_repo)
+
+        effect = ListUsers(limit=10, offset=0)
+        result = await interpreter.interpret(effect)
+
+        # Verify result
+        match result:
+            case Ok(EffectReturn(value=user_list, effect_name="ListUsers")):
+                assert isinstance(user_list, list)
+                assert len(user_list) == 2
+                assert user_list == users
+            case _:
+                pytest.fail(f"Expected Ok with users list, got {result}")
+
+        # Verify mock was called correctly
+        mock_user_repo.list_users.assert_called_once_with(10, 0)
+
+    @pytest.mark.asyncio()
+    async def test_list_users_empty(self, mocker: MockerFixture) -> None:
+        """Interpreter should return empty list when no users."""
+        # Create mocks
+        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
+        mock_user_repo.list_users.return_value = []
+        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
+
+        interpreter = DatabaseInterpreter(user_repo=mock_user_repo, message_repo=mock_msg_repo)
+
+        effect = ListUsers()
+        result = await interpreter.interpret(effect)
+
+        # Verify result
+        match result:
+            case Ok(EffectReturn(value=[], effect_name="ListUsers")):
+                pass  # Success
+            case _:
+                pytest.fail(f"Expected Ok with empty list, got {result}")
+
+        # Verify mock was called correctly
+        mock_user_repo.list_users.assert_called_once_with(None, None)
+
+    @pytest.mark.asyncio()
+    async def test_list_users_database_error(self, mocker: MockerFixture) -> None:
+        """Interpreter should return DatabaseError when list users fails."""
+        # Create mocks
+        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
+        mock_user_repo.list_users.side_effect = Exception("Connection refused")
+        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
+
+        interpreter = DatabaseInterpreter(user_repo=mock_user_repo, message_repo=mock_msg_repo)
+
+        effect = ListUsers()
+        result = await interpreter.interpret(effect)
+
+        # Verify result
+        match result:
+            case Err(DatabaseError(effect=e, db_error="Connection refused", is_retryable=True)):
+                assert e == effect
+            case _:
+                pytest.fail(f"Expected DatabaseError, got {result}")
+
+    @pytest.mark.asyncio()
+    async def test_create_user_success(self, mocker: MockerFixture) -> None:
+        """Interpreter should create user successfully."""
+        user_id = uuid4()
+        created_user = User(id=user_id, email="new@example.com", name="New User")
+
+        # Create mocks
+        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
+        mock_user_repo.create_user.return_value = created_user
+        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
+
+        interpreter = DatabaseInterpreter(user_repo=mock_user_repo, message_repo=mock_msg_repo)
+
+        effect = CreateUser(email="new@example.com", name="New User", password_hash="hash123")
+        result = await interpreter.interpret(effect)
+
+        # Verify result
+        match result:
+            case Ok(EffectReturn(value=user, effect_name="CreateUser")):
+                assert isinstance(user, User)
+                assert user.email == "new@example.com"
+                assert user.name == "New User"
+            case _:
+                pytest.fail(f"Expected Ok with User, got {result}")
+
+        # Verify mock was called correctly
+        mock_user_repo.create_user.assert_called_once_with("new@example.com", "New User", "hash123")
+
+    @pytest.mark.asyncio()
+    async def test_create_user_database_error(self, mocker: MockerFixture) -> None:
+        """Interpreter should return DatabaseError when create fails."""
+        # Create mocks
+        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
+        mock_user_repo.create_user.side_effect = Exception("Duplicate key violation")
+        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
+
+        interpreter = DatabaseInterpreter(user_repo=mock_user_repo, message_repo=mock_msg_repo)
+
+        effect = CreateUser(email="dup@example.com", name="Dup User", password_hash="hash")
+        result = await interpreter.interpret(effect)
+
+        # Verify result
+        match result:
+            case Err(DatabaseError(effect=e, db_error="Duplicate key violation", is_retryable=_)):
+                assert e == effect
+            case _:
+                pytest.fail(f"Expected DatabaseError, got {result}")
+
+    @pytest.mark.asyncio()
+    async def test_update_user_found(self, mocker: MockerFixture) -> None:
+        """Interpreter should update user successfully."""
+        user_id = uuid4()
+        updated_user = User(id=user_id, email="updated@example.com", name="Updated")
+
+        # Create mocks
+        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
+        mock_user_repo.update_user.return_value = UserFound(user=updated_user, source="database")
+        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
+
+        interpreter = DatabaseInterpreter(user_repo=mock_user_repo, message_repo=mock_msg_repo)
+
+        effect = UpdateUser(user_id=user_id, email="updated@example.com", name="Updated")
+        result = await interpreter.interpret(effect)
+
+        # Verify result
+        match result:
+            case Ok(EffectReturn(value=user, effect_name="UpdateUser")):
+                assert isinstance(user, User)
+                assert user.email == "updated@example.com"
+            case _:
+                pytest.fail(f"Expected Ok with User, got {result}")
+
+        # Verify mock was called correctly
+        mock_user_repo.update_user.assert_called_once_with(
+            user_id, "updated@example.com", "Updated"
+        )
+
+    @pytest.mark.asyncio()
+    async def test_update_user_not_found(self, mocker: MockerFixture) -> None:
+        """Interpreter should return UserNotFound when user doesn't exist."""
+        user_id = uuid4()
+
+        # Create mocks
+        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
+        mock_user_repo.update_user.return_value = UserNotFound(
+            user_id=user_id, reason="does_not_exist"
+        )
+        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
+
+        interpreter = DatabaseInterpreter(user_repo=mock_user_repo, message_repo=mock_msg_repo)
+
+        effect = UpdateUser(user_id=user_id, name="New Name")
+        result = await interpreter.interpret(effect)
+
+        # Verify result - UserNotFound ADT returned
+        match result:
+            case Ok(
+                EffectReturn(
+                    value=UserNotFound(user_id=_, reason="does_not_exist"),
+                    effect_name="UpdateUser",
+                )
+            ):
+                pass  # Success
+            case _:
+                pytest.fail(f"Expected Ok with UserNotFound, got {result}")
+
+    @pytest.mark.asyncio()
+    async def test_update_user_database_error(self, mocker: MockerFixture) -> None:
+        """Interpreter should return DatabaseError when update fails."""
+        user_id = uuid4()
+
+        # Create mocks
+        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
+        mock_user_repo.update_user.side_effect = Exception("Constraint violation")
+        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
+
+        interpreter = DatabaseInterpreter(user_repo=mock_user_repo, message_repo=mock_msg_repo)
+
+        effect = UpdateUser(user_id=user_id, email="bad")
+        result = await interpreter.interpret(effect)
+
+        # Verify result
+        match result:
+            case Err(DatabaseError(effect=e, db_error="Constraint violation", is_retryable=_)):
+                assert e == effect
+            case _:
+                pytest.fail(f"Expected DatabaseError, got {result}")
+
+    @pytest.mark.asyncio()
+    async def test_delete_user_success(self, mocker: MockerFixture) -> None:
+        """Interpreter should delete user successfully."""
+        user_id = uuid4()
+
+        # Create mocks
+        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
+        mock_user_repo.delete_user.return_value = None
+        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
+
+        interpreter = DatabaseInterpreter(user_repo=mock_user_repo, message_repo=mock_msg_repo)
+
+        effect = DeleteUser(user_id=user_id)
+        result = await interpreter.interpret(effect)
+
+        # Verify result
+        match result:
+            case Ok(EffectReturn(value=None, effect_name="DeleteUser")):
+                pass  # Success
+            case _:
+                pytest.fail(f"Expected Ok with None, got {result}")
+
+        # Verify mock was called correctly
+        mock_user_repo.delete_user.assert_called_once_with(user_id)
+
+    @pytest.mark.asyncio()
+    async def test_delete_user_database_error(self, mocker: MockerFixture) -> None:
+        """Interpreter should return DatabaseError when delete fails."""
+        user_id = uuid4()
+
+        # Create mocks
+        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
+        mock_user_repo.delete_user.side_effect = Exception("Foreign key constraint")
+        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
+
+        interpreter = DatabaseInterpreter(user_repo=mock_user_repo, message_repo=mock_msg_repo)
+
+        effect = DeleteUser(user_id=user_id)
+        result = await interpreter.interpret(effect)
+
+        # Verify result
+        match result:
+            case Err(DatabaseError(effect=e, db_error="Foreign key constraint", is_retryable=_)):
+                assert e == effect
+            case _:
+                pytest.fail(f"Expected DatabaseError, got {result}")

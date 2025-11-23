@@ -9,7 +9,7 @@ Effects:
     - DeleteObject: Remove an object from storage
     - ListObjects: List objects in a bucket/prefix
 
-All effects follow the functional_effects patterns:
+All effects follow the effectful patterns:
 - Frozen dataclasses (immutable)
 - No side effects (data only)
 - Interpreted by StorageInterpreter

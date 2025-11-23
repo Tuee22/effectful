@@ -27,7 +27,7 @@ class TestChatMessage:
         """ChatMessage should be frozen (immutable)."""
         msg = ChatMessage(id=uuid4(), user_id=uuid4(), text="Hello", created_at=datetime.now())
         with pytest.raises(FrozenInstanceError):
-            msg.text = "Goodbye"  # type: ignore[misc]
+            setattr(msg, "text", "Goodbye")
 
     def test_chat_message_is_hashable(self) -> None:
         """ChatMessage should be hashable."""

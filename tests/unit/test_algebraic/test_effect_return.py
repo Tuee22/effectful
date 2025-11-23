@@ -27,13 +27,13 @@ class TestEffectReturnConstruction:
         """EffectReturn should be frozen (immutable)."""
         result = EffectReturn(42, "GetCount")
         with pytest.raises(FrozenInstanceError):
-            result.value = 100  # type: ignore[misc]
+            setattr(result, "value", 100)
 
     def test_effect_return_effect_name_is_immutable(self) -> None:
         """EffectReturn.effect_name should be immutable."""
         result = EffectReturn(42, "GetCount")
         with pytest.raises(FrozenInstanceError):
-            result.effect_name = "NewName"  # type: ignore[misc]
+            setattr(result, "effect_name", "NewName")
 
 
 class TestEffectReturnMap:

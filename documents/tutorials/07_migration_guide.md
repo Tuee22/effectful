@@ -2,6 +2,10 @@
 
 This tutorial guides you through migrating from imperative WebSocket code to effectful programs.
 
+> **Core Doctrine**: For architecture patterns and type safety requirements, see:
+> - [ARCHITECTURE.md](../core/ARCHITECTURE.md) - 5-layer architecture
+> - [TYPE_SAFETY_DOCTRINE.md](../core/TYPE_SAFETY_DOCTRINE.md) - Result types and ADTs
+
 ## Prerequisites
 
 - Completed previous tutorials (01-06)
@@ -114,6 +118,7 @@ from effectful import (
     Close,
 )
 from effectful.domain import User, ChatMessage
+from effectful.domain.user import UserNotFound
 from uuid import UUID
 
 
@@ -123,7 +128,7 @@ def chat_program(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
     user = yield GetUserById(user_id=user_id)
 
     match user:
-        case None:
+        case UserNotFound():
             # Effect: Send error message
             yield SendText(text="Error: User not found")
             # Effect: Close connection

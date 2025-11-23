@@ -2,16 +2,33 @@
 
 Welcome to **effectful**! This guide will get you writing effect programs in 10 minutes.
 
-## Installation
+> **Core Doctrines**: For comprehensive patterns, see:
+> - [Architecture](../core/ARCHITECTURE.md) - 5-layer architecture and design decisions
+> - [Type Safety Doctrine](../core/TYPE_SAFETY_DOCTRINE.md) - Eight type safety rules
+> - [Testing Doctrine](../core/TESTING_DOCTRINE.md) - Coverage requirements and test patterns
+> - [Docker Doctrine](../core/DOCKER_DOCTRINE.md) - All development happens in Docker
+
+## For Library Users
+
+Install effectful in your application:
 
 ```bash
 pip install effectful
+# or
+poetry add effectful
 ```
 
-Or with Poetry:
+## For Contributors
+
+> **Important**: All development happens inside Docker containers. Do NOT install locally.
+> See [CONTRIBUTING.md](../../CONTRIBUTING.md) and [Docker Doctrine](../core/DOCKER_DOCTRINE.md) for setup instructions.
 
 ```bash
-poetry add effectful
+# Start development environment
+docker compose -f docker/docker-compose.yml up -d
+
+# Run tests inside container
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
 ```
 
 ## Your First Program
@@ -42,35 +59,33 @@ def hello_program() -> Generator[AllEffects, EffectResult, str]:
 - `yield SendText(...)` requests an effect execution
 - `return "Message sent"` is the program's final value
 
-## Running the Program
+## Testing the Program
 
-Programs need an **interpreter** to execute effects:
+Test programs by manually stepping through the generator:
 
 ```python
-import asyncio
-from effectful.testing import create_test_interpreter
+def test_hello_program():
+    # Create generator
+    gen = hello_program()
 
-async def main():
-    # Create interpreter with test fakes
-    interpreter = create_test_interpreter()
+    # Get first effect
+    effect = next(gen)
+    assert effect.__class__.__name__ == "SendText"
+    assert effect.text == "Hello, World!"
 
-    # Run program
-    result = await run_ws_program(hello_program(), interpreter)
+    # Send response and get final result
+    try:
+        gen.send(None)
+    except StopIteration as e:
+        result = e.value
 
-    # Handle result
-    match result:
-        case Ok(value):
-            print(f"Success: {value}")
-        case Err(error):
-            print(f"Error: {error}")
-
-asyncio.run(main())
+    assert result == "Message sent"
 ```
 
-Output:
-```
-Success: Message sent
-```
+**Benefits:**
+- No infrastructure needed
+- Fast and deterministic
+- Tests pure program logic
 
 ## Receiving Effect Results
 
@@ -79,6 +94,7 @@ Effects return values. Use them to build workflows:
 ```python
 from uuid import uuid4
 from effectful import GetUserById, User
+from effectful.domain.user import UserNotFound
 
 def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
     # Yield effect, receive result
@@ -86,7 +102,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 
     # Pattern match on result
     match user_result:
-        case None:
+        case UserNotFound():
             yield SendText(text="User not found")
             return "error"
         case User(name=name):
@@ -99,44 +115,45 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 - Pattern matching handles both success and failure cases
 - Type checker ensures all cases are handled
 
-## Testing Your Programs
+## Testing Complete Programs
 
-Use test fakes to run programs without real infrastructure:
+For more complex programs, step through the generator and verify each effect:
 
 ```python
-import pytest
-from effectful.testing import (
-    FakeUserRepository,
-    create_test_interpreter,
-    unwrap_ok,
-)
+from uuid import uuid4
+from effectful import GetUserById, SendText, User
 
-@pytest.mark.asyncio
-async def test_greet_user():
-    # Setup test data
-    fake_repo = FakeUserRepository()
+def test_greet_user():
     user_id = uuid4()
-    fake_repo._users[user_id] = User(
-        id=user_id,
-        email="alice@example.com",
-        name="Alice"
-    )
+    user = User(id=user_id, email="alice@example.com", name="Alice")
 
-    # Create interpreter with fake
-    interpreter = create_test_interpreter(user_repo=fake_repo)
+    # Create generator
+    gen = greet_user(user_id)
 
-    # Run program
-    result = await run_ws_program(greet_user(user_id), interpreter)
+    # Step 1: GetUserById effect
+    effect1 = next(gen)
+    assert effect1.__class__.__name__ == "GetUserById"
+    assert effect1.user_id == user_id
 
-    # Assert
-    value = unwrap_ok(result)
-    assert value == "success"
+    # Step 2: Send user, receive SendText effect
+    effect2 = gen.send(user)
+    assert effect2.__class__.__name__ == "SendText"
+    assert "Hello Alice" in effect2.text
+
+    # Step 3: Send None for SendText, get final result
+    try:
+        gen.send(None)
+    except StopIteration as e:
+        result = e.value
+
+    assert result == "success"
 ```
 
 **Benefits:**
 - Fast (no real database/WebSocket)
 - Deterministic (no network flakiness)
 - Isolated (tests don't interfere)
+- Tests pure program logic without interpreters
 
 ## Error Handling
 
@@ -212,19 +229,16 @@ async def handle_websocket(websocket: WebSocket):
 
 ```python
 from effectful.testing import (
-    # Fakes
-    FakeWebSocketConnection,
-    FakeUserRepository,
-    FakeChatMessageRepository,
-    FakeProfileCache,
-    create_test_interpreter,
-
     # Matchers
     assert_ok,
     assert_err,
     unwrap_ok,
     unwrap_err,
 )
+
+# For unit tests with pytest-mock:
+# mock_repo = mocker.AsyncMock(spec=UserRepository)
+# mock_repo.get_by_id.return_value = User(...)
 ```
 
 ### Type Safety

@@ -73,8 +73,7 @@ async def demo_user_not_found() -> None:
         case Ok(value):
             print(f"✓ Program completed: {value}")
             websocket = interpreter._websocket._connection
-            for msg in websocket._sent_messages:
-                print(f"  → {msg}")
+            _ = [print(f"  → {msg}") for msg in websocket._sent_messages]
         case Err(error):
             print(f"✗ Unexpected error: {error}")
 
@@ -120,8 +119,7 @@ async def demo_success_case() -> None:
         case Ok(value):
             print(f"✓ Program completed: {value}")
             websocket = interpreter._websocket._connection
-            for msg in websocket._sent_messages:
-                print(f"  → {msg}")
+            _ = [print(f"  → {msg}") for msg in websocket._sent_messages]
 
         case Err(error):
             print(f"✗ Unexpected error: {error}")
@@ -143,22 +141,30 @@ def multi_user_lookup(user_ids: list[UUID]) -> Generator[AllEffects, EffectResul
 
     Returns:
         Statistics: {"found": N, "not_found": M}
-    """
-    stats = {"found": 0, "not_found": 0}
 
+    Note:
+        For loop is acceptable here because yield cannot be in comprehensions.
+        Uses immutable dict updates instead of mutation.
+    """
+    # Initialize with immutable pattern
+    found = 0
+    not_found = 0
+
+    # For loop with yield is acceptable (yield cannot be in comprehensions)
     for user_id in user_ids:
         user_result = yield GetUserById(user_id=user_id)
 
         match user_result:
             case UserNotFound():
-                stats["not_found"] += 1
+                not_found = not_found + 1
             case User(name=name):
-                stats["found"] += 1
+                found = found + 1
                 yield SendText(text=f"Found: {name}")
             case unexpected:
                 raise AssertionError(f"Unexpected type: {type(unexpected)}")
 
     # Summary
+    stats = {"found": found, "not_found": not_found}
     yield SendText(text=f"Lookup complete: {stats['found']} found, {stats['not_found']} not found")
 
     return stats
@@ -187,8 +193,7 @@ async def demo_batch_processing() -> None:
             print(f"✓ Batch complete: {stats}")
             websocket = interpreter._websocket._connection
             print("  Messages sent:")
-            for msg in websocket._sent_messages:
-                print(f"    → {msg}")
+            _ = [print(f"    → {msg}") for msg in websocket._sent_messages]
 
         case Err(error):
             print(f"✗ Batch failed: {error}")

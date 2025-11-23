@@ -127,6 +127,35 @@ def assert_never(value: Never) -> Never:
     raise AssertionError(f"Unexpected value: {value!r} of type {type(value).__name__}")
 
 
+def unreachable(value: Never) -> Never:
+    """Ensure exhaustive pattern matching at compile time.
+
+    This is an alias for assert_never with a more descriptive name for use
+    in match statements. MyPy will error if the value could be anything other
+    than Never, indicating missing cases.
+
+    Args:
+        value: A value that should be of type Never (unreachable)
+
+    Raises:
+        AssertionError: Always raises with information about the unexpected value
+
+    Example:
+        >>> type UserResult = UserFound | UserNotFound | UserSuspended
+        >>> def handle(result: UserResult) -> str:
+        ...     match result:
+        ...         case UserFound(user=user):
+        ...             return user.name
+        ...         case UserNotFound():
+        ...             return "not found"
+        ...         case UserSuspended():
+        ...             return "suspended"
+        ...         case _ as never:
+        ...             unreachable(never)  # MyPy error if case missing
+    """
+    raise AssertionError(f"Unhandled case: {value!r} of type {type(value).__name__}")
+
+
 def fold_result(
     result: Result[T, E],
     on_ok: Callable[[T], U],

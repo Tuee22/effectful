@@ -45,6 +45,8 @@ For more information, see docs/tutorials/04_testing_guide.md
 
 # Matchers
 from effectful.testing.matchers import (
+    assert_effect_err,
+    assert_effect_ok,
     assert_err,
     assert_err_message,
     assert_ok,
@@ -61,4 +63,6 @@ __all__ = [
     "unwrap_err",
     "assert_ok_value",
     "assert_err_message",
+    "assert_effect_ok",
+    "assert_effect_err",
 ]

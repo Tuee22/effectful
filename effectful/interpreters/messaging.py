@@ -33,6 +33,10 @@ from effectful.interpreters.errors import (
     MessagingError,
     UnhandledEffectError,
 )
+from effectful.interpreters.retry_logic import (
+    MESSAGING_RETRY_PATTERNS,
+    is_retryable_error,
+)
 from effectful.programs.program_types import EffectResult
 
 
@@ -126,16 +130,11 @@ class MessagingInterpreter:
                 case PublishSuccess(message_id=msg_id, topic=_):
                     # Success - return message ID
                     return Ok(EffectReturn(value=msg_id, effect_name="PublishMessage"))
-                case PublishFailure(topic=_, reason=reason):
+                case PublishFailure(topic=t, reason=r):
                     # Domain failure (timeout, quota, topic not found)
-                    # Return as error for fail-fast semantics
-                    return Err(
-                        MessagingError(
-                            effect=effect,
-                            messaging_error=f"Publish failed: {reason}",
-                            is_retryable=reason in ["timeout", "quota_exceeded"],
-                        )
-                    )
+                    # Return as Ok with ADT - programs handle via pattern matching
+                    failure = PublishFailure(topic=t, reason=r)
+                    return Ok(EffectReturn(value=failure, effect_name="PublishMessage"))
         except Exception as e:
             # Infrastructure failure (connection error, etc.)
             return Err(
@@ -228,6 +227,4 @@ class MessagingInterpreter:
         Note:
             This is a heuristic based on error message patterns.
         """
-        error_str = str(error).lower()
-        retryable_patterns = ["connection", "timeout", "unavailable", "backpressure"]
-        return any(pattern in error_str for pattern in retryable_patterns)
+        return is_retryable_error(error, MESSAGING_RETRY_PATTERNS)

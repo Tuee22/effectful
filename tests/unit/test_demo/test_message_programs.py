@@ -9,6 +9,8 @@ from uuid import uuid4
 import pytest
 from pytest_mock import MockerFixture
 
+from datetime import datetime, timezone
+
 from demo.domain.errors import AppError
 from demo.domain.responses import MessageResponse
 from demo.programs.message_programs import get_message_program, send_message_program
@@ -16,6 +18,7 @@ from effectful.algebraic.result import Err, Ok
 from effectful.domain.user import User
 from effectful.effects.database import GetUserById, ListMessagesForUser
 from effectful.effects.messaging import PublishMessage
+from effectful.effects.system import GenerateUUID, GetCurrentTime
 
 
 class TestSendMessageProgram:
@@ -37,11 +40,21 @@ class TestSendMessageProgram:
         assert effect1.user_id == user_id
         result1 = gen.send(user)
 
-        # Step 2: PublishMessage to Pulsar
+        # Step 2: GenerateUUID
         effect2 = result1
-        assert isinstance(effect2, PublishMessage)
-        assert effect2.topic == "chat-messages"
-        assert b"Hello, world!" in effect2.payload
+        assert isinstance(effect2, GenerateUUID)
+        result2 = gen.send(uuid4())
+
+        # Step 3: GetCurrentTime
+        effect3 = result2
+        assert isinstance(effect3, GetCurrentTime)
+        result3 = gen.send(datetime.now(timezone.utc))
+
+        # Step 4: PublishMessage to Pulsar
+        effect4 = result3
+        assert isinstance(effect4, PublishMessage)
+        assert effect4.topic == "chat-messages"
+        assert b"Hello, world!" in effect4.payload
 
         try:
             gen.send("pulsar_message_id_123")

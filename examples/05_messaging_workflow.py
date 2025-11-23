@@ -40,9 +40,13 @@ def publish_events(events: list[str]) -> Generator[AllEffects, EffectResult, int
 
     Returns:
         Count of successfully published messages
+
+    Note:
+        For loop is acceptable here because yield cannot be in comprehensions.
     """
     published_count = 0
 
+    # For loop with yield is acceptable (yield cannot be in comprehensions)
     for event in events:
         # Publish event
         message_id = yield PublishMessage(
@@ -51,7 +55,7 @@ def publish_events(events: list[str]) -> Generator[AllEffects, EffectResult, int
         assert isinstance(message_id, str)
 
         print(f"  ✓ Published event: {event} (ID: {message_id})")
-        published_count += 1
+        published_count = published_count + 1
 
     return published_count
 
@@ -127,29 +131,32 @@ def pubsub_workflow(messages: list[str]) -> Generator[AllEffects, EffectResult, 
     Returns:
         Dictionary with counts: {"published": int, "acked": int, "nacked": int}
     """
-    stats = {"published": 0, "acked": 0, "nacked": 0}
-
     # Phase 1: Publish messages
     print("Phase 1: Publishing messages...")
     published_count = yield from publish_events(messages)
-    stats["published"] = published_count
 
     print(f"\n✓ Published {published_count} messages\n")
 
     # Phase 2: Consume and process messages
+    # Use immutable counters instead of dict mutation
     print("Phase 2: Consuming and processing messages...")
+    acked = 0
+    nacked = 0
+
+    # For loop with yield from is acceptable (yield cannot be in comprehensions)
     for _ in range(len(messages)):
         status = yield from consume_and_process()
 
         match status:
             case "success":
-                stats["acked"] += 1
+                acked = acked + 1
             case "failed":
-                stats["nacked"] += 1
+                nacked = nacked + 1
             case "timeout":
                 break  # No more messages
 
-    return stats
+    # Build stats dict at the end (immutable)
+    return {"published": published_count, "acked": acked, "nacked": nacked}
 
 
 async def main() -> None:
@@ -167,15 +174,17 @@ async def main() -> None:
     ]
 
     # Create message envelopes in consumer queue
-    for i, msg in enumerate(messages):
-        envelope = MessageEnvelope(
+    envelopes = [
+        MessageEnvelope(
             message_id=f"msg-{i+1}",
             payload=msg.encode("utf-8"),
             properties={"type": "event", "index": str(i)},
             publish_time=datetime.now(UTC),
             topic="events",
         )
-        fake_consumer._messages.append(envelope)
+        for i, msg in enumerate(messages)
+    ]
+    fake_consumer._messages.extend(envelopes)
 
     # Create interpreter
     interpreter = MessagingInterpreter(producer=fake_producer, consumer=fake_consumer)
@@ -196,10 +205,14 @@ async def main() -> None:
     # Show producer state
     print(f"\n=== Producer State ===")
     print(f"Published messages: {len(fake_producer._published)}")
-    for topic, payload, props in fake_producer._published:
-        print(f"  - Topic: {topic}")
-        print(f"    Payload: {payload.decode('utf-8')}")
-        print(f"    Properties: {props}")
+    _ = [
+        (
+            print(f"  - Topic: {topic}"),
+            print(f"    Payload: {payload.decode('utf-8')}"),
+            print(f"    Properties: {props}"),
+        )
+        for topic, payload, props in fake_producer._published
+    ]
 
     # Run consume and process workflow
     print(f"\n=== Consuming and Processing Messages ===")
@@ -221,12 +234,10 @@ async def main() -> None:
     # Show consumer state
     print(f"\n=== Consumer State ===")
     print(f"Messages acknowledged: {len(fake_consumer._acknowledged)}")
-    for msg_id in fake_consumer._acknowledged:
-        print(f"  ✓ {msg_id}")
+    _ = [print(f"  ✓ {msg_id}") for msg_id in fake_consumer._acknowledged]
 
     print(f"\nMessages negative acknowledged: {len(fake_consumer._nacked)}")
-    for msg_id in fake_consumer._nacked:
-        print(f"  ✗ {msg_id}")
+    _ = [print(f"  ✗ {msg_id}") for msg_id in fake_consumer._nacked]
 
     print(f"\nMessages remaining in queue: {len(fake_consumer._messages)}")
 

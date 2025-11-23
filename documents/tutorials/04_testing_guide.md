@@ -2,12 +2,32 @@
 
 This tutorial teaches you how to test effect programs using **generator-based mocking** with pytest-mock. This approach tests pure programs without requiring interpreters or real infrastructure.
 
+> **Core Doctrines**:
+> - [Testing Doctrine](../core/TESTING_DOCTRINE.md) - Coverage requirements and test patterns
+> - [Docker Doctrine](../core/DOCKER_DOCTRINE.md) - All commands run inside Docker
+
 ## Prerequisites
 
+- **Docker running**: All development happens inside Docker containers
 - Completed [Tutorial 01: Quick Start](./01_quickstart.md)
 - Completed [Tutorial 02: Effect Types](./02_effect_types.md)
 - Completed [Tutorial 03: ADTs and Results](./03_adts_and_results.md)
 - Familiarity with pytest
+
+## Running Tests
+
+> **Important**: ALL test commands run inside Docker. Never run pytest locally.
+
+```bash
+# Run all tests
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
+
+# Run unit tests only
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tests/unit
+
+# Run specific test file
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tests/unit/test_demo/test_auth_programs.py
+```
 
 ## Learning Objectives
 
@@ -20,9 +40,16 @@ By the end of this tutorial, you will:
 
 ## Setup
 
-### Installation
+### For Contributors
+
+Test dependencies are already installed in the Docker container. No local installation needed.
+
+### For Library Users
+
+If you're using effectful in your own project and want these test utilities:
 
 ```bash
+# Install test dependencies in YOUR project (not in effectful)
 poetry add --group dev pytest pytest-asyncio pytest-mock pytest-cov
 ```
 
@@ -56,7 +83,7 @@ from uuid import UUID
 
 from effectful import AllEffects, EffectResult, GetUserById
 from effectful.algebraic.result import Result, Ok, Err
-from effectful.domain.user import User
+from effectful.domain.user import User, UserNotFound
 from demo.domain.errors import AppError
 
 def get_user_program(
@@ -70,11 +97,11 @@ def get_user_program(
     """
     user = yield GetUserById(user_id=user_id)
 
-    if user is None:
-        return Err(AppError.not_found(f"User {user_id} not found"))
-
-    assert isinstance(user, User)  # Type narrowing
-    return Ok(user)
+    match user:
+        case UserNotFound():
+            return Err(AppError.not_found(f"User {user_id} not found"))
+        case User():
+            return Ok(user)
 ```
 
 ### Generator-Based Testing
@@ -125,7 +152,7 @@ import pytest
 from pytest_mock import MockerFixture
 from uuid import uuid4
 
-from effectful.domain.user import User
+from effectful.domain.user import User, UserNotFound
 from effectful.algebraic.result import Ok, Err
 from demo.domain.errors import AppError
 from src.programs.user_programs import get_user_program
@@ -207,7 +234,7 @@ import re
 from uuid import UUID
 from effectful import AllEffects, EffectResult, GetUserById, UpdateUser, InvalidateCache
 from effectful.algebraic.result import Result, Ok, Err
-from effectful.domain.user import User
+from effectful.domain.user import User, UserNotFound
 from demo.domain.errors import AppError
 
 def update_user_program(
@@ -226,8 +253,12 @@ def update_user_program(
 
     # Effect 1: Verify user exists
     user = yield GetUserById(user_id=user_id)
-    if user is None:
-        return Err(AppError.not_found(f"User {user_id} not found"))
+
+    match user:
+        case UserNotFound():
+            return Err(AppError.not_found(f"User {user_id} not found"))
+        case User():
+            pass
 
     # Effect 2: Update user
     updated_result = yield UpdateUser(user_id=user_id, email=email, name=name)
@@ -349,7 +380,8 @@ from effectful import (
 )
 from effectful.algebraic.result import Result, Ok, Err
 from effectful.domain.token_result import TokenValid, TokenInvalid
-from effectful.domain.user import User
+from effectful.domain.user import User, UserNotFound
+from effectful.domain.profile import CacheMiss
 from demo.domain.errors import AuthError, AppError
 from demo.domain.responses import MessageResponse
 
@@ -369,14 +401,21 @@ def send_authenticated_message_with_storage_program(
     # Step 2-4: [Cache + Database] Cache-aside pattern
     cached_result = yield GetCachedValue(key=f"user:{user_id}")
 
-    if cached_result is None:
-        # Cache miss - load from database
-        user = yield GetUserById(user_id=user_id)
-        if user is None:
-            return Err(AppError.not_found(f"User {user_id} not found"))
+    match cached_result:
+        case CacheMiss():
+            # Cache miss - load from database
+            user = yield GetUserById(user_id=user_id)
 
-        # Store in cache
-        yield PutCachedValue(key=f"user:{user_id}", value=b"...", ttl_seconds=300)
+            match user:
+                case UserNotFound():
+                    return Err(AppError.not_found(f"User {user_id} not found"))
+                case User():
+                    pass
+
+            # Store in cache
+            yield PutCachedValue(key=f"user:{user_id}", value=b"...", ttl_seconds=300)
+        case _:
+            pass
 
     # Validation
     if not text or text.strip() == "":

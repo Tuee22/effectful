@@ -35,7 +35,7 @@ class TestValidateToken:
         """ValidateToken should be frozen (immutable)."""
         effect = ValidateToken(token="test.token")
         with pytest.raises(FrozenInstanceError):
-            effect.token = "new.token"  # type: ignore[misc]
+            setattr(effect, "token", "new.token")
 
     def test_validate_token_equality(self) -> None:
         """ValidateToken should support equality comparison."""
@@ -70,21 +70,21 @@ class TestGenerateToken:
         claims = {"role": "user"}
         effect = GenerateToken(user_id=user_id, claims=claims, ttl_seconds=3600)
         with pytest.raises(FrozenInstanceError):
-            effect.ttl_seconds = 7200  # type: ignore[misc]
+            setattr(effect, "ttl_seconds", 7200)
 
     def test_generate_token_user_id_is_immutable(self) -> None:
         """GenerateToken user_id should be immutable."""
         user_id = uuid4()
         effect = GenerateToken(user_id=user_id, claims={}, ttl_seconds=3600)
         with pytest.raises(FrozenInstanceError):
-            effect.user_id = uuid4()  # type: ignore[misc]
+            setattr(effect, "user_id", uuid4())
 
     def test_generate_token_claims_is_immutable(self) -> None:
         """GenerateToken claims should be immutable."""
         user_id = uuid4()
         effect = GenerateToken(user_id=user_id, claims={}, ttl_seconds=3600)
         with pytest.raises(FrozenInstanceError):
-            effect.claims = {"new": "claims"}  # type: ignore[misc]
+            setattr(effect, "claims", {"new": "claims"})
 
     def test_generate_token_equality(self) -> None:
         """GenerateToken should support equality comparison."""
@@ -108,7 +108,7 @@ class TestRefreshToken:
         """RefreshToken should be frozen (immutable)."""
         effect = RefreshToken(refresh_token="test.refresh")
         with pytest.raises(FrozenInstanceError):
-            effect.refresh_token = "new.refresh"  # type: ignore[misc]
+            setattr(effect, "refresh_token", "new.refresh")
 
     def test_refresh_token_equality(self) -> None:
         """RefreshToken should support equality comparison."""
@@ -131,7 +131,7 @@ class TestRevokeToken:
         """RevokeToken should be frozen (immutable)."""
         effect = RevokeToken(token="test.token")
         with pytest.raises(FrozenInstanceError):
-            effect.token = "new.token"  # type: ignore[misc]
+            setattr(effect, "token", "new.token")
 
     def test_revoke_token_equality(self) -> None:
         """RevokeToken should support equality comparison."""
@@ -154,7 +154,7 @@ class TestGetUserByEmail:
         """GetUserByEmail should be frozen (immutable)."""
         effect = GetUserByEmail(email="test@example.com")
         with pytest.raises(FrozenInstanceError):
-            effect.email = "new@example.com"  # type: ignore[misc]
+            setattr(effect, "email", "new@example.com")
 
     def test_get_user_by_email_equality(self) -> None:
         """GetUserByEmail should support equality comparison."""
@@ -179,13 +179,13 @@ class TestValidatePassword:
         """ValidatePassword should be frozen (immutable)."""
         effect = ValidatePassword(password="secret", password_hash="hash")
         with pytest.raises(FrozenInstanceError):
-            effect.password = "newsecret"  # type: ignore[misc]
+            setattr(effect, "password", "newsecret")
 
     def test_validate_password_hash_is_immutable(self) -> None:
         """ValidatePassword password_hash should be immutable."""
         effect = ValidatePassword(password="secret", password_hash="hash")
         with pytest.raises(FrozenInstanceError):
-            effect.password_hash = "newhash"  # type: ignore[misc]
+            setattr(effect, "password_hash", "newhash")
 
     def test_validate_password_equality(self) -> None:
         """ValidatePassword should support equality comparison."""
@@ -207,7 +207,7 @@ class TestHashPassword:
         """HashPassword should be frozen (immutable)."""
         effect = HashPassword(password="secret")
         with pytest.raises(FrozenInstanceError):
-            effect.password = "newsecret"  # type: ignore[misc]
+            setattr(effect, "password", "newsecret")
 
     def test_hash_password_equality(self) -> None:
         """HashPassword should support equality comparison."""

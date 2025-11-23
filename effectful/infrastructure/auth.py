@@ -9,6 +9,7 @@ from typing import Protocol
 from uuid import UUID
 
 from effectful.domain.token_result import TokenValidationResult
+from effectful.domain.user import UserLookupResult
 
 
 class AuthService(Protocol):
@@ -57,5 +58,39 @@ class AuthService(Protocol):
 
         Args:
             token: JWT token to revoke
+        """
+        ...
+
+    async def get_user_by_email(self, email: str) -> UserLookupResult:
+        """Get user by email address.
+
+        Args:
+            email: Email address to search for
+
+        Returns:
+            UserFound if user exists, UserNotFound otherwise
+        """
+        ...
+
+    async def validate_password(self, password: str, password_hash: str) -> bool:
+        """Validate password against bcrypt hash.
+
+        Args:
+            password: Plain text password to validate
+            password_hash: Bcrypt hash to validate against
+
+        Returns:
+            True if password matches hash, False otherwise
+        """
+        ...
+
+    async def hash_password(self, password: str) -> str:
+        """Hash password with bcrypt.
+
+        Args:
+            password: Plain text password to hash
+
+        Returns:
+            Bcrypt hash as string
         """
         ...

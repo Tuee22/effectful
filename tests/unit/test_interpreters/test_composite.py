@@ -294,6 +294,7 @@ class TestCompositeInterpreter:
                         "WebSocketInterpreter",
                         "DatabaseInterpreter",
                         "CacheInterpreter",
+                        "SystemInterpreter",
                     ],
                 )
             ):
@@ -317,7 +318,7 @@ class TestCompositeInterpreter:
         )
 
         with pytest.raises(FrozenInstanceError):
-            interpreter.websocket = None  # type: ignore[assignment,misc]
+            setattr(interpreter, "websocket", None)
 
     def test_create_composite_interpreter_factory(self, mocker: MockerFixture) -> None:
         """Factory function should create valid CompositeInterpreter."""
@@ -407,12 +408,12 @@ class TestCompositeInterpreter:
         effect = PutObject(bucket="test-bucket", key="test-key", content=b"test content")
         result = await interpreter.interpret(effect)
 
-        # Verify result - storage interpreter returns key string, not PutSuccess
+        # Verify result - storage interpreter returns PutSuccess ADT
         match result:
-            case Ok(EffectReturn(value=object_key, effect_name="PutObject")):
-                assert object_key == "test-key"
+            case Ok(EffectReturn(value=PutSuccess(key="test-key"), effect_name="PutObject")):
+                pass  # Success
             case _:
-                pytest.fail(f"Expected Ok with PutObject, got {result}")
+                pytest.fail(f"Expected Ok with PutSuccess, got {result}")
 
         # Verify storage was used
         mock_storage.put_object.assert_called_once_with(

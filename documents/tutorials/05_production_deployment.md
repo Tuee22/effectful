@@ -2,6 +2,8 @@
 
 This tutorial guides you through deploying effectful programs to production with proper infrastructure configuration.
 
+> **Core Doctrine**: For the complete infrastructure topology and architecture diagrams, see [ARCHITECTURE.md](../core/ARCHITECTURE.md#infrastructure-topology).
+
 ## Prerequisites
 
 - Completed previous tutorials (01-04)

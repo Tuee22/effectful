@@ -1,6 +1,10 @@
 # Testing Patterns for effectful
 
-This document defines the comprehensive testing patterns for the effectful library. Following these patterns ensures consistency, maintainability, and type safety across the entire test suite.
+This document defines implementation patterns for testing the effectful library.
+
+**For testing doctrine and policy (coverage requirements, anti-patterns), see `documents/core/TESTING_DOCTRINE.md`.**
+
+Following these patterns ensures consistency, maintainability, and type safety across the entire test suite.
 
 ## Table of Contents
 - [Architecture Overview](#architecture-overview)
@@ -53,7 +57,8 @@ The effectful library has a clean 4-layer architecture:
 2. **Type safety everywhere**: Use `spec` parameter in pytest-mock to catch interface mismatches
 3. **No test doubles library**: Use pytest-mock's `AsyncMock` with `side_effect` for stateful behavior
 4. **Explicit error handling**: Always test both `Ok` and `Err` cases using pattern matching
-5. **100% coverage, 100% pass rate**: Zero skipped tests (pytest.skip is forbidden)
+
+For coverage requirements and anti-patterns, see `documents/core/TESTING_DOCTRINE.md`.
 
 ### Why This Architecture?
 

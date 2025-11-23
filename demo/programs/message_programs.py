@@ -1,17 +1,18 @@
 """Message handling effect programs for demo app.
 
-All programs are pure logic using the functional_effects library.
+All programs are pure logic using the effectful library.
 Programs yield effects and receive results directly (not wrapped in Result).
 Program returns are wrapped in Result types for explicit error handling.
 """
 
 from collections.abc import Generator
 from datetime import datetime
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from effectful.algebraic.result import Err, Ok, Result
 from effectful.effects.database import GetUserById
 from effectful.effects.messaging import PublishMessage
+from effectful.effects.system import GenerateUUID, GetCurrentTime
 from effectful.domain.message import ChatMessage
 from effectful.domain.user import User
 from effectful.programs.program_types import AllEffects, EffectResult
@@ -61,9 +62,12 @@ def send_message_program(
             AppError.validation_error("Message text cannot exceed 10000 characters")
         )
 
-    # Step 3: Create message
-    message_id = uuid4()
-    created_at = datetime.now()
+    # Step 3: Create message with pure effects
+    message_id = yield GenerateUUID()
+    assert isinstance(message_id, UUID)
+
+    created_at = yield GetCurrentTime()
+    assert isinstance(created_at, datetime)
 
     # Step 4: Publish to Pulsar
     # Message payload includes full context for downstream consumers

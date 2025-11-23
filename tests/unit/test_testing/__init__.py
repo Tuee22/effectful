@@ -1,1 +1,1 @@
-"""Tests for functional_effects.testing module."""
+"""Tests for effectful.testing module."""

@@ -8,6 +8,7 @@ This module provides interpreters that handle effect execution:
 - **MessagingInterpreter** - Handles messaging effects (PublishMessage, ConsumeMessage)
 - **StorageInterpreter** - Handles storage effects (GetObject, PutObject, DeleteObject, ListObjects)
 - **AuthInterpreter** - Handles auth effects (ValidateToken, GenerateToken, RefreshToken, RevokeToken)
+- **SystemInterpreter** - Handles system effects (GetCurrentTime, GenerateUUID)
 - **CompositeInterpreter** - Routes effects to specialized interpreters
 - **create_composite_interpreter()** - Factory for creating composite interpreters
 
@@ -38,11 +39,12 @@ Architecture:
     - Messaging effects -> MessagingInterpreter (if configured)
     - Storage effects -> StorageInterpreter (if configured)
     - Auth effects -> AuthInterpreter (if configured)
+    - System effects -> SystemInterpreter
 
 See Also:
-    - functional_effects.programs.runners - run_ws_program function
-    - functional_effects.testing - Test interpreters with fakes
-    - functional_effects.interpreters.errors - Error types
+    - effectful.programs.runners - run_ws_program function
+    - effectful.testing - Test matchers and utilities
+    - effectful.interpreters.errors - Error types
 """
 
 from effectful.interpreters.auth import AuthInterpreter
@@ -54,6 +56,7 @@ from effectful.interpreters.composite import (
 from effectful.interpreters.database import DatabaseInterpreter
 from effectful.interpreters.messaging import MessagingInterpreter
 from effectful.interpreters.storage import StorageInterpreter
+from effectful.interpreters.system import SystemInterpreter
 from effectful.interpreters.websocket import WebSocketInterpreter
 
 __all__ = [
@@ -63,6 +66,7 @@ __all__ = [
     "MessagingInterpreter",
     "StorageInterpreter",
     "AuthInterpreter",
+    "SystemInterpreter",
     "CompositeInterpreter",
     "create_composite_interpreter",
 ]

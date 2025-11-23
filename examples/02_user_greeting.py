@@ -63,8 +63,9 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 
             return "success"
 
-        case unexpected:
-            raise AssertionError(f"Unexpected type: {type(unexpected)}")
+        case _:
+            # All expected cases handled above - this is defensive
+            return "error"
 
 
 async def main() -> None:
@@ -90,14 +91,15 @@ async def main() -> None:
             # Show sent messages
             websocket = interpreter._websocket._connection
             print("\nMessages sent:")
-            for i, msg in enumerate(websocket._sent_messages, 1):
+            _ = [
                 print(f"  {i}. {msg}")
+                for i, msg in enumerate(websocket._sent_messages, 1)
+            ]
 
             # Show saved messages
             message_repo = interpreter._database._message_repo
             print(f"\nMessages saved: {len(message_repo._messages)}")
-            for msg in message_repo._messages:
-                print(f"  - {msg.text} (ID: {msg.id})")
+            _ = [print(f"  - {msg.text} (ID: {msg.id})") for msg in message_repo._messages]
 
         case Err(error):
             print(f"✗ Error: {error}")

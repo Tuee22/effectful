@@ -36,3 +36,35 @@ class ProfileCache(Protocol):
             ttl_seconds: Time-to-live in seconds
         """
         ...
+
+    async def get_value(self, key: str) -> CacheLookupResult[bytes]:
+        """Get cached value by key.
+
+        Args:
+            key: Cache key to retrieve
+
+        Returns:
+            CacheHit with bytes if found, CacheMiss if not found/expired
+        """
+        ...
+
+    async def put_value(self, key: str, value: bytes, ttl_seconds: int) -> None:
+        """Store value in cache with TTL.
+
+        Args:
+            key: Cache key
+            value: Value to cache (bytes)
+            ttl_seconds: Time-to-live in seconds
+        """
+        ...
+
+    async def invalidate(self, key: str) -> bool:
+        """Invalidate cache entry by key.
+
+        Args:
+            key: Cache key to invalidate
+
+        Returns:
+            True if key was found and deleted, False if not found
+        """
+        ...

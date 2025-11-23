@@ -1,7 +1,7 @@
 """Domain models for S3 objects and storage operations.
 
 This module defines domain types for AWS S3 object storage using algebraic data types.
-All models are frozen dataclasses (immutable) following functional_effects patterns.
+All models are frozen dataclasses (immutable) following effectful patterns.
 
 Domain Models:
     - S3Object: Object content and metadata from S3

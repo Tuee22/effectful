@@ -1,6 +1,9 @@
 # Testing API Reference
 
-This document provides a comprehensive reference for testing effect programs.
+This document provides API reference for testing utilities.
+
+**For testing doctrine and policy, see `documents/core/TESTING_DOCTRINE.md`.**
+**For testing patterns and examples, see `documents/testing/TESTING_PATTERNS.md`.**
 
 ## Overview
 
@@ -209,7 +212,7 @@ from effectful import (
     SendText,
     create_composite_interpreter,
 )
-from effectful.domain.user import User, UserFound
+from effectful.domain.user import User, UserFound, UserNotFound
 from effectful.infrastructure.websocket import WebSocketConnection
 from effectful.infrastructure.repositories import UserRepository, ChatMessageRepository
 from effectful.infrastructure.cache import ProfileCache
@@ -245,7 +248,7 @@ async def test_user_greeting(mocker: MockerFixture) -> None:
             case User(name=name):
                 yield SendText(text=f"Hello {name}!")
                 return "greeted"
-            case None:
+            case UserNotFound():
                 return "not_found"
 
     # Execute and verify
@@ -371,7 +374,7 @@ async def test_cache_miss_then_hit(mocker: MockerFixture) -> None:
     # Test program (calls get_profile twice)
     def program():
         first = yield GetCachedProfile(user_id=user_id)
-        assert first is None  # Cache miss
+        assert isinstance(first, CacheMiss)  # Cache miss
 
         # ... populate cache ...
 
@@ -453,7 +456,7 @@ async def test_program_composition(mocker: MockerFixture) -> None:
             case User(name=name):
                 yield SendText(text=f"Found: {name}")
                 return "found"
-            case None:
+            case UserNotFound():
                 return "not_found"
 
     result = await run_ws_program(main_program(user_id), interpreter)
@@ -496,10 +499,11 @@ async def test_batch_user_greeting(mocker: MockerFixture) -> None:
         stats = {"found": 0, "not_found": 0}
         for uid in user_ids:
             user = yield GetUserById(user_id=uid)
-            if user is not None:
-                stats["found"] += 1
-            else:
-                stats["not_found"] += 1
+            match user:
+                case User():
+                    stats["found"] += 1
+                case UserNotFound():
+                    stats["not_found"] += 1
         return stats
 
     result = await run_ws_program(batch_program(user_ids), interpreter)

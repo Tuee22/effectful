@@ -26,9 +26,8 @@ Example:
     ...         ...
 
 See Also:
-    - functional_effects.interpreters - Interpreters using these protocols
-    - functional_effects.testing.fakes - Test implementations of protocols
-    - functional_effects.adapters - Production implementations (Pulsar, S3, etc.)
+    - effectful.interpreters - Interpreters using these protocols
+    - effectful.adapters - Production implementations (Pulsar, S3, etc.)
 """
 
 from effectful.infrastructure.auth import AuthService

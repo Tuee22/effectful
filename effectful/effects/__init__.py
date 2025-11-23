@@ -7,6 +7,7 @@ This package provides immutable effect types for describing program behavior:
 - Messaging effects: PublishMessage, ConsumeMessage, AcknowledgeMessage, NegativeAcknowledge
 - Storage effects: GetObject, PutObject, DeleteObject, ListObjects
 - Auth effects: ValidateToken, GenerateToken, RefreshToken, RevokeToken
+- System effects: GetCurrentTime, GenerateUUID
 
 All effects are frozen dataclasses ensuring immutability.
 """
@@ -40,6 +41,7 @@ from effectful.effects.storage import (
     PutObject,
     StorageEffect,
 )
+from effectful.effects.system import GenerateUUID, GetCurrentTime, SystemEffect
 from effectful.effects.websocket import (
     Close,
     CloseGoingAway,
@@ -92,4 +94,8 @@ __all__ = [
     "RefreshToken",
     "RevokeToken",
     "AuthEffect",
+    # System
+    "GetCurrentTime",
+    "GenerateUUID",
+    "SystemEffect",
 ]

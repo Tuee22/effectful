@@ -1,6 +1,6 @@
 """Auth lifecycle effect programs for demo app.
 
-All programs are pure logic using the functional_effects library.
+All programs are pure logic using the effectful library.
 Programs yield effects and receive results directly (not wrapped in Result).
 Program returns are wrapped in Result types for explicit error handling.
 """

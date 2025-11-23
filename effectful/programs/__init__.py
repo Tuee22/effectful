@@ -40,9 +40,9 @@ Program Execution:
     Programs are **fail-fast**: First Err stops execution immediately.
 
 See Also:
-    - functional_effects.programs.types - Type definitions
-    - functional_effects.programs.runners - run_ws_program implementation
-    - functional_effects.interpreters - Effect interpreters
+    - effectful.programs.program_types - Type definitions
+    - effectful.programs.runners - run_ws_program implementation
+    - effectful.interpreters - Effect interpreters
 """
 
 from effectful.programs.program_types import AllEffects, EffectResult, WSProgram

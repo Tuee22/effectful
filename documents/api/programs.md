@@ -2,6 +2,8 @@
 
 This document provides a comprehensive reference for program execution and program types.
 
+> **Core Doctrine**: For program composition diagrams and execution flow, see [ARCHITECTURE.md](../core/ARCHITECTURE.md#program-composition).
+
 ## Overview
 
 Programs are Python generators that yield effects and return values. They describe workflows using imperative-style code while maintaining functional purity through the effect system.
@@ -43,7 +45,7 @@ def greeting_program(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
             greeting = f"Hello {name}!"
             yield SendText(text=greeting)
             return greeting
-        case None:
+        case UserNotFound():
             yield SendText(text="User not found")
             return "not_found"
 
@@ -124,13 +126,13 @@ Union of all effect types.
 
 ```python
 type AllEffects = (
-    SendText
-    | ReceiveText
-    | Close
-    | GetUserById
-    | SaveChatMessage
-    | GetCachedProfile
-    | PutCachedProfile
+    WebSocketEffect      # SendText, ReceiveText, Close
+    | DatabaseEffect     # GetUserById, SaveChatMessage, ListMessagesForUser, ListUsers, CreateUser, UpdateUser, DeleteUser
+    | CacheEffect        # GetCachedProfile, PutCachedProfile, GetCachedValue, PutCachedValue, InvalidateCache
+    | MessagingEffect    # PublishMessage, ConsumeMessage, AcknowledgeMessage, NegativeAcknowledge
+    | StorageEffect      # PutObject, GetObject, DeleteObject, ListObjects
+    | AuthEffect         # GenerateToken, ValidateToken, RefreshToken, RevokeToken, HashPassword, ValidatePassword
+    | SystemEffect       # GetCurrentTime, GenerateUUID
 )
 ```
 
@@ -153,15 +155,45 @@ def my_program() -> Generator[AllEffects, EffectResult, str]:
 Union of all possible effect return values.
 
 ```python
-type EffectResult = str | User | ChatMessage | ProfileData | CacheLookupResult | None
+type EffectResult = (
+    None                      # SendText, Close, PutCachedProfile, AcknowledgeMessage, etc.
+    | str                     # ReceiveText, PublishMessage, GenerateToken, RefreshToken, HashPassword
+    | bool                    # ValidatePassword, InvalidateCache, PutCachedValue, DeleteUser
+    | bytes                   # GetCachedValue (cache hit)
+    | UUID                    # CreateUser, GenerateUUID
+    | datetime                # GetCurrentTime
+    # User ADTs
+    | User                    # GetUserById, GetUserByEmail (success)
+    | UserNotFound            # GetUserById, GetUserByEmail (not found)
+    # Message types
+    | ChatMessage             # SaveChatMessage
+    # Cache ADTs
+    | ProfileData             # GetCachedProfile (cache hit)
+    | CacheMiss               # GetCachedProfile, GetCachedValue (cache miss)
+    # Messaging ADTs
+    | MessageEnvelope         # ConsumeMessage (success)
+    | ConsumeTimeout          # ConsumeMessage (timeout)
+    | PublishResult           # PublishMessage result
+    # Storage types
+    | S3Object                # GetObject (success)
+    | PutSuccess              # PutObject (success)
+    # Token ADTs
+    | TokenValidationResult   # ValidateToken (TokenValid | TokenExpired | TokenInvalid)
+    # List types
+    | list[ChatMessage]       # ListMessagesForUser
+    | list[str]               # ListObjects
+    | list[User]              # ListUsers
+)
 ```
 
 **Components**:
-- `str` - From `ReceiveText`
-- `User | None` - From `GetUserById` (ADT unwrapped to Optional)
+- `str` - From `ReceiveText`, `HashPassword`, `GenerateToken`
+- `User | UserNotFound` - From `GetUserById` (ADT for explicit semantics)
 - `ChatMessage` - From `SaveChatMessage`
-- `ProfileData | None` - From `GetCachedProfile` (ADT unwrapped to Optional)
+- `ProfileData | CacheMiss` - From `GetCachedProfile` (ADT for explicit semantics)
 - `None` - From `SendText`, `Close`, `PutCachedProfile`
+- `UUID` - From `GenerateUUID`
+- `datetime` - From `GetCurrentTime`
 
 **Type Narrowing**:
 
@@ -190,8 +222,8 @@ def program() -> Generator[AllEffects, EffectResult, str]:
         case User(name=name):
             # Type checker knows this is User
             return f"Hello {name}"
-        case None:
-            # Type checker knows this is None
+        case UserNotFound():
+            # Type checker knows this is UserNotFound
             return "Not found"
 ```
 
@@ -258,7 +290,7 @@ def parameterized_program(
         case User(name=name):
             yield SendText(text=f"{greeting}, {name}!")
             return True
-        case None:
+        case UserNotFound():
             yield SendText(text="User not found")
             return False
 ```
@@ -281,7 +313,7 @@ def conditional_program(
             if should_cache:
                 profile = ProfileData(id=str(uid), name=name)
                 yield PutCachedProfile(user_id=user_id, profile_data=profile)
-        case None:
+        case UserNotFound():
             yield SendText(text="User not found")
 
     return None
@@ -303,7 +335,7 @@ def batch_program(
             case User(name=name):
                 yield SendText(text=f"Found: {name}")
                 stats["found"] += 1
-            case None:
+            case UserNotFound():
                 stats["not_found"] += 1
 
     return stats
@@ -324,7 +356,7 @@ def error_aware_program(
         case User(name=name):
             yield SendText(text=f"Hello {name}!")
             return "success"
-        case None:
+        case UserNotFound():
             # User not found is not an error - it's a valid outcome
             yield SendText(text="User not found")
             return "not_found"
@@ -348,7 +380,7 @@ def lookup_and_greet(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
             greeting = f"Hello {name}!"
             yield SendText(text=greeting)
             return greeting
-        case None:
+        case UserNotFound():
             yield SendText(text="User not found")
             return "not_found"
 
@@ -381,7 +413,7 @@ def cache_user_profile(
                 ttl_seconds=ttl_seconds,
             )
             return profile
-        case None:
+        case UserNotFound():
             return None
 
 def workflow_with_caching(
@@ -443,7 +475,7 @@ def get_with_cache_aside(
         case ProfileData():
             # Cache hit
             return cached
-        case None:
+        case CacheMiss():
             # Cache miss - fallback to database
             user = yield GetUserById(user_id=user_id)
 
@@ -453,7 +485,7 @@ def get_with_cache_aside(
                     profile = ProfileData(id=str(uid), name=name)
                     yield PutCachedProfile(user_id=user_id, profile_data=profile)
                     return profile
-                case None:
+                case UserNotFound():
                     return None
 ```
 
@@ -486,7 +518,7 @@ def request_response_program() -> Generator[AllEffects, EffectResult, None]:
     match user:
         case User(name=name, email=email):
             yield SendText(text=f"USER:{name}:{email}")
-        case None:
+        case UserNotFound():
             yield SendText(text="ERROR: User not found")
 
     return None
@@ -504,7 +536,7 @@ def complete_workflow(
     user = yield GetUserById(user_id=user_id)
 
     match user:
-        case None:
+        case UserNotFound():
             yield SendText(text="Error: User not found")
             return {"status": "error", "reason": "user_not_found"}
         case User(name=name):
@@ -567,7 +599,7 @@ def optimized_program(
     match cached:
         case ProfileData(name=name):
             return f"Hello {name} (cached)"
-        case None:
+        case CacheMiss():
             # Slow path: database
             user = yield GetUserById(user_id=user_id)
 
@@ -577,7 +609,7 @@ def optimized_program(
                     profile = ProfileData(id=str(user_id), name=name)
                     yield PutCachedProfile(user_id=user_id, profile_data=profile)
                     return f"Hello {name}"
-                case None:
+                case UserNotFound():
                     return "User not found"
 ```
 
@@ -606,7 +638,7 @@ def instrumented_program(
             logger.info(f"User found: {name}")
             yield SendText(text=f"Hello {name}!")
             return "success"
-        case None:
+        case UserNotFound():
             logger.warning(f"User not found: {user_id}")
             return "not_found"
 ```

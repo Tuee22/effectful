@@ -30,7 +30,7 @@ class TestOkConstruction:
         """Ok should be frozen (immutable)."""
         result = Ok(42)
         with pytest.raises(FrozenInstanceError):
-            result.value = 100  # type: ignore[misc]
+            setattr(result, "value", 100)
 
 
 class TestOkPredicates:
@@ -120,7 +120,7 @@ class TestErrConstruction:
         """Err should be frozen (immutable)."""
         result = Err("error")
         with pytest.raises(FrozenInstanceError):
-            result.error = "new error"  # type: ignore[misc]
+            setattr(result, "error", "new error")
 
 
 class TestErrPredicates:

@@ -2,6 +2,8 @@
 
 This document provides a comprehensive reference for effect interpreters and error types.
 
+> **Core Doctrine**: For the 5-layer architecture and data flow diagrams, see [ARCHITECTURE.md](../core/ARCHITECTURE.md#5-layer-architecture).
+
 ## Overview
 
 Interpreters execute effects by implementing the actual side effects described by effect values. They translate declarative effect descriptions into concrete I/O operations.
@@ -21,6 +23,10 @@ def create_composite_interpreter(
     user_repo: UserRepository,
     message_repo: ChatMessageRepository,
     cache: ProfileCache,
+    message_producer: MessageProducer | None = None,
+    message_consumer: MessageConsumer | None = None,
+    object_storage: ObjectStorage | None = None,
+    auth_service: AuthService | None = None,
 ) -> CompositeInterpreter
 ```
 
@@ -29,6 +35,10 @@ def create_composite_interpreter(
 - `user_repo: UserRepository` - User data repository
 - `message_repo: ChatMessageRepository` - Message data repository
 - `cache: ProfileCache` - Profile caching layer
+- `message_producer: MessageProducer | None` - Optional Pulsar message producer
+- `message_consumer: MessageConsumer | None` - Optional Pulsar message consumer
+- `object_storage: ObjectStorage | None` - Optional S3-compatible object storage
+- `auth_service: AuthService | None` - Optional JWT authentication service
 
 **Returns**: `CompositeInterpreter` - Fully configured interpreter
 
@@ -37,12 +47,12 @@ def create_composite_interpreter(
 from effectful import create_composite_interpreter, run_ws_program
 from effectful.adapters.postgres import PostgresUserRepository, PostgresChatMessageRepository
 from effectful.adapters.redis_cache import RedisProfileCache
-from effectful.adapters.websocket_connection import FastAPIWebSocketConnection
+from effectful.adapters.websocket_connection import RealWebSocketConnection
 import asyncpg
 
 # Create infrastructure connections
 db_conn = await asyncpg.connect(DATABASE_URL)
-ws_conn = FastAPIWebSocketConnection(websocket)
+ws_conn = RealWebSocketConnection(websocket)
 cache_conn = await aioredis.create_redis_pool(REDIS_URL)
 
 # Create repositories
@@ -169,11 +179,10 @@ effect = GetUserById(user_id=uuid4())
 result = await interpreter.interpret(effect)
 
 match result:
-    case Ok(EffectReturn(value=user, effect_name="GetUserById")):
-        if user is not None:
-            print(f"Found user: {user.name}")
-        else:
-            print("User not found")
+    case Ok(EffectReturn(value=User() as user, effect_name="GetUserById")):
+        print(f"Found user: {user.name}")
+    case Ok(EffectReturn(value=UserNotFound(), effect_name="GetUserById")):
+        print("User not found")
     case Err(error):
         print(f"Database error: {error}")
 ```
@@ -209,11 +218,10 @@ effect = GetCachedProfile(user_id=uuid4())
 result = await interpreter.interpret(effect)
 
 match result:
-    case Ok(EffectReturn(value=profile, effect_name="GetCachedProfile")):
-        if profile is not None:
-            print(f"Cache hit: {profile.name}")
-        else:
-            print("Cache miss")
+    case Ok(EffectReturn(value=ProfileData() as profile, effect_name="GetCachedProfile")):
+        print(f"Cache hit: {profile.name}")
+    case Ok(EffectReturn(value=CacheMiss(), effect_name="GetCachedProfile")):
+        print("Cache miss")
     case Err(error):
         print(f"Cache error: {error}")
 ```
@@ -227,7 +235,15 @@ match result:
 Union type for all interpreter errors.
 
 ```python
-type InterpreterError = DatabaseError | WebSocketClosedError | CacheError | UnhandledEffectError
+type InterpreterError = (
+    UnhandledEffectError
+    | WebSocketClosedError
+    | DatabaseError
+    | CacheError
+    | MessagingError
+    | StorageError
+    | AuthError
+)
 ```
 
 ---
@@ -375,12 +391,12 @@ Interpreter received an effect type it doesn't support.
 @dataclass(frozen=True)
 class UnhandledEffectError:
     effect: Effect
-    interpreter_name: str
+    available_interpreters: list[str]
 ```
 
 **Fields**:
 - `effect: Effect` - The unsupported effect
-- `interpreter_name: str` - Name of the interpreter
+- `available_interpreters: list[str]` - List of interpreter names that were tried
 
 **Usage**:
 This error indicates a programming error (effect sent to wrong interpreter):
@@ -389,10 +405,10 @@ This error indicates a programming error (effect sent to wrong interpreter):
 from effectful.interpreters.errors import UnhandledEffectError
 
 match result:
-    case Err(UnhandledEffectError(effect=eff, interpreter_name=name)):
+    case Err(UnhandledEffectError(effect=eff, available_interpreters=names)):
         # This should not happen in production - indicates bug
-        logger.error(f"Bug: {name} received unsupported effect: {eff}")
-        raise RuntimeError(f"Interpreter configuration error: {name}")
+        logger.error(f"Bug: No interpreter for {eff}, tried: {names}")
+        raise RuntimeError(f"Interpreter configuration error")
 ```
 
 ---
@@ -421,7 +437,7 @@ class WebSocketConnection(Protocol):
 ```
 
 **Implementations**:
-- `FastAPIWebSocketConnection` - FastAPI WebSocket adapter
+- `RealWebSocketConnection` - WebSocket adapter for real connections
 
 ---
 
@@ -447,7 +463,7 @@ class UserFound:
 @dataclass(frozen=True)
 class UserNotFound:
     user_id: UUID
-    reason: str  # "does_not_exist" | "deleted" | "access_denied"
+    reason: Literal["does_not_exist", "deleted"]
 ```
 
 **Implementations**:

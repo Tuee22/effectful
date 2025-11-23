@@ -24,6 +24,7 @@ from effectful.interpreters.database import DatabaseInterpreter
 from effectful.interpreters.errors import InterpreterError, UnhandledEffectError
 from effectful.interpreters.messaging import MessagingInterpreter
 from effectful.interpreters.storage import StorageInterpreter
+from effectful.interpreters.system import SystemInterpreter
 from effectful.interpreters.websocket import WebSocketInterpreter
 from effectful.programs.program_types import EffectResult
 
@@ -41,11 +42,13 @@ class CompositeInterpreter:
         messaging: Messaging effect interpreter (optional)
         storage: Storage effect interpreter (optional)
         auth: Auth effect interpreter (optional)
+        system: System effect interpreter (always included)
     """
 
     websocket: WebSocketInterpreter
     database: DatabaseInterpreter
     cache: CacheInterpreter
+    system: SystemInterpreter
     messaging: MessagingInterpreter | None = None
     storage: StorageInterpreter | None = None
     auth: AuthInterpreter | None = None
@@ -62,12 +65,6 @@ class CompositeInterpreter:
             Ok(EffectReturn(value)) if any interpreter handled it
             Err(UnhandledEffectError) if no interpreter could handle it
         """
-        available = [
-            "WebSocketInterpreter",
-            "DatabaseInterpreter",
-            "CacheInterpreter",
-        ]
-
         # Try WebSocket interpreter first
         ws_result = await self.websocket.interpret(effect)
         match ws_result:
@@ -92,9 +89,16 @@ class CompositeInterpreter:
             case _:
                 return cache_result
 
+        # Try System interpreter
+        system_result = await self.system.interpret(effect)
+        match system_result:
+            case Err(UnhandledEffectError()):
+                pass  # Try next
+            case _:
+                return system_result
+
         # Try Messaging interpreter if provided
         if self.messaging is not None:
-            available.append("MessagingInterpreter")
             messaging_result = await self.messaging.interpret(effect)
             match messaging_result:
                 case Err(UnhandledEffectError()):
@@ -104,7 +108,6 @@ class CompositeInterpreter:
 
         # Try Storage interpreter if provided
         if self.storage is not None:
-            available.append("StorageInterpreter")
             storage_result = await self.storage.interpret(effect)
             match storage_result:
                 case Err(UnhandledEffectError()):
@@ -114,7 +117,6 @@ class CompositeInterpreter:
 
         # Try Auth interpreter if provided
         if self.auth is not None:
-            available.append("AuthInterpreter")
             auth_result = await self.auth.interpret(effect)
             match auth_result:
                 case Err(UnhandledEffectError()):
@@ -123,10 +125,20 @@ class CompositeInterpreter:
                     return auth_result
 
         # No interpreter could handle this effect
+        # Build available list immutably using tuple concatenation
+        available = (
+            "WebSocketInterpreter",
+            "DatabaseInterpreter",
+            "CacheInterpreter",
+            "SystemInterpreter",
+            *(("MessagingInterpreter",) if self.messaging is not None else ()),
+            *(("StorageInterpreter",) if self.storage is not None else ()),
+            *(("AuthInterpreter",) if self.auth is not None else ()),
+        )
         return Err(
             UnhandledEffectError(
                 effect=effect,
-                available_interpreters=available,
+                available_interpreters=list(available),
             )
         )
 
@@ -177,6 +189,7 @@ def create_composite_interpreter(
         websocket=WebSocketInterpreter(connection=websocket_connection),
         database=DatabaseInterpreter(user_repo=user_repo, message_repo=message_repo),
         cache=CacheInterpreter(cache=cache),
+        system=SystemInterpreter(),
         messaging=messaging_interpreter,
         storage=storage_interpreter,
         auth=auth_interpreter,

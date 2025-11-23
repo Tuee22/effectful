@@ -129,10 +129,10 @@ class TestPutObject:
 
         # Verify result
         match result:
-            case Ok(EffectReturn(value="data/file.txt", effect_name="PutObject")):
+            case Ok(EffectReturn(value=PutSuccess(key="data/file.txt"), effect_name="PutObject")):
                 pass  # Success
             case _:
-                pytest.fail(f"Expected Ok with key, got {result}")
+                pytest.fail(f"Expected Ok with PutSuccess, got {result}")
 
         # Verify mock was called correctly
         mock_storage.put_object.assert_called_once_with(
@@ -163,10 +163,10 @@ class TestPutObject:
 
         # Verify result
         match result:
-            case Ok(EffectReturn(value="data/file.txt", effect_name="PutObject")):
+            case Ok(EffectReturn(value=PutSuccess(key="data/file.txt"), effect_name="PutObject")):
                 pass  # Success
             case _:
-                pytest.fail(f"Expected Ok, got {result}")
+                pytest.fail(f"Expected Ok with PutSuccess, got {result}")
 
         # Verify mock was called with None
         mock_storage.put_object.assert_called_once_with(
@@ -449,7 +449,7 @@ class TestStorageInterpreterImmutability:
         interpreter = StorageInterpreter(storage=mock_storage)
 
         with pytest.raises(FrozenInstanceError):
-            interpreter.storage = mocker.AsyncMock(spec=ObjectStorage)  # type: ignore[misc]
+            setattr(interpreter, "storage", mocker.AsyncMock(spec=ObjectStorage))
 
 
 class TestIsRetryableError:

@@ -4,6 +4,7 @@ All tests use pytest-mock (mocker.AsyncMock) instead of fakes.
 Tests verify the complex workflow using all 6 infrastructure types.
 """
 
+from datetime import datetime, timezone
 from uuid import uuid4
 
 import pytest
@@ -20,6 +21,7 @@ from effectful.effects.cache import GetCachedValue, PutCachedValue
 from effectful.effects.database import GetUserById
 from effectful.effects.messaging import PublishMessage
 from effectful.effects.storage import PutObject
+from effectful.effects.system import GenerateUUID, GetCurrentTime
 from effectful.effects.websocket import SendText
 
 
@@ -64,25 +66,35 @@ class TestSendAuthenticatedMessageWithStorageProgram:
         assert effect4.ttl_seconds == 300
         result4 = gen.send(True)
 
-        # Step 5: [Storage] PutObject to S3
+        # Step 5: GenerateUUID
         effect5 = result4
-        assert isinstance(effect5, PutObject)
-        assert effect5.bucket == "chat-archive"
-        assert b"Hello from all 6 infrastructure types!" in effect5.content
-        # PutObject returns the key as a string
-        result5 = gen.send(effect5.key)
+        assert isinstance(effect5, GenerateUUID)
+        result5 = gen.send(uuid4())
 
-        # Step 6: [Messaging] PublishMessage to Pulsar
+        # Step 6: GetCurrentTime
         effect6 = result5
-        assert isinstance(effect6, PublishMessage)
-        assert effect6.topic == "chat-messages"
-        assert b"Hello from all 6 infrastructure types!" in effect6.payload
-        result6 = gen.send("pulsar_message_id_123")
+        assert isinstance(effect6, GetCurrentTime)
+        result6 = gen.send(datetime.now(timezone.utc))
 
-        # Step 7: [WebSocket] SendText
+        # Step 7: [Storage] PutObject to S3
         effect7 = result6
-        assert isinstance(effect7, SendText)
-        assert "Message sent:" in effect7.text
+        assert isinstance(effect7, PutObject)
+        assert effect7.bucket == "chat-archive"
+        assert b"Hello from all 6 infrastructure types!" in effect7.content
+        # PutObject returns the key as a string
+        result7 = gen.send(effect7.key)
+
+        # Step 8: [Messaging] PublishMessage to Pulsar
+        effect8 = result7
+        assert isinstance(effect8, PublishMessage)
+        assert effect8.topic == "chat-messages"
+        assert b"Hello from all 6 infrastructure types!" in effect8.payload
+        result8 = gen.send("pulsar_message_id_123")
+
+        # Step 9: [WebSocket] SendText
+        effect9 = result8
+        assert isinstance(effect9, SendText)
+        assert "Message sent:" in effect9.text
 
         try:
             gen.send(None)

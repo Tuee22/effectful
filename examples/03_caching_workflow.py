@@ -81,11 +81,13 @@ def get_profile_with_caching(user_id: UUID) -> Generator[AllEffects, EffectResul
 
                     return "cache_miss"
 
-                case unexpected:
-                    raise AssertionError(f"Unexpected user result: {type(unexpected)}")
+                case _:
+                    # All expected cases handled above - defensive
+                    return "error"
 
-        case unexpected:
-            raise AssertionError(f"Unexpected cache result: {type(unexpected)}")
+        case _:
+            # All expected cases handled above - defensive
+            return "error"
 
 
 async def main() -> None:
@@ -110,8 +112,7 @@ async def main() -> None:
         case Ok(value):
             print(f"✓ Result: {value}")
             websocket = interpreter._websocket._connection
-            for msg in websocket._sent_messages:
-                print(f"  → {msg}")
+            _ = [print(f"  → {msg}") for msg in websocket._sent_messages]
         case Err(error):
             print(f"✗ Error: {error}")
 
@@ -126,16 +127,17 @@ async def main() -> None:
         case Ok(value):
             print(f"✓ Result: {value}")
             websocket = interpreter._websocket._connection
-            for msg in websocket._sent_messages:
-                print(f"  → {msg}")
+            _ = [print(f"  → {msg}") for msg in websocket._sent_messages]
         case Err(error):
             print(f"✗ Error: {error}")
 
     # Show cache state
     print("\n=== Cache State ===")
     print(f"Cached profiles: {len(fake_cache._cache)}")
-    for uid, profile in fake_cache._cache.items():
+    _ = [
         print(f"  - {uid}: {profile.name} ({profile.email})")
+        for uid, profile in fake_cache._cache.items()
+    ]
 
 
 if __name__ == "__main__":

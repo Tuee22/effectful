@@ -26,7 +26,7 @@ class TestProfileData:
         """ProfileData should be frozen."""
         profile = ProfileData(id="123", name="Alice")
         with pytest.raises(FrozenInstanceError):
-            profile.name = "Bob"  # type: ignore[misc]
+            setattr(profile, "name", "Bob")
 
 
 class TestProfileFound:
@@ -44,7 +44,7 @@ class TestProfileFound:
         profile = ProfileData(id="123", name="Alice")
         found = ProfileFound(profile=profile, source="cache")
         with pytest.raises(FrozenInstanceError):
-            found.source = "database"  # type: ignore[misc]
+            setattr(found, "source", "database")
 
 
 class TestProfileNotFound:
@@ -61,7 +61,7 @@ class TestProfileNotFound:
         """ProfileNotFound should be frozen."""
         not_found = ProfileNotFound(user_id=uuid4(), reason="no_cache_no_user")
         with pytest.raises(FrozenInstanceError):
-            not_found.reason = "cache_miss_no_user"  # type: ignore[misc]
+            setattr(not_found, "reason", "cache_miss_no_user")
 
 
 class TestProfileLookupResultExhaustiveness:

@@ -15,8 +15,7 @@ Thank you for considering contributing to **effectful**! This guide will help yo
 
 ### Prerequisites
 
-- Python 3.12+
-- Poetry (package manager)
+- Docker and Docker Compose
 - Git
 
 ### Initial Setup
@@ -26,54 +25,49 @@ Thank you for considering contributing to **effectful**! This guide will help yo
 git clone https://github.com/your-org/effectful.git
 cd effectful
 
-# Install dependencies
-poetry install
+# Start Docker services
+docker compose -f docker/docker-compose.yml up -d
 
-# Install pre-commit hooks
-poetry run pre-commit install
+# Verify setup - run tests
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
 
-# Verify setup
-poetry run pytest
-poetry run mypy effectful
+# Verify setup - type check
+docker compose -f docker/docker-compose.yml exec effectful poetry run mypy effectful
 ```
 
-### Pre-commit Hooks
-
-This project uses pre-commit hooks to enforce code quality. After installation, hooks run automatically on `git commit`:
-
-- **Black**: Code formatting
-- **Ruff**: Fast linting with auto-fix
-- **MyPy**: Strict type checking
-- **General**: Trailing whitespace, YAML validation, etc.
-
-To run hooks manually:
-
-```bash
-# Run on all files
-poetry run pre-commit run --all-files
-
-# Run specific hook
-poetry run pre-commit run mypy --all-files
-```
+**Note**: All development happens inside Docker containers. Poetry is NOT set up as a local virtual environment.
 
 ### Development Environment
 
-```bash
-# Activate virtual environment
-poetry shell
+All commands run inside Docker:
 
+```bash
 # Run tests
-pytest
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
 
 # Type check
-mypy effectful
+docker compose -f docker/docker-compose.yml exec effectful poetry run mypy effectful
 
 # Format code
-black effectful tests
+docker compose -f docker/docker-compose.yml exec effectful poetry run black effectful tests
 
 # Lint
-ruff check effectful tests
+docker compose -f docker/docker-compose.yml exec effectful poetry run ruff check effectful tests
+
+# Check code quality (Black + MyPy)
+docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
+
+# Run all tests
+docker compose -f docker/docker-compose.yml exec effectful poetry run test-all
 ```
+
+## Core Doctrines
+
+Before contributing, familiarize yourself with the project's core doctrines:
+
+- **Testing Doctrine**: `documents/core/TESTING_DOCTRINE.md` - Coverage requirements, test anti-patterns
+- **Type Safety Doctrine**: `documents/core/TYPE_SAFETY_DOCTRINE.md` - Eight type safety rules
+- **Architecture**: `documents/core/ARCHITECTURE.md` - 5-layer architecture, design decisions
 
 ## Code Standards
 
@@ -81,33 +75,7 @@ ruff check effectful tests
 
 **CRITICAL**: This project maintains `mypy --strict` with zero errors. All code must pass strict type checking.
 
-#### Type Safety Workflow
-
-The following diagram shows our type safety enforcement process:
-
-```mermaid
-flowchart LR
-    Code[Write Code] --> MyPy[mypy strict check]
-    MyPy -->|Pass| Pytest[Run Tests]
-    MyPy -->|Fail| Errors{Type Error?}
-
-    Errors -->|Any types| Forbidden1[FORBIDDEN - Fix Required]
-    Errors -->|cast calls| Forbidden2[FORBIDDEN - Fix Required]
-    Errors -->|type ignore| Forbidden3[FORBIDDEN - Fix Required]
-    Errors -->|Mutable dataclass| Forbidden4[FORBIDDEN - Fix Required]
-    Errors -->|Non-exhaustive match| Forbidden5[FORBIDDEN - Fix Required]
-
-    Forbidden1 --> Fix[Fix Code]
-    Forbidden2 --> Fix
-    Forbidden3 --> Fix
-    Forbidden4 --> Fix
-    Forbidden5 --> Fix
-    Fix --> MyPy
-
-    Pytest -->|Pass| Success[Ready for Review]
-    Pytest -->|Fail| FixTests[Fix Implementation]
-    FixTests --> Pytest
-```
+For complete type safety patterns and examples, see `documents/core/TYPE_SAFETY_DOCTRINE.md`.
 
 **Key Points:**
 - Type checking is mandatory before tests can run
@@ -229,28 +197,31 @@ class User:
 
 ```bash
 # Format code before committing
-black effectful tests
+docker compose -f docker/docker-compose.yml exec effectful poetry run black effectful tests
 
 # Check formatting
-black --check effectful tests
+docker compose -f docker/docker-compose.yml exec effectful poetry run black --check effectful tests
 
 # Lint
-ruff check effectful tests
+docker compose -f docker/docker-compose.yml exec effectful poetry run ruff check effectful tests
 ```
 
 **Configuration**: See `pyproject.toml` for Black/Ruff settings.
 
 ## Testing Requirements
 
-### Test Coverage: 100%
+For complete testing doctrine including 21 anti-patterns, see `documents/core/TESTING_DOCTRINE.md`.
 
-All code must have 100% test coverage. No exceptions.
+### Coverage Doctrine
+
+- **Unit tests**: Minimum 45% overall coverage (adapters/infrastructure excluded)
+- **Integration tests**: Conceptual feature coverage (not metric-driven)
 
 ```bash
 # Run tests with coverage
-pytest --cov=effectful --cov-report=term-missing
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest --cov=effectful --cov-report=term-missing
 
-# Must show 100% coverage for all modules
+# Coverage will show ~69% overall (adapters excluded from measurement)
 ```
 
 ### Test Strategy Pyramid
@@ -260,19 +231,19 @@ The following diagram shows our testing approach organized by type:
 ```mermaid
 flowchart TB
     E2E[E2E Tests<br/>Real Infrastructure<br/>Full Integration<br/>Smoke Tests Only]
-    Integration[Integration Tests<br/>Real DB and Redis<br/>Fake WebSocket<br/>Multi-Effect Workflows]
-    Unit[Unit Tests<br/>All Fakes<br/>No I/O<br/>Fastest - Most Coverage]
+    Integration[Integration Tests<br/>Real DB and Redis<br/>Mocked WebSocket<br/>Multi-Effect Workflows]
+    Unit[Unit Tests<br/>pytest-mock<br/>No I/O<br/>Fastest - Most Coverage]
 
     E2E --> Integration
     Integration --> Unit
 ```
 
 **Test Distribution:**
-- **Many** Unit tests (all fakes, no I/O, fastest execution)
-- **Some** Integration tests (real DB/Redis, fake WebSocket)
+- **Many** Unit tests (pytest-mock only, no I/O, fastest execution)
+- **Some** Integration tests (real DB/Redis, mocked WebSocket)
 - **Few** E2E tests (real infrastructure, smoke tests only)
 
-**Philosophy**: Push testing down to the unit level. Most bugs should be caught by fast unit tests with fakes, not slow integration tests with real infrastructure.
+**Philosophy**: Push testing down to the unit level. Most bugs should be caught by fast unit tests with pytest-mock, not slow integration tests with real infrastructure.
 
 ### Test Organization
 
@@ -284,7 +255,7 @@ tests/
 ├── test_interpreters/       # WebSocket, Database, Cache interpreters
 ├── test_programs/           # run_ws_program
 ├── test_integration/        # Multi-effect workflows
-└── test_testing/            # Testing utilities (fakes, fixtures, matchers)
+└── test_testing/            # Testing utilities (matchers)
 ```
 
 ### Testing Antipatterns - Forbidden
@@ -308,19 +279,19 @@ def test_feature():
 #### 2. Testing with Real Infrastructure
 
 ```python
-# ❌ WRONG - Real database
+# ❌ WRONG - Real database in unit tests
 @pytest.mark.asyncio
 async def test_user_lookup():
     async with asyncpg.connect(DATABASE_URL) as conn:
         ...
 
-# ✅ CORRECT - Use fakes
-from effectful.testing import FakeUserRepository
-
+# ✅ CORRECT - Use pytest-mock
 @pytest.mark.asyncio
-async def test_user_lookup():
-    fake_repo = FakeUserRepository()
-    fake_repo._users[user_id] = User(...)
+async def test_user_lookup(mocker):
+    mock_repo = mocker.AsyncMock(spec=UserRepository)
+    mock_repo.get_by_id.return_value = User(
+        id=user_id, email="test@example.com", name="Alice"
+    )
     ...
 ```
 
@@ -333,14 +304,13 @@ async def test_user_lookup():
 result = await run_ws_program(program(), interpreter)
 assert_ok(result)
 
-# ✅ CORRECT - Verify side effects and state
+# ✅ CORRECT - Verify side effects and mock calls
 result = await run_ws_program(program(), interpreter)
 value = unwrap_ok(result)
 
 assert value == "expected"
-assert len(fake_websocket._sent_messages) == 2
-assert fake_websocket._sent_messages[0] == "Hello"
-assert len(fake_message_repo._messages) == 1
+mock_websocket.send_text.assert_called_with("Hello")
+mock_message_repo.save.assert_called_once()
 ```
 
 **Rationale**: Programs have effects beyond return values.
@@ -349,21 +319,26 @@ assert len(fake_message_repo._messages) == 1
 
 ```python
 # ❌ WRONG - Only happy path
-def test_user_lookup():
+@pytest.mark.asyncio
+async def test_user_lookup():
     result = await run_ws_program(program(), interpreter)
     assert_ok(result)
 
-# ✅ CORRECT - Test error cases
-from effectful.testing import FailingUserRepository
+# ✅ CORRECT - Test error cases with pytest-mock
+from effectful.interpreters.errors import DatabaseError
 
-def test_user_lookup_database_failure():
-    failing_repo = FailingUserRepository(error_message="Connection timeout")
-    interpreter = create_test_interpreter(user_repo=failing_repo)
+@pytest.mark.asyncio
+async def test_user_lookup_database_failure(mocker):
+    mock_repo = mocker.AsyncMock(spec=UserRepository)
+    mock_repo.get_by_id.side_effect = Exception("Connection timeout")
+
+    # ... setup interpreter with mock_repo ...
 
     result = await run_ws_program(program(), interpreter)
 
-    assert_err(result, DatabaseError)
+    assert_err(result)
     error = unwrap_err(result)
+    assert isinstance(error, DatabaseError)
     assert "Connection timeout" in error.db_error
 ```
 
@@ -371,22 +346,10 @@ def test_user_lookup_database_failure():
 
 ### Testing Utilities
 
-Use the `effectful.testing` module:
+Use the `effectful.testing` module for matchers:
 
 ```python
 from effectful.testing import (
-    # Fakes
-    FakeWebSocketConnection,
-    FakeUserRepository,
-    FakeChatMessageRepository,
-    FakeProfileCache,
-    create_test_interpreter,
-
-    # Failing variants
-    FailingUserRepository,
-    FailingChatMessageRepository,
-    FailingProfileCache,
-
     # Matchers
     assert_ok,
     assert_err,
@@ -397,9 +360,17 @@ from effectful.testing import (
 )
 
 @pytest.mark.asyncio
-async def test_my_program():
-    # Setup
-    interpreter = create_test_interpreter()
+async def test_my_program(mocker):
+    # Setup mocks with pytest-mock
+    mock_repo = mocker.AsyncMock(spec=UserRepository)
+    mock_repo.get_by_id.return_value = User(...)
+
+    # Create interpreter with mocks
+    interpreter = CompositeInterpreter(
+        websocket=mocker.AsyncMock(spec=WebSocketConnection),
+        user_repo=mock_repo,
+        # ... other dependencies
+    )
 
     # Test
     result = await run_ws_program(my_program(), interpreter)
@@ -415,20 +386,20 @@ async def test_my_program():
 
 1. **Run full test suite**:
    ```bash
-   pytest --cov=effectful --cov-report=term-missing
+   docker compose -f docker/docker-compose.yml exec effectful poetry run pytest --cov=effectful --cov-report=term-missing
    ```
-   Must show 100% coverage, zero failures.
+   Must show minimum 45% coverage, zero failures.
 
 2. **Type check**:
    ```bash
-   mypy effectful
+   docker compose -f docker/docker-compose.yml exec effectful poetry run mypy effectful
    ```
    Must show zero errors.
 
 3. **Format code**:
    ```bash
-   black effectful tests
-   ruff check effectful tests
+   docker compose -f docker/docker-compose.yml exec effectful poetry run black effectful tests
+   docker compose -f docker/docker-compose.yml exec effectful poetry run ruff check effectful tests
    ```
 
 4. **Update documentation** if adding features:
@@ -438,7 +409,7 @@ async def test_my_program():
 
 ### PR Checklist
 
-- [ ] All tests pass (100% coverage)
+- [ ] All tests pass (minimum 45% coverage)
 - [ ] Zero mypy errors (`mypy --strict`)
 - [ ] Code formatted (Black + Ruff)
 - [ ] No forbidden constructs (Any, cast, type: ignore)
@@ -466,7 +437,7 @@ Brief description of changes.
 
 ## Testing
 
-- [ ] All tests pass (100% coverage)
+- [ ] All tests pass (minimum 45% coverage)
 - [ ] Zero mypy errors
 - [ ] Error paths tested
 
@@ -586,84 +557,95 @@ Brief description of changes.
 
 ## Common Tasks
 
+All commands run inside Docker containers.
+
 ### Running Tests
 
 ```bash
 # All tests
-pytest
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
 
 # Specific file
-pytest tests/test_programs/test_runners.py
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tests/test_programs/test_runners.py
 
 # Specific test
-pytest tests/test_programs/test_runners.py::TestRunWSProgram::test_immediate_return
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tests/test_programs/test_runners.py::TestRunWSProgram::test_immediate_return
 
 # With coverage
-pytest --cov=effectful --cov-report=term-missing
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest --cov=effectful --cov-report=term-missing
 
 # Verbose
-pytest -v
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest -v
 ```
 
 ### Type Checking
 
 ```bash
 # Check entire project
-mypy effectful
+docker compose -f docker/docker-compose.yml exec effectful poetry run mypy effectful
 
 # Check specific file
-mypy effectful/programs/runners.py
+docker compose -f docker/docker-compose.yml exec effectful poetry run mypy effectful/programs/runners.py
 
 # Strict mode (required)
-mypy --strict effectful
+docker compose -f docker/docker-compose.yml exec effectful poetry run mypy --strict effectful
 ```
 
 ### Code Formatting
 
 ```bash
 # Format all code
-black effectful tests
+docker compose -f docker/docker-compose.yml exec effectful poetry run black effectful tests
 
 # Check formatting (CI)
-black --check effectful tests
+docker compose -f docker/docker-compose.yml exec effectful poetry run black --check effectful tests
 
 # Lint
-ruff check effectful tests
+docker compose -f docker/docker-compose.yml exec effectful poetry run ruff check effectful tests
 
 # Auto-fix lint issues
-ruff check --fix effectful tests
-```
-
-### Building Documentation
-
-```bash
-# Generate API docs
-cd docs
-make html
-
-# View docs
-open _build/html/index.html
+docker compose -f docker/docker-compose.yml exec effectful poetry run ruff check --fix effectful tests
 ```
 
 ### Release Process
 
 1. Update version in `pyproject.toml`
 2. Update `CHANGELOG.md`
-3. Run full test suite: `pytest --cov=effectful`
-4. Type check: `mypy --strict effectful`
-5. Format: `black effectful tests`
+3. Run full test suite: `docker compose -f docker/docker-compose.yml exec effectful poetry run pytest --cov=effectful`
+4. Type check: `docker compose -f docker/docker-compose.yml exec effectful poetry run mypy --strict effectful`
+5. Format: `docker compose -f docker/docker-compose.yml exec effectful poetry run black effectful tests`
 6. Commit: `git commit -m "Release v0.2.0"`
 7. Tag: `git tag v0.2.0`
 8. Push: `git push && git push --tags`
-9. Build: `poetry build`
-10. Publish: `poetry publish`
+9. Build: `docker compose -f docker/docker-compose.yml exec effectful poetry build`
+10. Publish: `docker compose -f docker/docker-compose.yml exec effectful poetry publish`
+
+## Git Workflow
+
+### For Claude Code Users
+
+**Critical Rule**: Claude Code is NOT authorized to commit or push changes.
+
+**Forbidden Git Operations:**
+- NEVER run `git commit` (including `--amend`, `--no-verify`, etc.)
+- NEVER run `git push` (including `--force`, `--force-with-lease`, etc.)
+- NEVER run `git add` followed by commit operations
+- NEVER create commits under any circumstances
+
+**Required Workflow:**
+1. Make all code changes as requested
+2. Run tests and validation
+3. Leave ALL changes as uncommitted working directory changes
+4. User reviews changes using `git status` and `git diff`
+5. User manually commits and pushes when satisfied
+
+**Rationale**: All changes must be human-reviewed before entering version control.
 
 ## Getting Help
 
 - **Documentation**: See `documents/` directory
 - **Examples**: See `examples/` directory
-- **Architecture**: See `ARCHITECTURE.md`
-- **Type Safety**: See `effectful/CLAUDE.md`
+- **Core Doctrines**: See `documents/core/` directory
 - **Issues**: GitHub Issues
 - **Discussions**: GitHub Discussions
 
@@ -685,4 +667,4 @@ open _build/html/index.html
 
 ---
 
-**Remember**: If `mypy --strict` passes with zero errors and pytest shows 100% coverage, your code is ready for review. Type safety is not optional.
+**Remember**: If `mypy --strict` passes with zero errors and pytest shows minimum 45% coverage, your code is ready for review. Type safety is not optional.

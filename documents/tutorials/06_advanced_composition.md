@@ -2,6 +2,8 @@
 
 This tutorial teaches you how to build complex workflows by composing smaller, reusable program components.
 
+> **Core Doctrine**: For the complete program composition patterns and diagrams, see [ARCHITECTURE.md](../core/ARCHITECTURE.md#program-composition).
+
 ## Prerequisites
 
 - Completed previous tutorials (01-05)
@@ -38,19 +40,19 @@ from effectful import (
     SendText,
     PutCachedProfile,
 )
-from effectful.domain import User, ProfileData
+from effectful.domain import User, ProfileData, UserNotFound
 from uuid import UUID
 
 
-def lookup_user(user_id: UUID) -> Generator[AllEffects, EffectResult, User | None]:
+def lookup_user(user_id: UUID) -> Generator[AllEffects, EffectResult, User | UserNotFound]:
     """Reusable component: lookup user by ID."""
     user = yield GetUserById(user_id=user_id)
 
     match user:
         case User():
             return user
-        case None:
-            return None
+        case UserNotFound():
+            return user
 
 
 def notify_user(message: str) -> Generator[AllEffects, EffectResult, None]:
@@ -79,7 +81,7 @@ def greet_and_cache(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
     user = yield from lookup_user(user_id)
 
     match user:
-        case None:
+        case UserNotFound():
             # Step 2a: User not found path
             yield from notify_user("User not found")
             return "not_found"
@@ -109,12 +111,12 @@ def greet_and_cache(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 
 ```python
 from effectful import GetCachedProfile
-from effectful.domain import ProfileData
+from effectful.domain import ProfileData, CacheMiss
 
 
 def get_profile_with_fallback(
     user_id: UUID,
-) -> Generator[AllEffects, EffectResult, ProfileData | None]:
+) -> Generator[AllEffects, EffectResult, ProfileData | UserNotFound]:
     """Try cache first, fallback to database."""
     # Branch 1: Try cache
     cached = yield GetCachedProfile(user_id=user_id)
@@ -123,7 +125,7 @@ def get_profile_with_fallback(
         case ProfileData():
             # Cache hit - return immediately
             return cached
-        case None:
+        case CacheMiss():
             # Cache miss - fallback to database
             user = yield from lookup_user(user_id)
 
@@ -136,8 +138,8 @@ def get_profile_with_fallback(
                     yield from cache_profile(user_id, user)
 
                     return profile
-                case None:
-                    return None
+                case UserNotFound():
+                    return user
 ```
 
 ### Multi-Branch Workflows
@@ -153,7 +155,7 @@ def handle_user_request(
     user = yield from lookup_user(user_id)
 
     match user:
-        case None:
+        case UserNotFound():
             yield from notify_user("Error: User not found")
             return "error_user_not_found"
         case User(name=name):
@@ -170,7 +172,7 @@ def handle_user_request(
                         case ProfileData(name=profile_name):
                             yield from notify_user(f"Profile: {profile_name}")
                             return "profile_sent"
-                        case None:
+                        case UserNotFound():
                             yield from notify_user("Profile not available")
                             return "profile_unavailable"
 
@@ -350,7 +352,7 @@ def process_user_batch(
             case User(name=name):
                 yield from notify_user(f"Processing {name}")
                 stats["found"] += 1
-            case None:
+            case UserNotFound():
                 stats["not_found"] += 1
 
     # Send summary
@@ -455,7 +457,7 @@ def validate_and_save_message(
     user = yield from lookup_user(user_id)
 
     match user:
-        case None:
+        case UserNotFound():
             yield from notify_user("Error: User not found")
             return "error_user_not_found"
         case User(name=name):
@@ -507,7 +509,7 @@ def workflow_with_checkpoints(
     user = yield from lookup_user(user_id)
 
     match user:
-        case None:
+        case UserNotFound():
             yield from notify_user("Error: User not found")
             return checkpoints
         case User(name=name):
@@ -580,7 +582,7 @@ class WorkflowBuilder:
             match user:
                 case User():
                     yield from cache_profile(self.user_id, user, ttl_seconds)
-                case None:
+                case UserNotFound():
                     pass
             return None
 
@@ -723,7 +725,7 @@ result = yield from execute_saga(saga_steps)
        case User(name=name):
            # Handle user found
            pass
-       case None:
+       case UserNotFound():
            # Handle user not found
            pass
    ```
@@ -732,8 +734,11 @@ result = yield from execute_saga(saga_steps)
    ```python
    # ✅ Critical failure stops workflow
    user = yield from lookup_user(user_id)
-   if user is None:
-       return "error"
+   match user:
+       case UserNotFound():
+           return "error"
+       case User():
+           pass
 
    # ✅ Optional failure continues workflow
    cache_result = await run_ws_program(cache_profile(user_id, user), interpreter)

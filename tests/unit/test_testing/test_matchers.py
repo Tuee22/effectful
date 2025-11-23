@@ -1,4 +1,4 @@
-"""Tests for functional_effects.testing.matchers module."""
+"""Tests for effectful.testing.matchers module."""
 
 from uuid import uuid4
 

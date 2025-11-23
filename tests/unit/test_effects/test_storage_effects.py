@@ -24,7 +24,7 @@ class TestGetObject:
         effect = GetObject(bucket="my-bucket", key="data/file.txt")
 
         with pytest.raises(Exception):  # FrozenInstanceError or AttributeError
-            effect.bucket = "new-bucket"  # type: ignore
+            setattr(effect, "bucket", "new-bucket")
 
     def test_get_object_attributes(self) -> None:
         """GetObject should store bucket and key."""
@@ -69,7 +69,7 @@ class TestPutObject:
         effect = PutObject(bucket="my-bucket", key="data/file.txt", content=b"data")
 
         with pytest.raises(Exception):  # FrozenInstanceError or AttributeError
-            effect.bucket = "new-bucket"  # type: ignore
+            setattr(effect, "bucket", "new-bucket")
 
     def test_put_object_with_all_fields(self) -> None:
         """PutObject should accept all optional fields."""
@@ -152,7 +152,7 @@ class TestDeleteObject:
         effect = DeleteObject(bucket="my-bucket", key="file.txt")
 
         with pytest.raises(Exception):  # FrozenInstanceError or AttributeError
-            effect.bucket = "new-bucket"  # type: ignore
+            setattr(effect, "bucket", "new-bucket")
 
     def test_delete_object_attributes(self) -> None:
         """DeleteObject should store bucket and key."""
@@ -197,7 +197,7 @@ class TestListObjects:
         effect = ListObjects(bucket="my-bucket")
 
         with pytest.raises(Exception):  # FrozenInstanceError or AttributeError
-            effect.bucket = "new-bucket"  # type: ignore
+            setattr(effect, "bucket", "new-bucket")
 
     def test_list_objects_with_prefix(self) -> None:
         """ListObjects should accept optional prefix."""

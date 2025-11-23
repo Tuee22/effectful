@@ -20,6 +20,7 @@ from pytest_mock import MockerFixture
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok
 from effectful.domain.message_envelope import (
+    ConsumeTimeout,
     MessageEnvelope,
     PublishFailure,
     PublishSuccess,
@@ -68,7 +69,7 @@ class TestPublishMessage:
 
     @pytest.mark.asyncio()
     async def test_publish_message_timeout_failure(self, mocker: MockerFixture) -> None:
-        """Interpreter should return MessagingError on publish timeout."""
+        """Interpreter should return PublishFailure ADT on publish timeout."""
         # Setup
         mock_producer = mocker.AsyncMock(spec=MessageProducer)
         mock_producer.publish.return_value = PublishFailure(topic="events", reason="timeout")
@@ -79,17 +80,16 @@ class TestPublishMessage:
         effect = PublishMessage(topic="events", payload=b"data")
         result = await interpreter.interpret(effect)
 
-        # Verify result - timeout is retryable
+        # Verify result - domain failure returned as Ok with ADT
         match result:
-            case Err(MessagingError(effect=e, messaging_error=err_msg, is_retryable=True)):
-                assert e == effect
-                assert "timeout" in err_msg
+            case Ok(EffectReturn(value=PublishFailure(topic="events", reason="timeout"))):
+                pass  # Success - domain failure is an ADT, not an error
             case _:
-                pytest.fail(f"Expected MessagingError with retryable=True, got {result}")
+                pytest.fail(f"Expected Ok with PublishFailure ADT, got {result}")
 
     @pytest.mark.asyncio()
     async def test_publish_message_quota_exceeded_failure(self, mocker: MockerFixture) -> None:
-        """Interpreter should return MessagingError on quota exceeded."""
+        """Interpreter should return PublishFailure ADT on quota exceeded."""
         # Setup
         mock_producer = mocker.AsyncMock(spec=MessageProducer)
         mock_producer.publish.return_value = PublishFailure(topic="events", reason="quota_exceeded")
@@ -100,17 +100,16 @@ class TestPublishMessage:
         effect = PublishMessage(topic="events", payload=b"data")
         result = await interpreter.interpret(effect)
 
-        # Verify result - quota_exceeded is retryable
+        # Verify result - domain failure returned as Ok with ADT
         match result:
-            case Err(MessagingError(effect=e, messaging_error=err_msg, is_retryable=True)):
-                assert e == effect
-                assert "quota_exceeded" in err_msg
+            case Ok(EffectReturn(value=PublishFailure(topic="events", reason="quota_exceeded"))):
+                pass  # Success - domain failure is an ADT, not an error
             case _:
-                pytest.fail(f"Expected MessagingError with retryable=True, got {result}")
+                pytest.fail(f"Expected Ok with PublishFailure ADT, got {result}")
 
     @pytest.mark.asyncio()
     async def test_publish_message_topic_not_found_failure(self, mocker: MockerFixture) -> None:
-        """Interpreter should return MessagingError on topic not found."""
+        """Interpreter should return PublishFailure ADT on topic not found."""
         # Setup
         mock_producer = mocker.AsyncMock(spec=MessageProducer)
         mock_producer.publish.return_value = PublishFailure(
@@ -123,13 +122,12 @@ class TestPublishMessage:
         effect = PublishMessage(topic="events", payload=b"data")
         result = await interpreter.interpret(effect)
 
-        # Verify result - topic_not_found is NOT retryable
+        # Verify result - domain failure returned as Ok with ADT
         match result:
-            case Err(MessagingError(effect=e, messaging_error=err_msg, is_retryable=False)):
-                assert e == effect
-                assert "topic_not_found" in err_msg
+            case Ok(EffectReturn(value=PublishFailure(topic="events", reason="topic_not_found"))):
+                pass  # Success - domain failure is an ADT, not an error
             case _:
-                pytest.fail(f"Expected MessagingError with retryable=False, got {result}")
+                pytest.fail(f"Expected Ok with PublishFailure ADT, got {result}")
 
     @pytest.mark.asyncio()
     async def test_publish_message_infrastructure_error(self, mocker: MockerFixture) -> None:
@@ -223,12 +221,17 @@ class TestConsumeMessage:
         effect = ConsumeMessage(subscription="my-sub", timeout_ms=1000)
         result = await interpreter.interpret(effect)
 
-        # Verify result - timeout returns None (not an error)
+        # Verify result - timeout returns ConsumeTimeout ADT (not None)
         match result:
-            case Ok(EffectReturn(value=None, effect_name="ConsumeMessage")):
+            case Ok(
+                EffectReturn(
+                    value=ConsumeTimeout(subscription="my-sub", timeout_ms=1000),
+                    effect_name="ConsumeMessage",
+                )
+            ):
                 pass  # Success
             case _:
-                pytest.fail(f"Expected Ok with None, got {result}")
+                pytest.fail(f"Expected Ok with ConsumeTimeout, got {result}")
 
         # Verify mock was called correctly
         mock_consumer.receive.assert_called_once_with("my-sub", 1000)
@@ -415,10 +418,10 @@ class TestMessagingInterpreterImmutability:
         interpreter = MessagingInterpreter(producer=mock_producer, consumer=mock_consumer)
 
         with pytest.raises(FrozenInstanceError):
-            interpreter.producer = mocker.AsyncMock(spec=MessageProducer)  # type: ignore[misc]
+            setattr(interpreter, "producer", mocker.AsyncMock(spec=MessageProducer))
 
         with pytest.raises(FrozenInstanceError):
-            interpreter.consumer = mocker.AsyncMock(spec=MessageConsumer)  # type: ignore[misc]
+            setattr(interpreter, "consumer", mocker.AsyncMock(spec=MessageConsumer))
 
 
 class TestIsRetryableError:

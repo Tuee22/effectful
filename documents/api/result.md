@@ -2,6 +2,8 @@
 
 This document provides a comprehensive reference for the `Result[T, E]` type and related utilities.
 
+> **Core Doctrine**: For the Result type patterns and error handling diagrams, see [TYPE_SAFETY_DOCTRINE.md](../core/TYPE_SAFETY_DOCTRINE.md#3-result-type-for-error-handling).
+
 ## Overview
 
 The `Result[T, E]` type represents either success (`Ok[T]`) or failure (`Err[E]`). It makes error handling explicit in type signatures, eliminating hidden exceptions and forcing callers to handle both success and error cases.

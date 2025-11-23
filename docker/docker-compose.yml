@@ -1,3 +1,5 @@
+name: effectful
+
 services:
   # Main Effectful service with two entrypoints
   effectful:
@@ -57,9 +59,7 @@ services:
       POSTGRES_PASSWORD: effectful_pass
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     volumes:
-      - pgdata:/var/lib/postgresql/data  # Named volume (NOT bind mount)
-    ports:
-      - "5432:5432"
+      - effectful-pgdata:/var/lib/postgresql/data  # Named volume (NOT bind mount)
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U effectful -d effectful_test"]
       interval: 5s
@@ -74,9 +74,7 @@ services:
     container_name: effectful-redis
     command: redis-server --appendonly yes
     volumes:
-      - redisdata:/data  # Named volume for persistence
-    ports:
-      - "6379:6379"
+      - effectful-redisdata:/data  # Named volume for persistence
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -94,10 +92,7 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     volumes:
-      - miniodata:/data  # Named volume for object storage
-    ports:
-      - "9000:9000"  # S3 API
-      - "9001:9001"  # Web console
+      - effectful-miniodata:/data  # Named volume for object storage
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 10s
@@ -110,15 +105,14 @@ services:
   pulsar:
     image: apachepulsar/pulsar:3.1.0
     container_name: effectful-pulsar
-    command: bin/pulsar standalone
+    command: >
+      bin/pulsar standalone
+      --advertised-address pulsar
     environment:
       PULSAR_MEM: "-Xms512m -Xmx512m"
       PULSAR_GC: "-XX:MaxDirectMemorySize=256m"
     volumes:
-      - pulsardata:/pulsar/data  # Named volume for message persistence
-    ports:
-      - "6650:6650"  # Pulsar protocol
-      - "8080:8080"  # Admin API
+      - effectful-pulsardata:/pulsar/data  # Named volume for message persistence
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/admin/v2/brokers"]
       interval: 10s
@@ -130,13 +124,13 @@ services:
 # Named volumes for data persistence
 # CRITICAL: Use named volumes, NOT bind mounts on macOS (see CLAUDE.md Anti-Pattern #21)
 volumes:
-  pgdata:
+  effectful-pgdata:
     driver: local
-  redisdata:
+  effectful-redisdata:
     driver: local
-  miniodata:
+  effectful-miniodata:
     driver: local
-  pulsardata:
+  effectful-pulsardata:
     driver: local
 
 networks:

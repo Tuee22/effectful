@@ -224,7 +224,7 @@ class TestRunWSProgramErrorPropagation:
         # Program that will hit database error
         def failing_program() -> Generator[AllEffects, EffectResult, str]:
             user = yield GetUserById(user_id=uuid4())
-            yield SendText(text=f"User: {user}")  # Never reached
+            yield SendText(text=f"User: {user!r}")  # Never reached
             return "never"
 
         # Act

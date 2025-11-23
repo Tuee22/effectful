@@ -12,7 +12,16 @@ from pytest_mock import MockerFixture
 
 from effectful.algebraic.result import Err, Ok
 from effectful.domain.token_result import TokenExpired, TokenInvalid, TokenValid
-from effectful.effects.auth import GenerateToken, RefreshToken, RevokeToken, ValidateToken
+from effectful.effects.auth import (
+    GenerateToken,
+    GetUserByEmail,
+    HashPassword,
+    RefreshToken,
+    RevokeToken,
+    ValidatePassword,
+    ValidateToken,
+)
+from effectful.domain.user import User, UserFound, UserNotFound
 from effectful.effects.websocket import SendText
 from effectful.infrastructure.auth import AuthService
 from effectful.interpreters.auth import AuthInterpreter
@@ -424,3 +433,201 @@ class TestIsRetryableError:
                 assert retryable is False
             case _:
                 pytest.fail("Expected AuthError")
+
+
+class TestGetUserByEmail:
+    """Tests for GetUserByEmail effect handling."""
+
+    @pytest.mark.asyncio
+    async def test_returns_user_when_found(self, mocker: MockerFixture) -> None:
+        """GetUserByEmail returns User when found."""
+        # Setup
+        user_id = uuid4()
+        user = User(id=user_id, email="alice@example.com", name="Alice")
+        expected = UserFound(user=user, source="database")
+
+        mock_auth = mocker.AsyncMock(spec=AuthService)
+        mock_auth.get_user_by_email.return_value = expected
+
+        interpreter = AuthInterpreter(auth_service=mock_auth)
+        effect = GetUserByEmail(email="alice@example.com")
+
+        # Act
+        result = await interpreter.interpret(effect)
+
+        # Assert
+        match result:
+            case Ok(effect_return):
+                assert effect_return.value == user
+                assert effect_return.effect_name == "GetUserByEmail"
+            case Err(error):
+                pytest.fail(f"Expected Ok, got Err({error})")
+
+        mock_auth.get_user_by_email.assert_called_once_with("alice@example.com")
+
+    @pytest.mark.asyncio
+    async def test_returns_user_not_found(self, mocker: MockerFixture) -> None:
+        """GetUserByEmail returns UserNotFound when user doesn't exist."""
+        # Setup
+        user_id = uuid4()
+        expected = UserNotFound(user_id=user_id, reason="does_not_exist")
+
+        mock_auth = mocker.AsyncMock(spec=AuthService)
+        mock_auth.get_user_by_email.return_value = expected
+
+        interpreter = AuthInterpreter(auth_service=mock_auth)
+        effect = GetUserByEmail(email="unknown@example.com")
+
+        # Act
+        result = await interpreter.interpret(effect)
+
+        # Assert
+        match result:
+            case Ok(effect_return):
+                assert isinstance(effect_return.value, UserNotFound)
+                assert effect_return.effect_name == "GetUserByEmail"
+            case Err(error):
+                pytest.fail(f"Expected Ok, got Err({error})")
+
+    @pytest.mark.asyncio
+    async def test_returns_auth_error_on_exception(self, mocker: MockerFixture) -> None:
+        """GetUserByEmail returns AuthError when service raises exception."""
+        # Setup
+        mock_auth = mocker.AsyncMock(spec=AuthService)
+        mock_auth.get_user_by_email.side_effect = ConnectionError("Database unavailable")
+
+        interpreter = AuthInterpreter(auth_service=mock_auth)
+        effect = GetUserByEmail(email="alice@example.com")
+
+        # Act
+        result = await interpreter.interpret(effect)
+
+        # Assert
+        match result:
+            case Err(AuthError(auth_error=error_msg, is_retryable=retryable)):
+                assert "unavailable" in error_msg.lower()
+                assert retryable is True
+            case Ok(value):
+                pytest.fail(f"Expected Err, got Ok({value})")
+            case _:
+                pytest.fail("Unexpected error type")
+
+
+class TestValidatePassword:
+    """Tests for ValidatePassword effect handling."""
+
+    @pytest.mark.asyncio
+    async def test_returns_true_when_password_valid(self, mocker: MockerFixture) -> None:
+        """ValidatePassword returns True when password matches hash."""
+        # Setup
+        mock_auth = mocker.AsyncMock(spec=AuthService)
+        mock_auth.validate_password.return_value = True
+
+        interpreter = AuthInterpreter(auth_service=mock_auth)
+        effect = ValidatePassword(password="correct_password", password_hash="$2b$12$hash")
+
+        # Act
+        result = await interpreter.interpret(effect)
+
+        # Assert
+        match result:
+            case Ok(effect_return):
+                assert effect_return.value is True
+                assert effect_return.effect_name == "ValidatePassword"
+            case Err(error):
+                pytest.fail(f"Expected Ok, got Err({error})")
+
+        mock_auth.validate_password.assert_called_once_with("correct_password", "$2b$12$hash")
+
+    @pytest.mark.asyncio
+    async def test_returns_false_when_password_invalid(self, mocker: MockerFixture) -> None:
+        """ValidatePassword returns False when password doesn't match hash."""
+        # Setup
+        mock_auth = mocker.AsyncMock(spec=AuthService)
+        mock_auth.validate_password.return_value = False
+
+        interpreter = AuthInterpreter(auth_service=mock_auth)
+        effect = ValidatePassword(password="wrong_password", password_hash="$2b$12$hash")
+
+        # Act
+        result = await interpreter.interpret(effect)
+
+        # Assert
+        match result:
+            case Ok(effect_return):
+                assert effect_return.value is False
+            case Err(error):
+                pytest.fail(f"Expected Ok, got Err({error})")
+
+    @pytest.mark.asyncio
+    async def test_returns_auth_error_on_exception(self, mocker: MockerFixture) -> None:
+        """ValidatePassword returns AuthError when service raises exception."""
+        # Setup
+        mock_auth = mocker.AsyncMock(spec=AuthService)
+        mock_auth.validate_password.side_effect = RuntimeError("Bcrypt error")
+
+        interpreter = AuthInterpreter(auth_service=mock_auth)
+        effect = ValidatePassword(password="password", password_hash="invalid_hash")
+
+        # Act
+        result = await interpreter.interpret(effect)
+
+        # Assert
+        match result:
+            case Err(AuthError(auth_error=error_msg)):
+                assert "Bcrypt error" in error_msg
+            case Ok(value):
+                pytest.fail(f"Expected Err, got Ok({value})")
+            case _:
+                pytest.fail("Unexpected error type")
+
+
+class TestHashPassword:
+    """Tests for HashPassword effect handling."""
+
+    @pytest.mark.asyncio
+    async def test_returns_hashed_password(self, mocker: MockerFixture) -> None:
+        """HashPassword returns bcrypt hash string."""
+        # Setup
+        expected_hash = "$2b$12$saltsaltsaltsaltsaltsohashhashhashhashhashhashhas"
+
+        mock_auth = mocker.AsyncMock(spec=AuthService)
+        mock_auth.hash_password.return_value = expected_hash
+
+        interpreter = AuthInterpreter(auth_service=mock_auth)
+        effect = HashPassword(password="my_password")
+
+        # Act
+        result = await interpreter.interpret(effect)
+
+        # Assert
+        match result:
+            case Ok(effect_return):
+                assert effect_return.value == expected_hash
+                assert effect_return.effect_name == "HashPassword"
+            case Err(error):
+                pytest.fail(f"Expected Ok, got Err({error})")
+
+        mock_auth.hash_password.assert_called_once_with("my_password")
+
+    @pytest.mark.asyncio
+    async def test_returns_auth_error_on_exception(self, mocker: MockerFixture) -> None:
+        """HashPassword returns AuthError when service raises exception."""
+        # Setup
+        mock_auth = mocker.AsyncMock(spec=AuthService)
+        mock_auth.hash_password.side_effect = RuntimeError("Hash generation failed")
+
+        interpreter = AuthInterpreter(auth_service=mock_auth)
+        effect = HashPassword(password="password")
+
+        # Act
+        result = await interpreter.interpret(effect)
+
+        # Assert
+        match result:
+            case Err(AuthError(auth_error=error_msg)):
+                assert "Hash generation failed" in error_msg
+            case Ok(value):
+                pytest.fail(f"Expected Err, got Ok({value})")
+            case _:
+                pytest.fail("Unexpected error type")

@@ -11,12 +11,22 @@ from effectful.algebraic.result import Err, Ok, Result
 from effectful.domain.cache_result import CacheHit, CacheMiss
 from effectful.domain.profile import ProfileData
 from effectful.effects.base import Effect
-from effectful.effects.cache import GetCachedProfile, PutCachedProfile
+from effectful.effects.cache import (
+    GetCachedProfile,
+    GetCachedValue,
+    InvalidateCache,
+    PutCachedProfile,
+    PutCachedValue,
+)
 from effectful.infrastructure.cache import ProfileCache
 from effectful.interpreters.errors import (
     CacheError,
     InterpreterError,
     UnhandledEffectError,
+)
+from effectful.interpreters.retry_logic import (
+    CACHE_RETRY_PATTERNS,
+    is_retryable_error,
 )
 from effectful.programs.program_types import EffectResult
 
@@ -48,6 +58,12 @@ class CacheInterpreter:
                 return await self._handle_get_profile(user_id, effect)
             case PutCachedProfile(user_id=user_id, profile_data=profile_data, ttl_seconds=ttl):
                 return await self._handle_put_profile(user_id, profile_data, ttl, effect)
+            case GetCachedValue(key=key):
+                return await self._handle_get_value(key, effect)
+            case PutCachedValue(key=key, value=value, ttl_seconds=ttl):
+                return await self._handle_put_value(key, value, ttl, effect)
+            case InvalidateCache(key=key):
+                return await self._handle_invalidate(key, effect)
             case _:
                 return Err(
                     UnhandledEffectError(
@@ -99,6 +115,61 @@ class CacheInterpreter:
                 )
             )
 
+    async def _handle_get_value(
+        self, key: str, effect: Effect
+    ) -> Result[EffectReturn[EffectResult], InterpreterError]:
+        """Handle GetCachedValue effect.
+
+        Returns bytes if cache hit, CacheMiss ADT if cache miss.
+        """
+        try:
+            lookup_result = await self.cache.get_value(key)
+            match lookup_result:
+                case CacheHit(value=value, ttl_remaining=_):
+                    return Ok(EffectReturn(value=value, effect_name="GetCachedValue"))
+                case CacheMiss() as miss:
+                    return Ok(EffectReturn(value=miss, effect_name="GetCachedValue"))
+        except Exception as e:
+            return Err(
+                CacheError(
+                    effect=effect,
+                    cache_error=str(e),
+                    is_retryable=self._is_retryable_error(e),
+                )
+            )
+
+    async def _handle_put_value(
+        self, key: str, value: bytes, ttl_seconds: int, effect: Effect
+    ) -> Result[EffectReturn[EffectResult], InterpreterError]:
+        """Handle PutCachedValue effect."""
+        try:
+            await self.cache.put_value(key, value, ttl_seconds)
+            return Ok(EffectReturn(value=True, effect_name="PutCachedValue"))
+        except Exception as e:
+            return Err(
+                CacheError(
+                    effect=effect,
+                    cache_error=str(e),
+                    is_retryable=self._is_retryable_error(e),
+                )
+            )
+
+    async def _handle_invalidate(
+        self, key: str, effect: Effect
+    ) -> Result[EffectReturn[EffectResult], InterpreterError]:
+        """Handle InvalidateCache effect."""
+        try:
+            deleted = await self.cache.invalidate(key)
+            return Ok(EffectReturn(value=deleted, effect_name="InvalidateCache"))
+        except Exception as e:
+            return Err(
+                CacheError(
+                    effect=effect,
+                    cache_error=str(e),
+                    is_retryable=self._is_retryable_error(e),
+                )
+            )
+
     def _is_retryable_error(self, error: Exception) -> bool:
         """Determine if a cache error is retryable.
 
@@ -108,12 +179,4 @@ class CacheInterpreter:
         Returns:
             True if error might succeed on retry, False otherwise
         """
-        # Common retryable error patterns for cache
-        error_str = str(error).lower()
-        retryable_patterns = [
-            "connection",
-            "timeout",
-            "unavailable",
-            "network",
-        ]
-        return any(pattern in error_str for pattern in retryable_patterns)
+        return is_retryable_error(error, CACHE_RETRY_PATTERNS)

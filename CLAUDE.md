@@ -73,7 +73,7 @@ Layer 5: Infrastructure Layer (PostgreSQL, Redis, S3, Pulsar, or test doubles)
 | Unit Tests | 200+ tests | ~0.5s | pytest-mock only |
 | Integration | 27+ tests | ~1.1s | Real PostgreSQL/Redis/MinIO |
 | Full suite | **329 tests** | **~1.6s** | Mixed |
-| Coverage | 69% overall | - | Excludes adapters without infra |
+| Coverage | 69% overall | - | Adapters/infrastructure excluded from measurement |
 
 **Test Organization**:
 - `tests/test_algebraic/` - Result, EffectReturn type tests
@@ -94,9 +94,10 @@ All code changes must meet these requirements:
 - ✅ **Zero skipped tests** (pytest.skip() forbidden)
 - ✅ 100% test pass rate
 - ✅ **Zero `Any`, `cast()`, or `# type: ignore`** (escape hatches forbidden)
-- ✅ Minimum 45% code coverage (adapters excluded)
+- ✅ **Minimum 45% code coverage** (adapters excluded)
+- ✅ **Integration tests cover all features** (conceptual coverage)
 
-Referenced by: Type Safety Doctrines, Testing Philosophy, Code Quality checks, Contributing Checklist.
+Referenced by: Testing Doctrine, Type Safety Doctrine, Code Quality checks, Contributing Checklist.
 
 ## 🐳 Docker Development
 
@@ -132,6 +133,45 @@ Referenced by: Type Safety Doctrines, Testing Philosophy, Code Quality checks, C
 - Poetry manages all Python dependencies via `pyproject.toml`
 - No manual pip/pipx usage - all dependencies declared in pyproject.toml
 - Use: `poetry add <package>` for runtime deps, `poetry add --group dev <package>` for dev deps
+
+### 🚫 FORBIDDEN: Local Development Commands
+
+**NEVER run these commands directly on the host machine:**
+
+```bash
+# ❌ FORBIDDEN - Running pytest locally
+pytest tests/
+python -m pytest
+
+# ❌ FORBIDDEN - Running poetry locally
+poetry run pytest
+poetry run check-code
+poetry install
+poetry add some-package
+
+# ❌ FORBIDDEN - Running mypy locally
+mypy effectful/
+
+# ❌ FORBIDDEN - Installing packages locally
+pip install effectful
+pip install -r requirements.txt
+
+# ❌ FORBIDDEN - Running Python scripts locally
+python examples/01_hello_world.py
+```
+
+**Why These Are Forbidden:**
+- Tests can't access PostgreSQL, Redis, MinIO, Pulsar infrastructure
+- Local Python version may differ from container
+- Creates local virtualenvs that cause version mismatches
+- Mypy results won't match CI environment
+
+**Always use the Docker prefix:**
+```bash
+docker compose -f docker/docker-compose.yml exec effectful poetry run <command>
+```
+
+See `documents/core/DOCKER_DOCTRINE.md` for complete policy.
 
 ## 🧪 Testing Philosophy
 
@@ -221,523 +261,64 @@ Must meet Universal Success Criteria (exit code 0, Black formatting applied, zer
 
 ## 🛡️ Type Safety Doctrines
 
-### Core Type Safety Workflow
+For complete type safety policy, patterns, and examples, see **`documents/core/TYPE_SAFETY_DOCTRINE.md`**.
 
-The following diagram shows our zero-tolerance type safety enforcement:
+**Core Principle**: Make invalid states unrepresentable through the type system.
 
-```mermaid
-flowchart LR
-    Code[Write Code] --> MyPy[mypy strict check]
-    MyPy -->|Pass| Pytest[Run Tests]
-    MyPy -->|Fail| Errors{Type Error?}
-
-    Errors -->|Any types| Forbidden1[FORBIDDEN - Fix Required]
-    Errors -->|cast calls| Forbidden2[FORBIDDEN - Fix Required]
-    Errors -->|type ignore| Forbidden3[FORBIDDEN - Fix Required]
-    Errors -->|Mutable dataclass| Forbidden4[FORBIDDEN - Fix Required]
-    Errors -->|Non-exhaustive match| Forbidden5[FORBIDDEN - Fix Required]
-
-    Forbidden1 --> Fix[Fix Code]
-    Forbidden2 --> Fix
-    Forbidden3 --> Fix
-    Forbidden4 --> Fix
-    Forbidden5 --> Fix
-    Fix --> MyPy
-
-    Pytest -->|Pass| Success[Ready for Review]
-    Pytest -->|Fail| FixTests[Fix Implementation]
-    FixTests --> Pytest
-```
-
-**Enforcement:**
-- `mypy --strict` with `disallow_any_explicit = true`
-- Zero tolerance for escape hatches
-- All errors must be fixed before tests run
-- Type checking is a gate, not a suggestion
-
-### 1. NO Escape Hatches
-
-```python
-# ❌ FORBIDDEN - These constructs are NEVER allowed
-from typing import Any, cast
-
-def process(data: Any) -> Any:  # NO!
-    return cast(int, data)      # NO!
-
-def transform(x):  # type: ignore  # NO!
-    return x
-
-# ✅ CORRECT - Explicit types always
-from uuid import UUID
-from effectful.algebraic.result import Result, Ok, Err
-from effectful.domain.user import User
-
-def process(user_id: UUID) -> Result[User, str]:
-    if not isinstance(user_id, UUID):
-        return Err("Invalid UUID")
-    return Ok(User(id=user_id, email="test@example.com", name="Test"))
-```
+**Eight Doctrines** (enforced via `mypy --strict`):
+1. NO Escape Hatches (Any, cast, type:ignore forbidden)
+2. ADTs Over Optional Types
+3. Result Type for Error Handling
+4. Immutability by Default (frozen dataclasses)
+5. Exhaustive Pattern Matching
+6. Type Narrowing for Union Types
+7. Generic Type Parameters
+8. PEP 695 Type Aliases
 
 **Enforcement**: `mypy --strict` with `disallow_any_explicit = true` in pyproject.toml
 
-### 2. ADTs Over Optional Types
-
-```python
-# ❌ WRONG - Optional hides the reason for None
-from typing import Optional
-
-async def get_user(user_id: UUID) -> Optional[User]:
-    user = await db.query(...)
-    return user  # Why is it None? Not found? Error? Timeout?
-
-# ✅ CORRECT - ADT makes all cases explicit
-from dataclasses import dataclass
-from effectful.domain.user import User
-
-@dataclass(frozen=True)
-class UserFound:
-    user: User
-    source: str  # "database" | "cache"
-
-@dataclass(frozen=True)
-class UserNotFound:
-    user_id: UUID
-    reason: str  # "does_not_exist" | "deleted" | "access_denied"
-
-type UserLookupResult = UserFound | UserNotFound
-
-async def get_user(user_id: UUID) -> UserLookupResult:
-    user = await db.query(...)
-    if user is not None:
-        return UserFound(user=user, source="database")
-    return UserNotFound(user_id=user_id, reason="does_not_exist")
-
-# Usage with exhaustive pattern matching
-match result:
-    case UserFound(user=user, source=source):
-        print(f"Found {user.name} from {source}")
-    case UserNotFound(user_id=uid, reason=reason):
-        print(f"User {uid} not found: {reason}")
-```
-
-**Why**: ADTs force callers to handle all cases explicitly. The type system prevents forgetting edge cases.
-
-### 3. Result Type for Error Handling
-
-```python
-# ❌ WRONG - Exceptions are invisible in type signatures
-async def save_message(user_id: UUID, text: str) -> ChatMessage:
-    # Raises ValueError? DatabaseError? Who knows!
-    return await db.save(...)
-
-# ✅ CORRECT - Errors are part of the type signature
-from effectful.algebraic.result import Result, Ok, Err
-from effectful.interpreters.errors import DatabaseError
-
-async def save_message(
-    user_id: UUID, text: str
-) -> Result[ChatMessage, DatabaseError]:
-    try:
-        msg = await db.save(...)
-        return Ok(msg)
-    except Exception as e:
-        return Err(DatabaseError(
-            effect=SaveChatMessage(user_id=user_id, text=text),
-            db_error=str(e),
-            is_retryable=True
-        ))
-
-# Caller MUST handle errors
-match result:
-    case Ok(message):
-        print(f"Saved: {message.id}")
-    case Err(error):
-        print(f"Failed: {error.db_error}")
-        if error.is_retryable:
-            await retry_logic()
-```
-
-**Why**: Errors become type-checked documentation. Impossible to forget error handling.
-
-### 4. Immutability by Default
-
-```python
-# ❌ WRONG - Mutable state allows invalid mutations
-from dataclasses import dataclass
-
-@dataclass
-class User:
-    id: UUID
-    email: str
-    name: str
-
-user = User(id=uuid4(), email="test@example.com", name="Alice")
-user.email = None  # Oops! Type checker doesn't prevent this at runtime
-
-# ✅ CORRECT - Frozen dataclasses prevent mutation
-@dataclass(frozen=True)
-class User:
-    id: UUID
-    email: str
-    name: str
-
-user = User(id=uuid4(), email="test@example.com", name="Alice")
-# user.email = None  # Error: cannot assign to field 'email'
-
-# To "update", create new instance
-updated_user = User(id=user.id, email="new@example.com", name=user.name)
-```
-
-**Why**: Immutability eliminates entire classes of bugs (race conditions, unexpected mutations, temporal coupling).
-
-### 5. Exhaustive Pattern Matching
-
-```python
-# ❌ WRONG - Non-exhaustive matching
-from effectful.algebraic.result import Result, Ok, Err
-
-def process(result: Result[int, str]) -> int:
-    match result:
-        case Ok(value):
-            return value
-    # Missing Err case - mypy error!
-
-# ✅ CORRECT - Exhaustive matching
-def process(result: Result[int, str]) -> int:
-    match result:
-        case Ok(value):
-            return value
-        case Err(error):
-            print(f"Error: {error}")
-            return 0
-```
-
-**Why**: Type checker enforces handling all cases. No forgotten branches.
-
-### 6. Type Narrowing for Union Types
-
-```python
-# ❌ WRONG - Accessing union type attributes without narrowing
-from effectful.effects.database import SaveChatMessage
-
-def program() -> Generator[AllEffects, EffectResult, str]:
-    message = yield SaveChatMessage(user_id=user_id, text="Hello")
-    # Error: EffectResult is str | User | ChatMessage | None
-    return f"Saved: {message.text}"  # mypy error!
-
-# ✅ CORRECT - Type narrowing with isinstance
-def program() -> Generator[AllEffects, EffectResult, str]:
-    message = yield SaveChatMessage(user_id=user_id, text="Hello")
-    assert isinstance(message, ChatMessage)  # Type narrowing
-    return f"Saved: {message.text}"  # OK - mypy knows it's ChatMessage
-
-# ✅ ALTERNATIVE - Pattern matching
-def program() -> Generator[AllEffects, EffectResult, str]:
-    message = yield SaveChatMessage(user_id=user_id, text="Hello")
-    match message:
-        case ChatMessage(id=msg_id, text=text):
-            return f"Saved: {text}"
-        case _:
-            return "Unexpected type"
-```
-
-**Why**: Union types require explicit narrowing. Type checker ensures runtime type safety.
-
-**Type Narrowing Flow:**
-
-```mermaid
-flowchart TB
-    Yield[Yield Effect<br/>SaveChatMessage]
-    Receive[Receive EffectResult<br/>Union Type]
-    Method{Narrowing Method}
-
-    Yield --> Receive
-    Receive --> Method
-
-    Method -->|isinstance check| Assert[assert isinstance msg ChatMessage]
-    Method -->|Pattern Match| Match[match msg:<br/>case ChatMessage id=id]
-
-    Assert --> Narrowed1[Type Narrowed<br/>msg: ChatMessage]
-    Match --> Narrowed2[Type Narrowed<br/>id: UUID]
-
-    Narrowed1 --> Access1[Access msg.text - Valid]
-    Narrowed2 --> Access2[Access id - Valid]
-
-    Receive -->|No Narrowing| Error[Access msg.text<br/>MyPy Error]
-```
-
-**Required Practices:**
-- Always narrow union types before accessing variant-specific attributes
-- Use `isinstance` for single-variant narrowing
-- Use pattern matching for multi-variant ADTs
-- MyPy will error if you forget to narrow - this is intentional
-
-### 7. Generic Type Parameters
-
-```python
-# ❌ WRONG - Bare generic types lose information
-def process(items: list) -> dict:  # What kind of list? What dict structure?
-    return {str(i): item for i, item in enumerate(items)}
-
-# ✅ CORRECT - Fully parameterized generics
-def process(items: list[str]) -> dict[str, str]:
-    return {str(i): item for i, item in enumerate(items)}
-
-# ✅ CORRECT - Generic functions with TypeVar
-from typing import TypeVar
-
-T = TypeVar("T")
-
-def first_or_none(items: list[T]) -> T | None:
-    return items[0] if items else None
-
-# Type checker infers: first_or_none([1, 2, 3]) -> int | None
-```
-
-**Why**: Generic parameters preserve type information through transformations.
-
-### 8. PEP 695 Type Aliases
-
-```python
-# ❌ WRONG - String-based type aliases (deprecated)
-from typing import Generator
-
-EffectResult = "str | User | ChatMessage | None"  # NO!
-
-# ✅ CORRECT - PEP 695 type aliases (Python 3.12+)
-from collections.abc import Generator
-
-type EffectResult = str | User | ChatMessage | ProfileData | CacheLookupResult | None
-
-type WSProgram = Generator[AllEffects, EffectResult, None]
-
-# Usage
-def my_program() -> WSProgram:
-    yield SendText(text="Hello")
-    return None
-```
-
-**Why**: Type aliases are first-class citizens with proper IDE support and type checking.
-
-## 🚫 Test Anti-Patterns (1-21)
-
-### 1. Tests Pass When Features Broken
-- ❌ Expecting valid data to fail
-- ✅ Test that valid inputs return expected outputs
-
-### 2. Accepting "Not Implemented" Errors
-- ❌ `assert result is None or isinstance(result, User)` - accepts missing implementation
-- ✅ `assert isinstance(result, User)` with error message
-
-### 3. Silent Effect Failures
-- ❌ Accepting None from effects that should return values
-- ✅ Only accept typed success values
-
-### 4. Testing Actions Without Validating Results
-- ❌ Yield effect, no verification of result
-- ✅ Yield effect, verify result type and value
-
-### 5. Contradicting Domain Guarantees
-- ❌ Testing that required domain invariants don't hold
-- ✅ Verify domain invariants are maintained
-
-### 6. Using pytest.skip()
-- ❌ **NEVER** use `pytest.skip()` or `@pytest.mark.skip`
-- ✅ Let tests FAIL to expose gaps, or delete test
-
-### 7. Hardcoded Success Tests
-- ❌ `assert True` - always passes
-- ✅ Validate actual behavior and return values
-
-### 8. Overly Permissive Assertions
-- ❌ Accepting any non-None value
-- ✅ Only accept specific expected values
-
-### 9. Lowered Standards
-- ❌ `assert len(result) > 0` - accepts anything non-empty
-- ✅ Validate specific expected values
-
-### 10. Test Timeouts
-- ❌ Using `timeout` command to limit execution
-- ✅ Let tests complete naturally
-
-### 11. Testing with Real Infrastructure in Unit Tests
-
-```python
-# ❌ WRONG - Unit tests depend on PostgreSQL, Redis, etc.
-@pytest.mark.asyncio
-async def test_user_lookup():
-    async with asyncpg.connect(DATABASE_URL) as conn:  # Real DB!
-        user = await UserRepository(conn).get_by_id(user_id)
-        assert user is not None
-
-# ✅ CORRECT - Use pytest-mock for unit tests
-from effectful.testing import unwrap_ok
-
-@pytest.mark.asyncio
-async def test_user_lookup(mocker):
-    # Setup
-    mock_repo = mocker.AsyncMock(spec=UserRepository)
-    mock_repo.get_by_id.return_value = User(
-        id=user_id, email="test@example.com", name="Alice"
-    )
-    interpreter = create_test_interpreter(user_repo=mock_repo)
-
-    # Test
-    def program() -> Generator[AllEffects, EffectResult, bool]:
-        user = yield GetUserById(user_id=user_id)
-        assert isinstance(user, User)
-        yield SendText(text=f"Hello {user.name}")
-        return True
-
-    result = await run_ws_program(program(), interpreter)
-    value = unwrap_ok(result)
-    assert value is True
-```
-
-**Why**: Unit tests must be fast, deterministic, and isolated. Real infrastructure belongs in integration tests only.
-
-### 12. Not Testing Error Paths
-
-```python
-# ❌ WRONG - Only testing happy path
-@pytest.mark.asyncio
-async def test_user_lookup():
-    result = await run_ws_program(program(), interpreter)
-    value = unwrap_ok(result)  # Assumes Ok
-    assert value == "success"
-
-# ✅ CORRECT - Test error cases explicitly
-from effectful.testing import assert_err, unwrap_err
-
-@pytest.mark.asyncio
-async def test_user_lookup_database_failure(mocker):
-    # Setup failing infrastructure
-    mock_repo = mocker.AsyncMock(spec=UserRepository)
-    mock_repo.get_by_id.side_effect = DatabaseError(
-        effect=GetUserById(user_id=user_id),
-        db_error="Connection timeout",
-        is_retryable=True
-    )
-    interpreter = create_test_interpreter(user_repo=mock_repo)
-
-    # Test
-    def program() -> Generator[AllEffects, EffectResult, bool]:
-        user = yield GetUserById(user_id=user_id)
-        return True
-
-    result = await run_ws_program(program(), interpreter)
-
-    # Assert error
-    assert_err(result)
-    error = unwrap_err(result)
-    assert isinstance(error, DatabaseError)
-    assert "Connection timeout" in error.db_error
-```
-
-**Why**: Error handling is half your code. Test it.
-
-### 13. Incomplete Assertions
-
-```python
-# ❌ WRONG - Only checking result succeeded
-result = await run_ws_program(program(), interpreter)
-assert_ok(result)  # Did the program do the right thing?
-
-# ✅ CORRECT - Verify side effects and state changes
-result = await run_ws_program(program(), interpreter)
-value = unwrap_ok(result)
-
-# Check return value
-assert value == "success"
-
-# Check side effects (when using mocks)
-mock_websocket.send_text.assert_called_once_with("Hello Alice")
-
-# Check state changes (when using real infrastructure)
-assert len(await message_repo.get_all()) == 1
-assert (await message_repo.get_all())[0].text == "Hello Alice"
-```
-
-**Why**: Programs have effects beyond return values. Verify the entire behavior.
-
-### 14. Relaxed Validation
-- ❌ Default fallbacks for missing fields: `if not result: result = default`
-- ✅ Strict validation requiring all fields: `assert isinstance(result, ExpectedType)`
-
-### 15. Disabling Test Infrastructure
-- ❌ Commenting out fixtures or test setup to make tests pass
-- ✅ Fix root cause of test failures
-
-### 16. Masking Root Causes with Workarounds
-- ❌ Adding try/except to hide errors
-- ✅ Fix root cause, use Result type for expected errors
-
-### 17. Trial-and-Error Debugging
-- ❌ Multiple conflicting "fixing tests" commits without diagnosis
-- ✅ Systematic: baseline → root cause → plan → fix → validate
-
-### 18. Adding Unvalidated Features During Test Fixing
-- ❌ Adding new features while debugging test failures
-- ✅ Fix tests first, add features after tests pass
-
-**Recovery Checklist**:
-1. Document baseline failures
-2. Investigate recent commits
-3. Identify root causes (not symptoms)
-4. Create systematic plan
-5. Fix avoiding anti-patterns
-6. Verify no new anti-patterns
-7. Run full test suite
-
-**Red Flags**: Multiple "fixing tests" commits in rapid succession, validation becoming less strict, infrastructure disabled instead of debugged, "temporary workaround" comments.
-
-### 19. Test-Specific Environment Variables in Production Code
-- ❌ Checking `PYTEST_RUNNING`, `PYTEST_CURRENT_TEST` in library code
-- ❌ `if os.getenv("PYTEST_RUNNING"): return mock_value` - library code aware of test runner
-- ✅ Use dependency injection: pass test doubles via constructor/parameters
-- ✅ Interpreter pattern allows swapping infrastructure without library code changes
-
-Impact: Couples library logic to test infrastructure, creates nondeterministic behavior.
-
-### 20. Holding Database Locks Across Test Execution
-- ❌ Executing TRUNCATE inside a transaction that wraps test execution
-- ❌ Yielding test fixtures while holding AccessExclusiveLock from TRUNCATE
-- ✅ **TRUNCATE+seed before each test**: Commit immediately, lock released before test runs
-
-Impact: Tests timeout waiting for locks to release.
-
-### 21. Docker Bind Mount Permission Issues (PostgreSQL Data Files)
-- ❌ Using bind mount `./pgdata:/var/lib/postgresql/data` on Docker Desktop for Mac
-- ❌ Files created with root ownership instead of postgres ownership
-- ❌ PostgreSQL cannot access its own data files during TRUNCATE
-- ✅ **Named Docker volume**: `pgdata:/var/lib/postgresql/data` ensures correct ownership
-- ✅ Docker manages volume permissions automatically
-
-Impact: Tests fail non-deterministically with `Permission denied: could not open file`.
-
-**Correct Solution (docker-compose.yml)**:
-```yaml
-# ✅ Named volume ensures correct ownership
-postgres:
-  image: postgres:15-alpine
-  volumes:
-    - pgdata:/var/lib/postgresql/data  # Docker manages permissions
-
-volumes:
-  pgdata:
-    driver: local
-```
-
-Detection:
-- Error message: `could not open file "base/16384/XXXXX": Permission denied`
-- Random test failures (different test each run)
-- Works individually, fails in full suite
-
-Prevention:
-- Always use named volumes for PostgreSQL data
-- Never use bind mounts for database files on Docker Desktop
-- Verify file ownership after docker compose -f docker/docker-compose.yml up
+## 🧹 Purity Enforcement
+
+For complete purity doctrine and patterns, see **`documents/core/PURITY.md`** and **`documents/core/PURITY_PATTERNS.md`**.
+
+**Core Principle**: Expressions over statements. Comprehensions over loops. Trampolines over recursion.
+
+**Six Purity Doctrines**:
+1. No Loops (`for`, `while` forbidden - use comprehensions/trampolines)
+2. Effects as Data (immutable descriptions, not execution)
+3. Yield Don't Call (programs yield effects, never call infrastructure)
+4. Interpreters Isolate Impurity (all I/O at boundary)
+5. Immutability by Default (frozen dataclasses everywhere)
+6. Exhaustive Pattern Matching (all cases handled with `unreachable()`)
+
+**Banned Patterns**:
+- ❌ `for` loops - use list/dict/set comprehensions
+- ❌ `while` loops - use trampoline pattern
+- ❌ `+=`, `-=` accumulation - use `functools.reduce`
+- ❌ `.append()`, `.extend()` - use tuple spread or comprehension
+- ❌ `del dict[key]` - use dict comprehension to filter
+- ❌ Variable reassignment - use expression-based flow
+
+**Acceptable Exceptions**:
+- ✅ Single `while True` in trampoline driver
+- ✅ Mutable connection state in adapters (I/O boundary)
+- ✅ Imperative patterns in tests for setup/assertions
+
+**Trampoline Module**: `effectful/algebraic/trampoline.py` - Use for any recursive patterns.
+
+## 🚫 Test Anti-Patterns
+
+For complete list of 21 test anti-patterns with examples, see **`documents/core/TESTING_DOCTRINE.md`**.
+
+**Key Anti-Patterns to Avoid:**
+- Tests that pass when features are broken
+- Using pytest.skip() (NEVER allowed)
+- Testing with real infrastructure in unit tests
+- Not testing error paths
+- Incomplete assertions
+- Docker bind mount permission issues
+
+**Core Principle**: Tests exist to find problems, not provide false confidence.
 
 ## 🚫 Implementation Anti-Patterns
 
@@ -761,11 +342,13 @@ Prevention:
 - ❌ Directly calling infrastructure in programs: `await db.query(...)`
 - ✅ Yield effects: `user = yield GetUserById(user_id=user_id)`
 
-**Reference**: See effectful/ARCHITECTURE.md for comprehensive functional architecture guide.
+**Reference**: See `documents/core/PURITY.md` for complete purity doctrine and functional programming rules.
 
 Impact: Breaks separation of concerns, makes testing difficult, couples business logic to infrastructure.
 
 ## Effect Program Patterns
+
+For complete purity rules and functional programming patterns, see **`documents/core/PURITY.md`**.
 
 ### 1. Generator-Based DSL
 
@@ -963,7 +546,15 @@ All items must meet Universal Success Criteria (see above).
 
 ## 📚 References
 
-### Type Safety
+### Core Doctrines (SSoT)
+- **Purity Doctrine**: `documents/core/PURITY.md`
+- **Purity Patterns**: `documents/core/PURITY_PATTERNS.md`
+- **Testing Doctrine**: `documents/core/TESTING_DOCTRINE.md`
+- **Type Safety Doctrine**: `documents/core/TYPE_SAFETY_DOCTRINE.md`
+- **Architecture**: `documents/core/ARCHITECTURE.md`
+
+### Code References
+- **Trampoline Module**: `effectful/algebraic/trampoline.py`
 - **Result Type**: `effectful/algebraic/result.py`
 - **ADT Examples**: `effectful/domain/user.py`, `effectful/domain/profile.py`
 - **Type Aliases**: `effectful/programs/program_types.py`
@@ -973,8 +564,7 @@ All items must meet Universal Success Criteria (see above).
 - **Testing Patterns**: `documents/testing/TESTING_PATTERNS.md`
 - **Test Suite Audit**: `documents/testing/TEST_SUITE_AUDIT.md`
 
-### Architecture
-- **Architecture Guide**: `ARCHITECTURE.md`
+### Other
 - **Effect Programs**: `tests/test_integration/test_chat_workflow.py`
 - **Contributing Guide**: `CONTRIBUTING.md`
 
@@ -989,4 +579,4 @@ All items must meet Universal Success Criteria (see above).
 
 **Status**: Library foundation complete | Docker infrastructure ready | 329 tests passing
 **Philosophy**: If the type checker passes, the program is correct. Make the type system work for you, not against you.
-**Architecture**: Pure functional effect system with 5-layer architecture (Application → Runner → Composite → Interpreters → Infrastructure)
+**Architecture**: Pure functional effect system with 5-layer architecture (Application -> Runner -> Composite -> Interpreters -> Infrastructure)

@@ -35,7 +35,7 @@ class TestSendText:
         """SendText should be frozen (immutable)."""
         effect = SendText("Hello")
         with pytest.raises(FrozenInstanceError):
-            effect.text = "Goodbye"  # type: ignore[misc]
+            setattr(effect, "text", "Goodbye")
 
 
 class TestReceiveText:
@@ -93,7 +93,7 @@ class TestCloseReasonProtocolError:
         """CloseProtocolError should be frozen (immutable)."""
         reason = CloseProtocolError("Error")
         with pytest.raises(FrozenInstanceError):
-            reason.reason = "New error"  # type: ignore[misc]
+            setattr(reason, "reason", "New error")
 
 
 class TestCloseReasonPolicyViolation:
@@ -108,7 +108,7 @@ class TestCloseReasonPolicyViolation:
         """ClosePolicyViolation should be frozen (immutable)."""
         reason = ClosePolicyViolation("Violation")
         with pytest.raises(FrozenInstanceError):
-            reason.reason = "New violation"  # type: ignore[misc]
+            setattr(reason, "reason", "New violation")
 
 
 class TestClose:
@@ -140,7 +140,7 @@ class TestClose:
         """Close should be frozen (immutable)."""
         effect = Close(CloseNormal())
         with pytest.raises(FrozenInstanceError):
-            effect.reason = CloseGoingAway()  # type: ignore[misc]
+            setattr(effect, "reason", CloseGoingAway())
 
 
 class TestCloseReasonExhaustiveness:

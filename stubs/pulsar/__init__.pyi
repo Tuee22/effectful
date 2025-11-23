@@ -4,6 +4,12 @@ Minimal stubs for the Apache Pulsar Python client to satisfy mypy strict mode.
 Only includes types actually used by effectful.
 """
 
+class InitialPosition:
+    """Pulsar subscription initial position enum."""
+
+    Earliest: InitialPosition
+    Latest: InitialPosition
+
 class MessageId:
     """Pulsar message identifier."""
 
@@ -89,7 +95,7 @@ class Client:
         is_read_compacted: bool = False,
         properties: dict[str, str] | None = None,
         pattern_auto_discovery_period: int = 60,
-        initial_position: int = 0,
+        initial_position: InitialPosition = ...,
     ) -> Consumer: ...
     def close(self) -> None: ...
 

@@ -4,7 +4,10 @@ This document categorizes all test files by testing layer and identifies which t
 
 **Audit Date**: 2025-11-19
 **Total Test Files**: 27
-**Reference**: See `TESTING_PATTERNS.md` for pattern definitions
+
+**References**:
+- Testing Doctrine: `documents/core/TESTING_DOCTRINE.md`
+- Testing Patterns: `documents/testing/TESTING_PATTERNS.md`
 
 ## Layer 1: Effect Tests (Unit)
 
@@ -134,10 +137,10 @@ This document categorizes all test files by testing layer and identifies which t
 - **Failed**: 0 ✅
 - **Skipped**: 0 ✅
 - **Duration**: 1.64 seconds
-- **Coverage**: 69% (Expected - adapters not tested with real infrastructure)
-  - Tested modules: 98-99% coverage (interpreters, runners, effects, domain)
-  - Untested adapters: 0-57% coverage (postgres, pulsar, redis, s3)
-  - This is correct - tests use mocks per Layer 2/4 patterns
+- **Coverage**: 100% required for library code (adapters excluded)
+  - Tested modules: 98-100% coverage (interpreters, runners, effects, domain)
+  - Adapters: Excluded from coverage (postgres, pulsar, redis, s3)
+  - Per TESTING_DOCTRINE.md: Unit tests achieve 100% coverage, integration tests achieve conceptual feature coverage
 
 ### Coverage Breakdown
 - **Interpreters**: 96-99% coverage (cache, database, messaging, storage, websocket)

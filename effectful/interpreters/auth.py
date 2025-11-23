@@ -21,13 +21,26 @@ from uuid import UUID
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok, Result
 from effectful.domain.token_result import TokenExpired, TokenInvalid, TokenValid
-from effectful.effects.auth import GenerateToken, RefreshToken, RevokeToken, ValidateToken
+from effectful.domain.user import UserFound, UserNotFound
+from effectful.effects.auth import (
+    GenerateToken,
+    GetUserByEmail,
+    HashPassword,
+    RefreshToken,
+    RevokeToken,
+    ValidatePassword,
+    ValidateToken,
+)
 from effectful.effects.base import Effect
 from effectful.infrastructure.auth import AuthService
 from effectful.interpreters.errors import (
     AuthError,
     InterpreterError,
     UnhandledEffectError,
+)
+from effectful.interpreters.retry_logic import (
+    AUTH_RETRY_PATTERNS,
+    is_retryable_error,
 )
 from effectful.programs.program_types import EffectResult
 
@@ -83,6 +96,12 @@ class AuthInterpreter:
                 return await self._handle_refresh_token(refresh_token, effect)
             case RevokeToken(token=token):
                 return await self._handle_revoke_token(token, effect)
+            case GetUserByEmail(email=email):
+                return await self._handle_get_user_by_email(email, effect)
+            case ValidatePassword(password=password, password_hash=password_hash):
+                return await self._handle_validate_password(password, password_hash, effect)
+            case HashPassword(password=password):
+                return await self._handle_hash_password(password, effect)
             case _:
                 return Err(
                     UnhandledEffectError(
@@ -168,6 +187,67 @@ class AuthInterpreter:
                 )
             )
 
+    async def _handle_get_user_by_email(
+        self, email: str, effect: Effect
+    ) -> Result[EffectReturn[EffectResult], InterpreterError]:
+        """Handle GetUserByEmail effect.
+
+        Returns User if found, UserNotFound ADT if not found.
+        """
+        try:
+            lookup_result = await self.auth_service.get_user_by_email(email)
+            match lookup_result:
+                case UserFound(user=user, source=_):
+                    return Ok(EffectReturn(value=user, effect_name="GetUserByEmail"))
+                case UserNotFound() as not_found:
+                    return Ok(EffectReturn(value=not_found, effect_name="GetUserByEmail"))
+        except Exception as e:
+            return Err(
+                AuthError(
+                    effect=effect,
+                    auth_error=str(e),
+                    is_retryable=self._is_retryable_error(e),
+                )
+            )
+
+    async def _handle_validate_password(
+        self, password: str, password_hash: str, effect: Effect
+    ) -> Result[EffectReturn[EffectResult], InterpreterError]:
+        """Handle ValidatePassword effect.
+
+        Returns True if password matches hash, False otherwise.
+        """
+        try:
+            is_valid = await self.auth_service.validate_password(password, password_hash)
+            return Ok(EffectReturn(value=is_valid, effect_name="ValidatePassword"))
+        except Exception as e:
+            return Err(
+                AuthError(
+                    effect=effect,
+                    auth_error=str(e),
+                    is_retryable=self._is_retryable_error(e),
+                )
+            )
+
+    async def _handle_hash_password(
+        self, password: str, effect: Effect
+    ) -> Result[EffectReturn[EffectResult], InterpreterError]:
+        """Handle HashPassword effect.
+
+        Returns bcrypt hash as string.
+        """
+        try:
+            hashed = await self.auth_service.hash_password(password)
+            return Ok(EffectReturn(value=hashed, effect_name="HashPassword"))
+        except Exception as e:
+            return Err(
+                AuthError(
+                    effect=effect,
+                    auth_error=str(e),
+                    is_retryable=self._is_retryable_error(e),
+                )
+            )
+
     def _is_retryable_error(self, error: Exception) -> bool:
         """Determine if an auth error is retryable.
 
@@ -177,27 +257,4 @@ class AuthInterpreter:
         Returns:
             True if error might succeed on retry, False otherwise
         """
-        # Common retryable error patterns for auth/Redis
-        error_str = str(error).lower()
-        retryable_patterns = [
-            "connection",
-            "timeout",
-            "unavailable",
-            "network",
-            "redis",
-        ]
-
-        # Non-retryable patterns (token/encoding issues)
-        non_retryable_patterns = [
-            "invalid signature",
-            "malformed",
-            "decode error",
-            "encoding error",
-        ]
-
-        # Check non-retryable first
-        if any(pattern in error_str for pattern in non_retryable_patterns):
-            return False
-
-        # Then check retryable
-        return any(pattern in error_str for pattern in retryable_patterns)
+        return is_retryable_error(error, AUTH_RETRY_PATTERNS)

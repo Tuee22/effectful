@@ -9,9 +9,12 @@ This is a production-ready adapter that:
 For testing, use pytest mocks or FakeAuthService instead of this real implementation.
 """
 
+import hashlib
+import hmac
 import jwt
+import secrets
 from datetime import datetime, timedelta, UTC
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from redis.asyncio import Redis
 
@@ -21,6 +24,7 @@ from effectful.domain.token_result import (
     TokenValid,
     TokenValidationResult,
 )
+from effectful.domain.user import UserLookupResult, UserNotFound
 from effectful.infrastructure.auth import AuthService
 
 
@@ -196,3 +200,56 @@ class RedisAuthService(AuthService):
         except Exception:
             # If we can't decode the token, blacklist it for 24 hours as fallback
             await self._redis.setex(f"auth:blacklist:{token}", 86400, "revoked")
+
+    async def get_user_by_email(self, email: str) -> UserLookupResult:
+        """Get user by email address.
+
+        Note: This is a stub implementation. In production, this should delegate
+        to a UserRepository. RedisAuthService is primarily for JWT token operations.
+
+        Args:
+            email: Email address to search for
+
+        Returns:
+            UserNotFound - This stub always returns not found
+        """
+        # This is a stub - in production, inject a UserRepository
+        return UserNotFound(user_id=uuid4(), reason="does_not_exist")
+
+    async def validate_password(self, password: str, password_hash: str) -> bool:
+        """Validate password against hash.
+
+        Uses PBKDF2-HMAC-SHA256 for secure password hashing.
+
+        Args:
+            password: Plain text password to validate
+            password_hash: Hash in format "salt$hash" to validate against
+
+        Returns:
+            True if password matches hash, False otherwise
+        """
+        try:
+            parts = password_hash.split("$")
+            if len(parts) != 2:
+                return False
+            salt = bytes.fromhex(parts[0])
+            stored_hash = parts[1]
+            computed_hash = hashlib.pbkdf2_hmac(
+                "sha256", password.encode("utf-8"), salt, 100000
+            ).hex()
+            return hmac.compare_digest(computed_hash, stored_hash)
+        except (ValueError, IndexError):
+            return False
+
+    async def hash_password(self, password: str) -> str:
+        """Hash password with PBKDF2-HMAC-SHA256.
+
+        Args:
+            password: Plain text password to hash
+
+        Returns:
+            Hash in format "salt$hash"
+        """
+        salt = secrets.token_bytes(32)
+        hashed = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100000).hex()
+        return f"{salt.hex()}${hashed}"

@@ -29,19 +29,19 @@ class TestUser:
         """User should be frozen (immutable)."""
         user = User(id=uuid4(), name="Alice", email="alice@example.com")
         with pytest.raises(FrozenInstanceError):
-            user.name = "Bob"  # type: ignore[misc]
+            setattr(user, "name", "Bob")
 
     def test_user_id_is_immutable(self) -> None:
         """User id should be immutable."""
         user = User(id=uuid4(), name="Alice", email="alice@example.com")
         with pytest.raises(FrozenInstanceError):
-            user.id = uuid4()  # type: ignore[misc]
+            setattr(user, "id", uuid4())
 
     def test_user_email_is_immutable(self) -> None:
         """User email should be immutable."""
         user = User(id=uuid4(), name="Alice", email="alice@example.com")
         with pytest.raises(FrozenInstanceError):
-            user.email = "bob@example.com"  # type: ignore[misc]
+            setattr(user, "email", "bob@example.com")
 
     def test_user_equality(self) -> None:
         """Users with same values should be equal."""

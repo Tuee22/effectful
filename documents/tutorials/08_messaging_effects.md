@@ -497,18 +497,18 @@ def handle_messaging_error() -> Generator[AllEffects, EffectResult, str]:
 
 ### Testing Error Cases
 
-Use failing fakes to test error handling:
+Use pytest-mock to test error handling:
 
 ```python
-from effectful.testing.failing import FailingMessageProducer
-
 @pytest.mark.asyncio
-async def test_publish_failure():
-    # Setup failing producer
-    failing_producer = FailingMessageProducer(reason="timeout")
+async def test_publish_failure(mocker):
+    # Setup failing producer with pytest-mock
+    mock_producer = mocker.AsyncMock(spec=MessageProducer)
+    mock_producer.publish.side_effect = Exception("timeout")
+
     interpreter = MessagingInterpreter(
-        producer=failing_producer,
-        consumer=FakeMessageConsumer()
+        producer=mock_producer,
+        consumer=mocker.AsyncMock(spec=MessageConsumer)
     )
 
     # Run program
@@ -644,23 +644,47 @@ def handle_message() -> Generator[AllEffects, EffectResult, str]:
 
 ## Testing Patterns
 
-### Using Fakes
+### Generator-Based Testing
 
-Fakes provide in-memory messaging for tests:
+Test programs by stepping through the generator:
 
 ```python
-from effectful.testing.fakes import (
-    FakeMessageProducer,
-    FakeMessageConsumer,
-)
+def test_publish_message():
+    # Create generator
+    def publish_program() -> Generator[AllEffects, EffectResult, str]:
+        yield PublishMessage(
+            topic="test-topic",
+            payload=b"test data",
+            properties={"key": "value"}
+        )
+        return "published"
 
+    gen = publish_program()
+
+    # Step through effects
+    effect = next(gen)
+    assert effect.__class__.__name__ == "PublishMessage"
+    assert effect.topic == "test-topic"
+    assert effect.payload == b"test data"
+
+    # Send response
+    try:
+        gen.send(None)
+    except StopIteration as e:
+        result = e.value
+
+    assert result == "published"
+```
+
+### Testing with pytest-mock
+
+Use pytest-mock for interpreter-level testing:
+
+```python
 @pytest.mark.asyncio
-async def test_publish_consume():
-    # Setup fakes
-    fake_producer = FakeMessageProducer()
-    fake_consumer = FakeMessageConsumer()
-
-    # Pre-populate consumer queue
+async def test_consume_with_mock(mocker):
+    # Setup mocks
+    mock_consumer = mocker.AsyncMock(spec=MessageConsumer)
     envelope = MessageEnvelope(
         message_id="msg-1",
         payload=b"test data",
@@ -668,43 +692,37 @@ async def test_publish_consume():
         publish_time=datetime.now(UTC),
         topic="test-topic"
     )
-    fake_consumer._messages.append(envelope)
+    mock_consumer.consume.return_value = envelope
 
     # Create interpreter
     interpreter = MessagingInterpreter(
-        producer=fake_producer,
-        consumer=fake_consumer
+        producer=mocker.AsyncMock(spec=MessageProducer),
+        consumer=mock_consumer
     )
 
     # Run program
-    result = await run_ws_program(my_program(), interpreter)
+    result = await run_ws_program(consume_program(), interpreter)
 
-    # Inspect state
-    assert len(fake_producer._published) == 1
-    assert "msg-1" in fake_consumer._acknowledged
+    # Verify
+    value = unwrap_ok(result)
+    assert value == "success"
+    mock_consumer.consume.assert_called_once()
 ```
 
-### Using Failing Variants
+### Testing Error Paths
 
-Test error paths with failing implementations:
+Test error handling with side_effect:
 
 ```python
-from effectful.testing.failing import (
-    FailingMessageProducer,
-    FailingMessageConsumer,
-)
-
 @pytest.mark.asyncio
-async def test_consume_exception():
-    # Setup failing consumer
-    failing_consumer = FailingMessageConsumer(
-        timeout_immediately=True,
-        ack_error_message="Connection lost"
-    )
+async def test_consume_timeout(mocker):
+    # Setup timeout
+    mock_consumer = mocker.AsyncMock(spec=MessageConsumer)
+    mock_consumer.consume.return_value = None  # Timeout
 
     interpreter = MessagingInterpreter(
-        producer=FakeMessageProducer(),
-        consumer=failing_consumer
+        producer=mocker.AsyncMock(spec=MessageProducer),
+        consumer=mock_consumer
     )
 
     # Run program

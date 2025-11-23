@@ -10,6 +10,12 @@ Key Concepts:
 - Results are propagated via Result[T, E] for explicit error handling
 - StopIteration captures the program's final return value
 
+Note on Purity:
+    The while loop in run_ws_program is an acceptable exception to the no-loops
+    doctrine because it serves as the core program execution driver (similar to
+    the trampoline driver). It cannot be replaced with a trampoline without adding
+    complexity, as each iteration requires async I/O.
+
 Example:
     >>> def chat_program(user_id: UUID) -> WSProgram:
     ...     user = yield GetUserById(user_id)
@@ -96,7 +102,7 @@ async def run_ws_program(
         # Start the program - get first effect
         effect = next(program)
 
-        # Program execution loop
+        # Program execution loop - acceptable while loop (core driver, see docstring)
         while True:
             # Interpret the current effect
             result: Result[

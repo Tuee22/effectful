@@ -34,6 +34,26 @@ class RedisProfileCache(ProfileCache):
         """
         self._redis = redis_client
 
+    async def _get_ttl_or_expired(self, key: str) -> int | None:
+        """Get TTL from Redis, returning None if key expired or deleted.
+
+        Args:
+            key: Cache key to check TTL for
+
+        Returns:
+            TTL in seconds (0 if no expiration), or None if key doesn't exist
+        """
+        ttl = await self._redis.ttl(key)
+        # Redis returns int but mypy doesn't know, so ensure it's int
+        ttl_int = int(ttl)
+        if ttl_int == -1:
+            # No expiration set
+            return 0
+        elif ttl_int == -2:
+            # Key doesn't exist (expired/deleted)
+            return None
+        return ttl_int
+
     async def get_profile(self, user_id: UUID) -> CacheLookupResult[ProfileData]:
         """Get cached profile from Redis.
 
@@ -55,11 +75,8 @@ class RedisProfileCache(ProfileCache):
         profile = ProfileData(id=profile_dict["id"], name=profile_dict["name"])
 
         # Get remaining TTL
-        ttl = await self._redis.ttl(key)
-        if ttl == -1:
-            # No expiration set (shouldn't happen but handle gracefully)
-            ttl = 0
-        elif ttl == -2:
+        ttl = await self._get_ttl_or_expired(key)
+        if ttl is None:
             # Key doesn't exist (race condition between get and ttl)
             return CacheMiss(key=key, reason="expired")
 
@@ -80,3 +97,52 @@ class RedisProfileCache(ProfileCache):
 
         # Store with TTL
         await self._redis.setex(key, ttl_seconds, profile_json)
+
+    async def get_value(self, key: str) -> CacheLookupResult[bytes]:
+        """Get cached value by key from Redis.
+
+        Args:
+            key: Cache key to retrieve
+
+        Returns:
+            CacheHit with bytes if found, CacheMiss if not found/expired
+        """
+        data = await self._redis.get(key)
+
+        if data is None:
+            return CacheMiss(key=key, reason="not_found")
+
+        # Ensure we return bytes
+        if isinstance(data, str):
+            data = data.encode("utf-8")
+
+        # Get remaining TTL
+        ttl = await self._get_ttl_or_expired(key)
+        if ttl is None:
+            return CacheMiss(key=key, reason="expired")
+
+        return CacheHit(value=data, ttl_remaining=ttl)
+
+    async def put_value(self, key: str, value: bytes, ttl_seconds: int) -> None:
+        """Store value in Redis with TTL.
+
+        Args:
+            key: Cache key
+            value: Value to cache (bytes)
+            ttl_seconds: Time-to-live in seconds
+        """
+        await self._redis.setex(key, ttl_seconds, value)
+
+    async def invalidate(self, key: str) -> bool:
+        """Invalidate cache entry by key in Redis.
+
+        Args:
+            key: Cache key to invalidate
+
+        Returns:
+            True if key was found and deleted, False if not found
+        """
+        result = await self._redis.delete(key)
+        # Redis delete returns int, but we need explicit bool conversion
+        deleted_count = int(result) if isinstance(result, int) else 0
+        return deleted_count > 0

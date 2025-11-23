@@ -208,4 +208,4 @@ class TestWebSocketInterpreter:
         interpreter = WebSocketInterpreter(connection=mock_conn)
 
         with pytest.raises(FrozenInstanceError):
-            interpreter.connection = mocker.AsyncMock(spec=WebSocketConnection)  # type: ignore[misc]
+            setattr(interpreter, "connection", mocker.AsyncMock(spec=WebSocketConnection))

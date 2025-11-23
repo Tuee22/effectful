@@ -29,6 +29,10 @@ from effectful.interpreters.errors import (
     StorageError,
     UnhandledEffectError,
 )
+from effectful.interpreters.retry_logic import (
+    STORAGE_RETRY_PATTERNS,
+    is_retryable_error,
+)
 from effectful.programs.program_types import EffectResult
 
 
@@ -142,8 +146,8 @@ class StorageInterpreter:
             # Pattern match on PutResult ADT
             match put_result:
                 case PutSuccess(key=object_key):
-                    # Success - return the key
-                    return Ok(EffectReturn(value=object_key, effect_name="PutObject"))
+                    # Success - return the PutSuccess ADT
+                    return Ok(EffectReturn(value=put_result, effect_name="PutObject"))
                 case PutFailure(key=failed_key, reason=reason):
                     # Domain failure - return error with retryability
                     is_retryable = self._is_retryable_put_failure(reason)
@@ -226,44 +230,7 @@ class StorageInterpreter:
         Returns:
             True if error is likely transient and retry might succeed.
         """
-        error_str = str(error).lower()
-
-        # Retryable patterns
-        retryable_patterns = [
-            "connection",
-            "timeout",
-            "unavailable",
-            "throttl",  # throttle, throttling
-            "rate limit",
-            "slow down",
-            "500",
-            "503",
-            "network",
-        ]
-
-        # Non-retryable patterns (checked first for specificity)
-        non_retryable_patterns = [
-            "configuration",
-            "invalid",
-            "authentication",
-            "authorization",
-            "access denied",
-            "bucket not found",
-            "404",
-            "403",
-            "400",
-        ]
-
-        # Check non-retryable first
-        if any(pattern in error_str for pattern in non_retryable_patterns):
-            return False
-
-        # Check retryable
-        if any(pattern in error_str for pattern in retryable_patterns):
-            return True
-
-        # Default: assume retryable for unknown errors
-        return True
+        return is_retryable_error(error, STORAGE_RETRY_PATTERNS)
 
     def _is_retryable_put_failure(
         self, reason: Literal["quota_exceeded", "permission_denied", "invalid_object_state"]

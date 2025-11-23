@@ -2,6 +2,21 @@
 
 Welcome to the **effectful** documentation!
 
+## Prerequisites
+
+All development happens inside Docker containers. See [Docker Doctrine](core/DOCKER_DOCTRINE.md).
+
+```bash
+# Start development environment
+docker compose -f docker/docker-compose.yml up -d
+
+# Run tests
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
+
+# Type check
+docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
+```
+
 ## Getting Started
 
 New to effectful? Start here:
@@ -11,6 +26,16 @@ New to effectful? Start here:
 3. [ADTs and Result Types](tutorials/03_adts_and_results.md) - Master type safety
 
 ## Documentation Structure
+
+### Core Doctrines (SSoT)
+
+Project policies and philosophies:
+
+- **[DOCKER_DOCTRINE.md](core/DOCKER_DOCTRINE.md)** - All development in Docker (SSoT)
+- **[TESTING_DOCTRINE.md](core/TESTING_DOCTRINE.md)** - Coverage requirements, test anti-patterns
+- **[TYPE_SAFETY_DOCTRINE.md](core/TYPE_SAFETY_DOCTRINE.md)** - Eight type safety rules
+- **[ARCHITECTURE.md](core/ARCHITECTURE.md)** - 5-layer architecture, design decisions
+- **[PURITY.md](core/PURITY.md)** - Pure functional programming rules
 
 ### Tutorials
 
@@ -27,12 +52,20 @@ Step-by-step guides for learning effectful:
 - **[06_advanced_composition.md](tutorials/06_advanced_composition.md)** - Build complex workflows
 - **[07_migration_guide.md](tutorials/07_migration_guide.md)** - Migrate from imperative code
 
+**Effect-Specific Guides**:
+- **[08_messaging_effects.md](tutorials/08_messaging_effects.md)** - Pub/sub with Apache Pulsar
+- **[09_storage_effects.md](tutorials/09_storage_effects.md)** - S3-compatible object storage
+- **[10_auth_effects.md](tutorials/10_auth_effects.md)** - JWT authentication and passwords
+
 ### API Reference
 
 Complete API documentation:
 
 - **[API Overview](api/README.md)** - Quick reference and navigation
-- **[effects.md](api/effects.md)** - All effect definitions
+- **[effects.md](api/effects.md)** - WebSocket, Database, Cache effects
+- **[auth.md](api/auth.md)** - JWT authentication effects
+- **[messaging.md](api/messaging.md)** - Pub/sub messaging effects
+- **[storage.md](api/storage.md)** - S3 object storage effects
 - **[result.md](api/result.md)** - Result type and utilities
 - **[interpreters.md](api/interpreters.md)** - Interpreter interfaces and error types
 - **[programs.md](api/programs.md)** - Program execution and composition
@@ -119,17 +152,20 @@ match divide(10, 2):
 - [GitHub Repository](https://github.com/your-org/effectful)
 - [Issue Tracker](https://github.com/your-org/effectful/issues)
 - [Contributing Guide](../CONTRIBUTING.md)
-- [Architecture](../ARCHITECTURE.md)
-- [Code Style](../effectful/CLAUDE.md)
+- [Architecture](core/ARCHITECTURE.md)
+- [Testing Doctrine](core/TESTING_DOCTRINE.md)
+- [Type Safety Doctrine](core/TYPE_SAFETY_DOCTRINE.md)
+- [Purity Doctrine](core/PURITY.md)
 
 ## Examples
 
 See the `examples/` directory for complete working programs:
 
-- **hello_world.py** - Minimal effect program
-- **user_greeting.py** - Database + WebSocket workflow
-- **caching_workflow.py** - Cache + Database integration
-- **error_handling.py** - Comprehensive error handling patterns
+- **01_hello_world.py** - Minimal effect program
+- **02_user_greeting.py** - Database + WebSocket workflow
+- **03_caching_workflow.py** - Cache + Database integration
+- **04_error_handling.py** - Comprehensive error handling patterns
+- **05_messaging_workflow.py** - Pub/sub messaging with Apache Pulsar
 
 ## Type Safety
 
@@ -140,7 +176,7 @@ effectful enforces **strict type safety**:
 - Zero `# type: ignore` comments
 - 100% `mypy --strict` compliance
 
-See [CLAUDE.md](../effectful/CLAUDE.md) for type safety guidelines.
+See [TYPE_SAFETY_DOCTRINE.md](core/TYPE_SAFETY_DOCTRINE.md) for type safety guidelines.
 
 ## Testing
 

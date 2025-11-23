@@ -2,6 +2,8 @@
 
 This tutorial teaches you how to use **Algebraic Data Types (ADTs)** and the **Result type** to write type-safe, self-documenting code.
 
+> **Core Doctrine**: For the complete type safety patterns and diagrams, see [TYPE_SAFETY_DOCTRINE.md](../core/TYPE_SAFETY_DOCTRINE.md).
+
 ## Why ADTs?
 
 ### The Problem with Optional
@@ -49,32 +51,7 @@ async def get_user(user_id: UUID) -> UserLookupResult:
 
 ### Visual Comparison: Optional vs ADT
 
-The following diagram illustrates why ADTs are superior to Optional types:
-
-```mermaid
-flowchart TB
-    subgraph Optional[Optional Pattern - Ambiguous]
-        O1[Return User or None]
-        O2{Why None?}
-        O3[Not Found?]
-        O4[Deleted?]
-        O5[Access Denied?]
-        O6[Database Error?]
-        O1 --> O2
-        O2 --> O3
-        O2 --> O4
-        O2 --> O5
-        O2 --> O6
-    end
-
-    subgraph ADT[ADT Pattern - Explicit]
-        A1[Return UserLookupResult]
-        A2[UserFound<br/>Contains user and source]
-        A3[UserNotFound<br/>Contains user_id and reason]
-        A1 --> A2
-        A1 --> A3
-    end
-```
+> **Diagram**: See the ADT vs Optional comparison diagram in [TYPE_SAFETY_DOCTRINE.md](../core/TYPE_SAFETY_DOCTRINE.md#2-adts-over-optional-types).
 
 **Key Differences:**
 - **Optional**: Single `None` value, many possible meanings (ambiguous)
@@ -180,7 +157,7 @@ def complex_workflow(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
             user_result = yield GetUserById(user_id=user_id)
 
             match user_result:
-                case None:
+                case UserNotFound():
                     yield SendText(text="User not found")
                     return "not_found"
                 case User(name=name, email=email):
@@ -415,12 +392,9 @@ def program(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
     user_result = yield GetUserById(user_id=user_id)
 
     match user_result:
-        case None:
-            # Note: Current implementation returns None, but could be improved to:
-            # case UserNotFound(user_id=uid, reason=reason):
-            return f"User not found"
+        case UserNotFound(user_id=uid, reason=reason):
+            return f"User {uid} not found: {reason}"
         case User(name=name):
-            # case UserFound(user=User(name=name), source=source):
             return f"Hello {name}"
 ```
 
@@ -457,7 +431,7 @@ def get_profile_with_fallback(user_id: UUID) -> Generator[AllEffects, EffectResu
             user_result = yield GetUserById(user_id=user_id)
 
             match user_result:
-                case None:
+                case UserNotFound():
                     return ProfileNotFound(user_id=user_id, reason="cache_miss_no_user")
                 case User(name=name, email=email):
                     profile = ProfileData(id=str(user_id), name=name, email=email)
@@ -470,17 +444,14 @@ def get_profile_with_fallback(user_id: UUID) -> Generator[AllEffects, EffectResu
 
 ### Testing Success Cases
 
+Test programs by stepping through the generator:
+
 ```python
-@pytest.mark.asyncio
-async def test_user_found():
-    # Setup
-    fake_repo = FakeUserRepository()
+def test_user_found():
     user_id = uuid4()
-    fake_repo._users[user_id] = User(id=user_id, email="test@example.com", name="Alice")
+    user = User(id=user_id, email="test@example.com", name="Alice")
 
-    interpreter = create_test_interpreter(user_repo=fake_repo)
-
-    # Test
+    # Create generator
     def program() -> Generator[AllEffects, EffectResult, str]:
         user_result = yield GetUserById(user_id=user_id)
         match user_result:
@@ -489,22 +460,27 @@ async def test_user_found():
             case _:
                 return "not_found"
 
-    result = await run_ws_program(program(), interpreter)
+    gen = program()
 
-    # Assert
-    value = unwrap_ok(result)
-    assert value == "Alice"
+    # Step 1: GetUserById effect
+    effect = next(gen)
+    assert effect.__class__.__name__ == "GetUserById"
+    assert effect.user_id == user_id
+
+    # Send user response
+    try:
+        gen.send(user)
+    except StopIteration as e:
+        result = e.value
+
+    assert result == "Alice"
 ```
 
 ### Testing Failure Cases
 
 ```python
-@pytest.mark.asyncio
-async def test_user_not_found():
-    # Setup - empty repository
-    interpreter = create_test_interpreter()
-
-    # Test
+def test_user_not_found():
+    # Create generator
     def program() -> Generator[AllEffects, EffectResult, str]:
         user_result = yield GetUserById(user_id=uuid4())
         match user_result:
@@ -513,32 +489,40 @@ async def test_user_not_found():
             case _:
                 return "not_found"
 
-    result = await run_ws_program(program(), interpreter)
+    gen = program()
 
-    # Assert
-    value = unwrap_ok(result)
-    assert value == "not_found"
+    # Step 1: GetUserById effect
+    effect = next(gen)
+    assert effect.__class__.__name__ == "GetUserById"
+
+    # Send None (user not found)
+    try:
+        gen.send(None)
+    except StopIteration as e:
+        result = e.value
+
+    assert result == "not_found"
 ```
 
-### Testing Error Cases
+### Testing Error Cases with pytest-mock
 
 ```python
 @pytest.mark.asyncio
-async def test_database_error():
-    # Setup failing repository
-    failing_repo = FailingUserRepository(error_message="Connection timeout")
-    interpreter = create_test_interpreter(user_repo=failing_repo)
+async def test_database_error(mocker):
+    # Setup failing repository with pytest-mock
+    mock_repo = mocker.AsyncMock(spec=UserRepository)
+    mock_repo.get_by_id.side_effect = Exception("Connection timeout")
+
+    interpreter = DatabaseInterpreter(user_repo=mock_repo, message_repo=mocker.AsyncMock())
 
     # Test
-    def program() -> Generator[AllEffects, EffectResult, str]:
-        user_result = yield GetUserById(user_id=uuid4())
-        return "shouldn't reach here"
-
-    result = await run_ws_program(program(), interpreter)
+    effect = GetUserById(user_id=uuid4())
+    result = await interpreter.interpret(effect)
 
     # Assert error case
-    assert_err(result, DatabaseError)
+    assert_err(result)
     error = unwrap_err(result)
+    assert isinstance(error, DatabaseError)
     assert "Connection timeout" in error.db_error
 ```
 

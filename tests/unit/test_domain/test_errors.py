@@ -21,7 +21,7 @@ class TestUserNotFoundError:
         """UserNotFoundError should be frozen."""
         error = UserNotFoundError(user_id=uuid4())
         with pytest.raises(FrozenInstanceError):
-            error.user_id = uuid4()  # type: ignore[misc]
+            setattr(error, "user_id", uuid4())
 
 
 class TestInvalidMessageError:
@@ -37,4 +37,4 @@ class TestInvalidMessageError:
         """InvalidMessageError should be frozen."""
         error = InvalidMessageError(text="", reason="empty")
         with pytest.raises(FrozenInstanceError):
-            error.reason = "other"  # type: ignore[misc]
+            setattr(error, "reason", "other")

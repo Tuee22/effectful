@@ -1,6 +1,6 @@
 """User management effect programs for demo app.
 
-All programs are pure logic using the functional_effects library.
+All programs are pure logic using the effectful library.
 Programs yield effects and receive results directly (not wrapped in Result).
 Program returns are wrapped in Result types for explicit error handling.
 """
@@ -80,11 +80,8 @@ def list_users_program(
     users_result = yield ListUsers(limit=limit, offset=offset)
     assert isinstance(users_result, list)
 
-    # Type narrow to list[User]
-    users: list[User] = []
-    for user in users_result:
-        if isinstance(user, User):
-            users.append(user)
+    # Type narrow to list[User] - pure list comprehension
+    users = [user for user in users_result if isinstance(user, User)]
 
     return Ok(users)
 

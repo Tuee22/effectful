@@ -24,7 +24,7 @@ class TestPublishMessage:
         effect = PublishMessage(topic="test-topic", payload=b"test data")
 
         with pytest.raises(Exception):  # FrozenInstanceError or AttributeError
-            effect.topic = "new-topic"  # type: ignore
+            setattr(effect, "topic", "new-topic")
 
     def test_publish_message_with_properties(self) -> None:
         """PublishMessage should accept optional properties."""
@@ -90,7 +90,7 @@ class TestConsumeMessage:
         effect = ConsumeMessage(subscription="test-sub")
 
         with pytest.raises(Exception):  # FrozenInstanceError or AttributeError
-            effect.subscription = "new-sub"  # type: ignore
+            setattr(effect, "subscription", "new-sub")
 
     def test_consume_message_with_custom_timeout(self) -> None:
         """ConsumeMessage should accept custom timeout."""
@@ -128,7 +128,7 @@ class TestAcknowledgeMessage:
         effect = AcknowledgeMessage(message_id="msg-123")
 
         with pytest.raises(Exception):  # FrozenInstanceError or AttributeError
-            effect.message_id = "msg-456"  # type: ignore
+            setattr(effect, "message_id", "msg-456")
 
     def test_acknowledge_message_attributes(self) -> None:
         """AcknowledgeMessage should store message_id."""
@@ -165,7 +165,7 @@ class TestNegativeAcknowledge:
         effect = NegativeAcknowledge(message_id="msg-123")
 
         with pytest.raises(Exception):  # FrozenInstanceError or AttributeError
-            effect.message_id = "msg-456"  # type: ignore
+            setattr(effect, "message_id", "msg-456")
 
     def test_negative_acknowledge_with_delay(self) -> None:
         """NegativeAcknowledge should accept custom delay."""

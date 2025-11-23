@@ -14,6 +14,11 @@ Dependencies:
 Type Safety:
     All implementations follow protocol contracts strictly. Domain failures return
     ADTs (PublishSuccess/PublishFailure), not exceptions.
+
+Note on Purity:
+    Adapters are at the I/O boundary and may use mutable state for connection/message
+    caching. This is an acceptable exception to the purity doctrine. The for loops
+    and dict mutations here are necessary for managing Pulsar client lifecycle.
 """
 
 from datetime import UTC, datetime
@@ -93,7 +98,10 @@ class PulsarMessageProducer(MessageProducer):
         try:
             # Get or create producer for topic
             if topic not in self._producers:
-                self._producers[topic] = self._client.create_producer(topic)
+                self._producers[topic] = self._client.create_producer(
+                    topic,
+                    send_timeout_millis=30000,
+                )
 
             producer = self._producers[topic]
             msg_id = producer.send(payload, properties=properties or {})
@@ -106,7 +114,11 @@ class PulsarMessageProducer(MessageProducer):
             return PublishFailure(topic=topic, reason="timeout")
         except pulsar.ProducerQueueIsFull:
             return PublishFailure(topic=topic, reason="quota_exceeded")
-        except Exception:
+        except Exception as e:
+            # Check for timeout pattern in exception
+            error_msg = str(e).lower()
+            if "timeout" in error_msg:
+                return PublishFailure(topic=topic, reason="timeout")
             # Other exceptions (topic not found, permission denied, etc.)
             return PublishFailure(topic=topic, reason="topic_not_found")
 
@@ -166,9 +178,12 @@ class PulsarMessageConsumer(MessageConsumer):
         if subscription not in self._consumers:
             # Extract topic from subscription name (assumes format: topic/sub-name)
             topic = subscription.split("/")[0] if "/" in subscription else subscription
+            # Extract subscription name from format: topic/sub-name
+            sub_name = subscription.split("/")[1] if "/" in subscription else subscription
             self._consumers[subscription] = self._client.subscribe(
                 topic=topic,
-                subscription_name=subscription,
+                subscription_name=sub_name,
+                initial_position=pulsar.InitialPosition.Earliest,
             )
 
         consumer = self._consumers[subscription]

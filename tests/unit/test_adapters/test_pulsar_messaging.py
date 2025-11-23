@@ -51,7 +51,7 @@ class TestPulsarMessageProducer:
         assert "msg-123" in result.message_id
 
         # Verify calls
-        mock_client.create_producer.assert_called_once_with(topic)
+        mock_client.create_producer.assert_called_once_with(topic, send_timeout_millis=30000)
         mock_producer.send.assert_called_once_with(payload, properties=properties)
 
     @pytest.mark.asyncio
@@ -175,10 +175,11 @@ class TestPulsarMessageConsumer:
         assert result.properties == {"source": "web"}
         assert result.topic == "user-events"
 
-        # Verify subscription
+        # Verify subscription - adapter extracts sub_name from format "topic/sub-name"
         mock_client.subscribe.assert_called_once_with(
             topic="user-events",
-            subscription_name=subscription,
+            subscription_name="my-subscription",
+            initial_position=pulsar.InitialPosition.Earliest,
         )
         mock_consumer.receive.assert_called_once_with(timeout_millis=1000)
 
@@ -341,4 +342,5 @@ class TestPulsarMessageConsumer:
         mock_client.subscribe.assert_called_once_with(
             topic="simple-subscription",
             subscription_name="simple-subscription",
+            initial_position=pulsar.InitialPosition.Earliest,
         )

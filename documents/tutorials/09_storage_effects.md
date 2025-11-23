@@ -724,20 +724,50 @@ def handle_storage_result() -> Generator[AllEffects, EffectResult, str]:
 
 ## Testing Patterns
 
-### Using Fakes
+### Generator-Based Testing
 
-Fakes provide in-memory storage for tests:
+Test programs by stepping through the generator:
 
 ```python
-from effectful.testing.fakes import FakeStorageAdapter
+def test_upload_program():
+    # Create generator
+    def upload_program() -> Generator[AllEffects, EffectResult, str]:
+        yield PutObject(
+            bucket="my-bucket",
+            key="test.txt",
+            content=b"test data",
+            content_type="text/plain"
+        )
+        return "uploaded"
 
+    gen = upload_program()
+
+    # Step through effects
+    effect = next(gen)
+    assert effect.__class__.__name__ == "PutObject"
+    assert effect.bucket == "my-bucket"
+    assert effect.key == "test.txt"
+    assert effect.content == b"test data"
+
+    # Send response
+    try:
+        gen.send(None)
+    except StopIteration as e:
+        result = e.value
+
+    assert result == "uploaded"
+```
+
+### Testing with pytest-mock
+
+Use pytest-mock for interpreter-level testing:
+
+```python
 @pytest.mark.asyncio
-async def test_upload_download():
-    # Setup fake storage
-    fake_storage = FakeStorageAdapter()
-
-    # Pre-populate storage
-    fake_storage._objects["my-bucket/existing.txt"] = S3Object(
+async def test_download_object(mocker):
+    # Setup mock storage
+    mock_storage = mocker.AsyncMock(spec=StorageAdapter)
+    s3_object = S3Object(
         key="existing.txt",
         content=b"test data",
         metadata={},
@@ -745,34 +775,32 @@ async def test_upload_download():
         last_modified=datetime.now(UTC),
         size=9
     )
+    mock_storage.get_object.return_value = s3_object
 
     # Create interpreter
-    interpreter = StorageInterpreter(storage=fake_storage)
+    interpreter = StorageInterpreter(storage=mock_storage)
 
     # Run program
-    result = await run_ws_program(my_program(), interpreter)
+    result = await run_ws_program(download_program(), interpreter)
 
-    # Inspect state
-    assert "my-bucket/new.txt" in fake_storage._objects
-    assert fake_storage._objects["my-bucket/new.txt"].content == b"new data"
+    # Verify
+    value = unwrap_ok(result)
+    assert value == "success"
+    mock_storage.get_object.assert_called_once()
 ```
 
-### Using Failing Variants
+### Testing Error Paths
 
-Test error paths with failing implementations:
+Test error handling with side_effect:
 
 ```python
-from effectful.testing.failing import FailingStorageAdapter
-
 @pytest.mark.asyncio
-async def test_upload_quota_exceeded():
+async def test_upload_quota_exceeded(mocker):
     # Setup failing storage
-    failing_storage = FailingStorageAdapter(
-        fail_on_put=True,
-        error_message="Storage quota exceeded"
-    )
+    mock_storage = mocker.AsyncMock(spec=StorageAdapter)
+    mock_storage.put_object.side_effect = Exception("Storage quota exceeded")
 
-    interpreter = StorageInterpreter(storage=failing_storage)
+    interpreter = StorageInterpreter(storage=mock_storage)
 
     # Run program
     result = await run_ws_program(upload_program(), interpreter)

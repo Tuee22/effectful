@@ -6,7 +6,7 @@ layers into a single cohesive business workflow.
 
 from collections.abc import Generator
 from datetime import datetime
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from effectful.algebraic.result import Err, Ok, Result
 from effectful.effects.auth import ValidateToken
@@ -14,6 +14,7 @@ from effectful.effects.cache import GetCachedValue, PutCachedValue
 from effectful.effects.database import GetUserById
 from effectful.effects.messaging import PublishMessage
 from effectful.effects.storage import PutObject
+from effectful.effects.system import GenerateUUID, GetCurrentTime
 from effectful.effects.websocket import SendText
 from effectful.domain.s3_object import PutSuccess
 from effectful.domain.token_result import TokenValid
@@ -102,9 +103,12 @@ def send_authenticated_message_with_storage_program(
             AppError.validation_error("Message text cannot exceed 10000 characters")
         )
 
-    # Create message
-    message_id = uuid4()
-    created_at = datetime.now()
+    # Create message with pure effects
+    message_id = yield GenerateUUID()
+    assert isinstance(message_id, UUID)
+
+    created_at = yield GetCurrentTime()
+    assert isinstance(created_at, datetime)
 
     # Step 6: [Storage] Archive message to S3 for compliance/audit
     # Object key: messages/{year}/{month}/{day}/{message_id}.txt
