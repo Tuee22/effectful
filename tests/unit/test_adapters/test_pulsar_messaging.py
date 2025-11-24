@@ -14,7 +14,12 @@ from effectful.adapters.pulsar_messaging import (
     PulsarMessageProducer,
 )
 from effectful.domain.message_envelope import (
+    AcknowledgeFailure,
+    AcknowledgeSuccess,
+    ConsumeTimeout,
     MessageEnvelope,
+    NackFailure,
+    NackSuccess,
     PublishFailure,
     PublishSuccess,
 )
@@ -184,8 +189,8 @@ class TestPulsarMessageConsumer:
         mock_consumer.receive.assert_called_once_with(timeout_millis=1000)
 
     @pytest.mark.asyncio
-    async def test_receive_returns_none_on_timeout(self, mocker: MockerFixture) -> None:
-        """Test receive timeout returns None."""
+    async def test_receive_returns_consume_timeout_on_timeout(self, mocker: MockerFixture) -> None:
+        """Test receive timeout returns ConsumeTimeout ADT."""
         # Setup
         mock_consumer = mocker.MagicMock()
         mock_consumer.receive.side_effect = pulsar.Timeout("Timeout")
@@ -199,7 +204,9 @@ class TestPulsarMessageConsumer:
         result = await consumer.receive("topic/sub", timeout_ms=100)
 
         # Assert
-        assert result is None
+        assert isinstance(result, ConsumeTimeout)
+        assert result.subscription == "topic/sub"
+        assert result.timeout_ms == 100
 
     @pytest.mark.asyncio
     async def test_receive_reuses_consumer_for_same_subscription(
@@ -256,21 +263,29 @@ class TestPulsarMessageConsumer:
         assert isinstance(envelope, MessageEnvelope)
 
         # Execute
-        await consumer.acknowledge(envelope.message_id)
+        result = await consumer.acknowledge(envelope.message_id)
 
         # Assert
         mock_consumer.acknowledge.assert_called_once_with(mock_msg)
+        assert isinstance(result, AcknowledgeSuccess)
+        assert result.message_id == envelope.message_id
 
     @pytest.mark.asyncio
-    async def test_acknowledge_raises_for_unknown_message(self, mocker: MockerFixture) -> None:
-        """Test acknowledge raises KeyError for unknown message_id."""
+    async def test_acknowledge_returns_failure_for_unknown_message(
+        self, mocker: MockerFixture
+    ) -> None:
+        """Test acknowledge returns AcknowledgeFailure for unknown message_id."""
         # Setup
         mock_client = mocker.MagicMock()
         consumer = PulsarMessageConsumer(mock_client)
 
-        # Execute & Assert
-        with pytest.raises(KeyError, match="not found in consumer cache"):
-            await consumer.acknowledge("unknown-msg-id")
+        # Execute
+        result = await consumer.acknowledge("unknown-msg-id")
+
+        # Assert
+        assert isinstance(result, AcknowledgeFailure)
+        assert result.message_id == "unknown-msg-id"
+        assert result.reason == "message_not_found"
 
     @pytest.mark.asyncio
     async def test_negative_acknowledge_calls_consumer_nack(self, mocker: MockerFixture) -> None:
@@ -298,23 +313,29 @@ class TestPulsarMessageConsumer:
         assert isinstance(envelope, MessageEnvelope)
 
         # Execute
-        await consumer.negative_acknowledge(envelope.message_id, delay_ms=1000)
+        result = await consumer.negative_acknowledge(envelope.message_id, delay_ms=1000)
 
         # Assert
         mock_consumer.negative_acknowledge.assert_called_once_with(mock_msg)
+        assert isinstance(result, NackSuccess)
+        assert result.message_id == envelope.message_id
 
     @pytest.mark.asyncio
-    async def test_negative_acknowledge_raises_for_unknown_message(
+    async def test_negative_acknowledge_returns_failure_for_unknown_message(
         self, mocker: MockerFixture
     ) -> None:
-        """Test negative_acknowledge raises KeyError for unknown message_id."""
+        """Test negative_acknowledge returns NackFailure for unknown message_id."""
         # Setup
         mock_client = mocker.MagicMock()
         consumer = PulsarMessageConsumer(mock_client)
 
-        # Execute & Assert
-        with pytest.raises(KeyError, match="not found in consumer cache"):
-            await consumer.negative_acknowledge("unknown-msg-id")
+        # Execute
+        result = await consumer.negative_acknowledge("unknown-msg-id")
+
+        # Assert
+        assert isinstance(result, NackFailure)
+        assert result.message_id == "unknown-msg-id"
+        assert result.reason == "message_not_found"
 
     @pytest.mark.asyncio
     async def test_receive_handles_simple_subscription_name(self, mocker: MockerFixture) -> None:

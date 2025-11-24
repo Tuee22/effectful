@@ -2,12 +2,14 @@
 
 This document categorizes all test files by testing layer and identifies which tests follow the correct patterns vs which need refactoring.
 
-**Audit Date**: 2025-11-19
+**Audit Date**: 2025-11-24
 **Total Test Files**: 27
 
+**Testing Philosophy**: Minimal API with pytest-mock only. The `effectful.testing` module exports 6 Result type matchers as optional utilities. All infrastructure mocking uses `pytest-mock` directly.
+
 **References**:
-- Testing Doctrine: `documents/core/TESTING_DOCTRINE.md`
-- Testing Patterns: `documents/testing/TESTING_PATTERNS.md`
+- Testing Doctrine (SSoT): `documents/core/testing_doctrine.md`
+- Tutorial: `documents/tutorials/04_testing_guide.md`
 
 ## Layer 1: Effect Tests (Unit)
 
@@ -140,7 +142,7 @@ This document categorizes all test files by testing layer and identifies which t
 - **Coverage**: 100% required for library code (adapters excluded)
   - Tested modules: 98-100% coverage (interpreters, runners, effects, domain)
   - Adapters: Excluded from coverage (postgres, pulsar, redis, s3)
-  - Per TESTING_DOCTRINE.md: Unit tests achieve 100% coverage, integration tests achieve conceptual feature coverage
+  - Per testing_doctrine.md: Unit tests achieve 100% coverage, integration tests achieve conceptual feature coverage
 
 ### Coverage Breakdown
 - **Interpreters**: 96-99% coverage (cache, database, messaging, storage, websocket)

@@ -3,8 +3,8 @@
 This tutorial guides you through migrating from imperative WebSocket code to effectful programs.
 
 > **Core Doctrine**: For architecture patterns and type safety requirements, see:
-> - [ARCHITECTURE.md](../core/ARCHITECTURE.md) - 5-layer architecture
-> - [TYPE_SAFETY_DOCTRINE.md](../core/TYPE_SAFETY_DOCTRINE.md) - Result types and ADTs
+> - [architecture.md](../core/architecture.md) - 5-layer architecture
+> - [type_safety_doctrine.md](../core/type_safety_doctrine.md) - Result types and ADTs
 
 ## Prerequisites
 
@@ -825,7 +825,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
 - Review [API Reference](../api/) for complete effectful API
 - Study [examples/](../../examples/) for real-world migration examples
-- Read [ARCHITECTURE.md](../../ARCHITECTURE.md) for design principles
+- Read [architecture.md](../../architecture.md) for design principles
 
 ## Summary
 

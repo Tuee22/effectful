@@ -18,40 +18,9 @@ Type Safety:
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Protocol
 
-try:
-    import boto3
-    from botocore.exceptions import ClientError
-except ImportError:
-    raise ImportError("S3 support requires boto3 library. " "Install with: pip install boto3")
-
-if TYPE_CHECKING:
-    from mypy_boto3_s3.client import S3Client
-else:
-    # Runtime type for boto3 client
-    class S3Client(Protocol):
-        """Protocol for S3 client operations."""
-
-        def get_object(self, Bucket: str, Key: str) -> dict[str, object]:
-            ...
-
-        def put_object(
-            self,
-            Bucket: str,
-            Key: str,
-            Body: bytes,
-            ContentType: str = ...,
-            Metadata: dict[str, str] = ...,
-        ) -> dict[str, object]:
-            ...
-
-        def delete_object(self, Bucket: str, Key: str) -> dict[str, object]:
-            ...
-
-        def list_objects_v2(self, Bucket: str, Prefix: str = ...) -> dict[str, object]:
-            ...
-
+import boto3
+from botocore.exceptions import ClientError
 
 from effectful.domain.s3_object import (
     PutFailure,
@@ -94,7 +63,7 @@ class S3ObjectStorage(ObjectStorage):
         ...         print(f"Stored {key} version {vid}")
     """
 
-    def __init__(self, s3_client: S3Client) -> None:
+    def __init__(self, s3_client: boto3.S3Client) -> None:
         """Initialize storage with boto3 S3 client.
 
         Args:

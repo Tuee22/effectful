@@ -19,8 +19,10 @@ from pytest_mock import MockerFixture
 
 from effectful.algebraic.result import Err, Ok
 from effectful.domain.message_envelope import (
+    AcknowledgeSuccess,
     ConsumeTimeout,
     MessageEnvelope,
+    NackSuccess,
     PublishFailure,
     PublishSuccess,
 )
@@ -61,6 +63,7 @@ class TestMessagingWorkflowIntegration:
             topic="test-topic",
         )
         mock_consumer.receive.return_value = envelope
+        mock_consumer.acknowledge.return_value = AcknowledgeSuccess(message_id="msg-123")
 
         interpreter = MessagingInterpreter(producer=mock_producer, consumer=mock_consumer)
 
@@ -222,8 +225,10 @@ class TestMessagingWorkflowIntegration:
         mock_producer = mocker.AsyncMock(spec=MessageProducer)
         mock_consumer = mocker.AsyncMock(spec=MessageConsumer)
 
-        # Configure consume to timeout (return None)
-        mock_consumer.receive.return_value = None
+        # Configure consume to timeout (return ConsumeTimeout ADT)
+        mock_consumer.receive.return_value = ConsumeTimeout(
+            subscription="test-sub", timeout_ms=1000
+        )
 
         interpreter = MessagingInterpreter(producer=mock_producer, consumer=mock_consumer)
 
@@ -271,6 +276,7 @@ class TestMessagingWorkflowIntegration:
             topic="test-topic",
         )
         mock_consumer.receive.return_value = envelope
+        mock_consumer.negative_acknowledge.return_value = NackSuccess(message_id="msg-456")
 
         interpreter = MessagingInterpreter(producer=mock_producer, consumer=mock_consumer)
 

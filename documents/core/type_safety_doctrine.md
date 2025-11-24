@@ -418,7 +418,7 @@ extra_checks = true
 - **Result Type:** `effectful/algebraic/result.py`
 - **ADT Examples:** `effectful/domain/user.py`, `effectful/domain/profile.py`
 - **Type Aliases:** `effectful/programs/program_types.py`
-- **Architecture:** `documents/core/ARCHITECTURE.md`
+- **Architecture:** `documents/core/architecture.md`
 
 ---
 

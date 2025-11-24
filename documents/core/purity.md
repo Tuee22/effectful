@@ -87,7 +87,7 @@ result = trampoline(step(1024, ()))
 
 **Exception**: The single `while True` in the trampoline driver is acceptable as the controlled iteration point.
 
-See `documents/core/PURITY_PATTERNS.md` for comprehensive trampoline and pure pattern examples.
+See `documents/core/purity_patterns.md` for comprehensive trampoline and pure pattern examples.
 
 ### Doctrine 2: Effects as Data
 
@@ -666,10 +666,10 @@ def handle_status(status: Status) -> str:
 
 ## Related Documentation
 
-- **Purity Patterns**: `documents/core/PURITY_PATTERNS.md` - Trampoline and pure implementation patterns
-- **Type Safety Doctrine**: `documents/core/TYPE_SAFETY_DOCTRINE.md`
-- **Testing Doctrine**: `documents/core/TESTING_DOCTRINE.md`
-- **Architecture**: `documents/core/ARCHITECTURE.md`
+- **Purity Patterns**: `documents/core/purity_patterns.md` - Trampoline and pure implementation patterns
+- **Type Safety Doctrine**: `documents/core/type_safety_doctrine.md`
+- **Testing Doctrine**: `documents/core/testing_doctrine.md`
+- **Architecture**: `documents/core/architecture.md`
 - **Trampoline Module**: `effectful/algebraic/trampoline.py`
 - **Result Type**: `effectful/algebraic/result.py`
 - **Effect Definitions**: `effectful/effects/`

@@ -2,7 +2,7 @@
 
 This document provides a comprehensive reference for the `Result[T, E]` type and related utilities.
 
-> **Core Doctrine**: For the Result type patterns and error handling diagrams, see [TYPE_SAFETY_DOCTRINE.md](../core/TYPE_SAFETY_DOCTRINE.md#3-result-type-for-error-handling).
+> **Core Doctrine**: For the Result type patterns and error handling diagrams, see [type_safety_doctrine.md](../core/type_safety_doctrine.md#3-result-type-for-error-handling).
 
 ## Overview
 

@@ -199,7 +199,7 @@ docker compose -f docker/docker-compose.yml ps
 ## References
 
 - **Command Reference**: See `CLAUDE.md` for complete command table
-- **Testing**: See `documents/core/TESTING_DOCTRINE.md` for test organization
+- **Testing**: See `documents/core/testing_doctrine.md` for test organization
 - **Contributing**: See `CONTRIBUTING.md` for contribution workflow
 
 ---

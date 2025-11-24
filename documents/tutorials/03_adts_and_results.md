@@ -2,7 +2,7 @@
 
 This tutorial teaches you how to use **Algebraic Data Types (ADTs)** and the **Result type** to write type-safe, self-documenting code.
 
-> **Core Doctrine**: For the complete type safety patterns and diagrams, see [TYPE_SAFETY_DOCTRINE.md](../core/TYPE_SAFETY_DOCTRINE.md).
+> **Core Doctrine**: For the complete type safety patterns and diagrams, see [type_safety_doctrine.md](../core/type_safety_doctrine.md).
 
 ## Why ADTs?
 
@@ -51,7 +51,7 @@ async def get_user(user_id: UUID) -> UserLookupResult:
 
 ### Visual Comparison: Optional vs ADT
 
-> **Diagram**: See the ADT vs Optional comparison diagram in [TYPE_SAFETY_DOCTRINE.md](../core/TYPE_SAFETY_DOCTRINE.md#2-adts-over-optional-types).
+> **Diagram**: See the ADT vs Optional comparison diagram in [type_safety_doctrine.md](../core/type_safety_doctrine.md#2-adts-over-optional-types).
 
 **Key Differences:**
 - **Optional**: Single `None` value, many possible meanings (ambiguous)

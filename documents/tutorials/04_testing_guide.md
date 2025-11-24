@@ -3,8 +3,8 @@
 This tutorial teaches you how to test effect programs using **generator-based mocking** with pytest-mock. This approach tests pure programs without requiring interpreters or real infrastructure.
 
 > **Core Doctrines**:
-> - [Testing Doctrine](../core/TESTING_DOCTRINE.md) - Coverage requirements and test patterns
-> - [Docker Doctrine](../core/DOCKER_DOCTRINE.md) - All commands run inside Docker
+> - [Testing Doctrine](../core/testing_doctrine.md) - Coverage requirements and test patterns
+> - [Docker Doctrine](../core/docker_doctrine.md) - All commands run inside Docker
 
 ## Prerequisites
 
@@ -38,6 +38,28 @@ By the end of this tutorial, you will:
 - Test program composition with yield from
 - Understand test organization strategies
 
+## Tutorial Learning Path
+
+```mermaid
+flowchart TB
+  Start[Start Tutorial]
+
+  Start --> Setup[Setup - pytest-mock only]
+  Setup --> Simple[Simple Effect Test - Layer 1]
+  Simple --> Interpreter[Interpreter Test - Layer 2]
+  Interpreter --> MultiStep[Multi-Step Program - Layer 3]
+  MultiStep --> Complex[Complex Workflow - Layer 4]
+  Complex --> Errors[Error Handling Patterns]
+  Errors --> Organization[Test Organization]
+  Organization --> Coverage[Coverage Guidelines]
+  Coverage --> End[Complete - Ready to Test]
+
+  Simple -.-> SimpleNote[Instantiate effects - No mocks]
+  Interpreter -.-> InterpNote[pytest-mock infrastructure]
+  MultiStep -.-> MultiNote[Manual next and send]
+  Complex -.-> ComplexNote[run_ws_program with mocks]
+```
+
 ## Setup
 
 ### For Contributors
@@ -52,6 +74,8 @@ If you're using effectful in your own project and want these test utilities:
 # Install test dependencies in YOUR project (not in effectful)
 poetry add --group dev pytest pytest-asyncio pytest-mock pytest-cov
 ```
+
+**Note on Minimal API**: The `effectful.testing` module exports only 6 Result type matchers (`assert_ok`, `unwrap_ok`, etc.) as optional convenience utilities. All infrastructure mocking uses `pytest-mock` directly. This tutorial teaches you pytest-mock patterns that work with any testing framework.
 
 ### Project Structure
 
@@ -705,7 +729,7 @@ tests/
 - Explore the demo application in `/demo` for complete working examples
 - Read [demo/README.md](../../demo/README.md) for comprehensive documentation
 - Study real tests in `tests/test_demo/` (35 tests with 100% pass rate)
-- Review [ARCHITECTURE.md](../../ARCHITECTURE.md) for system design
+- Review [architecture.md](../../architecture.md) for system design
 
 ## Summary
 

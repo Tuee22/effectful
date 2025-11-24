@@ -212,5 +212,5 @@ def process(user_id):  # Missing type hints
 
 - [Tutorials](../tutorials/) - Step-by-step guides for learning effectful
 - [Examples](../../examples/) - Real-world example programs
-- [ARCHITECTURE.md](../../ARCHITECTURE.md) - Design principles and architecture overview
+- [architecture.md](../../architecture.md) - Design principles and architecture overview
 - [CONTRIBUTING.md](../../CONTRIBUTING.md) - Contributing guidelines

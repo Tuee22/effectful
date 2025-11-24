@@ -3,10 +3,10 @@
 Welcome to **effectful**! This guide will get you writing effect programs in 10 minutes.
 
 > **Core Doctrines**: For comprehensive patterns, see:
-> - [Architecture](../core/ARCHITECTURE.md) - 5-layer architecture and design decisions
-> - [Type Safety Doctrine](../core/TYPE_SAFETY_DOCTRINE.md) - Eight type safety rules
-> - [Testing Doctrine](../core/TESTING_DOCTRINE.md) - Coverage requirements and test patterns
-> - [Docker Doctrine](../core/DOCKER_DOCTRINE.md) - All development happens in Docker
+> - [Architecture](../core/architecture.md) - 5-layer architecture and design decisions
+> - [Type Safety Doctrine](../core/type_safety_doctrine.md) - Eight type safety rules
+> - [Testing Doctrine](../core/testing_doctrine.md) - Coverage requirements and test patterns
+> - [Docker Doctrine](../core/docker_doctrine.md) - All development happens in Docker
 
 ## For Library Users
 
@@ -21,7 +21,7 @@ poetry add effectful
 ## For Contributors
 
 > **Important**: All development happens inside Docker containers. Do NOT install locally.
-> See [CONTRIBUTING.md](../../CONTRIBUTING.md) and [Docker Doctrine](../core/DOCKER_DOCTRINE.md) for setup instructions.
+> See [CONTRIBUTING.md](../../CONTRIBUTING.md) and [Docker Doctrine](../core/docker_doctrine.md) for setup instructions.
 
 ```bash
 # Start development environment

@@ -19,7 +19,12 @@ Type Safety:
 
 from typing import Protocol
 
-from effectful.domain.message_envelope import MessageEnvelope, PublishResult
+from effectful.domain.message_envelope import (
+    AcknowledgeResult,
+    ConsumeResult,
+    NackResult,
+    PublishResult,
+)
 
 
 class MessageProducer(Protocol):
@@ -102,7 +107,7 @@ class MessageConsumer(Protocol):
         ...             return None
     """
 
-    async def receive(self, subscription: str, timeout_ms: int) -> MessageEnvelope | None:
+    async def receive(self, subscription: str, timeout_ms: int) -> ConsumeResult:
         """Receive message from subscription.
 
         Args:
@@ -111,28 +116,32 @@ class MessageConsumer(Protocol):
 
         Returns:
             MessageEnvelope if message received before timeout.
-            None if timeout occurred (no messages available).
+            ConsumeTimeout if timeout occurred (no messages available).
+            ConsumeFailure if connection or subscription error occurred.
 
         Note:
             Timeout is NOT an error - it's a normal outcome when queue is empty.
+            All outcomes are explicit ADTs for exhaustive pattern matching.
         """
         ...
 
-    async def acknowledge(self, message_id: str) -> None:
+    async def acknowledge(self, message_id: str) -> AcknowledgeResult:
         """Acknowledge message processing.
 
         Args:
             message_id: Pulsar message ID to acknowledge
 
         Returns:
-            None
+            AcknowledgeSuccess if acknowledged successfully.
+            AcknowledgeFailure if acknowledgment failed.
 
         Note:
             Acknowledged messages will not be redelivered.
+            Failures are explicit ADTs for exhaustive pattern matching.
         """
         ...
 
-    async def negative_acknowledge(self, message_id: str, delay_ms: int = 0) -> None:
+    async def negative_acknowledge(self, message_id: str, delay_ms: int = 0) -> NackResult:
         """Negative acknowledge message for redelivery.
 
         Args:
@@ -140,9 +149,11 @@ class MessageConsumer(Protocol):
             delay_ms: Redelivery delay in milliseconds (0 = immediate)
 
         Returns:
-            None
+            NackSuccess if nacked successfully.
+            NackFailure if nack failed.
 
         Note:
             Nacked messages will be redelivered after the specified delay.
+            Failures are explicit ADTs for exhaustive pattern matching.
         """
         ...

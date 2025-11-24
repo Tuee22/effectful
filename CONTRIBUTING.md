@@ -65,9 +65,9 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run test-all
 
 Before contributing, familiarize yourself with the project's core doctrines:
 
-- **Testing Doctrine**: `documents/core/TESTING_DOCTRINE.md` - Coverage requirements, test anti-patterns
-- **Type Safety Doctrine**: `documents/core/TYPE_SAFETY_DOCTRINE.md` - Eight type safety rules
-- **Architecture**: `documents/core/ARCHITECTURE.md` - 5-layer architecture, design decisions
+- **Testing Doctrine**: `documents/core/testing_doctrine.md` - Coverage requirements, test anti-patterns
+- **Type Safety Doctrine**: `documents/core/type_safety_doctrine.md` - Eight type safety rules
+- **Architecture**: `documents/core/architecture.md` - 5-layer architecture, design decisions
 
 ## Code Standards
 
@@ -75,7 +75,7 @@ Before contributing, familiarize yourself with the project's core doctrines:
 
 **CRITICAL**: This project maintains `mypy --strict` with zero errors. All code must pass strict type checking.
 
-For complete type safety patterns and examples, see `documents/core/TYPE_SAFETY_DOCTRINE.md`.
+For complete type safety patterns and examples, see `documents/core/type_safety_doctrine.md`.
 
 **Key Points:**
 - Type checking is mandatory before tests can run
@@ -210,7 +210,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run ruff check
 
 ## Testing Requirements
 
-For complete testing doctrine including 21 anti-patterns, see `documents/core/TESTING_DOCTRINE.md`.
+For complete testing doctrine including 21 anti-patterns, see `documents/core/testing_doctrine.md`.
 
 ### Coverage Doctrine
 
@@ -509,9 +509,13 @@ Brief description of changes.
 6. **Write tests**:
    ```python
    # tests/test_effects/test_new_category.py
+   from pytest_mock import MockerFixture
+
    @pytest.mark.asyncio
-   async def test_new_effect():
-       interpreter = create_test_interpreter()
+   async def test_new_effect(mocker: MockerFixture):
+       # Create interpreter with pytest-mock
+       mock_infra = mocker.AsyncMock(spec=YourProtocol)
+       interpreter = YourInterpreter(infrastructure=mock_infra)
        # Test program using NewEffect
        ...
    ```

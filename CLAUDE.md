@@ -171,7 +171,7 @@ python examples/01_hello_world.py
 docker compose -f docker/docker-compose.yml exec effectful poetry run <command>
 ```
 
-See `documents/core/DOCKER_DOCTRINE.md` for complete policy.
+See `documents/core/docker_doctrine.md` for complete policy.
 
 ## 🧪 Testing Philosophy
 
@@ -261,7 +261,7 @@ Must meet Universal Success Criteria (exit code 0, Black formatting applied, zer
 
 ## 🛡️ Type Safety Doctrines
 
-For complete type safety policy, patterns, and examples, see **`documents/core/TYPE_SAFETY_DOCTRINE.md`**.
+For complete type safety policy, patterns, and examples, see **`documents/core/type_safety_doctrine.md`**.
 
 **Core Principle**: Make invalid states unrepresentable through the type system.
 
@@ -279,7 +279,7 @@ For complete type safety policy, patterns, and examples, see **`documents/core/T
 
 ## 🧹 Purity Enforcement
 
-For complete purity doctrine and patterns, see **`documents/core/PURITY.md`** and **`documents/core/PURITY_PATTERNS.md`**.
+For complete purity doctrine and patterns, see **`documents/core/purity.md`** and **`documents/core/purity_patterns.md`**.
 
 **Core Principle**: Expressions over statements. Comprehensions over loops. Trampolines over recursion.
 
@@ -308,7 +308,7 @@ For complete purity doctrine and patterns, see **`documents/core/PURITY.md`** an
 
 ## 🚫 Test Anti-Patterns
 
-For complete list of 21 test anti-patterns with examples, see **`documents/core/TESTING_DOCTRINE.md`**.
+For complete list of 22 test anti-patterns with examples, see **`documents/core/testing_doctrine.md`**.
 
 **Key Anti-Patterns to Avoid:**
 - Tests that pass when features are broken
@@ -342,13 +342,13 @@ For complete list of 21 test anti-patterns with examples, see **`documents/core/
 - ❌ Directly calling infrastructure in programs: `await db.query(...)`
 - ✅ Yield effects: `user = yield GetUserById(user_id=user_id)`
 
-**Reference**: See `documents/core/PURITY.md` for complete purity doctrine and functional programming rules.
+**Reference**: See `documents/core/purity.md` for complete purity doctrine and functional programming rules.
 
 Impact: Breaks separation of concerns, makes testing difficult, couples business logic to infrastructure.
 
 ## Effect Program Patterns
 
-For complete purity rules and functional programming patterns, see **`documents/core/PURITY.md`**.
+For complete purity rules and functional programming patterns, see **`documents/core/purity.md`**.
 
 ### 1. Generator-Based DSL
 
@@ -533,7 +533,7 @@ All items must meet Universal Success Criteria (see above).
 - [ ] Code quality: `poetry run check-code` exits 0
 - [ ] Tests for all features (unit + integration)
 - [ ] No forbidden constructs (Any/cast/type:ignore)
-- [ ] No anti-patterns (1-21)
+- [ ] No anti-patterns (1-22)
 - [ ] All dataclasses frozen (`frozen=True`)
 - [ ] ADTs used instead of Optional for domain logic
 - [ ] Result type used for all fallible operations
@@ -547,11 +547,11 @@ All items must meet Universal Success Criteria (see above).
 ## 📚 References
 
 ### Core Doctrines (SSoT)
-- **Purity Doctrine**: `documents/core/PURITY.md`
-- **Purity Patterns**: `documents/core/PURITY_PATTERNS.md`
-- **Testing Doctrine**: `documents/core/TESTING_DOCTRINE.md`
-- **Type Safety Doctrine**: `documents/core/TYPE_SAFETY_DOCTRINE.md`
-- **Architecture**: `documents/core/ARCHITECTURE.md`
+- **Purity Doctrine**: `documents/core/purity.md`
+- **Purity Patterns**: `documents/core/purity_patterns.md`
+- **Testing Doctrine**: `documents/core/testing_doctrine.md`
+- **Type Safety Doctrine**: `documents/core/type_safety_doctrine.md`
+- **Architecture**: `documents/core/architecture.md`
 
 ### Code References
 - **Trampoline Module**: `effectful/algebraic/trampoline.py`
@@ -560,9 +560,10 @@ All items must meet Universal Success Criteria (see above).
 - **Type Aliases**: `effectful/programs/program_types.py`
 
 ### Testing
-- **Testing Utilities**: `effectful/testing/__init__.py`
-- **Testing Patterns**: `documents/testing/TESTING_PATTERNS.md`
-- **Test Suite Audit**: `documents/testing/TEST_SUITE_AUDIT.md`
+- **Testing Utilities**: `effectful/testing/__init__.py` (6 Result matchers)
+- **Testing Doctrine**: `documents/core/testing_doctrine.md` (SSoT for all testing)
+- **Testing Tutorial**: `documents/tutorials/04_testing_guide.md`
+- **Test Suite Audit**: `documents/testing/test_suite_audit.md`
 
 ### Other
 - **Effect Programs**: `tests/test_integration/test_chat_workflow.py`

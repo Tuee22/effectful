@@ -12,7 +12,14 @@ from uuid import UUID
 
 from effectful.domain.cache_result import CacheMiss
 from effectful.domain.message import ChatMessage
-from effectful.domain.message_envelope import ConsumeTimeout, MessageEnvelope, PublishResult
+from effectful.domain.message_envelope import (
+    AcknowledgeResult,
+    ConsumeFailure,
+    ConsumeTimeout,
+    MessageEnvelope,
+    NackResult,
+    PublishResult,
+)
 from effectful.domain.profile import ProfileData
 from effectful.domain.s3_object import PutSuccess, S3Object
 from effectful.domain.token_result import TokenValidationResult
@@ -40,7 +47,7 @@ type AllEffects = (
 # This replaces 'Any' for strict type safety
 # ADT types are used instead of None for explicit domain semantics
 type EffectResult = (
-    None  # Most effects return None (SendText, Close, PutCachedProfile, AcknowledgeMessage, NegativeAcknowledge, DeleteObject, RevokeToken)
+    None  # Most effects return None (SendText, Close, PutCachedProfile, DeleteObject, RevokeToken)
     | str  # ReceiveText, PublishMessage, GenerateToken, RefreshToken, HashPassword return str
     | bool  # ValidatePassword, InvalidateCache, PutCachedValue return bool
     | bytes  # GetCachedValue returns bytes on cache hit
@@ -57,7 +64,10 @@ type EffectResult = (
     # Messaging ADTs
     | MessageEnvelope  # ConsumeMessage returns MessageEnvelope on success
     | ConsumeTimeout  # ConsumeMessage returns ConsumeTimeout on timeout
+    | ConsumeFailure  # ConsumeMessage returns ConsumeFailure on connection/subscription errors
     | PublishResult  # PublishMessage returns PublishResult ADT (PublishSuccess | PublishFailure)
+    | AcknowledgeResult  # AcknowledgeMessage returns AcknowledgeResult ADT (AcknowledgeSuccess | AcknowledgeFailure)
+    | NackResult  # NegativeAcknowledge returns NackResult ADT (NackSuccess | NackFailure)
     # Storage types
     | S3Object  # GetObject returns S3Object on success (None for not found)
     | PutSuccess  # PutObject returns PutSuccess on success

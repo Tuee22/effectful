@@ -2,7 +2,7 @@
 
 This tutorial teaches you how to build complex workflows by composing smaller, reusable program components.
 
-> **Core Doctrine**: For the complete program composition patterns and diagrams, see [ARCHITECTURE.md](../core/ARCHITECTURE.md#program-composition).
+> **Core Doctrine**: For the complete program composition patterns and diagrams, see [architecture.md](../core/architecture.md#program-composition).
 
 ## Prerequisites
 

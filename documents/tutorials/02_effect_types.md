@@ -2,7 +2,7 @@
 
 This tutorial covers all available effect types in **effectful** and how to use them.
 
-> **Core Doctrine**: For the complete architecture including effect hierarchy diagrams, see [ARCHITECTURE.md](../core/ARCHITECTURE.md).
+> **Core Doctrine**: For the complete architecture including effect hierarchy diagrams, see [architecture.md](../core/architecture.md).
 
 ## Effect Categories
 
@@ -17,7 +17,7 @@ effectful provides six categories of effects:
 
 ### Effect Type Hierarchy
 
-> **Diagram**: See the complete Effect Type Hierarchy diagram in [ARCHITECTURE.md](../core/ARCHITECTURE.md#effect-type-hierarchy).
+> **Diagram**: See the complete Effect Type Hierarchy diagram in [architecture.md](../core/architecture.md#effect-type-hierarchy).
 
 **Key Points:**
 - All effects are frozen dataclasses (immutable)
@@ -747,13 +747,17 @@ match result:
 Use failing fakes to test error handling:
 
 ```python
-from effectful.testing import FailingUserRepository
+from pytest_mock import MockerFixture
 
 @pytest.mark.asyncio
-async def test_database_failure():
-    # Setup failing infrastructure
-    failing_repo = FailingUserRepository(error_message="Connection timeout")
-    interpreter = create_test_interpreter(user_repo=failing_repo)
+async def test_database_failure(mocker: MockerFixture):
+    # Setup failing infrastructure with pytest-mock
+    mock_repo = mocker.AsyncMock(spec=UserRepository)
+    mock_repo.get_by_id.side_effect = Exception("Connection timeout")
+
+    # Create interpreter with mocked infrastructure
+    db_interp = DatabaseInterpreter(user_repo=mock_repo)
+    interpreter = CompositeInterpreter(interpreters=[db_interp])
 
     # Run program
     result = await run_ws_program(my_program(), interpreter)

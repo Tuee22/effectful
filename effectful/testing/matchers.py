@@ -23,10 +23,8 @@ from typing import TypeVar
 
 import pytest
 
-from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok, Result
 from effectful.interpreters.errors import InterpreterError
-from effectful.programs.program_types import EffectResult
 
 T = TypeVar("T")
 E = TypeVar("E")
@@ -168,73 +166,3 @@ def assert_err_message(result: Result[T, InterpreterError], expected_msg: str) -
             ), f"Expected error message containing '{expected_msg}', got: {error_str}"
         case Ok(value):  # pragma: no cover
             pytest.fail(f"Expected Err('{expected_msg}'), got Ok({value})")
-
-
-def assert_effect_ok(
-    result: Result[EffectReturn[EffectResult], InterpreterError],
-    expected_value: EffectResult,
-    effect_name: str,
-) -> None:
-    """Assert that result is Ok with EffectReturn containing expected value and effect name.
-
-    This is a convenience function for testing interpreter results that return
-    EffectReturn wrapped in Result.
-
-    Args:
-        result: The interpreter result to check
-        expected_value: The expected value inside EffectReturn
-        effect_name: The expected effect_name inside EffectReturn
-
-    Raises:
-        AssertionError: If result is Err or EffectReturn doesn't match
-
-    Example:
-        >>> result = await interpreter.interpret(GetUserById(user_id=user_id))
-        >>> assert_effect_ok(result, user, "GetUserById")
-    """
-    match result:
-        case Ok(EffectReturn(value=value, effect_name=name)):
-            assert name == effect_name, f"Expected effect_name '{effect_name}', got '{name}'"
-            assert value == expected_value, f"Expected value {expected_value!r}, got {value!r}"
-        case Err(error):  # pragma: no cover
-            pytest.fail(f"Expected Ok(EffectReturn({expected_value!r})), got Err({error})")
-        case _:  # pragma: no cover
-            pytest.fail(f"Expected Ok(EffectReturn), got {result}")
-
-
-def assert_effect_err(
-    result: Result[EffectReturn[EffectResult], InterpreterError],
-    error_type: type[InterpreterError],
-    **expected_fields: str | bool,
-) -> InterpreterError:
-    """Assert that result is Err with expected error type and fields.
-
-    This is a convenience function for testing interpreter error results.
-
-    Args:
-        result: The interpreter result to check
-        error_type: The expected error type (e.g., DatabaseError, CacheError)
-        **expected_fields: Optional field values to check (e.g., db_error="timeout")
-
-    Returns:
-        The error for further assertions
-
-    Raises:
-        AssertionError: If result is Ok or error doesn't match
-
-    Example:
-        >>> result = await interpreter.interpret(GetUserById(user_id=user_id))
-        >>> error = assert_effect_err(result, DatabaseError, is_retryable=True)
-        >>> assert "timeout" in error.db_error
-    """
-    match result:
-        case Err(error) if isinstance(error, error_type):
-            # Check expected fields
-            for field, expected in expected_fields.items():
-                actual = getattr(error, field, None)
-                assert actual == expected, f"Expected {field}={expected}, got {field}={actual}"
-            return error
-        case Err(error):  # pragma: no cover
-            pytest.fail(f"Expected Err({error_type.__name__}), got Err({type(error).__name__})")
-        case Ok(value):  # pragma: no cover
-            pytest.fail(f"Expected Err({error_type.__name__}), got Ok({value})")

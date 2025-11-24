@@ -320,19 +320,20 @@ async def test_user_lookup():
         user = await UserRepository(conn).get_by_id(user_id)
         assert user is not None
 
-# ✅ CORRECT - Use fakes from effectful.testing
-from effectful.testing import (
-    FakeUserRepository,
-    create_test_interpreter,
-    unwrap_ok,
-)
+# ✅ CORRECT - Use pytest-mock with spec parameter
+from effectful.testing import unwrap_ok
+from pytest_mock import MockerFixture
 
 @pytest.mark.asyncio
-async def test_user_lookup():
-    # Setup
-    fake_repo = FakeUserRepository()
-    fake_repo._users[user_id] = User(id=user_id, email="test@example.com", name="Alice")
-    interpreter = create_test_interpreter(user_repo=fake_repo)
+async def test_user_lookup(mocker: MockerFixture):
+    # Setup test data with pytest-mock
+    test_user = User(id=user_id, email="test@example.com", name="Alice")
+    mock_repo = mocker.AsyncMock(spec=UserRepository)
+    mock_repo.get_by_id.return_value = test_user
+
+    # Create interpreter with mocked infrastructure
+    db_interp = DatabaseInterpreter(user_repo=mock_repo)
+    interpreter = CompositeInterpreter(interpreters=[db_interp])
 
     # Test
     def program() -> Generator[AllEffects, EffectResult, bool]:
@@ -361,17 +362,18 @@ async def test_user_lookup():
     value = unwrap_ok(result)  # Assumes Ok
     assert value == "success"
 
-# ✅ CORRECT - Test error cases explicitly
-from effectful.testing import (
-    FailingUserRepository,
-    assert_err,
-)
+# ✅ CORRECT - Test error cases explicitly with pytest-mock
+from effectful.testing import assert_err, unwrap_err
+from pytest_mock import MockerFixture
 
 @pytest.mark.asyncio
-async def test_user_lookup_database_failure():
-    # Setup failing infrastructure
-    failing_repo = FailingUserRepository(error_message="Connection timeout")
-    interpreter = create_test_interpreter(user_repo=failing_repo)
+async def test_user_lookup_database_failure(mocker: MockerFixture):
+    # Setup failing infrastructure with pytest-mock
+    mock_repo = mocker.AsyncMock(spec=UserRepository)
+    mock_repo.get_by_id.side_effect = Exception("Connection timeout")
+
+    db_interp = DatabaseInterpreter(user_repo=mock_repo)
+    interpreter = CompositeInterpreter(interpreters=[db_interp])
 
     # Test
     def program() -> Generator[AllEffects, EffectResult, bool]:

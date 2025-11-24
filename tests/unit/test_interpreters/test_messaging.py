@@ -20,8 +20,10 @@ from pytest_mock import MockerFixture
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok
 from effectful.domain.message_envelope import (
+    AcknowledgeSuccess,
     ConsumeTimeout,
     MessageEnvelope,
+    NackSuccess,
     PublishFailure,
     PublishSuccess,
 )
@@ -210,18 +212,18 @@ class TestConsumeMessage:
 
     @pytest.mark.asyncio()
     async def test_consume_message_timeout(self, mocker: MockerFixture) -> None:
-        """Interpreter should return None on timeout (no messages available)."""
+        """Interpreter should return ConsumeTimeout on timeout (no messages available)."""
         # Setup
         mock_producer = mocker.AsyncMock(spec=MessageProducer)
         mock_consumer = mocker.AsyncMock(spec=MessageConsumer)
-        mock_consumer.receive.return_value = None
+        mock_consumer.receive.return_value = ConsumeTimeout(subscription="my-sub", timeout_ms=1000)
 
         interpreter = MessagingInterpreter(producer=mock_producer, consumer=mock_consumer)
 
         effect = ConsumeMessage(subscription="my-sub", timeout_ms=1000)
         result = await interpreter.interpret(effect)
 
-        # Verify result - timeout returns ConsumeTimeout ADT (not None)
+        # Verify result - timeout returns ConsumeTimeout ADT
         match result:
             case Ok(
                 EffectReturn(
@@ -264,10 +266,11 @@ class TestAcknowledgeMessage:
 
     @pytest.mark.asyncio()
     async def test_acknowledge_message_success(self, mocker: MockerFixture) -> None:
-        """Interpreter should return None on successful acknowledgment."""
+        """Interpreter should return AcknowledgeSuccess on successful acknowledgment."""
         # Setup
         mock_producer = mocker.AsyncMock(spec=MessageProducer)
         mock_consumer = mocker.AsyncMock(spec=MessageConsumer)
+        mock_consumer.acknowledge.return_value = AcknowledgeSuccess(message_id="msg-123")
 
         interpreter = MessagingInterpreter(producer=mock_producer, consumer=mock_consumer)
 
@@ -276,10 +279,15 @@ class TestAcknowledgeMessage:
 
         # Verify result
         match result:
-            case Ok(EffectReturn(value=None, effect_name="AcknowledgeMessage")):
+            case Ok(
+                EffectReturn(
+                    value=AcknowledgeSuccess(message_id="msg-123"),
+                    effect_name="AcknowledgeMessage",
+                )
+            ):
                 pass  # Success
             case _:
-                pytest.fail(f"Expected Ok with None, got {result}")
+                pytest.fail(f"Expected Ok with AcknowledgeSuccess, got {result}")
 
         # Verify mock was called correctly
         mock_consumer.acknowledge.assert_called_once_with("msg-123")
@@ -312,10 +320,11 @@ class TestNegativeAcknowledge:
 
     @pytest.mark.asyncio()
     async def test_negative_acknowledge_success(self, mocker: MockerFixture) -> None:
-        """Interpreter should return None on successful nack."""
+        """Interpreter should return NackSuccess on successful nack."""
         # Setup
         mock_producer = mocker.AsyncMock(spec=MessageProducer)
         mock_consumer = mocker.AsyncMock(spec=MessageConsumer)
+        mock_consumer.negative_acknowledge.return_value = NackSuccess(message_id="msg-456")
 
         interpreter = MessagingInterpreter(producer=mock_producer, consumer=mock_consumer)
 
@@ -324,10 +333,15 @@ class TestNegativeAcknowledge:
 
         # Verify result
         match result:
-            case Ok(EffectReturn(value=None, effect_name="NegativeAcknowledge")):
+            case Ok(
+                EffectReturn(
+                    value=NackSuccess(message_id="msg-456"),
+                    effect_name="NegativeAcknowledge",
+                )
+            ):
                 pass  # Success
             case _:
-                pytest.fail(f"Expected Ok with None, got {result}")
+                pytest.fail(f"Expected Ok with NackSuccess, got {result}")
 
         # Verify mock was called correctly
         mock_consumer.negative_acknowledge.assert_called_once_with("msg-456", 1000)
@@ -338,6 +352,7 @@ class TestNegativeAcknowledge:
         # Setup
         mock_producer = mocker.AsyncMock(spec=MessageProducer)
         mock_consumer = mocker.AsyncMock(spec=MessageConsumer)
+        mock_consumer.negative_acknowledge.return_value = NackSuccess(message_id="msg-789")
 
         interpreter = MessagingInterpreter(producer=mock_producer, consumer=mock_consumer)
 
@@ -346,10 +361,15 @@ class TestNegativeAcknowledge:
 
         # Verify result
         match result:
-            case Ok(EffectReturn(value=None, effect_name="NegativeAcknowledge")):
+            case Ok(
+                EffectReturn(
+                    value=NackSuccess(message_id="msg-789"),
+                    effect_name="NegativeAcknowledge",
+                )
+            ):
                 pass  # Success
             case _:
-                pytest.fail(f"Expected Ok with None, got {result}")
+                pytest.fail(f"Expected Ok with NackSuccess, got {result}")
 
         # Verify mock was called with zero delay
         mock_consumer.negative_acknowledge.assert_called_once_with("msg-789", 0)

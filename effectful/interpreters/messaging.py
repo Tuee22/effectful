@@ -19,7 +19,17 @@ from dataclasses import dataclass
 
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok, Result
-from effectful.domain.message_envelope import ConsumeTimeout, PublishFailure, PublishSuccess
+from effectful.domain.message_envelope import (
+    AcknowledgeFailure,
+    AcknowledgeSuccess,
+    ConsumeFailure,
+    ConsumeTimeout,
+    MessageEnvelope,
+    NackFailure,
+    NackSuccess,
+    PublishFailure,
+    PublishSuccess,
+)
 from effectful.effects.base import Effect
 from effectful.effects.messaging import (
     AcknowledgeMessage,
@@ -153,16 +163,19 @@ class MessagingInterpreter:
         Returns:
             Ok with MessageEnvelope on successful receive.
             Ok with ConsumeTimeout ADT on timeout (not an error - queue empty).
+            Ok with ConsumeFailure ADT on connection/subscription errors.
             Err(MessagingError) on infrastructure failure.
         """
         try:
-            envelope = await self.consumer.receive(subscription, timeout_ms)
-            # Return appropriate ADT based on result
-            if envelope is None:
-                # Timeout - return the ADT type for explicit semantics
-                timeout = ConsumeTimeout(subscription=subscription, timeout_ms=timeout_ms)
-                return Ok(EffectReturn(value=timeout, effect_name="ConsumeMessage"))
-            return Ok(EffectReturn(value=envelope, effect_name="ConsumeMessage"))
+            result = await self.consumer.receive(subscription, timeout_ms)
+            # Pattern match on ConsumeResult ADT
+            match result:
+                case MessageEnvelope() as envelope:
+                    return Ok(EffectReturn(value=envelope, effect_name="ConsumeMessage"))
+                case ConsumeTimeout() as timeout:
+                    return Ok(EffectReturn(value=timeout, effect_name="ConsumeMessage"))
+                case ConsumeFailure() as failure:
+                    return Ok(EffectReturn(value=failure, effect_name="ConsumeMessage"))
         except Exception as e:
             return Err(
                 MessagingError(
@@ -178,12 +191,17 @@ class MessagingInterpreter:
         """Handle AcknowledgeMessage effect.
 
         Returns:
-            Ok with None on successful ack.
+            Ok with AcknowledgeSuccess or AcknowledgeFailure ADT.
             Err(MessagingError) on infrastructure failure.
         """
         try:
-            await self.consumer.acknowledge(message_id)
-            return Ok(EffectReturn(value=None, effect_name="AcknowledgeMessage"))
+            result = await self.consumer.acknowledge(message_id)
+            # Pattern match on AcknowledgeResult ADT
+            match result:
+                case AcknowledgeSuccess() as success:
+                    return Ok(EffectReturn(value=success, effect_name="AcknowledgeMessage"))
+                case AcknowledgeFailure() as failure:
+                    return Ok(EffectReturn(value=failure, effect_name="AcknowledgeMessage"))
         except Exception as e:
             return Err(
                 MessagingError(
@@ -199,12 +217,17 @@ class MessagingInterpreter:
         """Handle NegativeAcknowledge effect.
 
         Returns:
-            Ok with None on successful nack.
+            Ok with NackSuccess or NackFailure ADT.
             Err(MessagingError) on infrastructure failure.
         """
         try:
-            await self.consumer.negative_acknowledge(message_id, delay_ms)
-            return Ok(EffectReturn(value=None, effect_name="NegativeAcknowledge"))
+            result = await self.consumer.negative_acknowledge(message_id, delay_ms)
+            # Pattern match on NackResult ADT
+            match result:
+                case NackSuccess() as success:
+                    return Ok(EffectReturn(value=success, effect_name="NegativeAcknowledge"))
+                case NackFailure() as failure:
+                    return Ok(EffectReturn(value=failure, effect_name="NegativeAcknowledge"))
         except Exception as e:
             return Err(
                 MessagingError(

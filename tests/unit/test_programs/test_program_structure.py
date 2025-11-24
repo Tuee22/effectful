@@ -17,7 +17,7 @@ from effectful.infrastructure.websocket import WebSocketConnection
 from effectful.interpreters.composite import create_composite_interpreter
 from effectful.programs.program_types import AllEffects, EffectResult
 from effectful.programs.runners import run_ws_program
-from effectful.testing.matchers import assert_ok, unwrap_ok
+from effectful.testing import assert_ok, unwrap_ok
 
 
 class TestProgramComposition:

@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from effectful.algebraic.effect_return import EffectReturn
-from effectful.algebraic.result import Ok, Result
+from effectful.algebraic.result import Err, Ok, Result
 from effectful.effects.base import Effect
 from effectful.effects.system import GenerateUUID, GetCurrentTime
 from effectful.interpreters.errors import InterpreterError, UnhandledEffectError
@@ -55,8 +55,6 @@ class SystemInterpreter:
 
     def _unhandled(self, effect: Effect) -> Result[EffectReturn[EffectResult], InterpreterError]:
         """Return UnhandledEffectError for unknown effects."""
-        from effectful.algebraic.result import Err
-
         return Err(
             UnhandledEffectError(
                 effect=effect,

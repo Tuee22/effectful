@@ -4,7 +4,7 @@ Welcome to the **effectful** documentation!
 
 ## Prerequisites
 
-All development happens inside Docker containers. See [Docker Doctrine](core/DOCKER_DOCTRINE.md).
+All development happens inside Docker containers. See [Docker Doctrine](core/docker_doctrine.md).
 
 ```bash
 # Start development environment
@@ -31,11 +31,11 @@ New to effectful? Start here:
 
 Project policies and philosophies:
 
-- **[DOCKER_DOCTRINE.md](core/DOCKER_DOCTRINE.md)** - All development in Docker (SSoT)
-- **[TESTING_DOCTRINE.md](core/TESTING_DOCTRINE.md)** - Coverage requirements, test anti-patterns
-- **[TYPE_SAFETY_DOCTRINE.md](core/TYPE_SAFETY_DOCTRINE.md)** - Eight type safety rules
-- **[ARCHITECTURE.md](core/ARCHITECTURE.md)** - 5-layer architecture, design decisions
-- **[PURITY.md](core/PURITY.md)** - Pure functional programming rules
+- **[docker_doctrine.md](core/docker_doctrine.md)** - All development in Docker (SSoT)
+- **[testing_doctrine.md](core/testing_doctrine.md)** - Coverage requirements, test anti-patterns
+- **[type_safety_doctrine.md](core/type_safety_doctrine.md)** - Eight type safety rules
+- **[architecture.md](core/architecture.md)** - 5-layer architecture, design decisions
+- **[purity.md](core/purity.md)** - Pure functional programming rules
 
 ### Tutorials
 
@@ -69,7 +69,6 @@ Complete API documentation:
 - **[result.md](api/result.md)** - Result type and utilities
 - **[interpreters.md](api/interpreters.md)** - Interpreter interfaces and error types
 - **[programs.md](api/programs.md)** - Program execution and composition
-- **[testing.md](api/testing.md)** - Testing utilities and patterns
 
 ## Core Concepts
 
@@ -152,10 +151,10 @@ match divide(10, 2):
 - [GitHub Repository](https://github.com/your-org/effectful)
 - [Issue Tracker](https://github.com/your-org/effectful/issues)
 - [Contributing Guide](../CONTRIBUTING.md)
-- [Architecture](core/ARCHITECTURE.md)
-- [Testing Doctrine](core/TESTING_DOCTRINE.md)
-- [Type Safety Doctrine](core/TYPE_SAFETY_DOCTRINE.md)
-- [Purity Doctrine](core/PURITY.md)
+- [Architecture](core/architecture.md)
+- [Testing Doctrine](core/testing_doctrine.md)
+- [Type Safety Doctrine](core/type_safety_doctrine.md)
+- [Purity Doctrine](core/purity.md)
 
 ## Examples
 
@@ -176,7 +175,7 @@ effectful enforces **strict type safety**:
 - Zero `# type: ignore` comments
 - 100% `mypy --strict` compliance
 
-See [TYPE_SAFETY_DOCTRINE.md](core/TYPE_SAFETY_DOCTRINE.md) for type safety guidelines.
+See [type_safety_doctrine.md](core/type_safety_doctrine.md) for type safety guidelines.
 
 ## Testing
 

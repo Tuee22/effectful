@@ -270,20 +270,22 @@ Use the test interpreter to mock auth operations:
 
 ```python
 import pytest
+from pytest_mock import MockerFixture
 from effectful import run_ws_program
-from effectful.testing import create_test_interpreter, unwrap_ok
+from effectful.testing import unwrap_ok
 
 @pytest.mark.asyncio
-async def test_authentication():
-    # Configure test interpreter with auth responses
-    interpreter = create_test_interpreter(
-        auth_responses={
-            "valid-token": TokenValid(
-                user_id=UUID("12345678-1234-1234-1234-123456789abc"),
-                claims={"role": "admin"}
-            )
-        }
+async def test_authentication(mocker: MockerFixture):
+    # Create mock auth infrastructure
+    mock_auth = mocker.AsyncMock(spec=AuthProtocol)
+    mock_auth.validate_token.return_value = TokenValid(
+        user_id=UUID("12345678-1234-1234-1234-123456789abc"),
+        claims={"role": "admin"}
     )
+
+    # Create interpreter with mocked infrastructure
+    auth_interp = AuthInterpreter(auth_provider=mock_auth)
+    interpreter = CompositeInterpreter(interpreters=[auth_interp])
 
     result = await run_ws_program(
         authenticate_and_authorize("valid-token", "admin"),

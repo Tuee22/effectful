@@ -28,10 +28,19 @@ try:
 except ImportError:
     raise ImportError(
         "Pulsar support requires pulsar-client library. " "Install with: pip install pulsar-client"
-    )
+    ) from None
 
 from effectful.domain.message_envelope import (
+    AcknowledgeFailure,
+    AcknowledgeResult,
+    AcknowledgeSuccess,
+    ConsumeFailure,
+    ConsumeResult,
+    ConsumeTimeout,
     MessageEnvelope,
+    NackFailure,
+    NackResult,
+    NackSuccess,
     PublishFailure,
     PublishResult,
     PublishSuccess,
@@ -98,10 +107,25 @@ class PulsarMessageProducer(MessageProducer):
         try:
             # Get or create producer for topic
             if topic not in self._producers:
-                self._producers[topic] = self._client.create_producer(
-                    topic,
-                    send_timeout_millis=30000,
-                )
+                try:
+                    self._producers[topic] = self._client.create_producer(
+                        topic,
+                        send_timeout_millis=30000,
+                    )
+                except pulsar.Timeout:
+                    # Timeout during producer creation indicates BookKeeper not ready
+                    return PublishFailure(topic=topic, reason="bookkeeper_not_ready")
+                except Exception as e:
+                    # Error classification based on string matching
+                    # Tested with pulsar-client 3.x - may need updates for other versions
+                    error_msg = str(e).lower()
+                    if "bookkeeper" in error_msg or "bookie" in error_msg:
+                        return PublishFailure(topic=topic, reason="bookkeeper_not_ready")
+                    if "connect" in error_msg or "unreachable" in error_msg:
+                        return PublishFailure(topic=topic, reason="broker_unreachable")
+                    if "auth" in error_msg:
+                        return PublishFailure(topic=topic, reason="auth_failed")
+                    return PublishFailure(topic=topic, reason="topic_not_found")
 
             producer = self._producers[topic]
             msg_id = producer.send(payload, properties=properties or {})
@@ -115,11 +139,25 @@ class PulsarMessageProducer(MessageProducer):
         except pulsar.ProducerQueueIsFull:
             return PublishFailure(topic=topic, reason="quota_exceeded")
         except Exception as e:
-            # Check for timeout pattern in exception
+            # Analyze error message for specific failure reason
+            # Tested with pulsar-client 3.x - may need updates for other versions
             error_msg = str(e).lower()
+            error_type = type(e).__name__.lower()
             if "timeout" in error_msg:
                 return PublishFailure(topic=topic, reason="timeout")
-            # Other exceptions (topic not found, permission denied, etc.)
+            if "bookkeeper" in error_msg or "bookie" in error_msg:
+                return PublishFailure(topic=topic, reason="bookkeeper_not_ready")
+            if "queue" in error_msg and "full" in error_msg:
+                return PublishFailure(topic=topic, reason="quota_exceeded")
+            if "blocked" in error_msg or "producerblocked" in error_type:
+                return PublishFailure(topic=topic, reason="producer_blocked")
+            if "too" in error_msg and ("big" in error_msg or "large" in error_msg):
+                return PublishFailure(topic=topic, reason="message_too_large")
+            if "connect" in error_msg or "closed" in error_msg:
+                return PublishFailure(topic=topic, reason="connection_closed")
+            if "auth" in error_msg:
+                return PublishFailure(topic=topic, reason="auth_failed")
+            # Default to topic_not_found for unknown errors
             return PublishFailure(topic=topic, reason="topic_not_found")
 
 
@@ -159,7 +197,7 @@ class PulsarMessageConsumer(MessageConsumer):
         self._consumers: dict[str, pulsar.Consumer] = {}
         self._messages: dict[str, pulsar.Message] = {}
 
-    async def receive(self, subscription: str, timeout_ms: int) -> MessageEnvelope | None:
+    async def receive(self, subscription: str, timeout_ms: int) -> ConsumeResult:
         """Receive message from Pulsar subscription.
 
         Args:
@@ -168,7 +206,8 @@ class PulsarMessageConsumer(MessageConsumer):
 
         Returns:
             MessageEnvelope if message received before timeout.
-            None if timeout occurred.
+            ConsumeFailure if connection or subscription error occurred.
+            None if timeout occurred (no message available).
 
         Note:
             Subscription format: "topic/subscription-name"
@@ -180,11 +219,23 @@ class PulsarMessageConsumer(MessageConsumer):
             topic = subscription.split("/")[0] if "/" in subscription else subscription
             # Extract subscription name from format: topic/sub-name
             sub_name = subscription.split("/")[1] if "/" in subscription else subscription
-            self._consumers[subscription] = self._client.subscribe(
-                topic=topic,
-                subscription_name=sub_name,
-                initial_position=pulsar.InitialPosition.Earliest,
-            )
+            try:
+                self._consumers[subscription] = self._client.subscribe(
+                    topic=topic,
+                    subscription_name=sub_name,
+                    initial_position=pulsar.InitialPosition.Earliest,
+                )
+            except Exception as e:
+                error_msg = str(e).lower()
+                if "connect" in error_msg or "unreachable" in error_msg:
+                    return ConsumeFailure(subscription=subscription, reason="broker_unreachable")
+                if "auth" in error_msg:
+                    return ConsumeFailure(subscription=subscription, reason="auth_failed")
+                if "not found" in error_msg or "does not exist" in error_msg:
+                    return ConsumeFailure(
+                        subscription=subscription, reason="subscription_not_found"
+                    )
+                return ConsumeFailure(subscription=subscription, reason="subscription_not_found")
 
         consumer = self._consumers[subscription]
 
@@ -203,42 +254,57 @@ class PulsarMessageConsumer(MessageConsumer):
                 topic=msg.topic_name(),
             )
         except pulsar.Timeout:
-            return None
+            return ConsumeTimeout(subscription=subscription, timeout_ms=timeout_ms)
+        except Exception as e:
+            error_msg = str(e).lower()
+            error_type = type(e).__name__.lower()
+            if "closed" in error_msg or "consumerclosed" in error_type:
+                return ConsumeFailure(subscription=subscription, reason="consumer_closed")
+            if "connect" in error_msg:
+                return ConsumeFailure(subscription=subscription, reason="connection_closed")
+            return ConsumeFailure(subscription=subscription, reason="subscription_not_found")
 
-    async def acknowledge(self, message_id: str) -> None:
+    async def acknowledge(self, message_id: str) -> AcknowledgeResult:
         """Acknowledge message processing.
 
         Args:
             message_id: Pulsar message ID to acknowledge
 
-        Raises:
-            KeyError: If message_id not found (message not received via this consumer)
+        Returns:
+            AcknowledgeSuccess if acknowledged successfully.
+            AcknowledgeFailure with reason if acknowledgment failed.
         """
         msg = self._messages.get(message_id)
         if msg is None:
-            raise KeyError(f"Message {message_id} not found in consumer cache")
+            return AcknowledgeFailure(message_id=message_id, reason="message_not_found")
 
-        # Get consumer for this message's subscription
-        for subscription, consumer in self._consumers.items():
+        # Try each consumer to find the one that owns this message
+        ack_errors: list[str] = []
+        for _subscription, consumer in self._consumers.items():
             try:
                 consumer.acknowledge(msg)
-                # Remove from cache after ack
-                del self._messages[message_id]
-                return
-            except Exception:
+                # Remove from cache after successful ack
+                self._messages = {k: v for k, v in self._messages.items() if k != message_id}
+                return AcknowledgeSuccess(message_id=message_id)
+            except Exception as e:
+                error_msg = str(e).lower()
+                if "closed" in error_msg:
+                    return AcknowledgeFailure(message_id=message_id, reason="connection_closed")
+                ack_errors.append(str(e))
                 continue
 
-        raise KeyError(f"No consumer found for message {message_id}")
+        return AcknowledgeFailure(message_id=message_id, reason="consumer_not_found")
 
-    async def negative_acknowledge(self, message_id: str, delay_ms: int = 0) -> None:
+    async def negative_acknowledge(self, message_id: str, delay_ms: int = 0) -> NackResult:
         """Negative acknowledge message for redelivery.
 
         Args:
             message_id: Pulsar message ID to negative acknowledge
             delay_ms: Redelivery delay in milliseconds (not supported by all Pulsar versions)
 
-        Raises:
-            KeyError: If message_id not found (message not received via this consumer)
+        Returns:
+            NackSuccess if nacked successfully.
+            NackFailure with reason if nack failed.
 
         Note:
             The delay_ms parameter may not be supported by all Pulsar broker versions.
@@ -246,16 +312,19 @@ class PulsarMessageConsumer(MessageConsumer):
         """
         msg = self._messages.get(message_id)
         if msg is None:
-            raise KeyError(f"Message {message_id} not found in consumer cache")
+            return NackFailure(message_id=message_id, reason="message_not_found")
 
-        # Get consumer for this message's subscription
-        for subscription, consumer in self._consumers.items():
+        # Try each consumer to find the one that owns this message
+        for _subscription, consumer in self._consumers.items():
             try:
                 consumer.negative_acknowledge(msg)
-                # Remove from cache after nack
-                del self._messages[message_id]
-                return
-            except Exception:
+                # Remove from cache after successful nack
+                self._messages = {k: v for k, v in self._messages.items() if k != message_id}
+                return NackSuccess(message_id=message_id)
+            except Exception as e:
+                error_msg = str(e).lower()
+                if "closed" in error_msg:
+                    return NackFailure(message_id=message_id, reason="connection_closed")
                 continue
 
-        raise KeyError(f"No consumer found for message {message_id}")
+        return NackFailure(message_id=message_id, reason="consumer_not_found")

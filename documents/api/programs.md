@@ -2,7 +2,7 @@
 
 This document provides a comprehensive reference for program execution and program types.
 
-> **Core Doctrine**: For program composition diagrams and execution flow, see [ARCHITECTURE.md](../core/ARCHITECTURE.md#program-composition).
+> **Core Doctrine**: For program composition diagrams and execution flow, see [architecture.md](../core/architecture.md#program-composition).
 
 ## Overview
 

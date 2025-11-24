@@ -7,7 +7,7 @@ import pytest
 from effectful.algebraic.result import Err, Ok, Result
 from effectful.effects.database import GetUserById
 from effectful.interpreters.errors import DatabaseError, InterpreterError
-from effectful.testing.matchers import (
+from effectful.testing import (
     assert_err,
     assert_err_message,
     assert_ok,

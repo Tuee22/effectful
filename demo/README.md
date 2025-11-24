@@ -358,6 +358,6 @@ See `CLAUDE.md` in the project root for comprehensive anti-patterns documentatio
 ## References
 
 - **Main README**: [README.md](../README.md) - Library overview
-- **Architecture**: [ARCHITECTURE.md](../ARCHITECTURE.md) - System design
+- **Architecture**: [architecture.md](../architecture.md) - System design
 - **Contributing**: [CONTRIBUTING.md](../CONTRIBUTING.md) - Development guidelines
 - **Testing Guide**: [documents/tutorials/04_testing_guide.md](../documents/tutorials/04_testing_guide.md) - Testing patterns

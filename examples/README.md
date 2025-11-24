@@ -155,10 +155,15 @@ def my_program() -> Generator[AllEffects, EffectResult, str]:
 
 ```python
 from effectful import run_ws_program
-from effectful.testing import create_test_interpreter
+from pytest_mock import MockerFixture
 
-async def main():
-    interpreter = create_test_interpreter()
+@pytest.mark.asyncio
+async def test_my_program(mocker: MockerFixture):
+    # Create interpreter with pytest-mock
+    mock_repo = mocker.AsyncMock(spec=UserRepository)
+    db_interp = DatabaseInterpreter(user_repo=mock_repo)
+    interpreter = CompositeInterpreter(interpreters=[db_interp])
+
     result = await run_ws_program(my_program(), interpreter)
 
     match result:
@@ -171,44 +176,50 @@ async def main():
 ### Setting Up Test Data
 
 ```python
-from effectful.testing import (
-    FakeUserRepository,
-    FakeProfileCache,
-    create_test_interpreter,
-)
+from pytest_mock import MockerFixture
 
-# Setup test data
-fake_repo = FakeUserRepository()
-fake_cache = FakeProfileCache()
+@pytest.mark.asyncio
+async def test_with_mock_data(mocker: MockerFixture):
+    # Setup test data with pytest-mock
+    user_id = uuid4()
+    test_user = User(id=user_id, name="Alice", email="alice@example.com")
 
-user_id = uuid4()
-fake_repo._users[user_id] = User(...)
+    mock_repo = mocker.AsyncMock(spec=UserRepository)
+    mock_repo.get_by_id.return_value = test_user
 
-# Create interpreter
-interpreter = create_test_interpreter(
-    user_repo=fake_repo,
-    cache=fake_cache,
-)
+    mock_cache = mocker.AsyncMock(spec=ProfileCache)
+    mock_cache.get.return_value = None  # Cache miss
+
+    # Create interpreter with mocked infrastructure
+    db_interp = DatabaseInterpreter(user_repo=mock_repo)
+    cache_interp = CacheInterpreter(cache=mock_cache)
+    interpreter = CompositeInterpreter(interpreters=[db_interp, cache_interp])
 ```
 
 ### Error Handling
 
 ```python
-# Testing database failures
-from effectful.testing import FailingUserRepository
+# Testing database failures with pytest-mock
+from pytest_mock import MockerFixture
 
-failing_repo = FailingUserRepository(error_message="Connection timeout")
-interpreter = create_test_interpreter(user_repo=failing_repo)
+@pytest.mark.asyncio
+async def test_database_failure(mocker: MockerFixture):
+    # Mock repository to raise exception
+    mock_repo = mocker.AsyncMock(spec=UserRepository)
+    mock_repo.get_by_id.side_effect = Exception("Connection timeout")
 
-result = await run_ws_program(program(), interpreter)
+    db_interp = DatabaseInterpreter(user_repo=mock_repo)
+    interpreter = CompositeInterpreter(interpreters=[db_interp])
 
-match result:
-    case Err(DatabaseError(db_error=error, is_retryable=True)):
-        # Handle retryable error
-        ...
-    case Err(error):
-        # Handle other errors
-        ...
+    result = await run_ws_program(program(), interpreter)
+
+    match result:
+        case Err(DatabaseError(db_error=error, is_retryable=True)):
+            # Handle retryable error
+            assert "Connection timeout" in error
+        case Err(error):
+            # Handle other errors
+            ...
 ```
 
 ## Next Steps
@@ -216,7 +227,7 @@ match result:
 After exploring these examples:
 
 1. **Read the tutorials** - [documents/tutorials/](../documents/tutorials/)
-2. **Study the architecture** - [ARCHITECTURE.md](../ARCHITECTURE.md)
+2. **Study the architecture** - [architecture.md](../architecture.md)
 3. **Review type safety guidelines** - [effectful/CLAUDE.md](../effectful/CLAUDE.md)
 4. **Write your own programs** - See [CONTRIBUTING.md](../CONTRIBUTING.md)
 

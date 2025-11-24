@@ -57,12 +57,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Testing Utilities
 - **Matchers**: `assert_ok`, `assert_err`, `unwrap_ok`, `unwrap_err`, `assert_ok_value`, `assert_err_message`
 - **Testing Pattern Docs**: `docs/testing/TESTING_PATTERNS.md` - Comprehensive 4-layer testing guide
-- **Test Suite Audit**: `docs/testing/TEST_SUITE_AUDIT.md` - Systematic review of all 27 test files
+- **Test Suite Audit**: `docs/testing/test_suite_audit.md` - Systematic review of all 27 test files
 - **pytest-mock Integration**: Type-safe mocking using `mocker.AsyncMock(spec=Protocol)`
 
 #### Documentation
 - **README.md** - Complete library overview with examples
-- **ARCHITECTURE.md** - Design rationale and patterns
+- **architecture.md** - Design rationale and patterns
 - **CONTRIBUTING.md** - Development workflow and standards
 - **effectful/CLAUDE.md** - Type safety guidelines
 - **docs/tutorials/01_quickstart.md** - Getting started guide
@@ -202,7 +202,7 @@ def test_workflow(mocker: MockerFixture) -> None:
   - Complete examples for each layer
   - Common pitfalls and how to avoid them
   - Migration guide from old patterns
-- **docs/testing/TEST_SUITE_AUDIT.md** - Systematic review of all 27 test files
+- **docs/testing/test_suite_audit.md** - Systematic review of all 27 test files
   - Categorized by testing layer
   - Verification that all tests follow documented patterns
   - Test execution results (329 tests, 100% pass rate)

@@ -85,25 +85,27 @@ match result:
 ### Testing Programs
 
 ```python
-from effectful.testing import (
-    create_test_interpreter,
-    FakeUserRepository,
-    unwrap_ok,
-)
+from effectful.testing import unwrap_ok
+from pytest_mock import MockerFixture
 
 @pytest.mark.asyncio
-async def test_greet_user():
-    # Setup test data
-    fake_repo = FakeUserRepository()
-    fake_repo._users[user_id] = User(id=user_id, email="test@example.com", name="Alice")
+async def test_greet_user(mocker: MockerFixture):
+    # Setup test data with pytest-mock
+    mock_repo = mocker.AsyncMock(spec=UserRepository)
+    mock_repo.get_by_id.return_value = User(
+        id=user_id,
+        email="test@example.com",
+        name="Alice"
+    )
 
-    # Create test interpreter
-    interpreter = create_test_interpreter(user_repo=fake_repo)
+    # Create interpreter with mocked infrastructure
+    db_interp = DatabaseInterpreter(user_repo=mock_repo)
+    interpreter = CompositeInterpreter(interpreters=[db_interp])
 
     # Run program
     result = await run_ws_program(greet_user(user_id), interpreter)
 
-    # Assert
+    # Assert using optional matcher utility
     value = unwrap_ok(result)
     assert value == "success"
 ```
@@ -159,9 +161,13 @@ interpreter = create_composite_interpreter(
     cache=RedisProfileCache(...),
 )
 
-# Testing: fake infrastructure
-from effectful.testing import create_test_interpreter
-test_interpreter = create_test_interpreter()
+# Testing: pytest-mock infrastructure
+from pytest_mock import MockerFixture
+
+def create_test_interpreter(mocker: MockerFixture) -> CompositeInterpreter:
+    mock_repo = mocker.AsyncMock(spec=UserRepository)
+    db_interp = DatabaseInterpreter(user_repo=mock_repo)
+    return CompositeInterpreter(interpreters=[db_interp])
 ```
 
 ### Result Type for Errors
@@ -277,21 +283,11 @@ See [Tutorial 09: Storage Effects](documents/tutorials/09_storage_effects.md) fo
 
 ## Testing Utilities
 
+**Minimal API Philosophy**: The `effectful.testing` module exports only 6 Result type matchers as optional convenience utilities. All infrastructure mocking uses `pytest-mock` directly.
+
 ```python
 from effectful.testing import (
-    # Fakes (in-memory test doubles)
-    FakeWebSocketConnection,
-    FakeUserRepository,
-    FakeChatMessageRepository,
-    FakeProfileCache,
-    create_test_interpreter,
-
-    # Failing variants (for error testing)
-    FailingUserRepository,
-    FailingChatMessageRepository,
-    FailingProfileCache,
-
-    # Assertion helpers
+    # Result type matchers (optional convenience utilities)
     assert_ok,
     assert_err,
     unwrap_ok,
@@ -299,6 +295,19 @@ from effectful.testing import (
     assert_ok_value,
     assert_err_message,
 )
+
+# Infrastructure mocking uses pytest-mock
+from pytest_mock import MockerFixture
+
+@pytest.mark.asyncio
+async def test_example(mocker: MockerFixture):
+    # Create type-safe mocks
+    mock_repo = mocker.AsyncMock(spec=UserRepository)
+    mock_repo.get_by_id.return_value = User(...)
+
+    # Build interpreter
+    interpreter = DatabaseInterpreter(user_repo=mock_repo)
+    # ...
 ```
 
 ## Documentation
@@ -323,11 +332,16 @@ from effectful.testing import (
   - [Result Type API](documents/api/result.md) - Result[T, E] and error handling
   - [Interpreters API](documents/api/interpreters.md) - Executing programs
   - [Programs API](documents/api/programs.md) - Program types and composition
-  - [Testing API](documents/api/testing.md) - Testing utilities and patterns
+
+### Core Doctrines
+
+- **[Testing Doctrine](documents/core/testing_doctrine.md)** - SSoT for all testing policy (22 anti-patterns)
+- **[Type Safety Doctrine](documents/core/type_safety_doctrine.md)** - Zero-tolerance type safety
+- **[Purity Doctrine](documents/core/purity.md)** - Functional programming rules
 
 ### Architecture and Contributing
 
-- **[Architecture](ARCHITECTURE.md)** - Design rationale and patterns
+- **[Architecture](architecture.md)** - Design rationale and patterns
 - **[Contributing](CONTRIBUTING.md)** - Development workflow and standards
 - **[Type Safety Guidelines](effectful/CLAUDE.md)** - Zero-tolerance type safety
 
