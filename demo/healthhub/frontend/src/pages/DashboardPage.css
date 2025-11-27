@@ -1,0 +1,55 @@
+.dashboard-page h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+}
+
+.welcome-message {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0 0 2rem 0;
+}
+
+.welcome-message strong {
+  color: #374151;
+}
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.dashboard-card {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.dashboard-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+}
+
+.dashboard-card p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.dashboard-card a {
+  display: inline-block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #3b82f6;
+  text-decoration: none;
+}
+
+.dashboard-card a:hover {
+  text-decoration: underline;
+}

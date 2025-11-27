@@ -1,0 +1,74 @@
+.invoice-list {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.invoice-list-empty {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.invoice-table th,
+.invoice-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.invoice-table th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #6b7280;
+  background-color: #f9fafb;
+}
+
+.invoice-table td {
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.invoice-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.invoice-number {
+  font-weight: 500;
+  font-family: monospace;
+}
+
+.invoice-amount {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.invoice-status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: white;
+  border-radius: 9999px;
+  text-transform: uppercase;
+}
+
+.invoice-view-link {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.invoice-view-link:hover {
+  text-decoration: underline;
+}

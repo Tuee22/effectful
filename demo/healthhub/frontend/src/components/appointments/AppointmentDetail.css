@@ -1,0 +1,111 @@
+.appointment-detail {
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.detail-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-item label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.detail-item span {
+  font-size: 0.875rem;
+  color: #1f2937;
+}
+
+.detail-actions {
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.detail-actions h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 1rem 0;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.action-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.action-button.confirm {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.action-button.confirm:hover {
+  background-color: #2563eb;
+}
+
+.action-button.start {
+  background-color: #8b5cf6;
+  color: white;
+}
+
+.action-button.start:hover {
+  background-color: #7c3aed;
+}
+
+.action-button.complete {
+  background-color: #10b981;
+  color: white;
+}
+
+.action-button.complete:hover {
+  background-color: #059669;
+}
+
+.action-button.cancel {
+  background-color: #ef4444;
+  color: white;
+}
+
+.action-button.cancel:hover {
+  background-color: #dc2626;
+}

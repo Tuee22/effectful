@@ -5,7 +5,7 @@ Tests PulsarMessageProducer and PulsarMessageConsumer using pytest-mock.
 
 from datetime import UTC, datetime
 
-import pulsar
+import pulsar  # Only for InitialPosition constants, not infrastructure
 import pytest
 from pytest_mock import MockerFixture
 
@@ -85,7 +85,7 @@ class TestPulsarMessageProducer:
         """Test publish timeout returns PublishFailure."""
         # Setup
         mock_producer = mocker.MagicMock()
-        mock_producer.send.side_effect = pulsar.Timeout("Timeout")
+        mock_producer.send.side_effect = TimeoutError("Timeout")
 
         mock_client = mocker.MagicMock()
         mock_client.create_producer.return_value = mock_producer
@@ -105,7 +105,7 @@ class TestPulsarMessageProducer:
         """Test publish with full queue returns PublishFailure."""
         # Setup
         mock_producer = mocker.MagicMock()
-        mock_producer.send.side_effect = pulsar.ProducerQueueIsFull("Queue full")
+        mock_producer.send.side_effect = RuntimeError("Queue full")
 
         mock_client = mocker.MagicMock()
         mock_client.create_producer.return_value = mock_producer
@@ -193,7 +193,7 @@ class TestPulsarMessageConsumer:
         """Test receive timeout returns ConsumeTimeout ADT."""
         # Setup
         mock_consumer = mocker.MagicMock()
-        mock_consumer.receive.side_effect = pulsar.Timeout("Timeout")
+        mock_consumer.receive.side_effect = TimeoutError("Timeout")
 
         mock_client = mocker.MagicMock()
         mock_client.subscribe.return_value = mock_consumer

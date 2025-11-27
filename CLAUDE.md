@@ -25,6 +25,7 @@
 - `tests/` - Comprehensive test suite (329+ tests)
 - `examples/` - Working example programs
 - `documents/` - Tutorials and API reference
+- `demo/` - Real-world demo applications built on effectful
 
 **5-Layer Architecture**:
 ```
@@ -82,7 +83,6 @@ Layer 5: Infrastructure Layer (PostgreSQL, Redis, S3, Pulsar, or test doubles)
 - `tests/test_interpreters/` - Individual interpreter tests (pytest-mock)
 - `tests/test_programs/` - Program runner tests
 - `tests/test_integration/` - Multi-effect workflows (real infrastructure)
-- `tests/test_demo/` - Demo program tests
 
 ## ✅ Universal Success Criteria
 
@@ -575,6 +575,49 @@ All items must meet Universal Success Criteria (see above).
 - **Caching Workflow**: `examples/03_caching_workflow.py`
 - **Error Handling**: `examples/04_error_handling.py`
 - **Messaging Workflow**: `examples/05_messaging_workflow.py`
+
+### Demo Applications
+- **HealthHub**: `demo/healthhub/` - Healthcare management portal demonstrating real-world effectful usage
+
+## 🏥 Demo Applications
+
+### HealthHub Medical Center
+
+A comprehensive healthcare management portal demonstrating the Effectful effect system in a real-world application.
+
+**Location**: `demo/healthhub/`
+
+**Features**:
+- Patient and doctor management
+- Appointment scheduling with state machine (Requested → Confirmed → InProgress → Completed)
+- Prescription management with medication interaction checking
+- Lab results with critical value alerts
+- ADT-based authorization (PatientAuthorized | DoctorAuthorized | AdminAuthorized | Unauthorized)
+- HIPAA-compliant audit logging
+- Real-time WebSocket notifications via Redis pub/sub
+
+**Stack**: FastAPI | PostgreSQL | Redis | Apache Pulsar | MinIO S3
+
+**Structure**:
+- `demo/healthhub/backend/` - FastAPI application with effect programs
+- `demo/healthhub/docker/` - Separate Docker Compose for HealthHub services
+- `demo/healthhub/tests/pytest/` - Unit and integration tests
+- `demo/healthhub/documents/` - Comprehensive 24-document suite
+- `demo/healthhub/CLAUDE.md` - HealthHub-specific patterns and commands
+
+**Running HealthHub**:
+```bash
+# Start HealthHub services (from effectful root)
+docker compose -f demo/healthhub/docker/docker-compose.yml up -d
+
+# Run HealthHub tests
+docker compose -f demo/healthhub/docker/docker-compose.yml exec healthhub poetry run test-all
+
+# Check HealthHub code quality
+docker compose -f demo/healthhub/docker/docker-compose.yml exec healthhub poetry run check-code
+```
+
+**Effectful Integration**: HealthHub uses effectful as a local path dependency (`effectful = {path = "../..", develop = true}` in pyproject.toml), demonstrating how to build applications on top of the effectful library.
 
 ---
 

@@ -9,6 +9,7 @@ These tests validate that adapters correctly implement protocols
 when connected to actual infrastructure.
 """
 
+import asyncio
 from datetime import UTC, datetime
 from uuid import uuid4
 
@@ -167,8 +168,6 @@ class TestRedisProfileCache:
         assert isinstance(result1, CacheHit)
 
         # Wait for expiration
-        import asyncio
-
         await asyncio.sleep(1.5)
 
         # Should be expired

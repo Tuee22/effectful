@@ -112,7 +112,7 @@ class PulsarMessageProducer(MessageProducer):
                         topic,
                         send_timeout_millis=30000,
                     )
-                except pulsar.Timeout:
+                except (TimeoutError, pulsar.Timeout):
                     # Timeout during producer creation indicates BookKeeper not ready
                     return PublishFailure(topic=topic, reason="bookkeeper_not_ready")
                 except Exception as e:
@@ -134,10 +134,8 @@ class PulsarMessageProducer(MessageProducer):
                 message_id=str(msg_id),
                 topic=topic,
             )
-        except pulsar.Timeout:
+        except (TimeoutError, pulsar.Timeout):
             return PublishFailure(topic=topic, reason="timeout")
-        except pulsar.ProducerQueueIsFull:
-            return PublishFailure(topic=topic, reason="quota_exceeded")
         except Exception as e:
             # Analyze error message for specific failure reason
             # Tested with pulsar-client 3.x - may need updates for other versions
@@ -253,7 +251,7 @@ class PulsarMessageConsumer(MessageConsumer):
                 publish_time=datetime.fromtimestamp(msg.publish_timestamp() / 1000, UTC),
                 topic=msg.topic_name(),
             )
-        except pulsar.Timeout:
+        except (TimeoutError, pulsar.Timeout):
             return ConsumeTimeout(subscription=subscription, timeout_ms=timeout_ms)
         except Exception as e:
             error_msg = str(e).lower()

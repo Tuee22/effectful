@@ -1,0 +1,14 @@
+.layout {
+  min-height: 100vh;
+  background-color: #f3f4f6;
+}
+
+.layout-body {
+  display: flex;
+}
+
+.layout-main {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+}

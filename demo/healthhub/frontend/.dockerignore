@@ -1,0 +1,29 @@
+# Node modules
+node_modules
+npm-debug.log
+
+# Build output
+dist
+build
+
+# Development files
+.git
+.gitignore
+*.md
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Testing
+coverage
+*.test.ts
+*.test.tsx
+tests/
+
+# Env files (should be provided by Docker)
+.env
+.env.local
+.env.*.local

@@ -1,0 +1,251 @@
+# ==============================================================================
+# .dockerignore - Keep synchronized with .gitignore for consistent build context
+# ==============================================================================
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Python distribution / packaging
+env/
+build/
+develop-eggs/
+dist/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Backend build artifacts
+backend/build/
+
+# Python virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Python test and coverage
+.pytest_cache/
+.tox/
+.coverage
+.cache
+htmlcov/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Python installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Translations
+*.mo
+*.pot
+
+# C extensions and compiled objects
+*.so
+*.os
+*.o
+
+# Core dump files
+/core
+core.*
+*.core
+core.[0-9]*
+
+# Node.js dependencies and artifacts - ZERO TOLERANCE (comprehensive exclusion)
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+**/.npm/
+.yarn/
+**/.yarn/
+.pnpm-store/
+**/.pnpm-store/
+
+# React build outputs - ZERO TOLERANCE (built inside container)
+build/
+**/build/
+dist/
+**/dist/
+.next/
+**/.next/
+out/
+**/out/
+frontend/build/
+frontend/dist/
+
+# Package lock files (removed from version control for cross-platform compatibility)
+# These are generated fresh in Docker builds for deterministic dependency resolution
+package-lock.json
+**/package-lock.json
+yarn.lock
+**/yarn.lock
+pnpm-lock.yaml
+**/pnpm-lock.yaml
+poetry.lock
+
+# Test coverage reports - ZERO TOLERANCE for generated coverage files
+coverage/
+**/coverage/
+.nyc_output/
+**/.nyc_output/
+*.lcov
+
+# React development cache
+.eslintcache
+
+# IDE and editor files (never needed in container)
+.vscode/*
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment files (use Docker env vars instead)
+.env
+.env.local
+.env.*.local
+
+# Claude AI files (exclude logs and temp, but keep config)
+.claude/logs/
+.claude/temp/
+
+# OS generated files (never needed in container)
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.orig
+*.log
+
+# Documentation build outputs
+docs/_build/
+Sphinx-*/
+
+# Benchmark results
+.benchmarks/
+
+# ==============================================================================
+# Docker-specific exclusions
+# ==============================================================================
+
+# Docker files themselves (don't copy into image)
+Dockerfile*
+docker-compose*.yml
+docker-compose*.yaml
+.dockerignore
+
+# Git repository (exclude .git directory for smaller context)
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD files
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+azure-pipelines.yml
+
+# Development and testing tools not needed in production
+test/
+spec/
+
+# Development documentation
+CHANGELOG.md
+LICENSE
+
+# Editor configurations
+.editorconfig
+.prettierrc*
+.eslintrc*
+
+# Development scripts
+scripts/dev/
+scripts/test/
+
+# Local development databases
+*.db
+*.sqlite
+*.sqlite3
+
+# PostgreSQL data directory
+.pgdata/
+
+# Redis data directory
+.redisdata/
+
+# MyPy reports and cache
+mypy-reports/
+.mypy_cache/
+
+# Ruff cache
+.ruff_cache/
+
+# Type checking reports
+type-check-results/
+.type-safety-cache/
+
+# Local development files
+.local/
+.tmp/
+
+# ==============================================================================
+# Performance optimizations - exclude large unnecessary files
+# ==============================================================================
+
+# Large media files that might be in development
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.mkv
+
+# Large image files (keep small ones for UI)
+*.psd
+*.ai
+*.sketch
+
+# Archive files
+*.zip
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.rar
+*.7z
+
+# Backup files
+*.backup
+*.bak
+*~
+
+# E2E test artifacts
+debug-*.png
+test-screenshots/
+*.screenshot.png
