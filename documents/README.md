@@ -37,6 +37,11 @@ Project policies and philosophies:
 - **[architecture.md](core/architecture.md)** - 5-layer architecture, design decisions
 - **[purity.md](core/purity.md)** - Pure functional programming rules
 
+**Observability**:
+- **[observability_doctrine.md](core/observability_doctrine.md)** - Metrics philosophy and cardinality management (SSoT)
+- **[monitoring_standards.md](core/monitoring_standards.md)** - Naming conventions and label standards (SSoT)
+- **[alerting_policy.md](core/alerting_policy.md)** - Alert severity levels and runbook requirements (SSoT)
+
 ### Tutorials
 
 Step-by-step guides for learning effectful:
@@ -57,6 +62,13 @@ Step-by-step guides for learning effectful:
 - **[09_storage_effects.md](tutorials/09_storage_effects.md)** - S3-compatible object storage
 - **[10_auth_effects.md](tutorials/10_auth_effects.md)** - JWT authentication and passwords
 
+**Observability**:
+- **[11_metrics_quickstart.md](tutorials/11_metrics_quickstart.md)** - Get started with metrics in 15 minutes
+- **[12_metric_types_guide.md](tutorials/12_metric_types_guide.md)** - Choose the right metric type
+- **[13_prometheus_setup.md](tutorials/13_prometheus_setup.md)** - Docker integration with Prometheus/Grafana
+- **[14_alert_rules.md](tutorials/14_alert_rules.md)** - Write actionable Prometheus alerts
+- **[15_grafana_dashboards.md](tutorials/15_grafana_dashboards.md)** - Build beautiful dashboards
+
 ### API Reference
 
 Complete API documentation:
@@ -66,6 +78,7 @@ Complete API documentation:
 - **[auth.md](api/auth.md)** - JWT authentication effects
 - **[messaging.md](api/messaging.md)** - Pub/sub messaging effects
 - **[storage.md](api/storage.md)** - S3 object storage effects
+- **[metrics.md](api/metrics.md)** - Prometheus metrics effects (Counter, Gauge, Histogram, Summary)
 - **[result.md](api/result.md)** - Result type and utilities
 - **[interpreters.md](api/interpreters.md)** - Interpreter interfaces and error types
 - **[programs.md](api/programs.md)** - Program execution and composition

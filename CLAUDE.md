@@ -16,7 +16,7 @@
 - `effectful/` - Main library package (renamed from functional_effects)
 - `effectful/algebraic/` - Result[T, E], EffectReturn types
 - `effectful/domain/` - Business domain models (User, Message, Profile, Token, etc.)
-- `effectful/effects/` - Immutable effect definitions (WebSocket, Database, Cache, Messaging, Storage, Auth)
+- `effectful/effects/` - Immutable effect definitions (WebSocket, Database, Cache, Messaging, Storage, Auth, Metrics)
 - `effectful/interpreters/` - Effect handlers (execution layer)
 - `effectful/programs/` - Program execution runners
 - `effectful/adapters/` - Real infrastructure implementations (PostgreSQL, Redis, S3, Pulsar)
@@ -35,7 +35,7 @@ Layer 2: Program Runner (run_ws_program - effect execution loop)
     ↓
 Layer 3: Composite Interpreter (Effect routing)
     ↓
-Layer 4: Specialized Interpreters (WebSocket, Database, Cache, Messaging, Storage, Auth)
+Layer 4: Specialized Interpreters (WebSocket, Database, Cache, Messaging, Storage, Auth, Metrics)
     ↓
 Layer 5: Infrastructure Layer (PostgreSQL, Redis, S3, Pulsar, or test doubles)
 ```
@@ -442,6 +442,58 @@ def greet_with_caching(user_id: UUID) -> Generator[AllEffects, EffectResult, str
 
 **Pattern**: Use `yield from` to delegate to sub-programs.
 
+### 4. Recording Metrics
+
+```python
+from effectful.effects.metrics import IncrementCounter, ObserveHistogram
+from effectful.domain.metrics_result import MetricRecorded, MetricRecordingFailed
+import time
+
+def process_task_with_metrics(
+    task_type: str,
+    task_id: str,
+) -> Generator[AllEffects, EffectResult, bool]:
+    """Process task and record metrics."""
+
+    # Start timer
+    start = time.perf_counter()
+
+    # Execute business logic
+    result = yield ProcessTask(task_id=task_id)
+
+    # Calculate duration
+    duration = time.perf_counter() - start
+    status = "success" if isinstance(result, TaskCompleted) else "failed"
+
+    # Record counter metric
+    counter_result = yield IncrementCounter(
+        metric_name="tasks_processed_total",
+        labels={"task_type": task_type, "status": status},
+        value=1.0,
+    )
+
+    # Record histogram metric
+    histogram_result = yield ObserveHistogram(
+        metric_name="task_duration_seconds",
+        labels={"task_type": task_type},
+        value=duration,
+    )
+
+    # Pattern match on results
+    match (counter_result, histogram_result):
+        case (MetricRecorded(), MetricRecorded()):
+            return True
+        case (MetricRecordingFailed(reason=r), _):
+            # Log error but don't fail the task
+            print(f"⚠️  Counter metric failed: {r}")
+            return isinstance(result, TaskCompleted)
+        case (_, MetricRecordingFailed(reason=r)):
+            print(f"⚠️  Histogram metric failed: {r}")
+            return isinstance(result, TaskCompleted)
+```
+
+**Pattern**: Metrics effects pattern match on `MetricRecorded | MetricRecordingFailed`. Metrics failures should not cause business logic to fail.
+
 ## 🗄️ Database
 
 **Schema**: Integration tests use real PostgreSQL with schema migrations
@@ -552,6 +604,9 @@ All items must meet Universal Success Criteria (see above).
 - **Testing Doctrine**: `documents/core/testing_doctrine.md`
 - **Type Safety Doctrine**: `documents/core/type_safety_doctrine.md`
 - **Architecture**: `documents/core/architecture.md`
+- **Observability Doctrine**: `documents/core/observability_doctrine.md` (SSoT for metrics philosophy)
+- **Monitoring Standards**: `documents/core/monitoring_standards.md` (SSoT for naming conventions)
+- **Alerting Policy**: `documents/core/alerting_policy.md` (SSoT for alert rules)
 
 ### Code References
 - **Trampoline Module**: `effectful/algebraic/trampoline.py`
@@ -564,6 +619,14 @@ All items must meet Universal Success Criteria (see above).
 - **Testing Doctrine**: `documents/core/testing_doctrine.md` (SSoT for all testing)
 - **Testing Tutorial**: `documents/tutorials/04_testing_guide.md`
 - **Test Suite Audit**: `documents/testing/test_suite_audit.md`
+
+### Observability
+- **Metrics Quickstart**: `documents/tutorials/11_metrics_quickstart.md`
+- **Metric Types Guide**: `documents/tutorials/12_metric_types_guide.md`
+- **Prometheus Setup**: `documents/tutorials/13_prometheus_setup.md`
+- **Alert Rules**: `documents/tutorials/14_alert_rules.md`
+- **Grafana Dashboards**: `documents/tutorials/15_grafana_dashboards.md`
+- **Metrics API Reference**: `documents/api/metrics.md`
 
 ### Other
 - **Effect Programs**: `tests/test_integration/test_chat_workflow.py`

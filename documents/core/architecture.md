@@ -41,8 +41,8 @@ flowchart TB
 | 1 | Application | Pure effect programs (business logic as generators) |
 | 2 | Program Runner | Execution engine (generator protocol, fail-fast semantics) |
 | 3 | Composite Interpreter | Effect routing (pattern matching to specialized handlers) |
-| 4 | Specialized Interpreters | Infrastructure integration (WebSocket, Database, Cache, Messaging, Storage, Auth) |
-| 5 | Infrastructure | External systems (PostgreSQL, Redis, FastAPI, Apache Pulsar, AWS S3, JWT auth, or test fakes) |
+| 4 | Specialized Interpreters | Infrastructure integration (WebSocket, Database, Cache, Messaging, Storage, Auth, Metrics) |
+| 5 | Infrastructure | External systems (PostgreSQL, Redis, FastAPI, Apache Pulsar, AWS S3, JWT auth, Prometheus, or test fakes) |
 
 **Key Properties:**
 - **Unidirectional flow**: Data flows down through layers, results flow back up
@@ -60,18 +60,30 @@ flowchart TB
     WSInterp[WebSocket Interpreter]
     DBInterp[Database Interpreter]
     CacheInterp[Cache Interpreter]
+    MsgInterp[Messaging Interpreter]
+    StorageInterp[Storage Interpreter]
+    MetricsInterp[Metrics Interpreter]
     WS[FastAPI WebSocket]
     DB[PostgreSQL asyncpg]
     Redis[Redis Cache]
+    Pulsar[Apache Pulsar]
+    S3[MinIO S3]
+    Prometheus[Prometheus Server]
 
     Program -->|yields effects| Runner
     Runner -->|interprets each| Composite
     Composite -->|WebSocket effects| WSInterp
     Composite -->|Database effects| DBInterp
     Composite -->|Cache effects| CacheInterp
+    Composite -->|Messaging effects| MsgInterp
+    Composite -->|Storage effects| StorageInterp
+    Composite -->|Metrics effects| MetricsInterp
     WSInterp --> WS
     DBInterp --> DB
     CacheInterp --> Redis
+    MsgInterp --> Pulsar
+    StorageInterp --> S3
+    MetricsInterp --> Prometheus
     Runner -->|sends results| Program
 ```
 
@@ -213,6 +225,7 @@ flowchart TB
     Messaging[MessagingEffect]
     Storage[StorageEffect]
     Auth[AuthEffect]
+    Metrics[MetricsEffect]
 
     AllEffects --> WebSocket
     AllEffects --> Database
@@ -220,6 +233,7 @@ flowchart TB
     AllEffects --> Messaging
     AllEffects --> Storage
     AllEffects --> Auth
+    AllEffects --> Metrics
 
     WebSocket --> SendText[SendText]
     WebSocket --> ReceiveText[ReceiveText]
@@ -232,6 +246,10 @@ flowchart TB
     Cache --> GetCachedProfile[GetCachedProfile]
     Cache --> PutCachedProfile[PutCachedProfile]
     Cache --> DeleteCachedProfile[DeleteCachedProfile]
+
+    Metrics --> IncrementCounter[IncrementCounter]
+    Metrics --> RecordGauge[RecordGauge]
+    Metrics --> ObserveHistogram[ObserveHistogram]
 ```
 
 **Key Properties:**
@@ -289,6 +307,8 @@ flowchart TB
     Redis[Redis Cache]
     S3[MinIO S3]
     Pulsar[Apache Pulsar]
+    Prometheus[Prometheus Server]
+    Grafana[Grafana Dashboard]
 
     App --> Interpreters
     Interpreters --> WS
@@ -296,6 +316,8 @@ flowchart TB
     Interpreters --> Redis
     Interpreters --> S3
     Interpreters --> Pulsar
+    Interpreters --> Prometheus
+    Prometheus --> Grafana
 ```
 
 **Infrastructure Services:**
@@ -307,6 +329,8 @@ flowchart TB
 | Redis | aioredis | Caching and session storage |
 | MinIO S3 | S3 API | File and object storage |
 | Apache Pulsar | Pulsar client | Pub/sub messaging |
+| Prometheus | HTTP | Metrics collection and monitoring |
+| Grafana | HTTP | Metrics visualization and alerting |
 
 **Testing Strategy:**
 - **Unit tests**: All services mocked with pytest-mock
@@ -524,6 +548,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, None]:
 
 - **Type Safety Doctrine**: `documents/core/type_safety_doctrine.md`
 - **Testing Doctrine**: `documents/core/testing_doctrine.md` (SSoT for all testing)
+- **Observability Doctrine**: `documents/core/observability_doctrine.md` (SSoT for metrics, monitoring, and alerting)
 - **Test Suite Audit**: `documents/testing/test_suite_audit.md`
 - **API Reference**: `documents/api/`
 

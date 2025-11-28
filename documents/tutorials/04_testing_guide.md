@@ -724,6 +724,302 @@ tests/
 
 ---
 
+## Testing Metrics Effects
+
+### Overview
+
+Metrics effects follow the same testing patterns as other effects, with additional considerations for cardinality validation and metric registry integration.
+
+> **See Also**: [Metrics Quickstart](./07_metrics_quickstart.md) for metrics basics.
+
+### Unit Testing Metrics Programs
+
+Test metrics effects like any other effect using generator-based mocking:
+
+```python
+from effectful.effects.metrics import IncrementCounter, ObserveHistogram
+from effectful.domain.metrics_result import MetricRecorded, MetricRecordingFailed
+
+def test_increment_counter_success() -> None:
+    """Test incrementing counter metric succeeds."""
+
+    # Program that records metric
+    def track_task_completion(task_type: str) -> Generator[AllEffects, EffectResult, bool]:
+        result = yield IncrementCounter(
+            metric_name="tasks_completed_total",
+            labels={"task_type": task_type},
+            value=1.0,
+        )
+
+        match result:
+            case MetricRecorded():
+                return True
+            case MetricRecordingFailed():
+                return False
+
+    # Execute program with mocked response
+    gen = track_task_completion(task_type="email")
+
+    # Program yields IncrementCounter effect
+    effect = next(gen)
+    assert isinstance(effect, IncrementCounter)
+    assert effect.metric_name == "tasks_completed_total"
+    assert effect.labels == {"task_type": "email"}
+    assert effect.value == 1.0
+
+    # Mock successful recording
+    with pytest.raises(StopIteration) as exc_info:
+        gen.send(MetricRecorded(timestamp=1706472000.0))
+
+    # Program returns True (success)
+    assert exc_info.value.value is True
+```
+
+### Testing Metric Failures
+
+Test how programs handle metric recording failures:
+
+```python
+def test_increment_counter_handles_failure() -> None:
+    """Test program handles metric recording failure gracefully."""
+
+    def track_with_fallback(task_type: str) -> Generator[AllEffects, EffectResult, str]:
+        result = yield IncrementCounter(
+            metric_name="tasks_completed_total",
+            labels={"task_type": task_type},
+            value=1.0,
+        )
+
+        match result:
+            case MetricRecorded():
+                return "metric_recorded"
+            case MetricRecordingFailed(reason=reason):
+                # Log failure but continue
+                yield LogWarning(message=f"Metrics failed: {reason}")
+                return "metric_failed_but_continued"
+
+    gen = track_with_fallback(task_type="email")
+
+    # Program yields IncrementCounter
+    effect = next(gen)
+    assert isinstance(effect, IncrementCounter)
+
+    # Mock metric failure
+    effect = gen.send(MetricRecordingFailed(reason="collector_unavailable"))
+
+    # Program yields LogWarning
+    assert isinstance(effect, LogWarning)
+    assert "Metrics failed" in effect.message
+
+    # Program continues despite metric failure
+    with pytest.raises(StopIteration) as exc_info:
+        gen.send(None)
+
+    assert exc_info.value.value == "metric_failed_but_continued"
+```
+
+### Testing Histogram Observations
+
+Test duration tracking with histograms:
+
+```python
+def test_observe_histogram_duration() -> None:
+    """Test observing duration in histogram."""
+
+    def measure_task_duration(
+        task_type: str,
+        duration: float,
+    ) -> Generator[AllEffects, EffectResult, None]:
+        result = yield ObserveHistogram(
+            metric_name="task_duration_seconds",
+            labels={"task_type": task_type},
+            value=duration,
+        )
+
+        assert isinstance(result, MetricRecorded)
+
+    gen = measure_task_duration(task_type="email", duration=1.234)
+
+    # Program yields ObserveHistogram
+    effect = next(gen)
+    assert isinstance(effect, ObserveHistogram)
+    assert effect.metric_name == "task_duration_seconds"
+    assert effect.labels == {"task_type": "email"}
+    assert effect.value == 1.234
+
+    # Mock successful observation
+    with pytest.raises(StopIteration):
+        gen.send(MetricRecorded(timestamp=1706472000.0))
+```
+
+### Integration Testing with Metrics
+
+Use `ResetMetrics` effect in test fixtures for isolation:
+
+```python
+import pytest
+from effectful.effects.metrics import ResetMetrics
+
+@pytest.fixture
+async def clean_metrics() -> None:
+    """Reset metrics before each test for isolation."""
+
+    def reset_all() -> Generator[AllEffects, EffectResult, None]:
+        result = yield ResetMetrics()
+        assert isinstance(result, MetricRecorded)
+
+    # Execute reset program
+    gen = reset_all()
+    effect = next(gen)
+    assert isinstance(effect, ResetMetrics)
+
+    with pytest.raises(StopIteration):
+        gen.send(MetricRecorded(timestamp=1706472000.0))
+
+@pytest.mark.asyncio
+async def test_counter_increments(clean_metrics: None) -> None:
+    """Test counter increments correctly (integration test)."""
+
+    # Test with clean metric state
+    def increment_twice() -> Generator[AllEffects, EffectResult, None]:
+        yield IncrementCounter(
+            metric_name="test_counter_total",
+            labels={"test": "value"},
+            value=1.0,
+        )
+        yield IncrementCounter(
+            metric_name="test_counter_total",
+            labels={"test": "value"},
+            value=1.0,
+        )
+
+        # Query final value
+        query_result = yield QueryMetrics(
+            metric_name="test_counter_total",
+            labels={"test": "value"},
+        )
+
+        match query_result:
+            case QuerySuccess(metrics=metrics):
+                # Should be 2.0 after two increments
+                total = sum(metrics.values())
+                assert total == 2.0
+
+    # Run program (would use real interpreter in integration test)
+    # ... test implementation
+```
+
+### Testing Metric Validation
+
+Test that invalid metrics are rejected:
+
+```python
+def test_invalid_metric_name_rejected() -> None:
+    """Test metric recording fails for unregistered metric."""
+
+    def record_invalid_metric() -> Generator[AllEffects, EffectResult, str]:
+        result = yield IncrementCounter(
+            metric_name="unknown_metric_total",  # Not in registry!
+            labels={},
+            value=1.0,
+        )
+
+        match result:
+            case MetricRecorded():
+                return "unexpected_success"
+            case MetricRecordingFailed(reason=reason):
+                return reason
+
+    gen = record_invalid_metric()
+    effect = next(gen)
+
+    # Mock rejection
+    with pytest.raises(StopIteration) as exc_info:
+        gen.send(MetricRecordingFailed(reason="metric_not_registered"))
+
+    # Program returns error reason
+    assert exc_info.value.value == "metric_not_registered"
+
+def test_missing_required_label_rejected() -> None:
+    """Test metric recording fails when required label is missing."""
+
+    def record_with_missing_label() -> Generator[AllEffects, EffectResult, str]:
+        result = yield IncrementCounter(
+            metric_name="tasks_completed_total",
+            labels={"task_type": "email"},  # Missing "status" label!
+            value=1.0,
+        )
+
+        match result:
+            case MetricRecorded():
+                return "unexpected_success"
+            case MetricRecordingFailed(reason=reason):
+                return reason
+
+    gen = record_with_missing_label()
+    effect = next(gen)
+
+    # Mock validation failure
+    with pytest.raises(StopIteration) as exc_info:
+        gen.send(MetricRecordingFailed(reason="missing_label: status"))
+
+    # Program receives specific error
+    assert "missing_label" in exc_info.value.value
+```
+
+### Testing Automatic Metrics
+
+Test that interpreters automatically record metrics:
+
+```python
+from unittest.mock import AsyncMock
+
+@pytest.mark.asyncio
+async def test_interpreter_records_automatic_metrics() -> None:
+    """Test interpreter records effect_duration_seconds automatically."""
+
+    # Create mock metrics collector
+    mock_collector = AsyncMock()
+    mock_collector.observe_histogram.return_value = Ok(
+        EffectReturn(value=MetricRecorded(timestamp=1706472000.0))
+    )
+
+    # Create interpreter with metrics enabled
+    interpreter = DatabaseInterpreter(
+        repository=mock_repository,
+        metrics_collector=mock_collector,  # Inject mock
+    )
+
+    # Execute effect
+    result = await interpreter.interpret(
+        GetUserById(user_id=UUID("..."))
+    )
+
+    # Verify interpreter recorded duration metric
+    mock_collector.observe_histogram.assert_called_once()
+    call_args = mock_collector.observe_histogram.call_args
+
+    assert call_args.kwargs["metric_name"] == "effectful_effect_duration_seconds"
+    assert call_args.kwargs["labels"]["effect_type"] == "GetUserById"
+    assert call_args.kwargs["value"] > 0  # Duration is positive
+```
+
+### Best Practices
+
+**✅ DO**:
+- Test both success and failure cases for metrics
+- Use `ResetMetrics` in integration test fixtures
+- Mock `MetricRecorded` / `MetricRecordingFailed` in unit tests
+- Test validation errors (wrong labels, invalid names)
+
+**❌ DON'T**:
+- Skip testing metrics (they're part of your program contract)
+- Forget to test error paths (collector unavailable)
+- Use real Prometheus in unit tests (too slow)
+- Assert on exact metric values in unit tests (use mocks)
+
+---
+
 ## Next Steps
 
 - Explore the demo application in `/demo` for complete working examples
