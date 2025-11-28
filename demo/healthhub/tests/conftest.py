@@ -6,7 +6,6 @@ import asyncio
 import json
 from collections.abc import AsyncIterator, Iterator
 from datetime import date, datetime, timezone
-from typing import Any
 from uuid import UUID, uuid4
 
 import asyncpg
@@ -14,8 +13,29 @@ import pytest
 import redis.asyncio as redis
 from pytest_mock import MockerFixture
 
-# Prevent pytest.skip() to enforce zero skipped tests
+# Override pytest.skip to enforce "zero skipped tests" policy
+# type: ignore is necessary because we're replacing a built-in fixture
+# with incompatible signature for policy enforcement purposes
 pytest.skip = lambda *args, **kwargs: pytest.fail("Test skipping is forbidden")  # type: ignore[assignment]
+
+
+def assert_frozen(obj: object, attr: str, value: object) -> None:
+    """Assert that frozen dataclass raises AttributeError on assignment.
+
+    Centralizes type:ignore for immutability testing to single location.
+    Frozen dataclasses are read-only at the type level, so assignment
+    requires suppressing type check even though it's correct to test.
+
+    Args:
+        obj: Frozen dataclass instance to test
+        attr: Attribute name to attempt assignment
+        value: Value to attempt to assign
+
+    Raises:
+        AssertionError: If attribute assignment succeeds (object is mutable)
+    """
+    with pytest.raises(AttributeError):
+        setattr(obj, attr, value)  # type: ignore[misc]
 
 
 async def _init_connection(conn: asyncpg.Connection[asyncpg.Record]) -> None:

@@ -9,6 +9,8 @@ from app.auth.jwt import (
     verify_token,
     TokenData,
     TokenType,
+    TokenValidationSuccess,
+    TokenValidationError,
 )
 from app.auth.password import hash_password, verify_password
 
@@ -18,6 +20,8 @@ __all__ = [
     "verify_token",
     "TokenData",
     "TokenType",
+    "TokenValidationSuccess",
+    "TokenValidationError",
     "hash_password",
     "verify_password",
 ]

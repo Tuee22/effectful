@@ -12,6 +12,7 @@ import pytest
 from app.domain.appointment import Confirmed
 from app.domain.invoice import LineItem
 from app.effects.healthcare import (
+    AddInvoiceLineItem,
     CheckMedicationInteractions,
     CreateAppointment,
     CreateInvoice,
@@ -22,12 +23,14 @@ from app.effects.healthcare import (
     GetLabResultById,
     GetPatientById,
     TransitionAppointmentStatus,
+    UpdateInvoiceStatus,
 )
 from app.effects.notification import (
     LogAuditEvent,
     NotificationValue,
     PublishWebSocketNotification,
 )
+from ...conftest import assert_frozen
 
 
 class TestHealthcareEffects:
@@ -37,9 +40,7 @@ class TestHealthcareEffects:
         """GetPatientById should be immutable."""
         patient_id = uuid4()
         effect = GetPatientById(patient_id=patient_id)
-
-        with pytest.raises(AttributeError):
-            effect.patient_id = uuid4()  # type: ignore[misc]
+        assert_frozen(effect, "patient_id", uuid4())
 
     def test_get_patient_by_id_structure(self) -> None:
         """GetPatientById should have correct structure."""
@@ -53,9 +54,7 @@ class TestHealthcareEffects:
         """GetDoctorById should be immutable."""
         doctor_id = uuid4()
         effect = GetDoctorById(doctor_id=doctor_id)
-
-        with pytest.raises(AttributeError):
-            effect.doctor_id = uuid4()  # type: ignore[misc]
+        assert_frozen(effect, "doctor_id", uuid4())
 
     def test_create_appointment_immutable(self) -> None:
         """CreateAppointment should be immutable."""
@@ -65,9 +64,7 @@ class TestHealthcareEffects:
             requested_time=datetime.now(timezone.utc),
             reason="Annual checkup",
         )
-
-        with pytest.raises(AttributeError):
-            effect.reason = "Different reason"  # type: ignore[misc]
+        assert_frozen(effect, "reason", "Different reason")
 
     def test_create_appointment_structure(self) -> None:
         """CreateAppointment should have correct structure."""
@@ -98,9 +95,7 @@ class TestHealthcareEffects:
             ),
             actor_id=uuid4(),
         )
-
-        with pytest.raises(AttributeError):
-            effect.actor_id = uuid4()  # type: ignore[misc]
+        assert_frozen(effect, "actor_id", uuid4())
 
     def test_create_prescription_immutable(self) -> None:
         """CreatePrescription should be immutable."""
@@ -114,16 +109,12 @@ class TestHealthcareEffects:
             refills_remaining=3,
             notes="Monitor blood pressure",
         )
-
-        with pytest.raises(AttributeError):
-            effect.dosage = "20mg"  # type: ignore[misc]
+        assert_frozen(effect, "dosage", "20mg")
 
     def test_check_medication_interactions_immutable(self) -> None:
         """CheckMedicationInteractions should be immutable."""
         effect = CheckMedicationInteractions(medications=["Aspirin", "Warfarin"])
-
-        with pytest.raises(AttributeError):
-            effect.medications = ["Different"]  # type: ignore[misc]
+        assert_frozen(effect, "medications", ["Different"])
 
     def test_create_lab_result_immutable(self) -> None:
         """CreateLabResult should be immutable."""
@@ -134,10 +125,9 @@ class TestHealthcareEffects:
             test_type="CBC",
             result_data={"wbc": "7.5", "rbc": "4.8"},
             critical=False,
+            doctor_notes=None,
         )
-
-        with pytest.raises(AttributeError):
-            effect.critical = True  # type: ignore[misc]
+        assert_frozen(effect, "critical", True)
 
     def test_create_invoice_immutable(self) -> None:
         """CreateInvoice should be immutable."""
@@ -157,9 +147,25 @@ class TestHealthcareEffects:
             line_items=[line_item],
             due_date=None,
         )
+        assert_frozen(effect, "patient_id", uuid4())
 
-        with pytest.raises(AttributeError):
-            effect.patient_id = uuid4()  # type: ignore[misc]
+    def test_add_invoice_line_item_immutable(self) -> None:
+        """AddInvoiceLineItem should be immutable."""
+        effect = AddInvoiceLineItem(
+            invoice_id=uuid4(),
+            description="Lab work - CBC",
+            quantity=1,
+            unit_price=Decimal("75.00"),
+        )
+        assert_frozen(effect, "description", "Different description")
+
+    def test_update_invoice_status_immutable(self) -> None:
+        """UpdateInvoiceStatus should be immutable."""
+        effect = UpdateInvoiceStatus(
+            invoice_id=uuid4(),
+            status="paid",
+        )
+        assert_frozen(effect, "status", "draft")
 
 
 class TestNotificationEffects:
@@ -172,9 +178,7 @@ class TestNotificationEffects:
             message={"type": "test", "data": "value"},
             recipient_id=uuid4(),
         )
-
-        with pytest.raises(AttributeError):
-            effect.channel = "different"  # type: ignore[misc]
+        assert_frozen(effect, "channel", "different")
 
     def test_publish_websocket_notification_structure(self) -> None:
         """PublishWebSocketNotification should have correct structure."""
@@ -203,9 +207,7 @@ class TestNotificationEffects:
             user_agent="Test Browser",
             metadata={"key": "value"},
         )
-
-        with pytest.raises(AttributeError):
-            effect.action = "different"  # type: ignore[misc]
+        assert_frozen(effect, "action", "different")
 
     def test_log_audit_event_structure(self) -> None:
         """LogAuditEvent should have correct structure."""

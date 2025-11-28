@@ -58,6 +58,25 @@ The **best_practices/** tier contains **HealthHub-specific implementation patter
 
 ---
 
+**[Purity Standards](purity_standards.md)** (750+ lines)
+- HIPAA-compliant code review standards for effect system purity
+- Six purity standards mapped to §164.312 requirements:
+  1. Effects as Data (§164.312(b) Audit Controls)
+  2. Yield Don't Call (§164.312(a)(1) Access Control)
+  3. Interpreters Isolate Impurity (All §164.312)
+  4. Immutability by Default (§164.312(c)(1) Integrity)
+  5. No Loops (§164.312(b) Deterministic workflows)
+  6. Exhaustive Pattern Matching (§164.312 Medical safety)
+- Automated violation detection (grep patterns)
+- 12 anti-patterns with severity triage (CRITICAL/HIGH/MEDIUM)
+- Layer-specific standards (routes, programs, interpreters, domain, infrastructure)
+- Code review checklists (purity + HIPAA compliance)
+- Current codebase violation scan (15+ critical violations)
+
+**Use this when**: Conducting code reviews, evaluating purity compliance, identifying HIPAA violations, automated CI/CD checks.
+
+---
+
 ### Quality & Testing
 
 **[Testing Doctrine](testing_doctrine.md)** (1,345 lines)
@@ -71,6 +90,97 @@ The **best_practices/** tier contains **HealthHub-specific implementation patter
 - Coverage requirements (backend: comprehensive, integration: conceptual)
 
 **Use this when**: Writing tests for any HealthHub component (programs, interpreters, repositories).
+
+---
+
+### Security & Compliance
+
+**[Security Hardening](security_hardening.md)** (867 lines)
+- Dual-token JWT authentication (access 15min, refresh 7 days)
+- CSRF protection layers (Bearer token, SameSite cookies, CORS, WebSocket origin validation)
+- ADT-based authorization security (pattern matching, capability fields)
+- Rate limiting for PHI protection (login, PHI access, API endpoints)
+- HIPAA Security Rule compliance (§164.312 mapping)
+- Cookie security configuration (HttpOnly, Secure, SameSite)
+- Anti-patterns: string-based roles, localStorage tokens, missing rate limiting
+
+**Use this when**: Implementing authentication, authorization, or security controls for medical data.
+
+---
+
+### Observability & Operations
+
+**[Monitoring & Observability](monitoring_observability.md)** (1,431 lines)
+- Prometheus metrics architecture for healthcare
+- Healthcare-specific metrics catalog (PHI access, appointments, prescriptions, lab results, audit logs)
+- Recording rules (PHI access rate, appointment success, lab result delivery)
+- Service Level Objectives (SLOs) with multi-window burn rates
+- Alert rules by severity (P1/P2/P3 with thresholds)
+- Grafana dashboards (6 healthcare dashboards)
+- Four Golden Signals (Latency, Traffic, Errors, Saturation)
+- Developer workflow (adding metrics, testing, dashboard creation)
+
+**Use this when**: Adding metrics to features, creating dashboards, defining alerts, tracking SLOs, or monitoring PHI access.
+
+---
+
+### Development Quality
+
+**[Code Quality Enforcement](code_quality_enforcement.md)** (590 lines)
+- Ruff linting architecture (F, E, W, B, ANN, PT, UP rules)
+- Tool responsibility split (Ruff → Black → MyPy)
+- Healthcare-specific quality rules (no mutable defaults, no bare except, type hints required)
+- Effect system boundary enforcement (banned APIs: asyncpg, Redis, Pulsar in effect programs)
+- check-code integration (Ruff → Black → MyPy fail-fast workflow)
+- pyproject.toml configuration examples
+
+**Use this when**: Setting up linting, enforcing code standards, or onboarding developers.
+
+---
+
+### Real-Time Communication
+
+**[WebSocket Security](websocket_security.md)** (690 lines)
+- Native WebSocket architecture with Redis Pub/Sub
+- One-time ticket authentication (60s expiry, Redis GETDEL)
+- Channel isolation for patient PHI (server-side authorization)
+- Connection state machine (Idle → Connecting → Authenticating → Active → Reconnecting → Terminated)
+- Medical event protocol (appointment_updated, lab_result_ready, prescription_created, billing_invoice_ready)
+- Priority levels (normal, urgent, critical) with acknowledgments
+- Security controls (CSP, origin validation, rate limiting, TLS requirement)
+- Resilience patterns (heartbeat, exponential backoff, subscription recovery)
+
+**Use this when**: Implementing real-time notifications, WebSocket connections, or critical medical alerts.
+
+---
+
+### Integration
+
+**[FastAPI Integration Patterns](fastapi_integration_patterns.md)** (390 lines)
+- Route handler → effect program conversion (HTTP → Program → HTTP)
+- Request/response lifecycle (Pydantic validation, program execution, DTO conversion)
+- Error handling (domain errors → HTTP status codes)
+- Dependency injection for interpreters (get_interpreter factory pattern)
+- Authorization dependencies (ADT-based access control with Depends())
+- Role-based filtering (pattern matching for query construction)
+- Common pitfalls (direct infrastructure calls, mixing exceptions, resource leaks)
+
+**Use this when**: Creating new FastAPI routes, integrating with effectful programs, or bridging HTTP and effect systems.
+
+---
+
+### Documentation Standards
+
+**[Mermaid Standards](mermaid_standards.md)** (270 lines)
+- Universal compatibility subset (GitHub + VSCode)
+- Diagram types (state machines, sequence diagrams, flowcharts)
+- Healthcare patterns (appointment state machine, prescription workflow, authorization flows, lab result alerts)
+- Style guide (color coding, node shapes, arrow types)
+- Accessibility guidelines (WCAG AA compliance, descriptive labels, maximum 15 nodes)
+- Safe subset (flowchart TB, solid arrows only, no subgraphs)
+- Testing checklist
+
+**Use this when**: Creating state machine diagrams, authorization flows, or architecture visualizations.
 
 ---
 
@@ -228,13 +338,20 @@ Update **best_practices/** documents when:
 | Implement authorization | [Authorization Patterns](authorization_patterns.md) |
 | Implement state machine | [State Machine Patterns](state_machine_patterns.md) |
 | Write effect program | [Effect Program Patterns](effect_program_patterns.md) |
+| **Review code purity** | **[Purity Standards](purity_standards.md)** |
 | Write tests | [Testing Doctrine](testing_doctrine.md) |
+| Implement security | [Security Hardening](security_hardening.md) |
+| Add monitoring | [Monitoring & Observability](monitoring_observability.md) |
+| Enforce code quality | [Code Quality Enforcement](code_quality_enforcement.md) |
+| Implement WebSockets | [WebSocket Security](websocket_security.md) |
+| Integrate FastAPI | [FastAPI Integration Patterns](fastapi_integration_patterns.md) |
+| Create diagrams | [Mermaid Standards](mermaid_standards.md) |
 | Understand domain | [../domain/](../domain/) |
 | See actual code | [../product/](../product/) |
 | Learn step-by-step | [../tutorials/](../tutorials/) |
 
 ---
 
-**Last Updated**: 2025-11-26
+**Last Updated**: 2025-11-27
 **Maintainer**: HealthHub Team
-**Document Count**: 4 best practice documents
+**Document Count**: 11 best practice documents

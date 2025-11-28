@@ -18,6 +18,7 @@ from app.domain.appointment import (
     validate_transition,
 )
 from app.domain.prescription import MedicationInteractionWarning, NoInteractions
+from ...conftest import assert_frozen
 
 
 class TestAppointmentStateMachine:
@@ -107,17 +108,13 @@ class TestDomainModelImmutability:
     def test_requested_status_immutable(self) -> None:
         """Requested status should be immutable."""
         status = Requested(requested_at=datetime.now(timezone.utc))
-
-        with pytest.raises(AttributeError):
-            status.requested_at = datetime.now(timezone.utc)  # type: ignore[misc]
+        assert_frozen(status, "requested_at", datetime.now(timezone.utc))
 
     def test_confirmed_status_immutable(self) -> None:
         """Confirmed status should be immutable."""
         now = datetime.now(timezone.utc)
         status = Confirmed(confirmed_at=now, scheduled_time=now)
-
-        with pytest.raises(AttributeError):
-            status.confirmed_at = datetime.now(timezone.utc)  # type: ignore[misc]
+        assert_frozen(status, "confirmed_at", datetime.now(timezone.utc))
 
     def test_medication_warning_immutable(self) -> None:
         """MedicationInteractionWarning should be immutable."""
@@ -126,9 +123,7 @@ class TestDomainModelImmutability:
             severity="severe",
             description="Increased bleeding risk",
         )
-
-        with pytest.raises(AttributeError):
-            warning.severity = "minor"  # type: ignore[misc]
+        assert_frozen(warning, "severity", "minor")
 
     def test_no_interactions_immutable(self) -> None:
         """NoInteractions should be immutable."""

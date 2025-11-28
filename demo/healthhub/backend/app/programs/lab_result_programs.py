@@ -72,6 +72,7 @@ def process_lab_result_program(
         test_type=test_type,
         result_data=result_data,
         critical=critical,
+        doctor_notes=None,
     )
     assert isinstance(lab_result, LabResult)
 

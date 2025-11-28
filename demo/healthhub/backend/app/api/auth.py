@@ -5,12 +5,23 @@ Implements JWT dual-token authentication pattern:
 - Refresh token: 7 days (set in HttpOnly cookie)
 """
 
-from fastapi import APIRouter, HTTPException, status
+from typing import Annotated
+
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from pydantic import BaseModel, EmailStr
 
-from app.auth import create_access_token, create_refresh_token, hash_password, verify_password
-from app.infrastructure import get_database_manager
-from app.repositories import UserRepository
+from app.auth import (
+    create_access_token,
+    create_refresh_token,
+    hash_password,
+    verify_password,
+    verify_token,
+    TokenType,
+    TokenValidationSuccess,
+    TokenValidationError,
+)
+from app.infrastructure import get_database_manager, rate_limit
+from app.repositories import UserRepository, PatientRepository, DoctorRepository
 from app.domain.user import UserRole
 
 
@@ -51,12 +62,25 @@ class RegisterResponse(BaseModel):
     message: str
 
 
+class RefreshResponse(BaseModel):
+    """Refresh token response with new access token."""
+
+    access_token: str
+    token_type: str
+
+
 @router.post("/login", response_model=LoginResponse)
-async def login(request: LoginRequest) -> LoginResponse:
+async def login(
+    request: LoginRequest,
+    response: Response,
+    _rate_limit: Annotated[None, Depends(rate_limit(5, 60))],
+) -> LoginResponse:
     """Authenticate user and return JWT tokens.
 
     Returns access token in response body.
-    Sets refresh token in HttpOnly cookie (TODO: implement cookie setting).
+    Sets refresh token in HttpOnly cookie with strict SameSite policy.
+
+    Rate limit: 5 requests per 60 seconds per IP address.
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
@@ -87,19 +111,38 @@ async def login(request: LoginRequest) -> LoginResponse:
     # Update last login timestamp
     await user_repo.update_last_login(user.id)
 
-    # Generate tokens
-    access_token = create_access_token(user.id, user.email, user.role.value)
-    refresh_token = create_refresh_token(user.id, user.email, user.role.value)
+    # Resolve profile IDs based on role (performance optimization)
+    patient_id = None
+    doctor_id = None
 
-    # TODO: Set refresh token in HttpOnly cookie
-    # response.set_cookie(
-    #     key="refresh_token",
-    #     value=refresh_token,
-    #     httponly=True,
-    #     secure=True,
-    #     samesite="lax",
-    #     max_age=settings.jwt_refresh_token_expire_days * 24 * 60 * 60,
-    # )
+    if user.role.value == "patient":
+        patient_repo = PatientRepository(pool)
+        patient = await patient_repo.get_by_user_id(user.id)
+        if patient is not None:
+            patient_id = patient.id
+    elif user.role.value == "doctor":
+        doctor_repo = DoctorRepository(pool)
+        doctor = await doctor_repo.get_by_user_id(user.id)
+        if doctor is not None:
+            doctor_id = doctor.id
+
+    # Generate tokens with profile IDs
+    access_token = create_access_token(
+        user.id, user.email, user.role.value, patient_id=patient_id, doctor_id=doctor_id
+    )
+    refresh_token = create_refresh_token(
+        user.id, user.email, user.role.value, patient_id=patient_id, doctor_id=doctor_id
+    )
+
+    # Set refresh token in HttpOnly cookie (7 days)
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=True,
+        samesite="strict",
+        max_age=7 * 24 * 60 * 60,
+    )
 
     return LoginResponse(
         access_token=access_token,
@@ -111,10 +154,15 @@ async def login(request: LoginRequest) -> LoginResponse:
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
-async def register(request: RegisterRequest) -> RegisterResponse:
+async def register(
+    request: RegisterRequest,
+    _rate_limit: Annotated[None, Depends(rate_limit(3, 300))],
+) -> RegisterResponse:
     """Register a new user account.
 
     Creates user with hashed password. Does NOT create patient/doctor profile.
+
+    Rate limit: 3 requests per 300 seconds (5 minutes) per IP address.
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
@@ -144,3 +192,89 @@ async def register(request: RegisterRequest) -> RegisterResponse:
         role=user.role.value,
         message="User registered successfully. Complete profile setup in the next step.",
     )
+
+
+@router.post("/refresh", response_model=RefreshResponse)
+async def refresh(
+    response: Response,
+    refresh_token: Annotated[str | None, Cookie()] = None,
+    _rate_limit: Annotated[None, Depends(rate_limit(10, 60))] = None,
+) -> RefreshResponse:
+    """Refresh access token using refresh token from HttpOnly cookie.
+
+    Implements token rotation: generates new access token AND new refresh token.
+    Sets new refresh token in HttpOnly cookie with strict SameSite policy.
+
+    Rate limit: 10 requests per 60 seconds per IP address.
+    """
+    # Check if refresh token exists in cookie
+    if refresh_token is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token not found in cookie",
+        )
+
+    # Verify refresh token
+    validation_result = verify_token(refresh_token, TokenType.REFRESH)
+
+    match validation_result:
+        case TokenValidationError(reason=reason, detail=detail):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Invalid refresh token: {reason} - {detail}",
+            )
+        case TokenValidationSuccess(token_data=token_data):
+            # Generate new tokens (token rotation) with profile IDs
+            new_access_token = create_access_token(
+                token_data.user_id,
+                token_data.email,
+                token_data.role,
+                patient_id=token_data.patient_id,
+                doctor_id=token_data.doctor_id,
+            )
+            new_refresh_token = create_refresh_token(
+                token_data.user_id,
+                token_data.email,
+                token_data.role,
+                patient_id=token_data.patient_id,
+                doctor_id=token_data.doctor_id,
+            )
+
+            # Set new refresh token in HttpOnly cookie (7 days)
+            response.set_cookie(
+                key="refresh_token",
+                value=new_refresh_token,
+                httponly=True,
+                secure=True,
+                samesite="strict",
+                max_age=7 * 24 * 60 * 60,
+            )
+
+            return RefreshResponse(
+                access_token=new_access_token,
+                token_type="Bearer",
+            )
+        case _:
+            # Unreachable - all cases covered above
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Unexpected token validation result",
+            )
+
+
+@router.post("/logout")
+async def logout(
+    response: Response,
+    _rate_limit: Annotated[None, Depends(rate_limit(10, 60))] = None,
+) -> dict[str, str]:
+    """Logout user by clearing refresh token cookie.
+
+    Clears the refresh token HttpOnly cookie by setting max_age=0.
+    Client should also discard the access token.
+
+    Rate limit: 10 requests per 60 seconds per IP address.
+    """
+    # Clear refresh token cookie
+    response.delete_cookie(key="refresh_token", httponly=True, secure=True, samesite="strict")
+
+    return {"message": "Logged out successfully"}

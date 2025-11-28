@@ -24,12 +24,14 @@ class TokenType(str, Enum):
 
 @dataclass(frozen=True)
 class TokenData:
-    """Decoded JWT token data."""
+    """Decoded JWT token data with profile IDs for performance optimization."""
 
     user_id: UUID
     email: str
     role: str
     token_type: TokenType
+    patient_id: UUID | None  # NEW: Eliminates DB lookup for patient authorization
+    doctor_id: UUID | None  # NEW: Eliminates DB lookup for doctor authorization
     exp: datetime
     iat: datetime
 
@@ -52,16 +54,24 @@ class TokenValidationError:
 type TokenValidationResult = TokenValidationSuccess | TokenValidationError
 
 
-def create_access_token(user_id: UUID, email: str, role: str) -> str:
-    """Create a short-lived JWT access token (15 minutes).
+def create_access_token(
+    user_id: UUID,
+    email: str,
+    role: str,
+    patient_id: UUID | None = None,
+    doctor_id: UUID | None = None,
+) -> str:
+    """Create a short-lived JWT access token (15 minutes) with profile IDs.
 
     Args:
         user_id: User UUID
         email: User email
         role: User role (patient, doctor, admin)
+        patient_id: Patient profile UUID (if role is patient)
+        doctor_id: Doctor profile UUID (if role is doctor)
 
     Returns:
-        Encoded JWT access token
+        Encoded JWT access token with profile IDs for performance optimization
     """
     now = datetime.now(timezone.utc)
     expires_delta = timedelta(minutes=settings.jwt_access_token_expire_minutes)
@@ -72,6 +82,8 @@ def create_access_token(user_id: UUID, email: str, role: str) -> str:
         "email": email,
         "role": role,
         "token_type": TokenType.ACCESS.value,
+        "patient_id": str(patient_id) if patient_id else None,
+        "doctor_id": str(doctor_id) if doctor_id else None,
         "exp": expire,
         "iat": now,
     }
@@ -79,16 +91,24 @@ def create_access_token(user_id: UUID, email: str, role: str) -> str:
     return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
 
-def create_refresh_token(user_id: UUID, email: str, role: str) -> str:
-    """Create a long-lived JWT refresh token (7 days).
+def create_refresh_token(
+    user_id: UUID,
+    email: str,
+    role: str,
+    patient_id: UUID | None = None,
+    doctor_id: UUID | None = None,
+) -> str:
+    """Create a long-lived JWT refresh token (7 days) with profile IDs.
 
     Args:
         user_id: User UUID
         email: User email
         role: User role (patient, doctor, admin)
+        patient_id: Patient profile UUID (if role is patient)
+        doctor_id: Doctor profile UUID (if role is doctor)
 
     Returns:
-        Encoded JWT refresh token
+        Encoded JWT refresh token with profile IDs for performance optimization
     """
     now = datetime.now(timezone.utc)
     expires_delta = timedelta(days=settings.jwt_refresh_token_expire_days)
@@ -99,6 +119,8 @@ def create_refresh_token(user_id: UUID, email: str, role: str) -> str:
         "email": email,
         "role": role,
         "token_type": TokenType.REFRESH.value,
+        "patient_id": str(patient_id) if patient_id else None,
+        "doctor_id": str(doctor_id) if doctor_id else None,
         "exp": expire,
         "iat": now,
     }
@@ -135,6 +157,8 @@ def verify_token(token: str, expected_type: TokenType) -> TokenValidationResult:
             email=payload["email"],
             role=payload["role"],
             token_type=TokenType(token_type),
+            patient_id=UUID(payload["patient_id"]) if payload.get("patient_id") else None,
+            doctor_id=UUID(payload["doctor_id"]) if payload.get("doctor_id") else None,
             exp=datetime.fromtimestamp(payload["exp"], tz=timezone.utc),
             iat=datetime.fromtimestamp(payload["iat"], tz=timezone.utc),
         )

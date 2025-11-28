@@ -115,6 +115,7 @@ class CreateLabResult:
     test_type: str
     result_data: dict[str, str]
     critical: bool
+    doctor_notes: str | None
 
 
 @dataclass(frozen=True)
@@ -140,15 +141,154 @@ class CreateInvoice:
     due_date: date | None
 
 
+@dataclass(frozen=True)
+class AddInvoiceLineItem:
+    """Effect: Add line item to existing invoice.
+
+    Returns: LineItem
+    """
+
+    invoice_id: UUID
+    description: str
+    quantity: int
+    unit_price: Decimal
+
+
+@dataclass(frozen=True)
+class UpdateInvoiceStatus:
+    """Effect: Update invoice payment status.
+
+    Returns: Invoice
+    """
+
+    invoice_id: UUID
+    status: str  # "draft" | "sent" | "paid" | "overdue"
+
+
+@dataclass(frozen=True)
+class ListAppointments:
+    """Effect: List appointments with optional filtering.
+
+    Returns: list[Appointment]
+    """
+
+    patient_id: UUID | None = None
+    doctor_id: UUID | None = None
+    status: str | None = None
+
+
+@dataclass(frozen=True)
+class GetPrescriptionById:
+    """Effect: Fetch prescription by ID.
+
+    Returns: Prescription | None
+    """
+
+    prescription_id: UUID
+
+
+@dataclass(frozen=True)
+class ListPrescriptions:
+    """Effect: List prescriptions with optional filtering.
+
+    Returns: list[Prescription]
+    """
+
+    patient_id: UUID | None = None
+    doctor_id: UUID | None = None
+
+
+@dataclass(frozen=True)
+class ListLabResults:
+    """Effect: List lab results with optional filtering.
+
+    Returns: list[LabResult]
+    """
+
+    patient_id: UUID | None = None
+    doctor_id: UUID | None = None
+
+
+@dataclass(frozen=True)
+class ReviewLabResult:
+    """Effect: Mark lab result as reviewed by doctor.
+
+    Returns: LabResult
+    """
+
+    result_id: UUID
+    doctor_notes: str | None
+
+
+@dataclass(frozen=True)
+class GetInvoiceById:
+    """Effect: Fetch invoice by ID.
+
+    Returns: Invoice | None
+    """
+
+    invoice_id: UUID
+
+
+@dataclass(frozen=True)
+class ListInvoices:
+    """Effect: List invoices with optional filtering.
+
+    Returns: list[Invoice]
+    """
+
+    patient_id: UUID | None = None
+
+
+@dataclass(frozen=True)
+class CreatePatient:
+    """Effect: Create new patient record.
+
+    Returns: Patient
+    """
+
+    user_id: UUID
+    first_name: str
+    last_name: str
+    date_of_birth: date
+    blood_type: str | None
+    allergies: list[str]
+    insurance_id: str | None
+    emergency_contact: str
+    phone: str | None
+    address: str | None
+
+
+@dataclass(frozen=True)
+class ListPatients:
+    """Effect: List all patients (admin only).
+
+    Returns: list[Patient]
+    """
+
+    pass
+
+
 type HealthcareEffect = (
     GetPatientById
     | GetDoctorById
     | CreateAppointment
     | GetAppointmentById
+    | ListAppointments
     | TransitionAppointmentStatus
     | CreatePrescription
+    | GetPrescriptionById
+    | ListPrescriptions
     | CheckMedicationInteractions
     | CreateLabResult
     | GetLabResultById
+    | ListLabResults
+    | ReviewLabResult
     | CreateInvoice
+    | AddInvoiceLineItem
+    | UpdateInvoiceStatus
+    | GetInvoiceById
+    | ListInvoices
+    | CreatePatient
+    | ListPatients
 )

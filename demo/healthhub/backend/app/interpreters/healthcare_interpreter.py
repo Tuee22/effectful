@@ -7,12 +7,14 @@ from __future__ import annotations
 
 import json
 from datetime import date, datetime, timedelta, timezone
+from decimal import Decimal
 from uuid import UUID, uuid4
 
 import asyncpg
 
 from app.database.converters import (
     safe_bool,
+    safe_date,
     safe_datetime,
     safe_decimal,
     safe_dict_str_object,
@@ -49,17 +51,28 @@ from app.domain.prescription import (
     Prescription,
 )
 from app.effects.healthcare import (
+    AddInvoiceLineItem,
     CheckMedicationInteractions,
     CreateAppointment,
     CreateInvoice,
     CreateLabResult,
+    CreatePatient,
     CreatePrescription,
     GetAppointmentById,
     GetDoctorById,
+    GetInvoiceById,
     GetLabResultById,
     GetPatientById,
+    GetPrescriptionById,
     HealthcareEffect,
+    ListAppointments,
+    ListInvoices,
+    ListLabResults,
+    ListPatients,
+    ListPrescriptions,
+    ReviewLabResult,
     TransitionAppointmentStatus,
+    UpdateInvoiceStatus,
 )
 from app.repositories.doctor_repository import DoctorRepository
 from app.repositories.patient_repository import PatientRepository
@@ -93,6 +106,12 @@ class HealthcareInterpreter:
         | MedicationCheckResult
         | LabResult
         | Invoice
+        | LineItem
+        | list[Patient]
+        | list[Appointment]
+        | list[Prescription]
+        | list[LabResult]
+        | list[Invoice]
     ):
         """Handle a healthcare effect.
 
@@ -105,6 +124,34 @@ class HealthcareInterpreter:
         match effect:
             case GetPatientById(patient_id=patient_id):
                 return await self._get_patient_by_id(patient_id)
+
+            case ListPatients():
+                return await self._list_patients()
+
+            case CreatePatient(
+                user_id=user_id,
+                first_name=first_name,
+                last_name=last_name,
+                date_of_birth=date_of_birth,
+                blood_type=blood_type,
+                allergies=allergies,
+                insurance_id=insurance_id,
+                emergency_contact=emergency_contact,
+                phone=phone,
+                address=address,
+            ):
+                return await self._create_patient(
+                    user_id,
+                    first_name,
+                    last_name,
+                    date_of_birth,
+                    blood_type,
+                    allergies,
+                    insurance_id,
+                    emergency_contact,
+                    phone,
+                    address,
+                )
 
             case GetDoctorById(doctor_id=doctor_id):
                 return await self._get_doctor_by_id(doctor_id)
@@ -119,6 +166,9 @@ class HealthcareInterpreter:
 
             case GetAppointmentById(appointment_id=appointment_id):
                 return await self._get_appointment_by_id(appointment_id)
+
+            case ListAppointments(patient_id=patient_id, doctor_id=doctor_id, status=status):
+                return await self._list_appointments(patient_id, doctor_id, status)
 
             case TransitionAppointmentStatus(
                 appointment_id=appointment_id, new_status=new_status, actor_id=actor_id
@@ -148,6 +198,12 @@ class HealthcareInterpreter:
                     notes,
                 )
 
+            case GetPrescriptionById(prescription_id=prescription_id):
+                return await self._get_prescription_by_id(prescription_id)
+
+            case ListPrescriptions(patient_id=patient_id, doctor_id=doctor_id):
+                return await self._list_prescriptions(patient_id, doctor_id)
+
             case CheckMedicationInteractions(medications=medications):
                 return await self._check_medication_interactions(medications)
 
@@ -158,13 +214,26 @@ class HealthcareInterpreter:
                 test_type=test_type,
                 result_data=result_data,
                 critical=critical,
+                doctor_notes=doctor_notes,
             ):
                 return await self._create_lab_result(
-                    result_id, patient_id, doctor_id, test_type, result_data, critical
+                    result_id,
+                    patient_id,
+                    doctor_id,
+                    test_type,
+                    result_data,
+                    critical,
+                    doctor_notes,
                 )
 
             case GetLabResultById(result_id=result_id):
                 return await self._get_lab_result_by_id(result_id)
+
+            case ListLabResults(patient_id=patient_id, doctor_id=doctor_id):
+                return await self._list_lab_results(patient_id, doctor_id)
+
+            case ReviewLabResult(result_id=result_id, doctor_notes=doctor_notes):
+                return await self._review_lab_result(result_id, doctor_notes)
 
             case CreateInvoice(
                 patient_id=patient_id,
@@ -174,10 +243,116 @@ class HealthcareInterpreter:
             ):
                 return await self._create_invoice(patient_id, appointment_id, line_items, due_date)
 
+            case AddInvoiceLineItem(
+                invoice_id=invoice_id,
+                description=description,
+                quantity=quantity,
+                unit_price=unit_price,
+            ):
+                return await self._add_invoice_line_item(
+                    invoice_id, description, quantity, unit_price
+                )
+
+            case UpdateInvoiceStatus(invoice_id=invoice_id, status=status):
+                return await self._update_invoice_status(invoice_id, status)
+
+            case GetInvoiceById(invoice_id=invoice_id):
+                return await self._get_invoice_by_id(invoice_id)
+
+            case ListInvoices(patient_id=patient_id):
+                return await self._list_invoices(patient_id)
+
     # Patient operations
     async def _get_patient_by_id(self, patient_id: UUID) -> Patient | None:
         """Get patient by ID."""
         return await self.patient_repo.get_by_id(patient_id)
+
+    async def _list_patients(self) -> list[Patient]:
+        """List all patients (admin only - authorization handled in API layer)."""
+        rows = await self.pool.fetch(
+            """
+            SELECT id, user_id, first_name, last_name, date_of_birth,
+                   blood_type, allergies, insurance_id, emergency_contact,
+                   phone, address, created_at, updated_at
+            FROM patients
+            ORDER BY last_name, first_name
+            """
+        )
+        return [self._row_to_patient(row) for row in rows]
+
+    async def _create_patient(
+        self,
+        user_id: UUID,
+        first_name: str,
+        last_name: str,
+        date_of_birth: date,
+        blood_type: str | None,
+        allergies: list[str],
+        insurance_id: str | None,
+        emergency_contact: str,
+        phone: str | None,
+        address: str | None,
+    ) -> Patient:
+        """Create new patient record."""
+        now = datetime.now(timezone.utc)
+        patient_id = uuid4()
+
+        allergies_json = json.dumps(allergies)
+
+        row = await self.pool.fetchrow(
+            """
+            INSERT INTO patients (
+                id, user_id, first_name, last_name, date_of_birth,
+                blood_type, allergies, insurance_id, emergency_contact,
+                phone, address, created_at, updated_at
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10, $11, $12, $13)
+            RETURNING id, user_id, first_name, last_name, date_of_birth,
+                      blood_type, allergies, insurance_id, emergency_contact,
+                      phone, address, created_at, updated_at
+            """,
+            patient_id,
+            user_id,
+            first_name,
+            last_name,
+            date_of_birth,
+            blood_type,
+            allergies_json,
+            insurance_id,
+            emergency_contact,
+            phone,
+            address,
+            now,
+            now,
+        )
+
+        if row is None:
+            raise RuntimeError("Failed to create patient")
+
+        return self._row_to_patient(row)
+
+    def _row_to_patient(self, row: asyncpg.Record) -> Patient:
+        """Convert database row to Patient domain model."""
+        allergies_obj = row["allergies"]
+        allergies: list[str] = []
+        if isinstance(allergies_obj, list):
+            allergies = [str(item) for item in allergies_obj]
+
+        return Patient(
+            id=safe_uuid(row["id"]),
+            user_id=safe_uuid(row["user_id"]),
+            first_name=safe_str(row["first_name"]),
+            last_name=safe_str(row["last_name"]),
+            date_of_birth=safe_date(row["date_of_birth"]),
+            blood_type=safe_optional_str(row["blood_type"]),
+            allergies=allergies,
+            insurance_id=safe_optional_str(row["insurance_id"]),
+            emergency_contact=safe_str(row["emergency_contact"]),
+            phone=safe_optional_str(row["phone"]),
+            address=safe_optional_str(row["address"]),
+            created_at=safe_datetime(row["created_at"]),
+            updated_at=safe_datetime(row["updated_at"]),
+        )
 
     # Doctor operations
     async def _get_doctor_by_id(self, doctor_id: UUID) -> Doctor | None:
@@ -240,6 +415,35 @@ class HealthcareInterpreter:
             return None
 
         return self._row_to_appointment(row)
+
+    async def _list_appointments(
+        self, patient_id: UUID | None, doctor_id: UUID | None, status: str | None
+    ) -> list[Appointment]:
+        """List appointments with optional filtering."""
+        query = """
+            SELECT id, patient_id, doctor_id, status, requested_time,
+                   reason, notes, created_at, updated_at
+            FROM appointments
+            WHERE 1=1
+        """
+        params: list[UUID | str] = []
+
+        if patient_id is not None:
+            params.append(patient_id)
+            query += f" AND patient_id = ${len(params)}"
+
+        if doctor_id is not None:
+            params.append(doctor_id)
+            query += f" AND doctor_id = ${len(params)}"
+
+        if status is not None:
+            params.append(status)
+            query += f" AND status = ${len(params)}"
+
+        query += " ORDER BY created_at DESC"
+
+        rows = await self.pool.fetch(query, *params)
+        return [self._row_to_appointment(row) for row in rows]
 
     async def _transition_appointment_status(
         self, appointment_id: UUID, new_status: AppointmentStatus, actor_id: UUID
@@ -345,6 +549,50 @@ class HealthcareInterpreter:
 
         return self._row_to_prescription(row)
 
+    async def _get_prescription_by_id(self, prescription_id: UUID) -> Prescription | None:
+        """Get prescription by ID."""
+        row = await self.pool.fetchrow(
+            """
+            SELECT id, patient_id, doctor_id, medication, dosage,
+                   frequency, duration_days, refills_remaining, notes,
+                   created_at, expires_at
+            FROM prescriptions
+            WHERE id = $1
+            """,
+            prescription_id,
+        )
+
+        if row is None:
+            return None
+
+        return self._row_to_prescription(row)
+
+    async def _list_prescriptions(
+        self, patient_id: UUID | None, doctor_id: UUID | None
+    ) -> list[Prescription]:
+        """List prescriptions with optional filtering."""
+        query = """
+            SELECT id, patient_id, doctor_id, medication, dosage,
+                   frequency, duration_days, refills_remaining, notes,
+                   created_at, expires_at
+            FROM prescriptions
+            WHERE 1=1
+        """
+        params: list[UUID] = []
+
+        if patient_id is not None:
+            params.append(patient_id)
+            query += f" AND patient_id = ${len(params)}"
+
+        if doctor_id is not None:
+            params.append(doctor_id)
+            query += f" AND doctor_id = ${len(params)}"
+
+        query += " ORDER BY created_at DESC"
+
+        rows = await self.pool.fetch(query, *params)
+        return [self._row_to_prescription(row) for row in rows]
+
     async def _check_medication_interactions(self, medications: list[str]) -> MedicationCheckResult:
         """Check for medication interactions.
 
@@ -396,6 +644,7 @@ class HealthcareInterpreter:
         test_type: str,
         result_data: dict[str, str],
         critical: bool,
+        doctor_notes: str | None,
     ) -> LabResult:
         """Create new lab result."""
         now = datetime.now(timezone.utc)
@@ -420,7 +669,7 @@ class HealthcareInterpreter:
             result_data_json,
             critical,
             False,
-            None,
+            doctor_notes,
             now,
         )
 
@@ -443,6 +692,50 @@ class HealthcareInterpreter:
 
         if row is None:
             return None
+
+        return self._row_to_lab_result(row)
+
+    async def _list_lab_results(
+        self, patient_id: UUID | None, doctor_id: UUID | None
+    ) -> list[LabResult]:
+        """List lab results with optional filtering."""
+        query = """
+            SELECT id, patient_id, doctor_id, test_type, result_data,
+                   critical, reviewed_by_doctor, doctor_notes, created_at
+            FROM lab_results
+            WHERE 1=1
+        """
+        params: list[UUID] = []
+
+        if patient_id is not None:
+            params.append(patient_id)
+            query += f" AND patient_id = ${len(params)}"
+
+        if doctor_id is not None:
+            params.append(doctor_id)
+            query += f" AND doctor_id = ${len(params)}"
+
+        query += " ORDER BY created_at DESC"
+
+        rows = await self.pool.fetch(query, *params)
+        return [self._row_to_lab_result(row) for row in rows]
+
+    async def _review_lab_result(self, result_id: UUID, doctor_notes: str | None) -> LabResult:
+        """Mark lab result as reviewed by doctor."""
+        row = await self.pool.fetchrow(
+            """
+            UPDATE lab_results
+            SET reviewed_by_doctor = TRUE, doctor_notes = COALESCE($2, doctor_notes)
+            WHERE id = $1
+            RETURNING id, patient_id, doctor_id, test_type, result_data,
+                      critical, reviewed_by_doctor, doctor_notes, created_at
+            """,
+            result_id,
+            doctor_notes,
+        )
+
+        if row is None:
+            raise RuntimeError(f"Lab result {result_id} not found")
 
         return self._row_to_lab_result(row)
 
@@ -512,6 +805,141 @@ class HealthcareInterpreter:
             )
 
         return self._row_to_invoice(invoice_row)
+
+    async def _get_invoice_by_id(self, invoice_id: UUID) -> Invoice | None:
+        """Get invoice by ID."""
+        row = await self.pool.fetchrow(
+            """
+            SELECT id, patient_id, appointment_id, status, subtotal,
+                   tax_amount, total_amount, due_date, paid_at,
+                   created_at, updated_at
+            FROM invoices
+            WHERE id = $1
+            """,
+            invoice_id,
+        )
+
+        if row is None:
+            return None
+
+        return self._row_to_invoice(row)
+
+    async def _list_invoices(self, patient_id: UUID | None) -> list[Invoice]:
+        """List invoices with optional patient filter."""
+        query = """
+            SELECT id, patient_id, appointment_id, status, subtotal,
+                   tax_amount, total_amount, due_date, paid_at,
+                   created_at, updated_at
+            FROM invoices
+            WHERE 1=1
+        """
+        params: list[UUID] = []
+
+        if patient_id is not None:
+            params.append(patient_id)
+            query += f" AND patient_id = ${len(params)}"
+
+        query += " ORDER BY created_at DESC"
+
+        rows = await self.pool.fetch(query, *params)
+        return [self._row_to_invoice(row) for row in rows]
+
+    async def _add_invoice_line_item(
+        self, invoice_id: UUID, description: str, quantity: int, unit_price: Decimal
+    ) -> LineItem:
+        """Add a line item to an existing invoice."""
+        now = datetime.now(timezone.utc)
+        line_item_id = uuid4()
+        total = Decimal(quantity) * unit_price
+
+        # Insert line item
+        row = await self.pool.fetchrow(
+            """
+            INSERT INTO invoice_line_items (
+                id, invoice_id, description, quantity, unit_price,
+                total, created_at
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING id, invoice_id, description, quantity, unit_price,
+                      total, created_at
+            """,
+            line_item_id,
+            invoice_id,
+            description,
+            quantity,
+            str(unit_price),
+            str(total),
+            now,
+        )
+
+        if row is None:
+            raise RuntimeError("Failed to create line item")
+
+        # Update invoice totals
+        await self._recalculate_invoice_totals(invoice_id)
+
+        return LineItem(
+            id=safe_uuid(row["id"]),
+            invoice_id=safe_uuid(row["invoice_id"]),
+            description=safe_str(row["description"]),
+            quantity=safe_int(row["quantity"]),
+            unit_price=safe_decimal(row["unit_price"]),
+            total=safe_decimal(row["total"]),
+            created_at=safe_datetime(row["created_at"]),
+        )
+
+    async def _update_invoice_status(self, invoice_id: UUID, status: str) -> Invoice:
+        """Update invoice payment status."""
+        now = datetime.now(timezone.utc)
+        paid_at = now if status == "paid" else None
+
+        row = await self.pool.fetchrow(
+            """
+            UPDATE invoices
+            SET status = $1, paid_at = $2, updated_at = $3
+            WHERE id = $4
+            RETURNING id, patient_id, appointment_id, status, subtotal,
+                      tax_amount, total_amount, due_date, paid_at,
+                      created_at, updated_at
+            """,
+            status,
+            paid_at,
+            now,
+            invoice_id,
+        )
+
+        if row is None:
+            raise RuntimeError(f"Invoice not found: {invoice_id}")
+
+        return self._row_to_invoice(row)
+
+    async def _recalculate_invoice_totals(self, invoice_id: UUID) -> None:
+        """Recalculate invoice totals after adding line items."""
+        # Get all line items for this invoice
+        rows = await self.pool.fetch(
+            """
+            SELECT total FROM invoice_line_items WHERE invoice_id = $1
+            """,
+            invoice_id,
+        )
+
+        subtotal = sum((safe_decimal(row["total"]) for row in rows), start=Decimal("0"))
+        tax_amount = Decimal("0")  # No tax for now
+        total_amount = subtotal + tax_amount
+
+        # Update invoice
+        await self.pool.execute(
+            """
+            UPDATE invoices
+            SET subtotal = $1, tax_amount = $2, total_amount = $3, updated_at = $4
+            WHERE id = $5
+            """,
+            str(subtotal),
+            str(tax_amount),
+            str(total_amount),
+            datetime.now(timezone.utc),
+            invoice_id,
+        )
 
     # Helper methods for row-to-domain conversion
     def _row_to_appointment(self, row: asyncpg.Record) -> Appointment:

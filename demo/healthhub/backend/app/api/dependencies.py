@@ -106,23 +106,21 @@ async def get_current_user(
     """Get current user authorization state from JWT token.
 
     Returns appropriate ADT variant based on user role:
-    - PatientAuthorized: Patient with patient_id resolved from database
-    - DoctorAuthorized: Doctor with doctor_id and capabilities resolved
-    - AdminAuthorized: Admin user
+    - PatientAuthorized: Patient with patient_id from JWT (no DB query)
+    - DoctorAuthorized: Doctor with doctor_id from JWT + DB query for can_prescribe
+    - AdminAuthorized: Admin user (no DB query)
     - Unauthorized: Invalid role or missing profile
 
-    Note: This dependency performs database lookups to resolve profile IDs.
-    For performance-critical endpoints, consider caching or using simpler checks.
+    Performance optimization: Uses patient_id/doctor_id from JWT payload.
+    Eliminates 1 DB query for patients, reduces to 1 query for doctors (can_prescribe only).
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
 
     match token_data.role:
         case "patient":
-            patient_repo = PatientRepository(pool)
-            patient = await patient_repo.get_by_user_id(token_data.user_id)
-
-            if patient is None:
+            # Use patient_id from JWT (no DB query)
+            if token_data.patient_id is None:
                 return Unauthorized(
                     reason="no_profile",
                     detail="Patient profile not found. Complete profile setup first.",
@@ -130,23 +128,31 @@ async def get_current_user(
 
             return PatientAuthorized(
                 user_id=token_data.user_id,
-                patient_id=patient.id,
+                patient_id=token_data.patient_id,
                 email=token_data.email,
             )
 
         case "doctor":
-            doctor_repo = DoctorRepository(pool)
-            doctor = await doctor_repo.get_by_user_id(token_data.user_id)
-
-            if doctor is None:
+            # Use doctor_id from JWT, but query for can_prescribe capability
+            if token_data.doctor_id is None:
                 return Unauthorized(
                     reason="no_profile",
                     detail="Doctor profile not found. Complete profile setup first.",
                 )
 
+            # Query only for can_prescribe and specialization (capabilities can change)
+            doctor_repo = DoctorRepository(pool)
+            doctor = await doctor_repo.get_by_id(token_data.doctor_id)
+
+            if doctor is None:
+                return Unauthorized(
+                    reason="no_profile",
+                    detail="Doctor profile not found or was deleted.",
+                )
+
             return DoctorAuthorized(
                 user_id=token_data.user_id,
-                doctor_id=doctor.id,
+                doctor_id=token_data.doctor_id,
                 email=token_data.email,
                 specialization=doctor.specialization,
                 can_prescribe=doctor.can_prescribe,

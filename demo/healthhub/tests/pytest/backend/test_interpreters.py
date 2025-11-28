@@ -31,6 +31,7 @@ from app.domain.prescription import (
     Prescription,
 )
 from app.effects.healthcare import (
+    AddInvoiceLineItem,
     CheckMedicationInteractions,
     CreateAppointment,
     CreateInvoice,
@@ -41,6 +42,7 @@ from app.effects.healthcare import (
     GetLabResultById,
     GetPatientById,
     TransitionAppointmentStatus,
+    UpdateInvoiceStatus,
 )
 from app.effects.notification import (
     AuditEventLogged,
@@ -496,6 +498,7 @@ class TestHealthcareInterpreterLabResultOperations:
             test_type="CBC",
             result_data={"wbc": "7.5", "rbc": "4.8"},
             critical=False,
+            doctor_notes=None,
         )
         result = await interpreter.handle(effect)
 
@@ -617,6 +620,86 @@ class TestHealthcareInterpreterInvoiceOperations:
         mock_pool.fetchrow.assert_called_once()
         # Line item insert
         mock_pool.execute.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_add_invoice_line_item_success(self, mocker: MockerFixture) -> None:
+        """AddInvoiceLineItem should add line item and return LineItem."""
+        invoice_id = uuid4()
+        line_item_id = uuid4()
+        description = "Lab work - CBC"
+        quantity = 1
+        unit_price = Decimal("75.00")
+
+        # Mock database pool
+        mock_pool = mocker.AsyncMock()
+        mock_row = {
+            "id": line_item_id,
+            "invoice_id": invoice_id,
+            "description": description,
+            "quantity": quantity,
+            "unit_price": "75.00",
+            "total": "75.00",
+            "created_at": datetime.now(timezone.utc),
+        }
+        mock_pool.fetchrow.return_value = mock_row
+
+        interpreter = HealthcareInterpreter(mock_pool)
+
+        # Execute
+        effect = AddInvoiceLineItem(
+            invoice_id=invoice_id,
+            description=description,
+            quantity=quantity,
+            unit_price=unit_price,
+        )
+        result = await interpreter.handle(effect)
+
+        # Assert
+        assert isinstance(result, LineItem)
+        assert result.invoice_id == invoice_id
+        assert result.description == description
+        assert result.quantity == quantity
+        assert result.unit_price == unit_price
+        mock_pool.fetchrow.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_update_invoice_status_success(self, mocker: MockerFixture) -> None:
+        """UpdateInvoiceStatus should update status and return Invoice."""
+        invoice_id = uuid4()
+        patient_id = uuid4()
+        new_status = "paid"
+
+        # Mock database pool
+        mock_pool = mocker.AsyncMock()
+        mock_row = {
+            "id": invoice_id,
+            "patient_id": patient_id,
+            "appointment_id": None,
+            "status": new_status,
+            "subtotal": "150.00",
+            "tax_amount": "0.00",
+            "total_amount": "150.00",
+            "due_date": None,
+            "paid_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
+        }
+        mock_pool.fetchrow.return_value = mock_row
+
+        interpreter = HealthcareInterpreter(mock_pool)
+
+        # Execute
+        effect = UpdateInvoiceStatus(
+            invoice_id=invoice_id,
+            status=new_status,
+        )
+        result = await interpreter.handle(effect)
+
+        # Assert
+        assert isinstance(result, Invoice)
+        assert result.id == invoice_id
+        assert result.status == new_status
+        mock_pool.fetchrow.assert_called_once()
 
 
 class TestNotificationInterpreterWebSocketNotifications:

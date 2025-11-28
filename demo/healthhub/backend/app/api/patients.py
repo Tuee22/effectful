@@ -3,19 +3,33 @@
 Provides CRUD operations for patient records with medical history tracking.
 """
 
+from collections.abc import Generator
 from datetime import date
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from pydantic import BaseModel, Field
+import redis.asyncio as redis
 
 from app.domain.patient import Patient
-from app.infrastructure import get_database_manager
+from app.effects.healthcare import (
+    CreatePatient as CreatePatientEffect,
+    GetPatientById,
+    ListPatients,
+)
+from app.effects.notification import LogAuditEvent
+from app.infrastructure import get_database_manager, rate_limit
+from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
+from app.programs.runner import run_program
 from app.repositories.patient_repository import PatientRepository
 from app.api.dependencies import (
     AdminAuthorized,
+    AuthorizationState,
     DoctorAuthorized,
+    PatientAuthorized,
+    require_admin,
+    require_authenticated,
     require_doctor_or_admin,
 )
 
@@ -46,7 +60,7 @@ class CreatePatientRequest(BaseModel):
     last_name: str
     date_of_birth: date
     blood_type: str | None = None
-    allergies: list[str] = []
+    allergies: list[str] = Field(default_factory=list)
     insurance_id: str | None = None
     emergency_contact: str
     phone: str | None = None
@@ -85,95 +99,259 @@ def patient_to_response(patient: Patient) -> PatientResponse:
 
 @router.get("/", response_model=list[PatientResponse])
 async def list_patients(
+    request: Request,
     auth: Annotated[
         DoctorAuthorized | AdminAuthorized,
         Depends(require_doctor_or_admin),
     ],
+    _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> list[PatientResponse]:
     """List all patients.
 
     Requires: Doctor or Admin role.
     Patients cannot view other patients' records.
+    Logs all PHI access for HIPAA compliance.
+    Rate limit: 100 requests per 60 seconds per IP address.
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
 
-    # Fetch all patients ordered by last name
-    rows = await pool.fetch(
-        """
-        SELECT id, user_id, first_name, last_name, date_of_birth,
-               blood_type, allergies, insurance_id, emergency_contact,
-               phone, address, created_at, updated_at
-        FROM patients
-        ORDER BY last_name, first_name
-        """
+    # Create Redis client
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
     )
 
-    patient_repo = PatientRepository(pool)
-    patients = [patient_repo._row_to_patient(row) for row in rows]
+    # Create composite interpreter
+    interpreter = CompositeInterpreter(pool, redis_client)
+
+    # Extract actor ID from auth state
+    actor_id: UUID
+    match auth:
+        case DoctorAuthorized(user_id=uid):
+            actor_id = uid
+        case AdminAuthorized(user_id=uid):
+            actor_id = uid
+
+    # Extract IP and user agent from request
+    ip_address = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+
+    # Create effect program with audit logging
+    def list_program() -> Generator[AllEffects, object, list[Patient]]:
+        patients = yield ListPatients()
+        assert isinstance(patients, list)
+
+        # HIPAA-required audit logging (log all PHI list access)
+        # Use UUID of first patient as resource_id (or nil UUID if empty list)
+        resource_id = patients[0].id if patients else UUID("00000000-0000-0000-0000-000000000000")
+        yield LogAuditEvent(
+            user_id=actor_id,
+            action="list_patients",
+            resource_type="patient",
+            resource_id=resource_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            metadata={"count": str(len(patients))},
+        )
+
+        return patients
+
+    # Run effect program
+    patients = await run_program(list_program(), interpreter)
+
+    await redis_client.aclose()
 
     return [patient_to_response(p) for p in patients]
 
 
 @router.post("/", response_model=PatientResponse, status_code=status.HTTP_201_CREATED)
-async def create_patient(request: CreatePatientRequest) -> PatientResponse:
+async def create_patient(
+    request: CreatePatientRequest,
+    auth: Annotated[AdminAuthorized, Depends(require_admin)],
+    _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
+) -> PatientResponse:
     """Create a new patient record.
 
-    Requires: Admin or Doctor role.
+    Requires: Admin role only.
+    Rate limit: 100 requests per 60 seconds per IP address.
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
-    patient_repo = PatientRepository(pool)
 
-    # Create patient
-    patient = await patient_repo.create(
-        user_id=UUID(request.user_id),
-        first_name=request.first_name,
-        last_name=request.last_name,
-        date_of_birth=request.date_of_birth,
-        blood_type=request.blood_type,
-        allergies=request.allergies,
-        insurance_id=request.insurance_id,
-        emergency_contact=request.emergency_contact,
-        phone=request.phone,
-        address=request.address,
+    # Create Redis client
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
     )
+
+    # Create composite interpreter
+    interpreter = CompositeInterpreter(pool, redis_client)
+
+    # Create effect program
+    def create_program() -> Generator[AllEffects, object, Patient]:
+        patient = yield CreatePatientEffect(
+            user_id=UUID(request.user_id),
+            first_name=request.first_name,
+            last_name=request.last_name,
+            date_of_birth=request.date_of_birth,
+            blood_type=request.blood_type,
+            allergies=request.allergies,
+            insurance_id=request.insurance_id,
+            emergency_contact=request.emergency_contact,
+            phone=request.phone,
+            address=request.address,
+        )
+        assert isinstance(patient, Patient)
+        return patient
+
+    # Run effect program
+    patient = await run_program(create_program(), interpreter)
+
+    await redis_client.aclose()
 
     return patient_to_response(patient)
 
 
 @router.get("/{patient_id}", response_model=PatientResponse)
-async def get_patient(patient_id: str) -> PatientResponse:
+async def get_patient(
+    patient_id: str,
+    request: Request,
+    auth: Annotated[
+        PatientAuthorized | DoctorAuthorized | AdminAuthorized,
+        Depends(require_authenticated),
+    ],
+    _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
+) -> PatientResponse:
     """Get patient by ID.
 
-    Requires: Patient (own record), Doctor, or Admin role (TODO: add authorization)
+    Requires: Patient (own record), Doctor, or Admin role.
+    Logs all PHI access for HIPAA compliance.
+    Rate limit: 100 requests per 60 seconds per IP address.
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
-    patient_repo = PatientRepository(pool)
 
-    patient = await patient_repo.get_by_id(UUID(patient_id))
+    # Create Redis client
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
+    )
 
-    if patient is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Patient {patient_id} not found",
+    # Create composite interpreter
+    interpreter = CompositeInterpreter(pool, redis_client)
+
+    # Extract actor ID from auth state
+    actor_id: UUID
+    match auth:
+        case PatientAuthorized(user_id=uid):
+            actor_id = uid
+        case DoctorAuthorized(user_id=uid):
+            actor_id = uid
+        case AdminAuthorized(user_id=uid):
+            actor_id = uid
+
+    # Extract IP and user agent from request
+    ip_address = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+
+    # Create effect program with audit logging
+    def get_program() -> Generator[AllEffects, object, Patient]:
+        patient = yield GetPatientById(patient_id=UUID(patient_id))
+
+        # HIPAA-required audit logging (log all access attempts)
+        yield LogAuditEvent(
+            user_id=actor_id,
+            action="view_patient",
+            resource_type="patient",
+            resource_id=UUID(patient_id),
+            ip_address=ip_address,
+            user_agent=user_agent,
+            metadata={"status": "found" if patient else "not_found"},
         )
+
+        if patient is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Patient {patient_id} not found",
+            )
+        assert isinstance(patient, Patient)
+        return patient
+
+    # Run effect program
+    patient = await run_program(get_program(), interpreter)
+
+    await redis_client.aclose()
 
     return patient_to_response(patient)
 
 
 @router.get("/by-user/{user_id}", response_model=PatientResponse)
-async def get_patient_by_user(user_id: str) -> PatientResponse:
+async def get_patient_by_user(
+    user_id: str,
+    request: Request,
+    auth: Annotated[
+        PatientAuthorized | DoctorAuthorized | AdminAuthorized,
+        Depends(require_authenticated),
+    ],
+    _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
+) -> PatientResponse:
     """Get patient by user ID.
 
-    Requires: Patient (own record), Doctor, or Admin role (TODO: add authorization)
+    Requires: Patient (own record), Doctor, or Admin role.
+    Logs all PHI access for HIPAA compliance.
+    Rate limit: 100 requests per 60 seconds per IP address.
+
+    TODO: Migrate to effect-based implementation (Phase 2 architectural fix)
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
     patient_repo = PatientRepository(pool)
 
+    # Create Redis client for audit logging
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
+    )
+    interpreter = CompositeInterpreter(pool, redis_client)
+
+    # Extract actor ID from auth state
+    actor_id: UUID
+    match auth:
+        case PatientAuthorized(user_id=uid):
+            actor_id = uid
+        case DoctorAuthorized(user_id=uid):
+            actor_id = uid
+        case AdminAuthorized(user_id=uid):
+            actor_id = uid
+
+    # Extract IP and user agent from request
+    ip_address = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+
     patient = await patient_repo.get_by_user_id(UUID(user_id))
+
+    # HIPAA-required audit logging (log all PHI access attempts)
+    def audit_program() -> Generator[AllEffects, object, None]:
+        yield LogAuditEvent(
+            user_id=actor_id,
+            action="view_patient_by_user",
+            resource_type="patient",
+            resource_id=patient.id if patient else UUID("00000000-0000-0000-0000-000000000000"),
+            ip_address=ip_address,
+            user_agent=user_agent,
+            metadata={
+                "status": "found" if patient else "not_found",
+                "lookup_user_id": user_id,
+            },
+        )
+
+    await run_program(audit_program(), interpreter)
+    await redis_client.aclose()
 
     if patient is None:
         raise HTTPException(
@@ -185,10 +363,19 @@ async def get_patient_by_user(user_id: str) -> PatientResponse:
 
 
 @router.put("/{patient_id}", response_model=PatientResponse)
-async def update_patient(patient_id: str, request: UpdatePatientRequest) -> PatientResponse:
+async def update_patient(
+    patient_id: str,
+    request: UpdatePatientRequest,
+    auth: Annotated[
+        PatientAuthorized | AdminAuthorized,
+        Depends(require_authenticated),
+    ],
+    _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
+) -> PatientResponse:
     """Update patient record.
 
-    Requires: Patient (own record), Doctor, or Admin role (TODO: add authorization)
+    Requires: Patient (own record) or Admin role.
+    Rate limit: 100 requests per 60 seconds per IP address.
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
@@ -201,6 +388,17 @@ async def update_patient(patient_id: str, request: UpdatePatientRequest) -> Pati
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Patient {patient_id} not found",
         )
+
+    # Authorization check - patient can only update their own record
+    match auth:
+        case PatientAuthorized(patient_id=auth_patient_id):
+            if str(auth_patient_id) != patient_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Not authorized to update this patient record",
+                )
+        case AdminAuthorized():
+            pass  # Admins can update any patient
 
     # Update patient (simplified - in production, use UPDATE query)
     updated_patient = await patient_repo.create(
@@ -222,10 +420,15 @@ async def update_patient(patient_id: str, request: UpdatePatientRequest) -> Pati
 
 
 @router.delete("/{patient_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_patient(patient_id: str) -> None:
+async def delete_patient(
+    patient_id: str,
+    auth: Annotated[AdminAuthorized, Depends(require_admin)],
+    _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
+) -> None:
     """Delete patient record.
 
-    Requires: Admin role only (TODO: add authorization)
+    Requires: Admin role only.
+    Rate limit: 100 requests per 60 seconds per IP address.
 
     Note: In production, this should be a soft delete (status update) for HIPAA compliance.
     """

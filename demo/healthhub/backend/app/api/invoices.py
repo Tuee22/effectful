@@ -3,13 +3,15 @@
 Provides CRUD operations for healthcare invoices and billing.
 """
 
+from collections.abc import Generator
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
+import redis.asyncio as redis
 
 from app.database import (
     safe_datetime,
@@ -23,7 +25,17 @@ from app.database import (
     safe_uuid,
 )
 from app.domain.invoice import Invoice, LineItem, InvoiceWithLineItems
-from app.infrastructure import get_database_manager
+from app.effects.healthcare import (
+    AddInvoiceLineItem,
+    CreateInvoice,
+    GetInvoiceById,
+    ListInvoices,
+    UpdateInvoiceStatus,
+)
+from app.effects.notification import LogAuditEvent
+from app.infrastructure import get_database_manager, rate_limit
+from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
+from app.programs.runner import run_program
 from app.api.dependencies import (
     AdminAuthorized,
     DoctorAuthorized,
@@ -154,147 +166,258 @@ def line_item_to_response(line_item: LineItem) -> LineItemResponse:
 
 @router.get("/", response_model=list[InvoiceResponse])
 async def list_invoices(
+    request: Request,
     auth: Annotated[
         PatientAuthorized | DoctorAuthorized | AdminAuthorized,
         Depends(require_authenticated),
     ],
+    _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> list[InvoiceResponse]:
     """List invoices with role-based filtering.
 
     - Patient: sees only their own invoices
     - Doctor/Admin: sees all invoices
+
+    Logs all PHI access for HIPAA compliance.
+    Rate limit: 100 requests per 60 seconds per IP address.
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
 
-    # Build query based on role
-    match auth:
-        case PatientAuthorized(patient_id=patient_id):
-            query = """
-                SELECT id, patient_id, appointment_id, status, subtotal,
-                       tax_amount, total_amount, due_date, paid_at,
-                       created_at, updated_at
-                FROM invoices
-                WHERE patient_id = $1
-                ORDER BY created_at DESC
-            """
-            rows = await pool.fetch(query, patient_id)
+    # Create Redis client
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
+    )
 
-        case DoctorAuthorized() | AdminAuthorized():
-            query = """
-                SELECT id, patient_id, appointment_id, status, subtotal,
-                       tax_amount, total_amount, due_date, paid_at,
-                       created_at, updated_at
-                FROM invoices
-                ORDER BY created_at DESC
-            """
-            rows = await pool.fetch(query)
+    try:
+        # Create composite interpreter
+        interpreter = CompositeInterpreter(pool, redis_client)
 
-    invoices = [_row_to_invoice(dict(row)) for row in rows]
-    return [invoice_to_response(inv) for inv in invoices]
+        # Extract actor ID and determine filters based on role
+        actor_id: UUID
+        patient_id: UUID | None = None
+
+        match auth:
+            case PatientAuthorized(user_id=uid, patient_id=pid):
+                actor_id = uid
+                patient_id = pid
+            case DoctorAuthorized(user_id=uid):
+                actor_id = uid
+            case AdminAuthorized(user_id=uid):
+                actor_id = uid
+
+        # Extract IP and user agent from request
+        ip_address = request.client.host if request.client else None
+        user_agent = request.headers.get("user-agent")
+
+        # Create effect program with audit logging
+        def list_program() -> Generator[AllEffects, object, list[Invoice]]:
+            invoices = yield ListInvoices(patient_id=patient_id)
+            assert isinstance(invoices, list)
+
+            # HIPAA-required audit logging (log all PHI list access)
+            resource_id = (
+                invoices[0].id if invoices else UUID("00000000-0000-0000-0000-000000000000")
+            )
+            yield LogAuditEvent(
+                user_id=actor_id,
+                action="list_invoices",
+                resource_type="invoice",
+                resource_id=resource_id,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                metadata={"count": str(len(invoices))},
+            )
+
+            return invoices
+
+        # Run effect program
+        invoices = await run_program(list_program(), interpreter)
+
+        return [invoice_to_response(inv) for inv in invoices]
+
+    finally:
+        await redis_client.aclose()
 
 
 @router.post("/", response_model=InvoiceResponse, status_code=status.HTTP_201_CREATED)
 async def create_invoice(
-    request: CreateInvoiceRequest,
+    request_data: CreateInvoiceRequest,
+    http_request: Request,
     auth: Annotated[
         DoctorAuthorized | AdminAuthorized,
         Depends(require_doctor_or_admin),
     ],
+    _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> InvoiceResponse:
     """Create a new invoice.
 
     Requires: Doctor or Admin role.
+    Rate limit: 100 requests per 60 seconds per IP address.
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
 
-    row = await pool.fetchrow(
-        """
-        INSERT INTO invoices (patient_id, appointment_id, due_date)
-        VALUES ($1, $2, $3)
-        RETURNING id, patient_id, appointment_id, status, subtotal,
-                  tax_amount, total_amount, due_date, paid_at,
-                  created_at, updated_at
-        """,
-        UUID(request.patient_id),
-        UUID(request.appointment_id) if request.appointment_id else None,
-        request.due_date,
+    # Create Redis client with resource management
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
     )
 
-    if row is None:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create invoice",
-        )
+    try:
+        # Create composite interpreter
+        interpreter = CompositeInterpreter(pool, redis_client)
 
-    invoice = _row_to_invoice(dict(row))
-    return invoice_to_response(invoice)
+        # Extract actor ID from auth state
+        actor_id: UUID
+        match auth:
+            case DoctorAuthorized(user_id=uid):
+                actor_id = uid
+            case AdminAuthorized(user_id=uid):
+                actor_id = uid
+
+        # Extract IP and user agent from request
+        ip_address = http_request.client.host if http_request.client else None
+        user_agent = http_request.headers.get("user-agent")
+
+        # Create effect program with audit logging
+        def create_program() -> Generator[AllEffects, object, Invoice]:
+            invoice = yield CreateInvoice(
+                patient_id=UUID(request_data.patient_id),
+                appointment_id=(
+                    UUID(request_data.appointment_id) if request_data.appointment_id else None
+                ),
+                line_items=[],  # Empty invoice, line items added later
+                due_date=request_data.due_date,
+            )
+
+            # HIPAA-required audit logging
+            assert isinstance(invoice, Invoice)
+            yield LogAuditEvent(
+                user_id=actor_id,
+                action="create_invoice",
+                resource_type="invoice",
+                resource_id=invoice.id,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                metadata={"patient_id": str(request_data.patient_id)},
+            )
+
+            return invoice
+
+        # Run effect program
+        invoice = await run_program(create_program(), interpreter)
+
+        return invoice_to_response(invoice)
+
+    finally:
+        await redis_client.aclose()
 
 
 @router.get("/{invoice_id}", response_model=InvoiceWithLineItemsResponse)
 async def get_invoice(
     invoice_id: str,
+    request: Request,
     auth: Annotated[
         PatientAuthorized | DoctorAuthorized | AdminAuthorized,
         Depends(require_authenticated),
     ],
+    _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> InvoiceWithLineItemsResponse:
     """Get invoice by ID with line items.
 
     Requires appropriate authorization.
+    Logs all PHI access for HIPAA compliance.
+    Rate limit: 100 requests per 60 seconds per IP address.
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
 
-    # Get invoice
-    invoice_row = await pool.fetchrow(
-        """
-        SELECT id, patient_id, appointment_id, status, subtotal,
-               tax_amount, total_amount, due_date, paid_at,
-               created_at, updated_at
-        FROM invoices
-        WHERE id = $1
-        """,
-        UUID(invoice_id),
+    # Create Redis client
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
     )
 
-    if invoice_row is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Invoice {invoice_id} not found",
+    try:
+        # Create composite interpreter
+        interpreter = CompositeInterpreter(pool, redis_client)
+
+        # Extract actor ID from auth state
+        actor_id: UUID
+        match auth:
+            case PatientAuthorized(user_id=uid):
+                actor_id = uid
+            case DoctorAuthorized(user_id=uid):
+                actor_id = uid
+            case AdminAuthorized(user_id=uid):
+                actor_id = uid
+
+        # Extract IP and user agent from request
+        ip_address = request.client.host if request.client else None
+        user_agent = request.headers.get("user-agent")
+
+        # Create effect program to get invoice with audit logging
+        def get_program() -> Generator[AllEffects, object, Invoice]:
+            invoice = yield GetInvoiceById(invoice_id=UUID(invoice_id))
+
+            # HIPAA-required audit logging (log all access attempts)
+            yield LogAuditEvent(
+                user_id=actor_id,
+                action="view_invoice",
+                resource_type="invoice",
+                resource_id=UUID(invoice_id),
+                ip_address=ip_address,
+                user_agent=user_agent,
+                metadata={"status": "found" if invoice else "not_found"},
+            )
+
+            if invoice is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Invoice {invoice_id} not found",
+                )
+            assert isinstance(invoice, Invoice)
+            return invoice
+
+        # Run effect program
+        invoice = await run_program(get_program(), interpreter)
+
+        # Authorization check - patient can only see their own invoices
+        match auth:
+            case PatientAuthorized(patient_id=patient_id):
+                if invoice.patient_id != patient_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Not authorized to view this invoice",
+                    )
+            case _:
+                pass  # Doctors and admins can view any invoice
+
+        # Get line items (direct DB call - no effect defined yet)
+        line_item_rows = await pool.fetch(
+            """
+            SELECT id, invoice_id, description, quantity, unit_price, total, created_at
+            FROM invoice_line_items
+            WHERE invoice_id = $1
+            ORDER BY created_at
+            """,
+            UUID(invoice_id),
         )
 
-    invoice = _row_to_invoice(dict(invoice_row))
+        line_items = [_row_to_line_item(dict(row)) for row in line_item_rows]
 
-    # Authorization check - patient can only see their own invoices
-    match auth:
-        case PatientAuthorized(patient_id=patient_id):
-            if invoice.patient_id != patient_id:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Not authorized to view this invoice",
-                )
-        case _:
-            pass  # Doctors and admins can view any invoice
+        return InvoiceWithLineItemsResponse(
+            invoice=invoice_to_response(invoice),
+            line_items=[line_item_to_response(li) for li in line_items],
+        )
 
-    # Get line items
-    line_item_rows = await pool.fetch(
-        """
-        SELECT id, invoice_id, description, quantity, unit_price, total, created_at
-        FROM invoice_line_items
-        WHERE invoice_id = $1
-        ORDER BY created_at
-        """,
-        UUID(invoice_id),
-    )
-
-    line_items = [_row_to_line_item(dict(row)) for row in line_item_rows]
-
-    return InvoiceWithLineItemsResponse(
-        invoice=invoice_to_response(invoice),
-        line_items=[line_item_to_response(li) for li in line_items],
-    )
+    finally:
+        await redis_client.aclose()
 
 
 @router.post(
@@ -302,63 +425,86 @@ async def get_invoice(
 )
 async def add_line_item(
     invoice_id: str,
-    request: CreateLineItemRequest,
+    request_data: CreateLineItemRequest,
+    http_request: Request,
     auth: Annotated[
         DoctorAuthorized | AdminAuthorized,
         Depends(require_doctor_or_admin),
     ],
+    _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> LineItemResponse:
     """Add a line item to an invoice.
 
     Requires: Doctor or Admin role.
     Also updates the invoice totals.
+    Rate limit: 100 requests per 60 seconds per IP address.
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
 
-    # Calculate total for the line item
-    total = request.quantity * request.unit_price
-
-    # Insert line item
-    line_item_row = await pool.fetchrow(
-        """
-        INSERT INTO invoice_line_items (invoice_id, description, quantity, unit_price, total)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING id, invoice_id, description, quantity, unit_price, total, created_at
-        """,
-        UUID(invoice_id),
-        request.description,
-        request.quantity,
-        Decimal(str(request.unit_price)),
-        Decimal(str(total)),
+    # Create Redis client with resource management
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
     )
 
-    if line_item_row is None:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to add line item",
-        )
+    try:
+        # Create composite interpreter
+        interpreter = CompositeInterpreter(pool, redis_client)
 
-    # Update invoice totals
-    await pool.execute(
-        """
-        UPDATE invoices
-        SET subtotal = (SELECT COALESCE(SUM(total), 0) FROM invoice_line_items WHERE invoice_id = $1),
-            tax_amount = (SELECT COALESCE(SUM(total), 0) FROM invoice_line_items WHERE invoice_id = $1) * 0.1,
-            total_amount = (SELECT COALESCE(SUM(total), 0) FROM invoice_line_items WHERE invoice_id = $1) * 1.1
-        WHERE id = $1
-        """,
-        UUID(invoice_id),
-    )
+        # Extract actor ID from auth state
+        actor_id: UUID
+        match auth:
+            case DoctorAuthorized(user_id=uid):
+                actor_id = uid
+            case AdminAuthorized(user_id=uid):
+                actor_id = uid
 
-    line_item = _row_to_line_item(dict(line_item_row))
-    return line_item_to_response(line_item)
+        # Extract IP and user agent from request
+        ip_address = http_request.client.host if http_request.client else None
+        user_agent = http_request.headers.get("user-agent")
+
+        # Create effect program with audit logging
+        def add_line_item_program() -> Generator[AllEffects, object, LineItem]:
+            line_item = yield AddInvoiceLineItem(
+                invoice_id=UUID(invoice_id),
+                description=request_data.description,
+                quantity=request_data.quantity,
+                unit_price=Decimal(str(request_data.unit_price)),
+            )
+
+            # HIPAA-required audit logging
+            assert isinstance(line_item, LineItem)
+            yield LogAuditEvent(
+                user_id=actor_id,
+                action="add_invoice_line_item",
+                resource_type="invoice",
+                resource_id=UUID(invoice_id),
+                ip_address=ip_address,
+                user_agent=user_agent,
+                metadata={
+                    "line_item_id": str(line_item.id),
+                    "description": request_data.description,
+                },
+            )
+
+            return line_item
+
+        # Run effect program
+        line_item = await run_program(add_line_item_program(), interpreter)
+
+        return line_item_to_response(line_item)
+
+    finally:
+        await redis_client.aclose()
 
 
 @router.patch("/{invoice_id}/status", response_model=InvoiceResponse)
 async def update_invoice_status(
     invoice_id: str,
-    request: UpdateInvoiceStatusRequest,
+    request_data: UpdateInvoiceStatusRequest,
+    http_request: Request,
     auth: Annotated[
         DoctorAuthorized | AdminAuthorized,
         Depends(require_doctor_or_admin),
@@ -371,55 +517,83 @@ async def update_invoice_status(
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
 
-    # Build update query
-    if request.status == "paid":
-        row = await pool.fetchrow(
-            """
-            UPDATE invoices
-            SET status = $2, paid_at = NOW()
-            WHERE id = $1
-            RETURNING id, patient_id, appointment_id, status, subtotal,
-                      tax_amount, total_amount, due_date, paid_at,
-                      created_at, updated_at
-            """,
-            UUID(invoice_id),
-            request.status,
-        )
-    else:
-        row = await pool.fetchrow(
-            """
-            UPDATE invoices
-            SET status = $2
-            WHERE id = $1
-            RETURNING id, patient_id, appointment_id, status, subtotal,
-                      tax_amount, total_amount, due_date, paid_at,
-                      created_at, updated_at
-            """,
-            UUID(invoice_id),
-            request.status,
-        )
+    # Create Redis client with resource management
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
+    )
 
-    if row is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Invoice {invoice_id} not found",
-        )
+    try:
+        # Create composite interpreter
+        interpreter = CompositeInterpreter(pool, redis_client)
 
-    invoice = _row_to_invoice(dict(row))
-    return invoice_to_response(invoice)
+        # Extract actor ID from auth state
+        actor_id: UUID
+        match auth:
+            case DoctorAuthorized(user_id=uid):
+                actor_id = uid
+            case AdminAuthorized(user_id=uid):
+                actor_id = uid
+
+        # Extract IP and user agent from request
+        ip_address = http_request.client.host if http_request.client else None
+        user_agent = http_request.headers.get("user-agent")
+
+        # Create effect program with audit logging
+        def update_status_program() -> Generator[AllEffects, object, Invoice]:
+            invoice = yield UpdateInvoiceStatus(
+                invoice_id=UUID(invoice_id),
+                status=request_data.status,
+            )
+
+            # HIPAA-required audit logging
+            if invoice is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Invoice {invoice_id} not found",
+                )
+
+            assert isinstance(invoice, Invoice)
+            yield LogAuditEvent(
+                user_id=actor_id,
+                action="update_invoice_status",
+                resource_type="invoice",
+                resource_id=UUID(invoice_id),
+                ip_address=ip_address,
+                user_agent=user_agent,
+                metadata={
+                    "old_status": "unknown",  # Could retrieve from DB if needed
+                    "new_status": request_data.status,
+                },
+            )
+
+            return invoice
+
+        # Run effect program
+        invoice = await run_program(update_status_program(), interpreter)
+
+        return invoice_to_response(invoice)
+
+    finally:
+        await redis_client.aclose()
 
 
 @router.get("/patient/{patient_id}", response_model=list[InvoiceResponse])
 async def get_patient_invoices(
     patient_id: str,
+    request: Request,
     auth: Annotated[
         PatientAuthorized | DoctorAuthorized | AdminAuthorized,
         Depends(require_authenticated),
     ],
+    _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> list[InvoiceResponse]:
     """Get all invoices for a patient.
 
     Requires appropriate authorization.
+    Logs all PHI access for HIPAA compliance.
+    Rate limit: 100 requests per 60 seconds per IP address.
     """
     # Authorization check
     match auth:
@@ -435,17 +609,56 @@ async def get_patient_invoices(
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
 
-    rows = await pool.fetch(
-        """
-        SELECT id, patient_id, appointment_id, status, subtotal,
-               tax_amount, total_amount, due_date, paid_at,
-               created_at, updated_at
-        FROM invoices
-        WHERE patient_id = $1
-        ORDER BY created_at DESC
-        """,
-        UUID(patient_id),
+    # Create Redis client
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
     )
 
-    invoices = [_row_to_invoice(dict(row)) for row in rows]
-    return [invoice_to_response(inv) for inv in invoices]
+    try:
+        # Create composite interpreter
+        interpreter = CompositeInterpreter(pool, redis_client)
+
+        # Extract actor ID from auth state
+        actor_id: UUID
+        match auth:
+            case PatientAuthorized(user_id=uid):
+                actor_id = uid
+            case DoctorAuthorized(user_id=uid):
+                actor_id = uid
+            case AdminAuthorized(user_id=uid):
+                actor_id = uid
+
+        # Extract IP and user agent from request
+        ip_address = request.client.host if request.client else None
+        user_agent = request.headers.get("user-agent")
+
+        # Create effect program with audit logging
+        def list_program() -> Generator[AllEffects, object, list[Invoice]]:
+            invoices = yield ListInvoices(patient_id=UUID(patient_id))
+            assert isinstance(invoices, list)
+
+            # HIPAA-required audit logging (log all PHI list access)
+            resource_id = (
+                invoices[0].id if invoices else UUID("00000000-0000-0000-0000-000000000000")
+            )
+            yield LogAuditEvent(
+                user_id=actor_id,
+                action="list_patient_invoices",
+                resource_type="invoice",
+                resource_id=resource_id,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                metadata={"count": str(len(invoices)), "patient_id": patient_id},
+            )
+
+            return invoices
+
+        # Run effect program
+        invoices = await run_program(list_program(), interpreter)
+
+        return [invoice_to_response(inv) for inv in invoices]
+
+    finally:
+        await redis_client.aclose()
