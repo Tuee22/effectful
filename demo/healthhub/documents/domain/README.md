@@ -66,11 +66,11 @@ The **domain/** tier contains healthcare domain knowledge that is **NOT specific
 
 ### Domain → Best Practices
 
-The **best_practices/** tier provides **HealthHub-specific implementation patterns** that apply these domain concepts:
+The **engineering/** tier provides **HealthHub-specific implementation patterns** that apply these domain concepts:
 
-- [State Machine Patterns](../best_practices/state_machine_patterns.md) - How to implement medical state machines using ADTs
-- [Authorization Patterns](../best_practices/authorization_patterns.md) - How to use ADT-based authorization for medical roles
-- [Effect Program Patterns](../best_practices/effect_program_patterns.md) - How to compose medical workflows as effect programs
+- [State Machine Patterns](../engineering/state_machine_patterns.md) - How to implement medical state machines using ADTs
+- [Authorization Patterns](../engineering/authorization_patterns.md) - How to use ADT-based authorization for medical roles
+- [Effect Program Patterns](../engineering/effect_program_patterns.md) - How to compose medical workflows as effect programs
 
 **Flow**: Domain knowledge → HealthHub implementation patterns
 
@@ -105,11 +105,11 @@ The **tutorials/** tier provides **step-by-step guides** that reference domain c
 **Starting Point**: If you're new to healthcare application development, start here:
 1. Read [Appointment Workflows](appointment_workflows.md) to understand the medical domain
 2. Read [HIPAA Compliance](hipaa_compliance.md) to understand regulatory requirements
-3. Then move to [best_practices/](../best_practices/) to learn HealthHub implementation patterns
+3. Then move to [engineering/](../engineering/) to learn HealthHub implementation patterns
 
 **Reference Material**: If you're implementing a new medical workflow:
 1. Check [Medical State Machines](medical_state_machines.md) for general patterns
-2. Check [best_practices/state_machine_patterns.md](../best_practices/state_machine_patterns.md) for ADT implementation patterns
+2. Check [engineering/state_machine_patterns.md](../engineering/state_machine_patterns.md) for ADT implementation patterns
 3. Check [product/](../product/) for examples from existing HealthHub workflows
 
 **Compliance Questions**: If you need to verify HIPAA compliance:
@@ -127,8 +127,8 @@ graph TB
     B[domain/medical_state_machines.md]
     C[domain/hipaa_compliance.md]
 
-    D[best_practices/state_machine_patterns.md]
-    E[best_practices/authorization_patterns.md]
+    D[engineering/state_machine_patterns.md]
+    E[engineering/authorization_patterns.md]
 
     F[product/appointment_state_machine.md]
     G[product/domain_models.md]
@@ -189,7 +189,7 @@ Update **domain/** documents when:
 | Design a new medical workflow | [Medical State Machines](medical_state_machines.md) |
 | Verify HIPAA compliance | [HIPAA Compliance](hipaa_compliance.md) |
 | Implement appointment state machine | [../product/appointment_state_machine.md](../product/appointment_state_machine.md) |
-| Learn ADT state machine patterns | [../best_practices/state_machine_patterns.md](../best_practices/state_machine_patterns.md) |
+| Learn ADT state machine patterns | [../engineering/state_machine_patterns.md](../engineering/state_machine_patterns.md) |
 
 ---
 

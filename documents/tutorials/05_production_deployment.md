@@ -28,7 +28,11 @@ By the end of this tutorial, you will:
 
 **Install Dependencies**:
 ```bash
+# For library users adding effectful to YOUR application
 poetry add asyncpg
+
+# For effectful contributors (inside Docker)
+docker compose -f docker/docker-compose.yml exec effectful poetry add asyncpg
 ```
 
 **Connection Pool Setup**:
@@ -74,7 +78,11 @@ async def get_db_connection() -> AsyncIterator[asyncpg.Connection]:
 
 **Install Dependencies**:
 ```bash
+# For library users adding effectful to YOUR application
 poetry add redis[hiredis]
+
+# For effectful contributors (inside Docker)
+docker compose -f docker/docker-compose.yml exec effectful poetry add redis[hiredis]
 ```
 
 **Connection Pool Setup**:

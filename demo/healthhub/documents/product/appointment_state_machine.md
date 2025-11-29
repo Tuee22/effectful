@@ -429,7 +429,7 @@ def get_available_actions(
 - [Medical State Machines](../domain/medical_state_machines.md) - General medical workflow patterns
 
 ### Best Practices
-- [State Machine Patterns](../best_practices/state_machine_patterns.md) - ADT-based state machine implementation patterns
+- [State Machine Patterns](../engineering/state_machine_patterns.md) - ADT-based state machine implementation patterns
 
 ### Product Documentation
 - [Domain Models](domain_models.md) - Appointment entity structure

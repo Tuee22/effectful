@@ -121,6 +121,56 @@ services:
     networks:
       - effectful-network
 
+  # Prometheus metrics server
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: effectful-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - effectful-prometheusdata:/prometheus  # Named volume for metrics data
+    ports:
+      - "9090:9090"  # Prometheus UI
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - effectful-network
+
+  # Grafana dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: effectful-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_INSTALL_PLUGINS: ""
+    volumes:
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - effectful-grafanadata:/var/lib/grafana  # Named volume for dashboard data
+    ports:
+      - "3000:3000"  # Grafana UI
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - effectful-network
+
 # Named volumes for data persistence
 # CRITICAL: Use named volumes, NOT bind mounts on macOS (see CLAUDE.md Anti-Pattern #21)
 volumes:
@@ -131,6 +181,10 @@ volumes:
   effectful-miniodata:
     driver: local
   effectful-pulsardata:
+    driver: local
+  effectful-prometheusdata:
+    driver: local
+  effectful-grafanadata:
     driver: local
 
 networks:

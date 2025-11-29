@@ -59,8 +59,24 @@ Layer 5: Infrastructure (PostgreSQL, Redis, Pulsar, MinIO)
 | Test integration | `docker compose -f docker/docker-compose.yml exec healthhub poetry run test-integration` |
 | API server (dev) | `docker compose -f docker/docker-compose.yml exec healthhub poetry run api-dev` |
 | Python shell | `docker compose -f docker/docker-compose.yml exec healthhub poetry run python` |
+| Rebuild with frontend | `docker compose -f docker/docker-compose.yml build healthhub && docker compose -f docker/docker-compose.yml up -d` |
 
 **With output capture**: Add `> /tmp/test-output.txt 2>&1` to any test command.
+
+## 🐳 Docker Development Policy
+
+**CRITICAL**: All development happens inside Docker containers. Poetry is configured to NOT create virtual environments via `poetry.toml`.
+
+**Do NOT run `poetry install` locally** - it will fail.
+
+See parent [Docker Doctrine](../../documents/core/docker_doctrine.md) for complete policy.
+
+**Why Docker-Only**:
+- Consistent environment (Python 3.12, PostgreSQL 15, Redis 7)
+- Access to real infrastructure for integration tests
+- Matches production environment
+- No local Python version conflicts
+- No virtualenv mismatches (enforced by `poetry.toml`)
 
 ## 📊 Test Statistics
 
@@ -91,7 +107,7 @@ All code changes must meet:
 
 | Service | Image | Port | Purpose |
 |---------|-------|------|---------|
-| healthhub | Python 3.12 + Poetry | 8850 | FastAPI application |
+| healthhub | Python 3.12 + Poetry | 8850 | FastAPI application + React frontend |
 | postgres | postgres:15-alpine | 5433 | Patient/appointment data |
 | redis | redis:7-alpine | 6380 | Notifications, cache |
 | pulsar | apachepulsar/pulsar:3.0.0 | 6651 | Durable messaging |
@@ -116,6 +132,26 @@ from effectful.algebraic.result import Ok, Err, Result
 from effectful.domain.user import User
 from effectful.effects.database import GetUserById
 ```
+
+### Frontend Architecture
+
+**Pattern**: FastAPI serves React frontend using StaticFiles mount.
+
+**Build Process**:
+- Frontend built during `docker build` step
+- Output: `/opt/healthhub/frontend-build/build/`
+- Served by FastAPI on port 8850
+
+**Routing**:
+- `/api/*` - API routes (FastAPI routers)
+- `/static/*` - Static assets (JS, CSS, images)
+- `/*` - React app (index.html served for client-side routing)
+
+**Development Workflow**:
+- **Backend changes**: Volume mounts enable hot reload (uvicorn --reload)
+- **Frontend changes**: Rebuild Docker image OR run `npm run dev` locally at http://localhost:5173
+
+**See also**: [documents/engineering/frontend_architecture.md](documents/engineering/frontend_architecture.md)
 
 ## 🧪 Testing Philosophy
 

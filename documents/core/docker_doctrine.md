@@ -20,7 +20,7 @@ This doctrine applies to:
 2. **No Local Setup Required**: Contributors don't need to manage Python versions or virtual environments locally
 3. **Infrastructure Parity**: Tests run against the same PostgreSQL, Redis, MinIO, and Pulsar versions as production
 4. **Reproducible Builds**: Build artifacts are identical regardless of host OS (macOS, Linux, Windows)
-5. **Clean Host Machine**: No Poetry, no virtualenvs, no Python version conflicts on your machine
+5. **Clean Host Machine**: No Poetry virtualenvs (enforced via `poetry.toml`), no Python version conflicts
 
 ### Why NOT Local Development?
 
@@ -83,12 +83,16 @@ pip install -r requirements.txt
 
 # FORBIDDEN - Running Python scripts locally
 python examples/01_hello_world.py
+
+# FORBIDDEN - Creates or uses virtualenvs
+python -m venv .venv
+source .venv/bin/activate
 ```
 
 ### Why These Are Forbidden
 
 1. **Local pytest**: Won't have access to PostgreSQL, Redis, MinIO, Pulsar
-2. **Local poetry**: Creates local virtualenvs, causes version mismatches
+2. **Local poetry**: `poetry.toml` prevents virtualenv creation - commands will fail
 3. **Local mypy**: May use different Python version, give false positives/negatives
 4. **Local pip**: Pollutes global Python, causes conflicts
 
@@ -117,6 +121,73 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
 # 4. Iterate
 ```
 
+### Adding Dependencies
+
+```bash
+# Runtime dependency
+docker compose -f docker/docker-compose.yml exec effectful poetry add <package>
+
+# Development dependency
+docker compose -f docker/docker-compose.yml exec effectful poetry add --group dev <package>
+```
+
+**CRITICAL**: Never run `poetry add` locally - use Docker exec wrapper.
+
+### Code Quality Gates
+
+Before committing any code, ensure all gates pass:
+
+```bash
+# 1. Type check (mypy --strict)
+docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
+
+# 2. Run all tests (329 tests, ~1.6s)
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
+
+# 3. Coverage check (minimum 45%)
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest --cov=effectful --cov-report=term-missing
+```
+
+All gates must pass with:
+- ✅ Exit code 0
+- ✅ Zero MyPy errors
+- ✅ Zero test failures
+- ✅ Zero skipped tests
+- ✅ Minimum 45% coverage
+
+### Pull Request Checklist
+
+Before submitting a PR:
+
+- [ ] All tests pass (zero failures, zero skipped)
+- [ ] Zero mypy errors (`check-code` exits 0)
+- [ ] Code formatted (Black applied)
+- [ ] Minimum 45% coverage
+- [ ] No forbidden constructs (Any, cast, type: ignore)
+- [ ] All dataclasses frozen (`frozen=True`)
+- [ ] ADTs used instead of Optional
+- [ ] Result type used for errors
+- [ ] Error paths tested
+- [ ] Docstrings on public APIs
+
+### Git Workflow
+
+**CRITICAL**: Claude Code users must follow this workflow:
+
+**Forbidden Operations**:
+- ❌ `git commit` (including --amend, --no-verify)
+- ❌ `git push` (including --force)
+- ❌ Automated commits of any kind
+
+**Required Workflow**:
+1. Make code changes
+2. Run quality gates (check-code, pytest)
+3. Leave changes uncommitted
+4. User reviews with `git status` and `git diff`
+5. User manually commits and pushes
+
+**Rationale**: All changes must be human-reviewed before entering version control.
+
 ### Viewing Logs
 
 ```bash
@@ -139,6 +210,43 @@ docker compose -f docker/docker-compose.yml down
 # Stop and remove everything including data
 docker compose -f docker/docker-compose.yml down -v
 ```
+
+## Poetry Configuration
+
+**CRITICAL**: Poetry is configured to NOT create virtual environments.
+
+### poetry.toml
+
+The repository includes `poetry.toml` at the root:
+
+```toml
+[virtualenvs]
+create = false
+in-project = false
+```
+
+**Why This Matters**:
+- Running `poetry install` on host machine will fail (no virtualenv created)
+- Prevents accidental local dependency installation
+- Forces all development through Docker
+- Eliminates "works on my machine" issues from virtualenv mismatches
+
+### .venv Directory
+
+If you see a `.venv` directory in the project root, it should NOT exist:
+
+```bash
+# Remove it
+rm -rf .venv
+
+# Verify poetry.toml exists
+cat poetry.toml
+# Should show: create = false
+```
+
+**How It Got There**: Someone ran `poetry install` before `poetry.toml` was added.
+
+**Fix**: Delete it and never run `poetry install` locally again.
 
 ## Container Services
 
@@ -320,9 +428,10 @@ docker compose -f docker/docker-compose.yml ps
 ## References
 
 - **Command Reference**: See `CLAUDE.md` for complete command table
-- **Testing**: See `documents/core/testing_doctrine.md` for test organization
+- **Development Guide**: See `CLAUDE.md` for complete development reference
+- **Type Safety**: See `documents/core/type_safety_doctrine.md` for eight type safety rules
+- **Testing**: See `documents/core/testing_doctrine.md` for test organization and antipatterns
 - **Observability**: See `documents/core/observability_doctrine.md` for Prometheus/Grafana integration
-- **Contributing**: See `CONTRIBUTING.md` for contribution workflow
 
 ---
 

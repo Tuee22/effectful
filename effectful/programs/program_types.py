@@ -20,6 +20,13 @@ from effectful.domain.message_envelope import (
     NackResult,
     PublishResult,
 )
+from effectful.domain.metrics_result import (
+    MetricQueryResult,
+    MetricRecorded,
+    MetricRecordingFailed,
+    QueryFailure,
+    QuerySuccess,
+)
 from effectful.domain.profile import ProfileData
 from effectful.domain.s3_object import PutSuccess, S3Object
 from effectful.domain.token_result import TokenValidationResult
@@ -28,6 +35,7 @@ from effectful.effects.auth import AuthEffect
 from effectful.effects.cache import CacheEffect
 from effectful.effects.database import DatabaseEffect
 from effectful.effects.messaging import MessagingEffect
+from effectful.effects.metrics import MetricsEffect
 from effectful.effects.storage import StorageEffect
 from effectful.effects.system import SystemEffect
 from effectful.effects.websocket import WebSocketEffect
@@ -41,6 +49,7 @@ type AllEffects = (
     | StorageEffect
     | AuthEffect
     | SystemEffect
+    | MetricsEffect
 )
 
 # Union of all possible return values from effects
@@ -73,6 +82,11 @@ type EffectResult = (
     | PutSuccess  # PutObject returns PutSuccess on success
     # Token ADTs
     | TokenValidationResult  # ValidateToken returns TokenValidationResult ADT (TokenValid | TokenExpired | TokenInvalid)
+    # Metrics ADTs
+    | MetricRecorded  # IncrementCounter, RecordGauge, ObserveHistogram, RecordSummary return MetricRecorded on success
+    | MetricRecordingFailed  # Metrics recording operations return MetricRecordingFailed on validation/collector error
+    | QuerySuccess  # QueryMetrics returns QuerySuccess with metrics dict
+    | QueryFailure  # QueryMetrics returns QueryFailure when metric not found or collector unavailable
     # List types
     | list[ChatMessage]  # ListMessagesForUser returns list[ChatMessage]
     | list[str]  # ListObjects returns list[str] (object keys)

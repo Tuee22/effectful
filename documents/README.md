@@ -6,6 +6,8 @@ Welcome to the **effectful** documentation!
 
 All development happens inside Docker containers. See [Docker Doctrine](core/docker_doctrine.md).
 
+**CRITICAL**: Poetry is configured to NOT create virtual environments (`poetry.toml`). Do NOT run `poetry install` locally.
+
 ```bash
 # Start development environment
 docker compose -f docker/docker-compose.yml up -d
@@ -163,7 +165,8 @@ match divide(10, 2):
 
 - [GitHub Repository](https://github.com/your-org/effectful)
 - [Issue Tracker](https://github.com/your-org/effectful/issues)
-- [Contributing Guide](../CONTRIBUTING.md)
+- [Development Guide](../CLAUDE.md)
+- [Docker Doctrine](core/docker_doctrine.md)
 - [Architecture](core/architecture.md)
 - [Testing Doctrine](core/testing_doctrine.md)
 - [Type Safety Doctrine](core/type_safety_doctrine.md)
@@ -233,7 +236,7 @@ async def test_my_program():
 
 - **Questions?** Open a [discussion](https://github.com/your-org/effectful/discussions)
 - **Bug reports?** File an [issue](https://github.com/your-org/effectful/issues)
-- **Contributing?** See [CONTRIBUTING.md](../CONTRIBUTING.md)
+- **Contributing?** See [CLAUDE.md](../CLAUDE.md) and [Docker Doctrine](core/docker_doctrine.md)
 
 ---
 

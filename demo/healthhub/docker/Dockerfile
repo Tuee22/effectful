@@ -16,7 +16,7 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /app
 
 # Create directories for build artifacts (ShipNorth pattern)
-RUN mkdir -p /opt/healthhub/backend-build
+RUN mkdir -p /opt/healthhub/backend-build /opt/healthhub/frontend-build
 
 # Install system dependencies including Node.js for Playwright
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -97,6 +97,27 @@ RUN poetry lock --no-update 2>/dev/null || true && \
 
 # Install Playwright browsers (ShipNorth pattern)
 RUN python -m playwright install --with-deps chromium firefox webkit
+
+# ============================================
+# Step 3: Build Frontend
+# ============================================
+
+# Copy frontend source
+COPY demo/healthhub/frontend/package.json demo/healthhub/frontend/package-lock.json /opt/healthhub/frontend-build/
+COPY demo/healthhub/frontend/src /opt/healthhub/frontend-build/src
+COPY demo/healthhub/frontend/index.html /opt/healthhub/frontend-build/
+COPY demo/healthhub/frontend/vite.config.ts /opt/healthhub/frontend-build/
+COPY demo/healthhub/frontend/tsconfig.json /opt/healthhub/frontend-build/
+COPY demo/healthhub/frontend/tsconfig.node.json /opt/healthhub/frontend-build/
+
+# Install frontend dependencies and build
+WORKDIR /opt/healthhub/frontend-build
+RUN npm ci --quiet && \
+    BUILD_PATH=build npm run build && \
+    ls -la build/index.html
+
+# Return to healthhub workdir
+WORKDIR /app/healthhub
 
 # ============================================
 # Policy Enforcement (ShipNorth pattern)

@@ -630,8 +630,8 @@ def test_cannot_start_appointment_before_scheduled_time() -> None:
 - [Domain Models](../product/domain_models.md) - Prescription, LabResult, Invoice models
 
 ### Best Practices
-- [State Machine Patterns](../best_practices/state_machine_patterns.md) - Implementation patterns and anti-patterns
-- [Effect Program Patterns](../best_practices/effect_program_patterns.md) - Using state machines in effect programs
+- [State Machine Patterns](../engineering/state_machine_patterns.md) - Implementation patterns and anti-patterns
+- [Effect Program Patterns](../engineering/effect_program_patterns.md) - Using state machines in effect programs
 
 ---
 

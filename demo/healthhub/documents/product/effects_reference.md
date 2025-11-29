@@ -464,8 +464,8 @@ type PublishResult = NotificationPublished | PublishFailed
 ## Related Documentation
 
 ### Best Practices
-- [Effect Program Patterns](../best_practices/effect_program_patterns.md) - How to use effects in programs (yield, type narrowing, composition)
-- [Testing Doctrine](../best_practices/testing_doctrine.md) - Testing effect programs with generator stepping
+- [Effect Program Patterns](../engineering/effect_program_patterns.md) - How to use effects in programs (yield, type narrowing, composition)
+- [Testing Doctrine](../engineering/testing_doctrine.md) - Testing effect programs with generator stepping
 
 ### Product Documentation
 - [Architecture Overview](architecture_overview.md) - How effects fit in the 5-layer architecture

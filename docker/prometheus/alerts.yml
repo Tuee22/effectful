@@ -1,0 +1,159 @@
+# Prometheus alert rules for Effectful framework metrics
+# SSoT: documents/core/alerting_policy.md
+
+groups:
+  - name: effectful_framework_alerts
+    interval: 30s
+    rules:
+      # Alert: High effect error rate
+      # Triggers when error rate exceeds 5% over 5 minutes
+      - alert: HighEffectErrorRate
+        expr: |
+          (
+            sum by (effect_type) (
+              rate(effectful_effects_total{result="error"}[5m])
+            )
+            /
+            sum by (effect_type) (
+              rate(effectful_effects_total[5m])
+            )
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          layer: framework
+        annotations:
+          summary: "High error rate for effect {{ $labels.effect_type }}"
+          description: "Effect {{ $labels.effect_type }} has error rate {{ $value | humanizePercentage }} over last 5 minutes (threshold: 5%)"
+          runbook_url: "https://github.com/effectful/runbooks/high-error-rate"
+
+      # Alert: Critical effect error rate
+      # Triggers when error rate exceeds 20% over 5 minutes
+      - alert: CriticalEffectErrorRate
+        expr: |
+          (
+            sum by (effect_type) (
+              rate(effectful_effects_total{result="error"}[5m])
+            )
+            /
+            sum by (effect_type) (
+              rate(effectful_effects_total[5m])
+            )
+          ) > 0.20
+        for: 2m
+        labels:
+          severity: critical
+          layer: framework
+        annotations:
+          summary: "CRITICAL: Effect {{ $labels.effect_type }} failing at {{ $value | humanizePercentage }}"
+          description: "Effect {{ $labels.effect_type }} has CRITICAL error rate {{ $value | humanizePercentage }} over last 5 minutes (threshold: 20%)"
+          runbook_url: "https://github.com/effectful/runbooks/critical-error-rate"
+
+      # Alert: High effect latency (P95)
+      # Triggers when 95th percentile latency exceeds 1 second
+      - alert: HighEffectLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum by (effect_type, le) (
+              rate(effectful_effect_duration_seconds_bucket[5m])
+            )
+          ) > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          layer: framework
+        annotations:
+          summary: "High latency for effect {{ $labels.effect_type }}"
+          description: "Effect {{ $labels.effect_type }} P95 latency is {{ $value }}s over last 5 minutes (threshold: 1.0s)"
+          runbook_url: "https://github.com/effectful/runbooks/high-latency"
+
+      # Alert: Critical effect latency (P95)
+      # Triggers when 95th percentile latency exceeds 5 seconds
+      - alert: CriticalEffectLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum by (effect_type, le) (
+              rate(effectful_effect_duration_seconds_bucket[5m])
+            )
+          ) > 5.0
+        for: 2m
+        labels:
+          severity: critical
+          layer: framework
+        annotations:
+          summary: "CRITICAL: Effect {{ $labels.effect_type }} latency {{ $value }}s"
+          description: "Effect {{ $labels.effect_type }} P95 latency is CRITICAL at {{ $value }}s over last 5 minutes (threshold: 5.0s)"
+          runbook_url: "https://github.com/effectful/runbooks/critical-latency"
+
+      # Alert: Low effect success rate
+      # Triggers when success rate drops below 95% over 5 minutes
+      - alert: LowEffectSuccessRate
+        expr: |
+          (
+            sum by (effect_type) (
+              rate(effectful_effects_total{result="ok"}[5m])
+            )
+            /
+            sum by (effect_type) (
+              rate(effectful_effects_total[5m])
+            )
+          ) < 0.95
+        for: 5m
+        labels:
+          severity: warning
+          layer: framework
+        annotations:
+          summary: "Low success rate for effect {{ $labels.effect_type }}"
+          description: "Effect {{ $labels.effect_type }} has success rate {{ $value | humanizePercentage }} over last 5 minutes (threshold: 95%)"
+          runbook_url: "https://github.com/effectful/runbooks/low-success-rate"
+
+      # Alert: Effect execution volume anomaly
+      # Triggers when effect execution rate drops by more than 50%
+      - alert: EffectVolumeDropped
+        expr: |
+          (
+            sum by (effect_type) (
+              rate(effectful_effects_total[5m])
+            )
+            /
+            sum by (effect_type) (
+              rate(effectful_effects_total[5m] offset 1h)
+            )
+          ) < 0.5
+        for: 10m
+        labels:
+          severity: info
+          layer: framework
+        annotations:
+          summary: "Effect {{ $labels.effect_type }} volume dropped significantly"
+          description: "Effect {{ $labels.effect_type }} execution rate is {{ $value | humanizePercentage }} of normal (threshold: 50%)"
+          runbook_url: "https://github.com/effectful/runbooks/volume-drop"
+
+  - name: effectful_infrastructure_alerts
+    interval: 30s
+    rules:
+      # Alert: Prometheus scrape failures
+      # Triggers when Prometheus cannot scrape metrics endpoint
+      - alert: PrometheusTargetDown
+        expr: up{job="effectful-app"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          layer: infrastructure
+        annotations:
+          summary: "Prometheus cannot scrape {{ $labels.job }}"
+          description: "Prometheus target {{ $labels.job }} ({{ $labels.instance }}) is down for 2 minutes"
+          runbook_url: "https://github.com/effectful/runbooks/target-down"
+
+      # Alert: High scrape duration
+      # Triggers when metrics scraping takes too long
+      - alert: HighScrapeDuration
+        expr: scrape_duration_seconds{job="effectful-app"} > 1.0
+        for: 5m
+        labels:
+          severity: warning
+          layer: infrastructure
+        annotations:
+          summary: "Slow metrics scraping for {{ $labels.job }}"
+          description: "Scraping {{ $labels.job }} takes {{ $value }}s (threshold: 1.0s)"
+          runbook_url: "https://github.com/effectful/runbooks/slow-scrape"

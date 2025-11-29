@@ -9,6 +9,8 @@ This package contains immutable domain entities and value objects:
 - PublishResult: ADT for publish operation results (PublishSuccess | PublishFailure)
 - S3Object: S3 object with metadata
 - PutResult: ADT for put operation results (PutSuccess | PutFailure)
+- MetricResult: ADT for metric recording results (MetricRecorded | MetricRecordingFailed)
+- MetricQueryResult: ADT for metric query results (QuerySuccess | QueryFailure)
 - DomainError: Domain-level error types
 """
 
@@ -22,6 +24,14 @@ from effectful.domain.message_envelope import (
     PublishFailure,
     PublishResult,
     PublishSuccess,
+)
+from effectful.domain.metrics_result import (
+    MetricQueryResult,
+    MetricRecorded,
+    MetricRecordingFailed,
+    MetricResult,
+    QueryFailure,
+    QuerySuccess,
 )
 from effectful.domain.profile import (
     ProfileData,
@@ -72,6 +82,13 @@ __all__ = [
     "TokenExpired",
     "TokenInvalid",
     "TokenValidationResult",
+    # Metrics ADTs
+    "MetricRecorded",
+    "MetricRecordingFailed",
+    "MetricResult",
+    "QuerySuccess",
+    "QueryFailure",
+    "MetricQueryResult",
     # Errors
     "UserNotFoundError",
     "InvalidMessageError",

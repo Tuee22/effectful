@@ -367,8 +367,8 @@ REDIS_DB=0
 ## Related Documentation
 
 ### Best Practices
-- [Effect Program Patterns](../best_practices/effect_program_patterns.md) - Fire-and-forget notifications (Pattern 3)
-- [Testing Doctrine](../best_practices/testing_doctrine.md) - Testing notification workflows
+- [Effect Program Patterns](../engineering/effect_program_patterns.md) - Fire-and-forget notifications (Pattern 3)
+- [Testing Doctrine](../engineering/testing_doctrine.md) - Testing notification workflows
 
 ### Product Documentation
 - [Architecture Overview](architecture_overview.md) - How messaging fits in the 5-layer architecture

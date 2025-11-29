@@ -425,7 +425,7 @@ def process_lab_result(data: LabResultData) -> LabResult:
 ```python
 from typing import assert_never
 
-# ADT types (see documents/best_practices/authorization_patterns.md)
+# ADT types (see documents/engineering/authorization_patterns.md)
 @dataclass(frozen=True)
 class PatientAuthorized:
     user_id: UUID
@@ -645,7 +645,7 @@ docker compose -f docker/docker-compose.yml exec healthhub poetry run check-code
 "pulsar".msg = "Effect programs yield PublishAuditLog, not call Pulsar"
 ```
 
-**Why**: Effect programs are pure logic that yields immutable effect descriptions. The program runner (`run_ws_program`) interprets effects and calls infrastructure. See `documents/best_practices/effect_program_patterns.md`.
+**Why**: Effect programs are pure logic that yields immutable effect descriptions. The program runner (`run_ws_program`) interprets effects and calls infrastructure. See `documents/engineering/effect_program_patterns.md`.
 
 ### Frozen Dataclasses Required
 
@@ -711,7 +711,7 @@ APPOINTMENTS_CREATED.labels(patient_id=str(patient_id)).inc()
 APPOINTMENTS_CREATED.labels(portal="patient").inc()
 ```
 
-**See Also**: `documents/best_practices/monitoring_observability.md` - HIPAA Compliance Monitoring.
+**See Also**: `documents/engineering/monitoring_observability.md` - HIPAA Compliance Monitoring.
 
 ---
 

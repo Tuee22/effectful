@@ -1,0 +1,58 @@
+# Prometheus configuration for Effectful metrics
+# SSoT: documents/core/monitoring_standards.md
+
+global:
+  scrape_interval: 15s  # Default scrape interval
+  evaluation_interval: 15s  # Evaluate rules every 15s
+  scrape_timeout: 10s
+  external_labels:
+    cluster: 'effectful-dev'
+    environment: 'development'
+
+# Alertmanager configuration (optional - for production use)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           - alertmanager:9093
+
+# Load alert rules
+rule_files:
+  - '/etc/prometheus/alerts.yml'
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # Effectful application metrics
+  # IMPORTANT: Update this when running FastAPI with metrics endpoint
+  # The target should be the host:port where your application exposes /metrics
+  - job_name: 'effectful-app'
+    metrics_path: '/metrics'  # Prometheus client default endpoint
+    scrape_interval: 5s  # More frequent for framework metrics
+    static_configs:
+      - targets: []  # Add your application host:port here
+        # Example: ['effectful:8000'] when running FastAPI in effectful container
+        labels:
+          service: 'effectful'
+          layer: 'application'
+    # Optional: Relabel to extract effect_type from metric labels
+    metric_relabel_configs:
+      - source_labels: [__name__, effect_type]
+        separator: ';'
+        target_label: full_metric
+        replacement: '$1{effect_type="$2"}'
+
+  # Future: Add scrape configs for other services
+  # - job_name: 'postgres-exporter'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+  #
+  # - job_name: 'redis-exporter'
+  #   static_configs:
+  #     - targets: ['redis-exporter:9121']

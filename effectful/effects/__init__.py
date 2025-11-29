@@ -8,6 +8,7 @@ This package provides immutable effect types for describing program behavior:
 - Storage effects: GetObject, PutObject, DeleteObject, ListObjects
 - Auth effects: ValidateToken, GenerateToken, RefreshToken, RevokeToken
 - System effects: GetCurrentTime, GenerateUUID
+- Metrics effects: IncrementCounter, RecordGauge, ObserveHistogram, RecordSummary, QueryMetrics, ResetMetrics
 
 All effects are frozen dataclasses ensuring immutability.
 """
@@ -33,6 +34,15 @@ from effectful.effects.messaging import (
     MessagingEffect,
     NegativeAcknowledge,
     PublishMessage,
+)
+from effectful.effects.metrics import (
+    IncrementCounter,
+    MetricsEffect,
+    ObserveHistogram,
+    QueryMetrics,
+    RecordGauge,
+    RecordSummary,
+    ResetMetrics,
 )
 from effectful.effects.storage import (
     DeleteObject,
@@ -98,4 +108,12 @@ __all__ = [
     "GetCurrentTime",
     "GenerateUUID",
     "SystemEffect",
+    # Metrics
+    "IncrementCounter",
+    "RecordGauge",
+    "ObserveHistogram",
+    "RecordSummary",
+    "QueryMetrics",
+    "ResetMetrics",
+    "MetricsEffect",
 ]

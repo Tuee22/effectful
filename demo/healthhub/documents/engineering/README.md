@@ -6,7 +6,7 @@
 
 ## Purpose
 
-The **best_practices/** tier contains **HealthHub-specific implementation patterns** for applying domain knowledge in code. These documents focus on **HOW to implement** features using HealthHub's tech stack and architecture.
+The **engineering/** tier contains **HealthHub-specific implementation patterns** for applying domain knowledge in code. These documents focus on **HOW to implement** features using HealthHub's tech stack and architecture.
 
 **Key Principle**: If a pattern describes HealthHub's specific implementation choices (ADT-based authorization, effect programs, generator testing), it belongs in this tier.
 
@@ -169,6 +169,19 @@ The **best_practices/** tier contains **HealthHub-specific implementation patter
 
 ---
 
+**[Frontend Architecture](frontend_architecture.md)** (355 lines)
+- FastAPI StaticFiles mount + catch-all route pattern (ShipNorth reference)
+- Single-server architecture (backend + frontend on port 8850)
+- Build process (Vite → build/ directory → Docker image)
+- Three development workflows (backend only, frontend dev with HMR, full stack rebuild)
+- Route registration order (API → StaticFiles → catch-all)
+- React Router client-side routing integration
+- Troubleshooting guide (503 errors, 404s, static asset issues)
+
+**Use this when**: Setting up frontend serving, debugging frontend access issues, or understanding the frontend build process.
+
+---
+
 ### Documentation Standards
 
 **[Mermaid Standards](mermaid_standards.md)** (270 lines)
@@ -252,10 +265,10 @@ graph TB
     D2[domain/medical_state_machines.md]
     D3[domain/hipaa_compliance.md]
 
-    BP1[best_practices/authorization_patterns.md]
-    BP2[best_practices/state_machine_patterns.md]
-    BP3[best_practices/effect_program_patterns.md]
-    BP4[best_practices/testing_doctrine.md]
+    BP1[engineering/authorization_patterns.md]
+    BP2[engineering/state_machine_patterns.md]
+    BP3[engineering/effect_program_patterns.md]
+    BP4[engineering/testing_doctrine.md]
 
     P1[product/authorization_system.md]
     P2[product/appointment_state_machine.md]
@@ -293,19 +306,19 @@ graph TB
 
 ### When to Add New Documents
 
-Add a new document to **best_practices/** if:
+Add a new document to **engineering/** if:
 - ✅ The content describes HealthHub-specific implementation patterns
 - ✅ It provides HOW-TO guidance for developers
 - ✅ It's reusable across multiple HealthHub features
 
-Do NOT add to **best_practices/** if:
+Do NOT add to **engineering/** if:
 - ❌ The content is general healthcare domain knowledge (use domain/)
 - ❌ It describes a specific HealthHub feature implementation (use product/)
 - ❌ It's a step-by-step tutorial (use tutorials/)
 
 ### When to Update Existing Documents
 
-Update **best_practices/** documents when:
+Update **engineering/** documents when:
 - New implementation patterns emerge from code reviews
 - Anti-patterns are discovered in production
 - HealthHub architecture evolves (new effect types, new interpreters)
@@ -345,6 +358,7 @@ Update **best_practices/** documents when:
 | Enforce code quality | [Code Quality Enforcement](code_quality_enforcement.md) |
 | Implement WebSockets | [WebSocket Security](websocket_security.md) |
 | Integrate FastAPI | [FastAPI Integration Patterns](fastapi_integration_patterns.md) |
+| Serve frontend | [Frontend Architecture](frontend_architecture.md) |
 | Create diagrams | [Mermaid Standards](mermaid_standards.md) |
 | Understand domain | [../domain/](../domain/) |
 | See actual code | [../product/](../product/) |
@@ -352,6 +366,6 @@ Update **best_practices/** documents when:
 
 ---
 
-**Last Updated**: 2025-11-27
+**Last Updated**: 2025-11-28
 **Maintainer**: HealthHub Team
-**Document Count**: 11 best practice documents
+**Document Count**: 12 engineering documents

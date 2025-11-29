@@ -1,5 +1,6 @@
-# Poetry virtual environment
+# Poetry virtual environments (should not exist - see poetry.toml)
 .venv/
+venv/
 *.egg-info/
 poetry.lock
 

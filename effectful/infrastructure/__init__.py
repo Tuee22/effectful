@@ -12,6 +12,7 @@ Available protocols:
 - **MessageProducer** - Message publishing protocol (Pulsar, Kafka, etc.)
 - **MessageConsumer** - Message consumption protocol (Pulsar, Kafka, etc.)
 - **ObjectStorage** - Object storage protocol (S3, MinIO, etc.)
+- **MetricsCollector** - Metrics collection protocol (Prometheus, in-memory, etc.)
 
 Example:
     >>> from effectful.infrastructure import UserRepository, ObjectStorage
@@ -33,6 +34,7 @@ See Also:
 from effectful.infrastructure.auth import AuthService
 from effectful.infrastructure.cache import ProfileCache
 from effectful.infrastructure.messaging import MessageConsumer, MessageProducer
+from effectful.infrastructure.metrics import MetricsCollector
 from effectful.infrastructure.repositories import (
     ChatMessageRepository,
     UserRepository,
@@ -49,4 +51,5 @@ __all__ = [
     "MessageConsumer",
     "ObjectStorage",
     "AuthService",
+    "MetricsCollector",
 ]

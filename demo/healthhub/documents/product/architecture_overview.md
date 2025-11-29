@@ -388,8 +388,8 @@ type HealthcareEffect = (
 ## Related Documentation
 
 ### Best Practices
-- [Effect Program Patterns](../best_practices/effect_program_patterns.md) - How to write programs in Layer 1
-- [Testing Doctrine](../best_practices/testing_doctrine.md) - Testing strategy for each layer
+- [Effect Program Patterns](../engineering/effect_program_patterns.md) - How to write programs in Layer 1
+- [Testing Doctrine](../engineering/testing_doctrine.md) - Testing strategy for each layer
 
 ### Product Documentation
 - [Effects Reference](effects_reference.md) - Complete effect API (Layer 2)

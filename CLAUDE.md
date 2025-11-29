@@ -44,7 +44,9 @@ Layer 5: Infrastructure Layer (PostgreSQL, Redis, S3, Pulsar, or test doubles)
 
 **All commands run inside Docker**: `docker compose -f docker/docker-compose.yml exec effectful poetry run <command>`
 
-**Important**: Poetry is NOT set up as a virtual environment. Running `poetry install` outside the container should not create a `.venv` directory. All development happens inside Docker.
+**Important**: Poetry is configured to NOT create virtual environments via `poetry.toml` (`create = false`). Running `poetry install` outside the container will fail. All development happens inside Docker.
+
+See [Docker Doctrine](documents/core/docker_doctrine.md) for complete policy.
 
 | Task | Command |
 |------|---------|
@@ -131,8 +133,12 @@ Referenced by: Testing Doctrine, Type Safety Doctrine, Code Quality checks, Cont
 
 ### Package Management
 - Poetry manages all Python dependencies via `pyproject.toml`
+- **CRITICAL**: `poetry.toml` prevents virtualenv creation (`create = false`)
 - No manual pip/pipx usage - all dependencies declared in pyproject.toml
-- Use: `poetry add <package>` for runtime deps, `poetry add --group dev <package>` for dev deps
+- Use: `docker compose -f docker/docker-compose.yml exec effectful poetry add <package>` for runtime deps
+- Use: `docker compose -f docker/docker-compose.yml exec effectful poetry add --group dev <package>` for dev deps
+
+**CRITICAL**: All poetry commands MUST run inside Docker. `poetry.toml` prevents virtualenv creation.
 
 ### 🚫 FORBIDDEN: Local Development Commands
 
@@ -163,7 +169,7 @@ python examples/01_hello_world.py
 **Why These Are Forbidden:**
 - Tests can't access PostgreSQL, Redis, MinIO, Pulsar infrastructure
 - Local Python version may differ from container
-- Creates local virtualenvs that cause version mismatches
+- `poetry.toml` prevents virtualenv creation - local poetry commands will fail
 - Mypy results won't match CI environment
 
 **Always use the Docker prefix:**
@@ -630,7 +636,7 @@ All items must meet Universal Success Criteria (see above).
 
 ### Other
 - **Effect Programs**: `tests/test_integration/test_chat_workflow.py`
-- **Contributing Guide**: `CONTRIBUTING.md`
+- **Docker Doctrine**: `documents/core/docker_doctrine.md` (SSoT for development workflow)
 
 ### Examples
 - **Hello World**: `examples/01_hello_world.py`

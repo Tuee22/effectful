@@ -13,7 +13,7 @@
 | **New Developer** | [tutorials/01_quickstart.md](tutorials/01_quickstart.md) |
 | **Healthcare Context** | [domain/README.md](domain/README.md) |
 | **Backend Engineer** | [product/architecture_overview.md](product/architecture_overview.md) |
-| **Implementation Patterns** | [best_practices/README.md](best_practices/README.md) |
+| **Implementation Patterns** | [engineering/README.md](engineering/README.md) |
 
 ### By Topic
 
@@ -29,10 +29,10 @@
 | Effects Reference | [product/effects_reference.md](product/effects_reference.md) |
 | Authorization | [product/authorization_system.md](product/authorization_system.md) |
 | **Patterns & Testing** | |
-| Authorization Patterns | [best_practices/authorization_patterns.md](best_practices/authorization_patterns.md) |
-| State Machine Implementation | [best_practices/state_machine_patterns.md](best_practices/state_machine_patterns.md) |
-| Effect Programs | [best_practices/effect_program_patterns.md](best_practices/effect_program_patterns.md) |
-| Testing Doctrine | [best_practices/testing_doctrine.md](best_practices/testing_doctrine.md) |
+| Authorization Patterns | [engineering/authorization_patterns.md](engineering/authorization_patterns.md) |
+| State Machine Implementation | [engineering/state_machine_patterns.md](engineering/state_machine_patterns.md) |
+| Effect Programs | [engineering/effect_program_patterns.md](engineering/effect_program_patterns.md) |
+| Testing Doctrine | [engineering/testing_doctrine.md](engineering/testing_doctrine.md) |
 
 ---
 
@@ -44,7 +44,7 @@ HealthHub documentation follows a strict **Single Source of Truth (SSoT)** hiera
 ┌─────────────────────────────────────────┐
 │  domain/  (Healthcare Domain Knowledge) │ ← Healthcare requirements
 ├─────────────────────────────────────────┤
-│  best_practices/  (Implementation)      │ ← HOW to implement in HealthHub
+│  engineering/  (Implementation)      │ ← HOW to implement in HealthHub
 ├─────────────────────────────────────────┤
 │  product/  (HealthHub Features)         │ ← WHAT HealthHub implements
 ├─────────────────────────────────────────┤
@@ -69,19 +69,19 @@ HealthHub documentation follows a strict **Single Source of Truth (SSoT)** hiera
 
 ---
 
-### Tier 2: best_practices/ (HealthHub Implementation Patterns)
+### Tier 2: engineering/ (HealthHub Implementation Patterns)
 
 **Purpose**: HOW to implement features using HealthHub's ADTs, effect programs, and pure functional architecture.
 
 | Document | Lines | Description |
 |----------|-------|-------------|
-| [authorization_patterns.md](best_practices/authorization_patterns.md) | 244 | ADT-based authorization patterns (PatientAuthorized, DoctorAuthorized) |
-| [state_machine_patterns.md](best_practices/state_machine_patterns.md) | 456 | ADT state machine implementation (frozen dataclasses, TransitionResult ADT) |
-| [effect_program_patterns.md](best_practices/effect_program_patterns.md) | 318 | Pure effect programs (generators, type narrowing, fire-and-forget notifications) |
-| [testing_doctrine.md](best_practices/testing_doctrine.md) | 1,345 | Comprehensive testing philosophy (22 anti-patterns, generator testing) |
-| [README.md](best_practices/README.md) | 240 | Best practices tier overview and navigation |
+| [authorization_patterns.md](engineering/authorization_patterns.md) | 244 | ADT-based authorization patterns (PatientAuthorized, DoctorAuthorized) |
+| [state_machine_patterns.md](engineering/state_machine_patterns.md) | 456 | ADT state machine implementation (frozen dataclasses, TransitionResult ADT) |
+| [effect_program_patterns.md](engineering/effect_program_patterns.md) | 318 | Pure effect programs (generators, type narrowing, fire-and-forget notifications) |
+| [testing_doctrine.md](engineering/testing_doctrine.md) | 1,345 | Comprehensive testing philosophy (22 anti-patterns, generator testing) |
+| [README.md](engineering/README.md) | 240 | Engineering tier overview and navigation |
 
-**Total**: 5 documents (2,603 lines)
+**Total**: 5+ documents (2,603+ lines)
 
 **Use this tier when**: Implementing authorization checks, writing effect programs, creating state machines, writing tests.
 
@@ -133,9 +133,9 @@ HealthHub documentation follows a strict **Single Source of Truth (SSoT)** hiera
 
 ## Document Inventory
 
-**Total**: 27 documents
+**Total**: 27+ documents
 - **Domain Knowledge**: 4 documents (1,302 lines)
-- **Best Practices**: 5 documents (2,603 lines)
+- **Engineering Patterns**: 5+ documents (2,603+ lines)
 - **Product Documentation**: 10 documents (4,103 lines)
 - **Tutorials**: 8 documents
 
@@ -150,7 +150,7 @@ HealthHub documentation follows a strict **Single Source of Truth (SSoT)** hiera
 **Use case**: Implementing a new medical workflow
 
 1. Read [domain/medical_state_machines.md](domain/medical_state_machines.md) for healthcare requirements
-2. Read [best_practices/state_machine_patterns.md](best_practices/state_machine_patterns.md) for ADT patterns
+2. Read [engineering/state_machine_patterns.md](engineering/state_machine_patterns.md) for ADT patterns
 3. Reference [product/appointment_state_machine.md](product/appointment_state_machine.md) for concrete example
 4. Follow [tutorials/02_scheduling_appointments.md](tutorials/02_scheduling_appointments.md) for step-by-step guide
 
@@ -161,7 +161,7 @@ HealthHub documentation follows a strict **Single Source of Truth (SSoT)** hiera
 **Use case**: Understanding why a feature works a certain way
 
 1. See implementation in [product/appointment_state_machine.md](product/appointment_state_machine.md)
-2. Understand patterns in [best_practices/state_machine_patterns.md](best_practices/state_machine_patterns.md)
+2. Understand patterns in [engineering/state_machine_patterns.md](engineering/state_machine_patterns.md)
 3. Learn healthcare requirements in [domain/appointment_workflows.md](domain/appointment_workflows.md)
 
 ---
@@ -171,7 +171,7 @@ HealthHub documentation follows a strict **Single Source of Truth (SSoT)** hiera
 **Use case**: Understanding related concepts at the same level
 
 - **Domain tier**: [appointment_workflows.md](domain/appointment_workflows.md) references [medical_state_machines.md](domain/medical_state_machines.md) and [hipaa_compliance.md](domain/hipaa_compliance.md)
-- **Best practices tier**: [effect_program_patterns.md](best_practices/effect_program_patterns.md) references [state_machine_patterns.md](best_practices/state_machine_patterns.md)
+- **Engineering tier**: [effect_program_patterns.md](engineering/effect_program_patterns.md) references [state_machine_patterns.md](engineering/state_machine_patterns.md)
 - **Product tier**: [api_reference.md](product/api_reference.md) references [authorization_system.md](product/authorization_system.md), [authentication.md](product/authentication.md), [audit_logging.md](product/audit_logging.md)
 
 ---
@@ -199,7 +199,7 @@ HealthHub documentation follows a strict **Single Source of Truth (SSoT)** hiera
 Each piece of information exists in exactly one authoritative location:
 
 - **Healthcare requirements**: domain/ tier
-- **Implementation patterns**: best_practices/ tier
+- **Implementation patterns**: engineering/ tier
 - **Feature specifications**: product/ tier
 - **Learning guides**: tutorials/ tier
 
@@ -217,8 +217,8 @@ All documents include "Related Documentation" sections with three subsections:
 ### Domain Knowledge
 - Links to domain/ tier
 
-### Best Practices
-- Links to best_practices/ tier
+### Engineering Patterns
+- Links to engineering/ tier
 
 ### Product Documentation
 - Links to product/ tier
@@ -277,7 +277,7 @@ HealthHub demonstrates comprehensive medical workflows:
 - Describes medical domain requirements or compliance rules
 - Example: "Prescription State Machines for DEA Controlled Substances"
 
-**Add to best_practices/** if:
+**Add to engineering/** if:
 - Content describes HealthHub-specific implementation patterns
 - Provides HOW-TO guidance for developers
 - Example: "Testing Prescription Programs with Generator Stepping"
@@ -301,7 +301,7 @@ HealthHub demonstrates comprehensive medical workflows:
 - Medical best practices evolve (new prescription safety guidelines)
 - Industry standards update (ICD-11 adoption)
 
-**Update best_practices/** when:
+**Update engineering/** when:
 - New implementation patterns emerge from code reviews
 - Anti-patterns discovered in production
 - HealthHub architecture evolves (new effect types, interpreters)

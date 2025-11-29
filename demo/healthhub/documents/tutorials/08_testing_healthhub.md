@@ -297,8 +297,8 @@ Must pass with zero errors.
 
 ## Related Documentation
 
-- [Testing Patterns](../best_practices/testing_patterns.md)
-- [Effect Program Patterns](../best_practices/effect_program_patterns.md)
+- [Testing Patterns](../engineering/testing_patterns.md)
+- [Effect Program Patterns](../engineering/effect_program_patterns.md)
 - [Architecture Overview](../product/architecture_overview.md)
 
 ---

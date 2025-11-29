@@ -64,16 +64,22 @@ flowchart TB
 
 ### For Contributors
 
-Test dependencies are already installed in the Docker container. No local installation needed.
+All test dependencies are installed in the Docker container. No local installation possible.
+
+**CRITICAL**: `poetry.toml` prevents virtualenv creation. Running `poetry install` locally will fail.
+
+See [Docker Doctrine](../core/docker_doctrine.md) for development workflow.
 
 ### For Library Users
 
-If you're using effectful in your own project and want these test utilities:
+If you're using effectful in your own project:
 
 ```bash
-# Install test dependencies in YOUR project (not in effectful)
+# Install in YOUR project (not effectful)
 poetry add --group dev pytest pytest-asyncio pytest-mock pytest-cov
 ```
+
+**Note**: This is for YOUR project. For contributing to effectful itself, use Docker only.
 
 **Note on Minimal API**: The `effectful.testing` module exports only 6 Result type matchers (`assert_ok`, `unwrap_ok`, etc.) as optional convenience utilities. All infrastructure mocking uses `pytest-mock` directly. This tutorial teaches you pytest-mock patterns that work with any testing framework.
 

@@ -332,7 +332,7 @@ For moderate interactions with override option:
 - [Medical State Machines](../domain/medical_state_machines.md) - Prescription lifecycle (Pending → Active → Completed/Expired)
 
 ### Best Practices
-- [Effect Program Patterns](../best_practices/effect_program_patterns.md) - Early return on severe interactions (Pattern 5)
+- [Effect Program Patterns](../engineering/effect_program_patterns.md) - Early return on severe interactions (Pattern 5)
 
 ### Product Documentation
 - [Effects Reference](effects_reference.md) - CheckMedicationInteractions effect

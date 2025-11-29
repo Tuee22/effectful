@@ -20,16 +20,22 @@ poetry add effectful
 
 ## For Contributors
 
-> **Important**: All development happens inside Docker containers. Do NOT install locally.
-> See [CONTRIBUTING.md](../../CONTRIBUTING.md) and [Docker Doctrine](../core/docker_doctrine.md) for setup instructions.
+> **CRITICAL**: All development happens inside Docker containers. Poetry is configured to NOT create virtual environments (`poetry.toml`).
+
+> See [Docker Doctrine](../core/docker_doctrine.md) for complete setup.
 
 ```bash
 # Start development environment
 docker compose -f docker/docker-compose.yml up -d
 
-# Run tests inside container
+# Run tests
 docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
+
+# Type check
+docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
 ```
+
+**Do NOT run `poetry install` locally** - it will fail due to no-virtualenv policy enforced by `poetry.toml`.
 
 ## Your First Program
 

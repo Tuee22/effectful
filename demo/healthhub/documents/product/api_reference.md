@@ -476,8 +476,8 @@ All errors return consistent format:
 - [HIPAA Compliance](../domain/hipaa_compliance.md) - PHI access logging requirements
 
 ### Best Practices
-- [Authorization Patterns](../best_practices/authorization_patterns.md) - Route-level authorization checks
-- [Testing Doctrine](../best_practices/testing_doctrine.md) - API endpoint testing strategies
+- [Authorization Patterns](../engineering/authorization_patterns.md) - Route-level authorization checks
+- [Testing Doctrine](../engineering/testing_doctrine.md) - API endpoint testing strategies
 
 ### Product Documentation
 - [Authentication](authentication.md) - JWT token details and login/logout endpoints

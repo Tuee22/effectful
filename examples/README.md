@@ -227,9 +227,9 @@ async def test_database_failure(mocker: MockerFixture):
 After exploring these examples:
 
 1. **Read the tutorials** - [documents/tutorials/](../documents/tutorials/)
-2. **Study the architecture** - [architecture.md](../architecture.md)
-3. **Review type safety guidelines** - [effectful/CLAUDE.md](../effectful/CLAUDE.md)
-4. **Write your own programs** - See [CONTRIBUTING.md](../CONTRIBUTING.md)
+2. **Study the architecture** - [documents/core/architecture.md](../documents/core/architecture.md)
+3. **Review development guide** - [CLAUDE.md](../CLAUDE.md)
+4. **Write your own programs** - See [Docker Doctrine](../documents/core/docker_doctrine.md)
 
 ## Testing Examples
 

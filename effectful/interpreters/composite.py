@@ -12,6 +12,7 @@ from effectful.effects.base import Effect
 from effectful.infrastructure.auth import AuthService
 from effectful.infrastructure.cache import ProfileCache
 from effectful.infrastructure.messaging import MessageConsumer, MessageProducer
+from effectful.infrastructure.metrics import MetricsCollector
 from effectful.infrastructure.repositories import (
     ChatMessageRepository,
     UserRepository,
@@ -23,6 +24,7 @@ from effectful.interpreters.cache import CacheInterpreter
 from effectful.interpreters.database import DatabaseInterpreter
 from effectful.interpreters.errors import InterpreterError, UnhandledEffectError
 from effectful.interpreters.messaging import MessagingInterpreter
+from effectful.interpreters.metrics import MetricsInterpreter
 from effectful.interpreters.storage import StorageInterpreter
 from effectful.interpreters.system import SystemInterpreter
 from effectful.interpreters.websocket import WebSocketInterpreter
@@ -42,6 +44,7 @@ class CompositeInterpreter:
         messaging: Messaging effect interpreter (optional)
         storage: Storage effect interpreter (optional)
         auth: Auth effect interpreter (optional)
+        metrics: Metrics effect interpreter (optional)
         system: System effect interpreter (always included)
     """
 
@@ -52,6 +55,7 @@ class CompositeInterpreter:
     messaging: MessagingInterpreter | None = None
     storage: StorageInterpreter | None = None
     auth: AuthInterpreter | None = None
+    metrics: MetricsInterpreter | None = None
 
     async def interpret(
         self, effect: Effect
@@ -120,9 +124,18 @@ class CompositeInterpreter:
             auth_result = await self.auth.interpret(effect)
             match auth_result:
                 case Err(UnhandledEffectError()):
-                    pass  # No one handled it
+                    pass  # Try next
                 case _:
                     return auth_result
+
+        # Try Metrics interpreter if provided
+        if self.metrics is not None:
+            metrics_result = await self.metrics.interpret(effect)
+            match metrics_result:
+                case Err(UnhandledEffectError()):
+                    pass  # No one handled it
+                case _:
+                    return metrics_result
 
         # No interpreter could handle this effect
         # Build available list immutably using tuple concatenation
@@ -134,6 +147,7 @@ class CompositeInterpreter:
             *(("MessagingInterpreter",) if self.messaging is not None else ()),
             *(("StorageInterpreter",) if self.storage is not None else ()),
             *(("AuthInterpreter",) if self.auth is not None else ()),
+            *(("MetricsInterpreter",) if self.metrics is not None else ()),
         )
         return Err(
             UnhandledEffectError(
@@ -152,6 +166,7 @@ def create_composite_interpreter(
     message_consumer: MessageConsumer | None = None,
     object_storage: ObjectStorage | None = None,
     auth_service: AuthService | None = None,
+    metrics_collector: MetricsCollector | None = None,
 ) -> CompositeInterpreter:
     """Factory function to create a configured composite interpreter.
 
@@ -164,6 +179,7 @@ def create_composite_interpreter(
         message_consumer: Optional message consumer for Pulsar (if messaging needed)
         object_storage: Optional object storage for S3 (if storage needed)
         auth_service: Optional auth service for JWT authentication (if auth needed)
+        metrics_collector: Optional metrics collector for Prometheus/in-memory (if metrics needed)
 
     Returns:
         Configured CompositeInterpreter with all dependencies injected
@@ -185,6 +201,11 @@ def create_composite_interpreter(
     if auth_service is not None:
         auth_interpreter = AuthInterpreter(auth_service=auth_service)
 
+    # Create optional metrics interpreter if metrics collector provided
+    metrics_interpreter = None
+    if metrics_collector is not None:
+        metrics_interpreter = MetricsInterpreter(collector=metrics_collector)
+
     return CompositeInterpreter(
         websocket=WebSocketInterpreter(connection=websocket_connection),
         database=DatabaseInterpreter(user_repo=user_repo, message_repo=message_repo),
@@ -193,4 +214,5 @@ def create_composite_interpreter(
         messaging=messaging_interpreter,
         storage=storage_interpreter,
         auth=auth_interpreter,
+        metrics=metrics_interpreter,
     )

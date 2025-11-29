@@ -52,7 +52,17 @@ Expected response:
 
 ---
 
-## Step 3: Run Tests
+## Step 3: Access the Application
+
+**Frontend**: http://localhost:8850
+**API Documentation**: http://localhost:8850/docs (FastAPI auto-generated)
+**Health Check**: http://localhost:8850/health
+
+The FastAPI server serves both the React frontend and the REST API on a single port (8850).
+
+---
+
+## Step 4: Run Tests
 
 ```bash
 # Run all tests
@@ -64,7 +74,7 @@ docker compose -f demo/healthhub/docker/docker-compose.yml exec healthhub poetry
 
 ---
 
-## Step 4: Check Code Quality
+## Step 5: Check Code Quality
 
 ```bash
 docker compose -f demo/healthhub/docker/docker-compose.yml exec healthhub poetry run check-code
@@ -76,7 +86,7 @@ This runs:
 
 ---
 
-## Step 5: Explore the API
+## Step 6: Explore the API
 
 ### Login as a Patient
 
@@ -97,7 +107,7 @@ curl http://localhost:8850/api/v1/patients/me \
 
 ---
 
-## Step 6: View Logs
+## Step 7: View Logs
 
 ```bash
 # Follow API logs
@@ -146,6 +156,7 @@ demo/healthhub/
 | Start | `docker compose -f demo/healthhub/docker/docker-compose.yml up -d` |
 | Stop | `docker compose -f demo/healthhub/docker/docker-compose.yml down` |
 | Reset DB | `docker compose -f demo/healthhub/docker/docker-compose.yml down -v && docker compose -f demo/healthhub/docker/docker-compose.yml up -d` |
+| Rebuild Frontend | `docker compose -f demo/healthhub/docker/docker-compose.yml build healthhub && docker compose -f demo/healthhub/docker/docker-compose.yml up -d` |
 | Tests | `docker compose -f demo/healthhub/docker/docker-compose.yml exec healthhub poetry run test-all` |
 | Check | `docker compose -f demo/healthhub/docker/docker-compose.yml exec healthhub poetry run check-code` |
 | Shell | `docker compose -f demo/healthhub/docker/docker-compose.yml exec healthhub poetry run python` |
@@ -160,4 +171,4 @@ demo/healthhub/
 
 ---
 
-**Last Updated**: 2025-11-25
+**Last Updated**: 2025-11-28

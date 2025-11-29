@@ -339,11 +339,12 @@ async def test_example(mocker: MockerFixture):
 - **[Type Safety Doctrine](documents/core/type_safety_doctrine.md)** - Zero-tolerance type safety
 - **[Purity Doctrine](documents/core/purity.md)** - Functional programming rules
 
-### Architecture and Contributing
+### Architecture and Development
 
-- **[Architecture](architecture.md)** - Design rationale and patterns
-- **[Contributing](CONTRIBUTING.md)** - Development workflow and standards
-- **[Type Safety Guidelines](effectful/CLAUDE.md)** - Zero-tolerance type safety
+- **[Architecture](documents/core/architecture.md)** - Design rationale and patterns
+- **[Docker Doctrine](documents/core/docker_doctrine.md)** - Development workflow (SSoT)
+- **[CLAUDE.md](CLAUDE.md)** - Complete development reference
+- **[Type Safety Doctrine](documents/core/type_safety_doctrine.md)** - Eight type safety rules
 
 ## Examples
 
@@ -351,54 +352,62 @@ See [`examples/`](examples/) directory for complete working programs.
 
 ## Development
 
-### Setup
+### For Contributors
+
+**CRITICAL**: All development happens inside Docker containers. Poetry is configured to NOT create virtual environments (`poetry.toml`).
+
+See [Docker Doctrine](documents/core/docker_doctrine.md) for complete workflow.
 
 ```bash
 # Clone repository
 git clone https://github.com/your-org/effectful.git
 cd effectful
 
-# Install dependencies
-poetry install
+# Start Docker services
+docker compose -f docker/docker-compose.yml up -d
 
 # Run tests
-poetry run pytest
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
 
 # Type check
-poetry run mypy effectful
-
-# Format code
-poetry run black effectful tests
+docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
 ```
+
+**Do NOT run `poetry install` locally** - it will fail due to `poetry.toml` configuration.
 
 ### Running Tests
 
+All test commands run inside Docker:
+
 ```bash
 # All tests
-pytest
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
 
 # With coverage
-pytest --cov=effectful --cov-report=term-missing
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest --cov=effectful --cov-report=term-missing
 
 # Specific file
-pytest tests/test_programs/test_runners.py
-
-# Type checking
-mypy --strict effectful
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tests/test_programs/test_runners.py
 ```
+
+See [Testing Doctrine](documents/core/testing_doctrine.md) for comprehensive guide.
 
 ### Code Quality
 
+All quality checks run inside Docker:
+
 ```bash
-# Format
-black effectful tests
+# Type check + format (mypy --strict + black)
+docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
+
+# Format code
+docker compose -f docker/docker-compose.yml exec effectful poetry run black effectful tests
 
 # Lint
-ruff check effectful tests
-
-# Type check (must pass with zero errors)
-mypy --strict effectful
+docker compose -f docker/docker-compose.yml exec effectful poetry run ruff check effectful tests
 ```
+
+See [Docker Doctrine](documents/core/docker_doctrine.md) for complete command reference.
 
 ## Project Structure
 
@@ -449,12 +458,18 @@ See [CLAUDE.md](effectful/CLAUDE.md) for complete type safety guidelines.
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
+We welcome contributions! See [CLAUDE.md](CLAUDE.md) for:
 
-- Development setup
+- Development setup (Docker-based)
 - Code standards (type safety, formatting, testing)
-- Pull request process
+- Command reference
 - Architecture guidelines
+
+**Key Doctrines**:
+- [Docker Doctrine](documents/core/docker_doctrine.md) - All development in Docker
+- [Testing Doctrine](documents/core/testing_doctrine.md) - Coverage and test patterns
+- [Type Safety Doctrine](documents/core/type_safety_doctrine.md) - Eight type safety rules
+- [Purity Doctrine](documents/core/purity.md) - Functional programming patterns
 
 ## License
 
@@ -464,7 +479,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 - **Questions?** Open a [discussion](https://github.com/your-org/effectful/discussions)
 - **Bug reports?** File an [issue](https://github.com/your-org/effectful/issues)
-- **Contributing?** See [CONTRIBUTING.md](CONTRIBUTING.md)
+- **Contributing?** See [CLAUDE.md](CLAUDE.md) and [Docker Doctrine](documents/core/docker_doctrine.md)
 
 ---
 

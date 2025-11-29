@@ -7,6 +7,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    build: {
+      outDir: 'build',  // Match ShipNorth pattern (not 'dist')
+    },
     server: {
       port: 5173,
       host: true,

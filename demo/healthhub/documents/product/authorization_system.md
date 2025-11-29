@@ -364,7 +364,7 @@ def test_unauthorized_captures_reason() -> None:
 ## Related Documentation
 
 ### Best Practices
-- [Authorization Patterns](../best_practices/authorization_patterns.md) - Usage patterns and anti-patterns
+- [Authorization Patterns](../engineering/authorization_patterns.md) - Usage patterns and anti-patterns
 
 ### Product Documentation
 - [Authentication](authentication.md) - JWT token handling
