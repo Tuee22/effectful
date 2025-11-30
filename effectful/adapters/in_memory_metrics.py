@@ -66,7 +66,7 @@ class InMemoryMetricsCollector:
             return
 
         # Use object.__setattr__ to set field on frozen dataclass
-        object.__setattr__(self, 'registry', registry)
+        object.__setattr__(self, "registry", registry)
 
     async def increment_counter(
         self,
@@ -178,6 +178,112 @@ class InMemoryMetricsCollector:
 
         # Set gauge value
         self._gauges[metric_name][label_key] = value
+
+        return MetricRecorded(timestamp=time.time())
+
+    async def increment_gauge(
+        self,
+        metric_name: str,
+        labels: dict[str, str],
+        value: float = 1.0,
+    ) -> MetricResult:
+        """Increment gauge metric by value.
+
+        Args:
+            metric_name: Name of gauge metric (must be registered)
+            labels: Label key-value pairs (must match registered label_names)
+            value: Amount to increment by (default: 1.0)
+
+        Returns:
+            MetricRecorded: Success with timestamp
+            MetricRecordingFailed: Validation error or unregistered metric
+        """
+        # Validate registry exists
+        if self.registry is None:
+            return MetricRecordingFailed(
+                reason="No metrics registered - call register_metrics() first"
+            )
+
+        # Validate metric is registered
+        gauge_names = tuple(g.name for g in self.registry.gauges)
+        if metric_name not in gauge_names:
+            return MetricRecordingFailed(
+                reason=f"Gauge '{metric_name}' not registered. " f"Registered gauges: {gauge_names}"
+            )
+
+        # Get gauge definition
+        gauge_def = next((g for g in self.registry.gauges if g.name == metric_name))
+
+        # Validate labels match definition
+        if set(labels.keys()) != set(gauge_def.label_names):
+            return MetricRecordingFailed(
+                reason=f"Labels {set(labels.keys())} don't match "
+                f"registered label_names {set(gauge_def.label_names)}"
+            )
+
+        # Increment gauge value using native dicts
+        label_key = self._serialize_labels(labels)
+
+        # Get or create inner dict for this metric
+        if metric_name not in self._gauges:
+            self._gauges[metric_name] = {}
+
+        # Get current value (default to 0 if not exists) and increment
+        current_value = self._gauges[metric_name].get(label_key, 0.0)
+        self._gauges[metric_name][label_key] = current_value + value
+
+        return MetricRecorded(timestamp=time.time())
+
+    async def decrement_gauge(
+        self,
+        metric_name: str,
+        labels: dict[str, str],
+        value: float = 1.0,
+    ) -> MetricResult:
+        """Decrement gauge metric by value.
+
+        Args:
+            metric_name: Name of gauge metric (must be registered)
+            labels: Label key-value pairs (must match registered label_names)
+            value: Amount to decrement by (default: 1.0)
+
+        Returns:
+            MetricRecorded: Success with timestamp
+            MetricRecordingFailed: Validation error or unregistered metric
+        """
+        # Validate registry exists
+        if self.registry is None:
+            return MetricRecordingFailed(
+                reason="No metrics registered - call register_metrics() first"
+            )
+
+        # Validate metric is registered
+        gauge_names = tuple(g.name for g in self.registry.gauges)
+        if metric_name not in gauge_names:
+            return MetricRecordingFailed(
+                reason=f"Gauge '{metric_name}' not registered. " f"Registered gauges: {gauge_names}"
+            )
+
+        # Get gauge definition
+        gauge_def = next((g for g in self.registry.gauges if g.name == metric_name))
+
+        # Validate labels match definition
+        if set(labels.keys()) != set(gauge_def.label_names):
+            return MetricRecordingFailed(
+                reason=f"Labels {set(labels.keys())} don't match "
+                f"registered label_names {set(gauge_def.label_names)}"
+            )
+
+        # Decrement gauge value using native dicts
+        label_key = self._serialize_labels(labels)
+
+        # Get or create inner dict for this metric
+        if metric_name not in self._gauges:
+            self._gauges[metric_name] = {}
+
+        # Get current value (default to 0 if not exists) and decrement
+        current_value = self._gauges[metric_name].get(label_key, 0.0)
+        self._gauges[metric_name][label_key] = current_value - value
 
         return MetricRecorded(timestamp=time.time())
 
@@ -367,8 +473,7 @@ class InMemoryMetricsCollector:
                 metrics = {f"{metric_name}{{{label_filter_key}}}": value}
             else:
                 metrics = {
-                    f"{metric_name}{{{label_key}}}": value
-                    for label_key, value in inner_map.items()
+                    f"{metric_name}{{{label_key}}}": value for label_key, value in inner_map.items()
                 }
             return QuerySuccess(metrics=metrics, timestamp=time.time())
 
@@ -380,8 +485,7 @@ class InMemoryMetricsCollector:
                 metrics = {f"{metric_name}{{{label_filter_key}}}": value}
             else:
                 metrics = {
-                    f"{metric_name}{{{label_key}}}": value
-                    for label_key, value in inner_map.items()
+                    f"{metric_name}{{{label_key}}}": value for label_key, value in inner_map.items()
                 }
             return QuerySuccess(metrics=metrics, timestamp=time.time())
 

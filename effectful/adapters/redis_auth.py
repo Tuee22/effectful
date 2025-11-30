@@ -12,6 +12,7 @@ For testing, use pytest mocks or FakeAuthService instead of this real implementa
 import hashlib
 import hmac
 import jwt
+import os
 import secrets
 from datetime import datetime, timedelta, UTC
 from uuid import UUID, uuid4
@@ -167,7 +168,11 @@ class RedisAuthService(AuthService):
         match validation_result:
             case TokenValid(user_id=user_id, claims=claims):
                 # Generate new access token with same claims, extended TTL (1 hour)
-                new_token = await self.generate_token(user_id, claims, ttl_seconds=3600)
+                new_token = await self.generate_token(
+                    user_id,
+                    claims,
+                    ttl_seconds=int(os.getenv("JWT_REFRESH_TOKEN_TTL_SECONDS", "3600")),
+                )
                 return new_token
             case TokenExpired() | TokenInvalid():
                 # Refresh token invalid/expired - cannot refresh
@@ -199,7 +204,11 @@ class RedisAuthService(AuthService):
 
         except Exception:
             # If we can't decode the token, blacklist it for 24 hours as fallback
-            await self._redis.setex(f"auth:blacklist:{token}", 86400, "revoked")
+            await self._redis.setex(
+                f"auth:blacklist:{token}",
+                int(os.getenv("JWT_REVOCATION_DEFAULT_TTL_SECONDS", "86400")),
+                "revoked",
+            )
 
     async def get_user_by_email(self, email: str) -> UserLookupResult:
         """Get user by email address.
@@ -235,7 +244,10 @@ class RedisAuthService(AuthService):
             salt = bytes.fromhex(parts[0])
             stored_hash = parts[1]
             computed_hash = hashlib.pbkdf2_hmac(
-                "sha256", password.encode("utf-8"), salt, 100000
+                "sha256",
+                password.encode("utf-8"),
+                salt,
+                int(os.getenv("PASSWORD_HASH_ITERATIONS", "100000")),
             ).hex()
             return hmac.compare_digest(computed_hash, stored_hash)
         except (ValueError, IndexError):
@@ -251,5 +263,10 @@ class RedisAuthService(AuthService):
             Hash in format "salt$hash"
         """
         salt = secrets.token_bytes(32)
-        hashed = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100000).hex()
+        hashed = hashlib.pbkdf2_hmac(
+            "sha256",
+            password.encode("utf-8"),
+            salt,
+            int(os.getenv("PASSWORD_HASH_ITERATIONS", "100000")),
+        ).hex()
         return f"{salt.hex()}${hashed}"

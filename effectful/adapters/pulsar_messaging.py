@@ -16,6 +16,7 @@ Type Safety:
     ADTs (PublishSuccess/PublishFailure), not exceptions.
 """
 
+import os
 from datetime import UTC, datetime
 
 try:
@@ -105,7 +106,7 @@ class PulsarMessageProducer(MessageProducer):
                 try:
                     self._producers[topic] = self._client.create_producer(
                         topic,
-                        send_timeout_millis=5000,  # 5-second timeout for integration tests
+                        send_timeout_millis=int(os.getenv("PULSAR_SEND_TIMEOUT_MS", "5000")),
                     )
                 except (TimeoutError, pulsar.Timeout):
                     # Timeout during producer creation indicates BookKeeper not ready
@@ -163,6 +164,7 @@ class PulsarMessageProducer(MessageProducer):
             >>> await producer.publish("topic-1", b"data")
             >>> producer.close_producers()  # Cleanup between tests
         """
+
         # Close each producer using functional pattern
         def safe_close(producer: pulsar.Producer) -> bool:
             try:
@@ -356,6 +358,7 @@ class PulsarMessageConsumer(MessageConsumer):
             >>> await consumer.receive("topic/sub", timeout_ms=1000)
             >>> consumer.close_consumers()  # Cleanup between tests
         """
+
         # Close each consumer using functional pattern
         def safe_close(consumer: pulsar.Consumer) -> bool:
             try:

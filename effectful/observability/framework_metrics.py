@@ -30,11 +30,8 @@ from effectful.observability import (
 
 # Framework metrics registry for automatic instrumentation
 #
-# Note: Currently tracks counter and histogram metrics only.
-# Gauge tracking for concurrent effects (effectful_effects_in_progress)
-# requires increment/decrement operations not yet in MetricsCollector protocol.
-# Program-level metrics (effectful_programs_total, effectful_program_duration_seconds)
-# will be implemented in future InstrumentedProgramRunner.
+# Note: InstrumentedProgramRunner (for program-level metrics) is future work.
+# See observability.md for automatic instrumentation requirements.
 FRAMEWORK_METRICS = MetricsRegistry(
     counters=(
         CounterDefinition(
@@ -42,13 +39,30 @@ FRAMEWORK_METRICS = MetricsRegistry(
             help_text="Total effect executions by type and result",
             label_names=("effect_type", "result"),
         ),
+        CounterDefinition(
+            name="effectful_programs_total",
+            help_text="Total program executions by name and result",
+            label_names=("program_name", "result"),
+        ),
     ),
-    gauges=(),
+    gauges=(
+        GaugeDefinition(
+            name="effectful_effects_in_progress",
+            help_text="Currently executing effects",
+            label_names=("effect_type",),
+        ),
+    ),
     histograms=(
         HistogramDefinition(
             name="effectful_effect_duration_seconds",
             help_text="Effect execution duration distribution",
             label_names=("effect_type",),
+            buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0),
+        ),
+        HistogramDefinition(
+            name="effectful_program_duration_seconds",
+            help_text="Program execution duration distribution",
+            label_names=("program_name",),
             buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0),
         ),
     ),

@@ -185,26 +185,26 @@ def create_composite_interpreter(
         Configured CompositeInterpreter with all dependencies injected
     """
     # Create optional messaging interpreter if both producer and consumer provided
-    messaging_interpreter = None
-    if message_producer is not None and message_consumer is not None:
-        messaging_interpreter = MessagingInterpreter(
-            producer=message_producer, consumer=message_consumer
-        )
+    messaging_interpreter = (
+        MessagingInterpreter(producer=message_producer, consumer=message_consumer)
+        if (message_producer is not None and message_consumer is not None)
+        else None
+    )
 
     # Create optional storage interpreter if object storage provided
-    storage_interpreter = None
-    if object_storage is not None:
-        storage_interpreter = StorageInterpreter(storage=object_storage)
+    storage_interpreter = (
+        StorageInterpreter(storage=object_storage) if object_storage is not None else None
+    )
 
     # Create optional auth interpreter if auth service provided
-    auth_interpreter = None
-    if auth_service is not None:
-        auth_interpreter = AuthInterpreter(auth_service=auth_service)
+    auth_interpreter = (
+        AuthInterpreter(auth_service=auth_service) if auth_service is not None else None
+    )
 
     # Create optional metrics interpreter if metrics collector provided
-    metrics_interpreter = None
-    if metrics_collector is not None:
-        metrics_interpreter = MetricsInterpreter(collector=metrics_collector)
+    metrics_interpreter = (
+        MetricsInterpreter(collector=metrics_collector) if metrics_collector is not None else None
+    )
 
     return CompositeInterpreter(
         websocket=WebSocketInterpreter(connection=websocket_connection),

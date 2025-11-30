@@ -192,7 +192,10 @@ def validate_label_names(labels: tuple[str, ...]) -> Result[None, str]:
     """
     # Check basic pattern
     invalid_pattern = [
-        (label, f"Label '{label}' must match [a-z_][a-z0-9_]* (snake_case, starts with letter or underscore)")
+        (
+            label,
+            f"Label '{label}' must match [a-z_][a-z0-9_]* (snake_case, starts with letter or underscore)",
+        )
         for label in labels
         if not re.match(r"^[a-z_][a-z0-9_]*$", label)
     ]
@@ -210,10 +213,11 @@ def validate_label_names(labels: tuple[str, ...]) -> Result[None, str]:
 
     # Check for duplicates
     seen: set[str] = set()
-    duplicates = [
-        label for label in labels
-        if label in seen or (seen.add(label) or False)  # type: ignore[func-returns-value]
-    ]
+    duplicates: list[str] = []
+    for label in labels:
+        if label in seen:
+            duplicates.append(label)
+        seen.add(label)
     if duplicates:
         return Err(f"Duplicate label '{duplicates[0]}' in label_names")
 
@@ -251,7 +255,9 @@ def validate_histogram_buckets(buckets: tuple[float, ...]) -> Result[None, str]:
         if buckets[i] >= buckets[i + 1]
     ]
     if unordered_pairs:
-        return Err(f"Histogram buckets must be sorted ascending: {unordered_pairs[0][0]} >= {unordered_pairs[0][1]}")
+        return Err(
+            f"Histogram buckets must be sorted ascending: {unordered_pairs[0][0]} >= {unordered_pairs[0][1]}"
+        )
 
     return Ok(None)
 

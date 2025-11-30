@@ -9,6 +9,7 @@ from typing import List, Tuple
 # Root directory of the project
 ROOT = Path(__file__).parent.parent
 
+
 def find_markdown_files() -> List[Path]:
     """Find all markdown files in documents/ and root."""
     md_files = []
@@ -23,46 +24,49 @@ def find_markdown_files() -> List[Path]:
 
     return sorted(md_files)
 
+
 def extract_links(content: str) -> List[str]:
     """Extract all markdown links from content."""
     # Pattern: [text](link)
-    pattern = r'\[([^\]]+)\]\(([^)]+)\)'
+    pattern = r"\[([^\]]+)\]\(([^)]+)\)"
     matches = re.findall(pattern, content)
     return [link for _text, link in matches]
+
 
 def verify_link(source_file: Path, link: str) -> Tuple[bool, str]:
     """Verify a link exists. Returns (is_valid, reason)."""
     # Skip external links (http/https)
-    if link.startswith(('http://', 'https://', 'mailto:')):
+    if link.startswith(("http://", "https://", "mailto:")):
         return (True, "external")
 
     # Skip anchors (same-file references)
-    if link.startswith('#'):
+    if link.startswith("#"):
         return (True, "anchor")
 
     # Handle relative paths
-    if link.startswith('../'):
+    if link.startswith("../"):
         # Relative to parent
-        target = (source_file.parent.parent / link.lstrip('../')).resolve()
-    elif link.startswith('./'):
+        target = (source_file.parent.parent / link.lstrip("../")).resolve()
+    elif link.startswith("./"):
         # Relative to current
-        target = (source_file.parent / link.lstrip('./')).resolve()
-    elif link.startswith('/'):
+        target = (source_file.parent / link.lstrip("./")).resolve()
+    elif link.startswith("/"):
         # Absolute from root (treat as relative to project root)
-        target = (ROOT / link.lstrip('/')).resolve()
+        target = (ROOT / link.lstrip("/")).resolve()
     else:
         # Relative to current directory
         target = (source_file.parent / link).resolve()
 
     # Strip anchor from link
-    if '#' in str(target):
-        target = Path(str(target).split('#')[0])
+    if "#" in str(target):
+        target = Path(str(target).split("#")[0])
 
     # Check if target exists
     if target.exists():
         return (True, "ok")
     else:
         return (False, f"not found: {target}")
+
 
 def main() -> int:
     """Main verification logic."""
@@ -104,6 +108,7 @@ def main() -> int:
     else:
         print("✅ All links valid!")
         return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

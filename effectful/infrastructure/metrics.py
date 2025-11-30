@@ -76,6 +76,44 @@ class MetricsCollector(Protocol):
         """
         ...
 
+    async def increment_gauge(
+        self,
+        metric_name: str,
+        labels: dict[str, str],
+        value: float = 1.0,
+    ) -> MetricResult:
+        """Increment gauge metric by value.
+
+        Args:
+            metric_name: Name of gauge metric (must be registered)
+            labels: Label key-value pairs (must match registered label_names)
+            value: Amount to increment by (default: 1.0)
+
+        Returns:
+            MetricRecorded: Success with timestamp
+            MetricRecordingFailed: Validation error or collector unavailable
+        """
+        ...
+
+    async def decrement_gauge(
+        self,
+        metric_name: str,
+        labels: dict[str, str],
+        value: float = 1.0,
+    ) -> MetricResult:
+        """Decrement gauge metric by value.
+
+        Args:
+            metric_name: Name of gauge metric (must be registered)
+            labels: Label key-value pairs (must match registered label_names)
+            value: Amount to decrement by (default: 1.0)
+
+        Returns:
+            MetricRecorded: Success with timestamp
+            MetricRecordingFailed: Validation error or collector unavailable
+        """
+        ...
+
     async def observe_histogram(
         self,
         metric_name: str,

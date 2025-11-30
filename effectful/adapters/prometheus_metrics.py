@@ -66,52 +66,60 @@ class PrometheusMetricsCollector:
             return
 
         # Use object.__setattr__ to set field on frozen dataclass
-        object.__setattr__(self, '_metrics_registry', metrics_registry)
+        object.__setattr__(self, "_metrics_registry", metrics_registry)
 
         # Register counters
-        self._counters.update({
-            counter_def.name: Counter(
-                name=counter_def.name,
-                documentation=counter_def.help_text,
-                labelnames=counter_def.label_names,
-                registry=self.registry,
-            )
-            for counter_def in metrics_registry.counters
-        })
+        self._counters.update(
+            {
+                counter_def.name: Counter(
+                    name=counter_def.name,
+                    documentation=counter_def.help_text,
+                    labelnames=counter_def.label_names,
+                    registry=self.registry,
+                )
+                for counter_def in metrics_registry.counters
+            }
+        )
 
         # Register gauges
-        self._gauges.update({
-            gauge_def.name: Gauge(
-                name=gauge_def.name,
-                documentation=gauge_def.help_text,
-                labelnames=gauge_def.label_names,
-                registry=self.registry,
-            )
-            for gauge_def in metrics_registry.gauges
-        })
+        self._gauges.update(
+            {
+                gauge_def.name: Gauge(
+                    name=gauge_def.name,
+                    documentation=gauge_def.help_text,
+                    labelnames=gauge_def.label_names,
+                    registry=self.registry,
+                )
+                for gauge_def in metrics_registry.gauges
+            }
+        )
 
         # Register histograms
-        self._histograms.update({
-            histogram_def.name: Histogram(
-                name=histogram_def.name,
-                documentation=histogram_def.help_text,
-                labelnames=histogram_def.label_names,
-                buckets=histogram_def.buckets,
-                registry=self.registry,
-            )
-            for histogram_def in metrics_registry.histograms
-        })
+        self._histograms.update(
+            {
+                histogram_def.name: Histogram(
+                    name=histogram_def.name,
+                    documentation=histogram_def.help_text,
+                    labelnames=histogram_def.label_names,
+                    buckets=histogram_def.buckets,
+                    registry=self.registry,
+                )
+                for histogram_def in metrics_registry.histograms
+            }
+        )
 
         # Register summaries
-        self._summaries.update({
-            summary_def.name: Summary(
-                name=summary_def.name,
-                documentation=summary_def.help_text,
-                labelnames=summary_def.label_names,
-                registry=self.registry,
-            )
-            for summary_def in metrics_registry.summaries
-        })
+        self._summaries.update(
+            {
+                summary_def.name: Summary(
+                    name=summary_def.name,
+                    documentation=summary_def.help_text,
+                    labelnames=summary_def.label_names,
+                    registry=self.registry,
+                )
+                for summary_def in metrics_registry.summaries
+            }
+        )
 
     async def increment_counter(
         self,
@@ -208,6 +216,100 @@ class PrometheusMetricsCollector:
         # Set gauge value
         try:
             gauge.labels(**labels).set(value)
+            return MetricRecorded(timestamp=time.time())
+        except Exception as e:
+            return MetricRecordingFailed(reason=f"Prometheus error: {str(e)}")
+
+    async def increment_gauge(
+        self,
+        metric_name: str,
+        labels: dict[str, str],
+        value: float = 1.0,
+    ) -> MetricResult:
+        """Increment gauge metric by value.
+
+        Args:
+            metric_name: Name of gauge metric (must be registered)
+            labels: Label key-value pairs (must match registered label_names)
+            value: Amount to increment by (default: 1.0)
+
+        Returns:
+            MetricRecorded: Success with timestamp
+            MetricRecordingFailed: Validation error or unregistered metric
+        """
+        # Validate registry exists
+        if self._metrics_registry is None:
+            return MetricRecordingFailed(
+                reason="No metrics registered - call register_metrics() first"
+            )
+
+        # Validate metric is registered
+        if metric_name not in self._gauges:
+            gauge_names = tuple(self._gauges.keys())
+            return MetricRecordingFailed(
+                reason=f"Gauge '{metric_name}' not registered. " f"Registered gauges: {gauge_names}"
+            )
+
+        # Get gauge and validate labels
+        gauge = self._gauges[metric_name]
+        gauge_def = next((g for g in self._metrics_registry.gauges if g.name == metric_name))
+
+        if set(labels.keys()) != set(gauge_def.label_names):
+            return MetricRecordingFailed(
+                reason=f"Labels {set(labels.keys())} don't match "
+                f"registered label_names {set(gauge_def.label_names)}"
+            )
+
+        # Increment gauge value
+        try:
+            gauge.labels(**labels).inc(value)
+            return MetricRecorded(timestamp=time.time())
+        except Exception as e:
+            return MetricRecordingFailed(reason=f"Prometheus error: {str(e)}")
+
+    async def decrement_gauge(
+        self,
+        metric_name: str,
+        labels: dict[str, str],
+        value: float = 1.0,
+    ) -> MetricResult:
+        """Decrement gauge metric by value.
+
+        Args:
+            metric_name: Name of gauge metric (must be registered)
+            labels: Label key-value pairs (must match registered label_names)
+            value: Amount to decrement by (default: 1.0)
+
+        Returns:
+            MetricRecorded: Success with timestamp
+            MetricRecordingFailed: Validation error or unregistered metric
+        """
+        # Validate registry exists
+        if self._metrics_registry is None:
+            return MetricRecordingFailed(
+                reason="No metrics registered - call register_metrics() first"
+            )
+
+        # Validate metric is registered
+        if metric_name not in self._gauges:
+            gauge_names = tuple(self._gauges.keys())
+            return MetricRecordingFailed(
+                reason=f"Gauge '{metric_name}' not registered. " f"Registered gauges: {gauge_names}"
+            )
+
+        # Get gauge and validate labels
+        gauge = self._gauges[metric_name]
+        gauge_def = next((g for g in self._metrics_registry.gauges if g.name == metric_name))
+
+        if set(labels.keys()) != set(gauge_def.label_names):
+            return MetricRecordingFailed(
+                reason=f"Labels {set(labels.keys())} don't match "
+                f"registered label_names {set(gauge_def.label_names)}"
+            )
+
+        # Decrement gauge value
+        try:
+            gauge.labels(**labels).dec(value)
             return MetricRecorded(timestamp=time.time())
         except Exception as e:
             return MetricRecordingFailed(reason=f"Prometheus error: {str(e)}")
