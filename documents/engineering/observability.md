@@ -689,7 +689,7 @@ async def test_metrics_workflow() -> None:
 
 > **Core Doctrine**: For purity and effects as data, see [purity.md](./purity.md)
 
-> **Core Doctrine**: For type safety patterns, see [type_safety_doctrine.md](./type_safety.md)
+> **Core Doctrine**: For type safety patterns, see [type_safety_doctrine.md](./type-safety-enforcement.md)
 
 > **Core Doctrine**: For testing strategies, see [testing_doctrine.md](./testing.md)
 

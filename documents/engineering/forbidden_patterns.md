@@ -36,7 +36,7 @@ def process_data(data: UserData) -> Result[ProcessedData, ProcessingError]:
 
 **Detection**: `mypy --strict` with `disallow_any_explicit = true` catches all `Any` usage.
 
-**See**: [Type Safety](type_safety.md) for complete doctrine.
+**See**: [Type Safety](type-safety-enforcement.md) for complete doctrine.
 
 ---
 
@@ -72,7 +72,7 @@ class User:
 
 **Detection**: Code review, manual inspection.
 
-**See**: [Type Safety](type_safety.md) - Doctrine 4: Immutability by Default.
+**See**: [Type Safety](type-safety-enforcement.md) - Doctrine 4: Immutability by Default.
 
 ---
 
@@ -111,7 +111,7 @@ def get_user(user_id: UUID) -> UserLookupResult:
 
 **Detection**: Code review, pattern matching.
 
-**See**: [Type Safety](type_safety.md) - Doctrine 2: ADTs Over Optional Types.
+**See**: [Type Safety](type-safety-enforcement.md) - Doctrine 2: ADTs Over Optional Types.
 
 ---
 
@@ -149,7 +149,7 @@ match divide(10, 0):
 
 **Detection**: MyPy catches unhandled Result types, code review.
 
-**See**: [Type Safety](type_safety.md) - Doctrine 3: Result Type for Error Handling.
+**See**: [Type Safety](type-safety-enforcement.md) - Doctrine 3: Result Type for Error Handling.
 
 ---
 
@@ -337,7 +337,7 @@ class InMemoryMetricsCollector:
 
 ## See Also
 
-- [Type Safety](type_safety.md) - Eight type safety doctrines
+- [Type Safety](type-safety-enforcement.md) - Eight type safety doctrines
 - [Purity](purity.md) - Six purity doctrines
 - [Purity Patterns](purity_patterns.md) - Functional programming patterns
 - [Testing](testing.md) - 22 test anti-patterns
@@ -346,4 +346,4 @@ class InMemoryMetricsCollector:
 ---
 
 **Last Updated**: 2025-11-30
-**Referenced by**: CLAUDE.md, type_safety.md, purity.md, testing.md
+**Referenced by**: CLAUDE.md, type-safety-enforcement.md, purity.md, testing.md

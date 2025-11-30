@@ -6,6 +6,8 @@ Tests verify:
 - Invalid configurations are rejected
 """
 
+from dataclasses import FrozenInstanceError
+
 import pytest
 
 from effectful.algebraic.result import Err, Ok
@@ -38,8 +40,8 @@ def test_counter_definition_creation() -> None:
 def test_counter_definition_is_frozen() -> None:
     """CounterDefinition is immutable (frozen dataclass)."""
     counter = CounterDefinition(name="requests_total", help_text="Total requests", label_names=())
-    with pytest.raises(AttributeError, match="cannot assign"):
-        counter.name = "other_total"  # type: ignore
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        setattr(counter, "name", "other_total")
 
 
 # GaugeDefinition tests
@@ -58,8 +60,8 @@ def test_gauge_definition_creation() -> None:
 def test_gauge_definition_is_frozen() -> None:
     """GaugeDefinition is immutable (frozen dataclass)."""
     gauge = GaugeDefinition(name="test_gauge", help_text="Test", label_names=())
-    with pytest.raises(AttributeError, match="cannot assign"):
-        gauge.name = "other_gauge"  # type: ignore
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        setattr(gauge, "name", "other_gauge")
 
 
 # HistogramDefinition tests
@@ -82,8 +84,8 @@ def test_histogram_definition_is_frozen() -> None:
     histogram = HistogramDefinition(
         name="test_seconds", help_text="Test", label_names=(), buckets=(0.1,)
     )
-    with pytest.raises(AttributeError, match="cannot assign"):
-        histogram.name = "other_seconds"  # type: ignore
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        setattr(histogram, "name", "other_seconds")
 
 
 # SummaryDefinition tests
@@ -106,8 +108,8 @@ def test_summary_definition_is_frozen() -> None:
     summary = SummaryDefinition(
         name="test_summary", help_text="Test", label_names=(), quantiles=(0.5,)
     )
-    with pytest.raises(AttributeError, match="cannot assign"):
-        summary.name = "other_summary"  # type: ignore
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        setattr(summary, "name", "other_summary")
 
 
 # MetricsRegistry tests
@@ -137,8 +139,8 @@ def test_metrics_registry_creation() -> None:
 def test_metrics_registry_is_frozen() -> None:
     """MetricsRegistry is immutable (frozen dataclass)."""
     registry = MetricsRegistry(counters=(), gauges=(), histograms=(), summaries=())
-    with pytest.raises(AttributeError, match="cannot assign"):
-        registry.counters = ()  # type: ignore
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        setattr(registry, "counters", ())
 
 
 def test_metrics_registry_empty() -> None:

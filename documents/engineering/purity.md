@@ -99,6 +99,64 @@ The ONLY acceptable while-loop in the entire codebase is the `while True` in the
 - ✅ List/dict/set comprehensions are ACCEPTABLE and preferred
 - ✅ Trampoline pattern for recursive algorithms
 
+**Comprehensions and Purity**:
+
+Comprehensions (list/dict/set/generator expressions) are syntactic sugar for loops but are treated as pure constructs in effectful because:
+
+1. **Functional composition**: Comprehensions are expressions that produce values, not statements that execute side effects
+2. **Local scope**: Variables in comprehensions are scoped to the expression
+3. **Immutability**: Comprehensions build new collections rather than mutating existing ones
+
+**Critical requirement**: Comprehensions are pure **only when the internal logic is pure**.
+
+✅ **PURE comprehensions** - Acceptable everywhere:
+```python
+# Pure transformation - creates new User objects
+users = [User(id=row["id"], name=row["name"]) for row in rows]
+
+# Pure filtering - no side effects
+active_users = [u for u in users if u.status == "active"]
+
+# Pure dict transformation
+user_map = {user.id: user.name for user in users}
+
+# Pure computation
+squares = [x * x for x in range(10)]
+```
+
+❌ **IMPURE comprehensions** - Forbidden:
+```python
+# Side effect: I/O operation inside comprehension
+results = [print(f"Processing {x}") for x in items]  # NO!
+
+# Side effect: logging inside comprehension
+values = [log.info(x) or x for x in data]  # NO!
+
+# Mutation: modifying external state
+total = 0
+sums = [total := total + x for x in numbers]  # NO! (walrus operator with mutation)
+
+# Side effect: calling impure function
+users = [save_to_database(user) for user in new_users]  # NO!
+```
+
+**Rule of thumb**: If the comprehension's internal logic could be extracted to a pure function, the comprehension is pure.
+
+**Examples of pure internal logic**:
+- Object construction: `User(id=..., name=...)`
+- Arithmetic: `x * 2`, `a + b`
+- String operations: `name.upper()`, `f"Hello {name}"`
+- Attribute access: `user.name`, `item.price`
+- Comparison: `x > 10`, `status == "active"`
+- Boolean logic: `is_valid and is_active`
+
+**Examples of impure internal logic**:
+- I/O operations: `print()`, `open()`, `requests.get()`
+- Logging: `log.info()`, `logger.debug()`
+- Mutations: Assignment with `:=`, `list.append()`, `dict.update()`
+- Random: `random.randint()`, `uuid4()`
+- Time: `datetime.now()`, `time.time()`
+
 See `documents/engineering/purity_patterns.md` for comprehensive trampoline and pure pattern examples.
 
 ### Doctrine 2: Effects as Data
@@ -200,7 +258,7 @@ updated_user = User(id=user.id, name=user.name, email="new@example.com")
 All union types must be handled exhaustively with compile-time verification.
 
 ```python
-from effectful.algebraic import unreachable
+from typing import assert_never
 
 type UserResult = UserFound | UserNotFound | UserSuspended
 
@@ -213,7 +271,7 @@ def handle_user(result: UserResult) -> str:
         case UserSuspended(user=user, reason=reason):
             return f"{user.name} suspended: {reason}"
         case _ as never:
-            unreachable(never)  # MyPy error if any case unhandled
+            assert_never(never)  # MyPy error if any case unhandled
 ```
 
 **Why**: Type checker enforces all cases handled. No forgotten branches at runtime.
@@ -429,6 +487,33 @@ def program() -> Generator[AllEffects, EffectResult, User | None]:
 
 **Impact**: Untestable without database, couples business logic to infrastructure.
 
+### Anti-Pattern 1.5: Impure Comprehensions
+
+```python
+# WRONG - Side effects inside comprehension
+results = [print(f"Item: {item}") or process(item) for item in items]
+
+# WRONG - Mutation inside comprehension
+cache: dict[str, int] = {}
+values = [cache.update({k: v}) or v for k, v in pairs]  # Mutation!
+
+# CORRECT - Extract side effects, use pure comprehension
+for item in items:
+    print(f"Item: {item}")  # Side effect in impure layer
+results = [process(item) for item in items]  # Pure comprehension
+
+# CORRECT - Use effects instead
+def program() -> Generator[AllEffects, EffectResult, list[Result]]:
+    results = []
+    for item in items:
+        yield LogDebug(message=f"Item: {item}")  # Effect instead of print
+        result = yield ProcessItem(item=item)
+        results.append(result)
+    return results
+```
+
+**Impact**: Side effects in comprehensions break referential transparency and make code unpredictable.
+
 ### Anti-Pattern 2: Global Mutable State
 
 ```python
@@ -518,7 +603,7 @@ def handle(result: UserResult) -> str:
         case UserSuspended(user=user, reason=reason):
             return f"Suspended: {reason}"
         case _ as never:
-            unreachable(never)
+            assert_never(never)
 ```
 
 **Impact**: Runtime errors when unhandled case occurs.
@@ -632,7 +717,7 @@ class GetUserById:
 - [ ] No direct I/O (print, open, requests, etc.)
 - [ ] No global mutable state
 - [ ] All dataclasses frozen
-- [ ] Exhaustive pattern matching with `unreachable()`
+- [ ] Exhaustive pattern matching with `assert_never()`
 - [ ] `yield from` for program composition
 
 ### 5. Architectural Boundaries
@@ -651,12 +736,12 @@ Purity is enforced by architecture: programs in `effects/` and `domain/` cannot 
 
 ---
 
-## The `unreachable()` Helper
+## The `assert_never()` Helper
 
-Use `unreachable()` to ensure exhaustive pattern matching:
+Use `assert_never()` from Python's typing module to ensure exhaustive pattern matching:
 
 ```python
-from effectful.algebraic import unreachable
+from typing import assert_never
 
 type Status = Active | Inactive | Pending
 
@@ -669,7 +754,7 @@ def handle_status(status: Status) -> str:
         case Pending():
             return "pending"
         case _ as never:
-            unreachable(never)  # MyPy error if any case missing
+            assert_never(never)  # MyPy error if any case missing
 ```
 
 **How it works**: If all cases are handled, the `_` branch is unreachable and `never` has type `Never`. If a case is missing, MyPy errors because `never` could be that missing type.
@@ -679,7 +764,7 @@ def handle_status(status: Status) -> str:
 ## Related Documentation
 
 - **Purity Patterns**: `documents/engineering/purity_patterns.md` - Trampoline and pure implementation patterns
-- **Type Safety**: `documents/engineering/type_safety.md`
+- **Type Safety**: `documents/engineering/type-safety-enforcement.md`
 - **Testing**: `documents/engineering/testing.md`
 - **Architecture**: `documents/engineering/architecture.md`
 - **Trampoline Module**: `effectful/algebraic/trampoline.py`
@@ -689,4 +774,4 @@ def handle_status(status: Status) -> str:
 
 ---
 
-**Last Updated**: 2025-11-29
+**Last Updated**: 2025-11-30

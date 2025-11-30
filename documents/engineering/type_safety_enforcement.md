@@ -1,6 +1,6 @@
-# Type Safety
+# Type Safety Enforcement
 
-This is the Single Source of Truth (SSoT) for all type safety policy in the Effectful project.
+> **Single Source of Truth (SSoT)** for all type safety policy and code quality enforcement in Effectful.
 
 ## Core Principle
 
@@ -10,27 +10,55 @@ If the type checker passes, the program should be correct. The type system works
 
 ---
 
+## Zero-Tolerance Policy
+
+**CRITICAL**: There are **ZERO** exceptions for type safety escape hatches. This policy has **NO** carve-outs:
+
+- ❌ **FORBIDDEN**: `Any` type (including `from typing import Any`)
+- ❌ **FORBIDDEN**: `cast()` function (including `from typing import cast`)
+- ❌ **FORBIDDEN**: `# type: ignore` comments (in ANY code, including tests)
+
+**This means:**
+- Not in production code
+- Not in test code
+- Not in examples
+- Not in scripts
+- Not in __init__.py files
+- Not ANYWHERE in the codebase
+
+**Enforcement**: `mypy --strict` with `disallow_any_explicit = true` catches all violations.
+
+**Testing frozen dataclasses**: Use `setattr(obj, "field", value)` instead of `obj.field = value  # type: ignore`
+
+---
+
 ## Type Safety Workflow
 
 ```mermaid
 flowchart TB
     Code[Write Code]
+    CheckCode[check-code Command]
+    Black[Black Formatter]
     MyPy[MyPy Strict Check]
     Errors{Type Error?}
     Fix[Fix Code]
     Pytest[Run Tests]
     Success[Ready for Review]
 
-    Code --> MyPy
+    Code --> CheckCode
+    CheckCode --> Black
+    Black -->|Auto-format| MyPy
     MyPy -->|Pass| Pytest
     MyPy -->|Fail| Errors
-    Errors --> Fix
-    Fix --> MyPy
+    Errors -->|Any/cast/type:ignore?| Fix
+    Errors -->|Other type error?| Fix
+    Fix --> CheckCode
     Pytest -->|Pass| Success
     Pytest -->|Fail| Fix
 ```
 
 **Enforcement:**
+- `poetry run check-code` runs Black → MyPy with fail-fast behavior
 - `mypy --strict` with `disallow_any_explicit = true`
 - Zero tolerance for escape hatches
 - All errors must be fixed before tests run
@@ -38,18 +66,55 @@ flowchart TB
 
 ---
 
-## Eight Type Safetys
+## check-code Command
 
-### 1. NO Escape Hatches
+**Usage**: `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code`
+
+See [Command Reference](command_reference.md) for complete command table.
+
+### Black + MyPy Workflow
+
+Runs Black (formatter) → MyPy (strict type checker) with fail-fast behavior.
+
+**Behavior**:
+1. **Black**: Auto-formats Python code (line-length=100)
+2. **MyPy**: Strict type checking with 30+ strict settings, disallow_any_explicit=true
+3. **Fail-fast**: Exits on first failure
+
+Must meet Universal Success Criteria (exit code 0, Black formatting applied, zero MyPy errors).
+
+---
+
+## Universal Success Criteria
+
+All code changes must meet these requirements:
+
+- ✅ Exit code 0 (all operations complete successfully)
+- ✅ **Zero MyPy errors** (mypy --strict mandatory)
+- ✅ Zero stderr output
+- ✅ Zero console warnings/errors
+- ✅ **Zero skipped tests** (pytest.skip() forbidden)
+- ✅ 100% test pass rate
+- ✅ **Zero `Any`, `cast()`, or `# type: ignore`** (escape hatches forbidden - NO exceptions)
+- ✅ **Minimum 45% code coverage** (adapters excluded)
+- ✅ **Integration tests cover all features** (conceptual coverage)
+
+**Referenced by**: [Testing](testing.md), [Command Reference](command_reference.md), [Contributing](../CONTRIBUTING.md).
+
+---
+
+## Eight Type Safety Doctrines
+
+### 1. NO Escape Hatches (ZERO Exceptions)
 
 ```python
-# FORBIDDEN - These constructs are NEVER allowed
+# FORBIDDEN - These constructs are NEVER allowed ANYWHERE
 from typing import Any, cast
 
-def process(data: Any) -> Any:  # NO!
-    return cast(int, data)      # NO!
+def process(data: Any) -> Any:  # NO! Not in prod, not in tests!
+    return cast(int, data)      # NO! Not in prod, not in tests!
 
-def transform(x):  # type: ignore  # NO!
+def transform(x):  # type: ignore  # NO! Not in prod, not in tests!
     return x
 
 # CORRECT - Explicit types always
@@ -61,9 +126,20 @@ def process(user_id: UUID) -> Result[User, str]:
     if not isinstance(user_id, UUID):
         return Err("Invalid UUID")
     return Ok(User(id=user_id, email="test@example.com", name="Test"))
+
+# CORRECT - Testing frozen dataclasses without type:ignore
+from dataclasses import FrozenInstanceError
+import pytest
+
+def test_user_is_frozen() -> None:
+    user = User(id=user_id, email="test@example.com", name="Alice")
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        setattr(user, "email", "hacker@example.com")  # Use setattr, NOT type:ignore!
 ```
 
 **Enforcement:** `mypy --strict` with `disallow_any_explicit = true` in pyproject.toml
+
+**Why:** Escape hatches defeat the purpose of static typing. If you need `Any`, your type design is wrong.
 
 ### 2. ADTs Over Optional Types
 
@@ -363,23 +439,35 @@ def my_program() -> WSProgram:
 
 ## Implementation Anti-Patterns
 
-### 1. Using `Any` Types
+### 1. Using `Any` Types (FORBIDDEN - Zero Exceptions)
 - **Wrong:** Function parameters or return types with `Any`
 - **Right:** Explicit types always (see Doctrine 1)
+- **Important:** No exceptions, not even in tests
 
-### 2. Mutable Domain Models
+### 2. Using `cast()` (FORBIDDEN - Zero Exceptions)
+- **Wrong:** Using `cast()` to bypass type checker
+- **Right:** Fix your type design instead
+- **Important:** No exceptions, not even in tests
+
+### 3. Using `# type: ignore` (FORBIDDEN - Zero Exceptions)
+- **Wrong:** Using `# type: ignore` to silence MyPy
+- **Right:** Fix the type error properly
+- **Testing Frozen:** Use `setattr(obj, "field", value)` instead of `obj.field = value  # type: ignore`
+- **Important:** No exceptions, not even in tests
+
+### 4. Mutable Domain Models
 - **Wrong:** Dataclasses without `frozen=True`
 - **Right:** All domain models immutable: `@dataclass(frozen=True)`
 
-### 3. Optional for Domain Logic
+### 5. Optional for Domain Logic
 - **Wrong:** Returning `Optional[User]` from domain methods
 - **Right:** ADT types: `UserLookupResult = UserFound | UserNotFound`
 
-### 4. Exceptions for Expected Errors
+### 6. Exceptions for Expected Errors
 - **Wrong:** Raising exceptions for expected failure cases
 - **Right:** Result type: `Result[Success, Error]`
 
-### 5. Imperative Effect Execution
+### 7. Imperative Effect Execution
 - **Wrong:** Directly calling infrastructure in programs: `await db.query(...)`
 - **Right:** Yield effects: `user = yield GetUserById(user_id=user_id)`
 
@@ -387,15 +475,15 @@ def my_program() -> WSProgram:
 
 ---
 
-## MyPy Configuration
+## MyPy Strict Configuration
 
-The following settings enforce type safety doctrines:
+**pyproject.toml settings** (30+ strict options enabled):
 
 ```toml
 [tool.mypy]
 python_version = "3.12"
 strict = true
-disallow_any_explicit = true
+disallow_any_explicit = true       # CRITICAL: Forbids Any type EVERYWHERE
 disallow_any_generics = true
 disallow_subclassing_any = true
 disallow_untyped_calls = true
@@ -406,20 +494,157 @@ disallow_untyped_decorators = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 warn_return_any = true
+warn_no_return = true
+warn_unreachable = true
+no_implicit_optional = true
 no_implicit_reexport = true
 strict_equality = true
 extra_checks = true
+warn_unused_configs = true
+```
+
+**Critical Setting**: `disallow_any_explicit = true` - Forbids `Any` type in ALL code (production, tests, examples).
+
+---
+
+## Black Configuration
+
+**Line length**: 100 characters (configured in pyproject.toml)
+
+**Auto-formatting**: Black modifies files in-place to enforce consistent style.
+
+**Target version**: Python 3.12+
+
+---
+
+## Coverage Requirements
+
+**Minimum Coverage**: 45% overall (enforced by pytest-cov)
+
+**Excluded from measurement**:
+- `effectful/adapters/` - Real infrastructure implementations
+- `effectful/infrastructure/` - Protocol definitions (no logic)
+- Test files themselves
+
+**Why 45%**: Balances quality signal vs. diminishing returns. Focus on:
+- Core algebraic types (Result, EffectReturn)
+- Domain models
+- Interpreters
+- Program runners
+- Effect definitions
+
+**Conceptual coverage**: Every feature must have integration tests, even if line coverage < 100%.
+
+---
+
+## Pre-commit Checks
+
+Before committing code:
+
+1. **Format**: `poetry run black effectful tests`
+2. **Type check**: `poetry run check-code`
+3. **Test**: `poetry run test-all` (see [Command Reference](command_reference.md))
+4. **Coverage**: `poetry run pytest --cov=effectful --cov-report=term-missing`
+
+All must meet Universal Success Criteria.
+
+---
+
+## Common Violations and Fixes
+
+### Type Safety Violations
+
+**❌ WRONG** - Using Any (FORBIDDEN):
+```python
+def process_data(data: Any) -> Any:  # Forbidden EVERYWHERE!
+    return data
+```
+
+**✅ CORRECT** - Explicit types:
+```python
+def process_data(data: UserData) -> Result[ProcessedData, ProcessingError]:
+    return Ok(ProcessedData(...))
+```
+
+**❌ WRONG** - Using type:ignore (FORBIDDEN):
+```python
+def test_user_frozen() -> None:
+    user = User(...)
+    user.email = "test"  # type: ignore  # FORBIDDEN!
+```
+
+**✅ CORRECT** - Use setattr():
+```python
+from dataclasses import FrozenInstanceError
+
+def test_user_frozen() -> None:
+    user = User(...)
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        setattr(user, "email", "test")  # No type:ignore needed!
+```
+
+### Coverage Violations
+
+**❌ WRONG** - No tests for new feature:
+```python
+# Added new function, no tests = coverage drops below 45%
+def calculate_metrics(data: MetricData) -> MetricResult:
+    ...
+```
+
+**✅ CORRECT** - Tests for all features:
+```python
+# tests/test_metrics.py
+def test_calculate_metrics():
+    result = calculate_metrics(MetricData(...))
+    assert_ok(result)
+```
+
+### Formatting Violations
+
+Black automatically fixes these, but check-code will fail if code isn't formatted:
+
+- Line length > 100 characters
+- Inconsistent quote styles
+- Missing trailing commas
+- Inconsistent indentation
+
+---
+
+## Exit Codes
+
+**Exit code 0**: All checks passed (Black formatting applied, zero MyPy errors)
+**Exit code 1**: Black formatting needed OR MyPy errors found
+
+**Fail-fast behavior**: check-code stops at first failure (Black or MyPy), does not continue.
+
+---
+
+## Integration with CI
+
+**GitHub Actions** (future):
+```yaml
+- name: Check code quality
+  run: docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
+
+- name: Run tests with coverage
+  run: docker compose -f docker/docker-compose.yml exec effectful poetry run pytest --cov=effectful --cov-fail-under=45
 ```
 
 ---
 
 ## Related Documentation
 
+- **Command Reference:** [command_reference.md](command_reference.md) - All Docker commands
+- **Testing Standards:** [testing.md](testing.md) - 22 test anti-patterns
+- **Development Workflow:** [development_workflow.md](development_workflow.md) - Daily development loop
+- **Architecture:** [architecture.md](architecture.md) - 5-layer architecture design
 - **Result Type:** `effectful/algebraic/result.py`
 - **ADT Examples:** `effectful/domain/user.py`, `effectful/domain/profile.py`
 - **Type Aliases:** `effectful/programs/program_types.py`
-- **Architecture:** `documents/engineering/architecture.md`
 
 ---
 
-**Last Updated:** 2025-11-20
+**Last Updated:** 2025-11-30
+**Supersedes:** type-safety-enforcement.md, type-safety-enforcement.md (to be deleted)
+**Referenced by:** CLAUDE.md, development_workflow.md, CONTRIBUTING.md, testing.md

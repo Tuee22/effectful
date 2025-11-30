@@ -336,7 +336,7 @@ async def test_example(mocker: MockerFixture):
 ### Core Doctrines
 
 - **[Testing](documents/engineering/testing.md)** - SSoT for all testing policy (22 anti-patterns)
-- **[Type Safety](documents/engineering/type_safety.md)** - Zero-tolerance type safety
+- **[Type Safety](documents/engineering/type-safety-enforcement.md)** - Zero-tolerance type safety
 - **[Purity](documents/engineering/purity.md)** - Functional programming rules
 
 ### Architecture and Development
@@ -344,7 +344,7 @@ async def test_example(mocker: MockerFixture):
 - **[Architecture](documents/engineering/architecture.md)** - Design rationale and patterns
 - **[Docker Workflow](documents/engineering/docker_workflow.md)** - Development workflow (SSoT)
 - **[CLAUDE.md](CLAUDE.md)** - Complete development reference
-- **[Type Safety](documents/engineering/type_safety.md)** - Eight type safety rules
+- **[Type Safety](documents/engineering/type-safety-enforcement.md)** - Eight type safety rules
 
 ## Examples
 
@@ -468,7 +468,7 @@ We welcome contributions! See [CLAUDE.md](CLAUDE.md) for:
 **Key Doctrines**:
 - [Docker Workflow](documents/engineering/docker_workflow.md) - All development in Docker
 - [Testing](documents/engineering/testing.md) - Coverage and test patterns
-- [Type Safety](documents/engineering/type_safety.md) - Eight type safety rules
+- [Type Safety](documents/engineering/type-safety-enforcement.md) - Eight type safety rules
 - [Purity](documents/engineering/purity.md) - Functional programming patterns
 
 ## License

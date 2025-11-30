@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from typing import Self
 
 
-@dataclass
+@dataclass(frozen=True)
 class E2EWebSocketClient:
     """WebSocket client for E2E testing.
 
@@ -60,7 +60,8 @@ class E2EWebSocketClient:
 
     async def close(self) -> None:
         """Close the WebSocket connection."""
-        self._is_open = False
+        # Use object.__setattr__ to set field on frozen dataclass
+        object.__setattr__(self, "_is_open", False)
 
     async def is_open(self) -> bool:
         """Check if the connection is open."""

@@ -16,7 +16,7 @@ We achieve this through:
 3. **Immutability** - Eliminate temporal coupling and race conditions
 4. **Exhaustive Matching** - Type checker enforces handling all cases
 
-For detailed type safety patterns, see `documents/engineering/type_safety.md`.
+For detailed type safety patterns, see `documents/engineering/type-safety-enforcement.md`.
 
 ## 5-Layer Architecture
 
@@ -546,7 +546,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, None]:
 
 ## Related Documentation
 
-- **Type Safety**: `documents/engineering/type_safety.md`
+- **Type Safety**: `documents/engineering/type-safety-enforcement.md`
 - **Testing**: `documents/engineering/testing.md` (SSoT for all testing)
 - **Observability**: `documents/engineering/observability.md` (SSoT for metrics, monitoring, and alerting)
 - **Test Suite Audit**: `documents/testing/test_suite_audit.md`

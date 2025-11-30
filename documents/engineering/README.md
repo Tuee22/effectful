@@ -11,14 +11,14 @@ The **engineering/** directory contains **effectful-specific engineering standar
 | What do you need? | Document to read |
 |-------------------|------------------|
 | Understand system design | [Architecture](architecture.md) |
-| Write type-safe code | [Type Safety](type_safety.md) |
+| Write type-safe code | [Type Safety](type-safety-enforcement.md) |
 | Pure functional patterns | [Purity](purity.md) + [Purity Patterns](purity_patterns.md) |
 | Test programs correctly | [Testing](testing.md) |
 | Set up development environment | [Docker Workflow](docker_workflow.md) |
-| Run quality checks | [Code Quality](code_quality.md) |
+| Run quality checks | [Code Quality](type-safety-enforcement.md) |
 | Add metrics/observability | [Observability](observability.md) |
 | Avoid common mistakes | [Forbidden Patterns](forbidden_patterns.md) |
-| Write documentation | [Documentation Guidelines](documentation_guidelines.md) |
+| Write documentation | [Documentation Guidelines](documentation-standards.md) |
 
 ## Core Standards
 
@@ -28,7 +28,7 @@ The **engineering/** directory contains **effectful-specific engineering standar
 - Effect system design decisions
 - Why pure functional programming for Python
 
-**[Type Safety](type_safety.md)** (425 lines)
+**[Type Safety](type-safety-enforcement.md)** (425 lines)
 - Eight type safety doctrines
 - ADTs over Optional types
 - Result type for error handling
@@ -64,7 +64,7 @@ The **engineering/** directory contains **effectful-specific engineering standar
 
 ## Development Guides
 
-**[Documentation Guidelines](documentation_guidelines.md)** (500+ lines)
+**[Documentation Guidelines](documentation-standards.md)** (500+ lines)
 - SSoT (Single Source of Truth) enforcement
 - DRY (Don't Repeat Yourself) principles
 - Mermaid diagram best practices (GitHub + VSCode compatibility)
@@ -78,7 +78,7 @@ The **engineering/** directory contains **effectful-specific engineering standar
 - Test statistics (329 tests, ~1.6s execution)
 - Output capture techniques
 
-**[Code Quality](code_quality.md)** (200 lines)
+**[Code Quality](type-safety-enforcement.md)** (200 lines)
 - check-code workflow (Black → MyPy)
 - Universal success criteria
 - MyPy strict mode enforcement
@@ -137,7 +137,7 @@ The **engineering/** directory contains **effectful-specific engineering standar
 ### Engineering → Tutorials
 - **Engineering** defines standards and patterns (HOW)
 - **Tutorials** teach how to apply them step-by-step (LEARN)
-- Example: [Type Safety](type_safety.md) (standard) → [tutorials/03_adts_and_results.md](../tutorials/03_adts_and_results.md) (tutorial)
+- Example: [Type Safety](type-safety-enforcement.md) (standard) → [tutorials/03_adts_and_results.md](../tutorials/03_adts_and_results.md) (tutorial)
 
 ### Engineering → API
 - **Engineering** explains architectural decisions (WHY)
@@ -174,7 +174,7 @@ All engineering documents marked with "**SSoT**" are authoritative. When conflic
 ## Meta-Documentation
 
 **How to update these standards:**
-1. Read [Documentation Guidelines](documentation_guidelines.md) for standards
+1. Read [Documentation Guidelines](documentation-standards.md) for standards
 2. Make changes to appropriate SSoT document
 3. Update "Last Updated" timestamp
 4. Update "Referenced by" list if adding new cross-references

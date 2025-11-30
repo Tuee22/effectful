@@ -81,14 +81,27 @@ async def clean_db(
 ) -> AsyncGenerator[asyncpg.Connection, None]:
     """Provide a clean PostgreSQL database.
 
-    Truncates all tables before yielding, ensuring test isolation.
-    Tests should seed their own data after receiving this fixture.
+    Truncates all tables before AND after yielding, ensuring test isolation
+    even when tests fail.
 
     Yields:
         Clean asyncpg connection with empty tables
+
+    Note:
+        Pre-cleanup: Ensures clean starting state
+        Post-cleanup: Prevents orphaned data when tests fail
     """
+    # PRE-CLEANUP: Clean up BEFORE test runs
     await postgres_connection.execute("TRUNCATE TABLE chat_messages, users CASCADE")
+
     yield postgres_connection
+
+    # POST-CLEANUP: Prevent data leaks on test failure
+    try:
+        await postgres_connection.execute("TRUNCATE TABLE chat_messages, users CASCADE")
+    except Exception:
+        # Ignore cleanup errors - test isolation is more important
+        pass
 
 
 @pytest_asyncio.fixture

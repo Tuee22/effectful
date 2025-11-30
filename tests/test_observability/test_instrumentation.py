@@ -8,6 +8,8 @@ Tests cover:
 - Error handling and metrics failures
 """
 
+from dataclasses import FrozenInstanceError
+
 import pytest
 from pytest_mock import MockerFixture
 
@@ -376,8 +378,8 @@ def test_instrumented_interpreter_is_frozen(mocker: MockerFixture) -> None:
         metrics_collector=mock_collector,
     )
 
-    with pytest.raises(AttributeError):
-        instrumented.wrapped = mocker.AsyncMock(spec=Interpreter)  # type: ignore
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        setattr(instrumented, "wrapped", mocker.AsyncMock(spec=Interpreter))
 
 
 # Edge cases
@@ -455,7 +457,7 @@ async def test_metrics_collection_does_not_block_execution(
     # Slow metrics collector
     mock_collector = mocker.AsyncMock(spec=MetricsCollector)
 
-    async def slow_increment(*args, **kwargs):  # type: ignore
+    async def slow_increment(*args: object, **kwargs: object) -> MetricRecorded:
         # Simulate slow metrics recording
         import asyncio
 

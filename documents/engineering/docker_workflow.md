@@ -429,7 +429,7 @@ docker compose -f docker/docker-compose.yml ps
 
 - **Command Reference**: See `CLAUDE.md` for complete command table
 - **Development Guide**: See `CLAUDE.md` for complete development reference
-- **Type Safety**: See `documents/engineering/type_safety.md` for eight type safety rules
+- **Type Safety**: See `documents/engineering/type-safety-enforcement.md` for eight type safety rules
 - **Testing**: See `documents/engineering/testing.md` for test organization and antipatterns
 - **Observability**: See `documents/engineering/observability.md` for Prometheus/Grafana integration
 

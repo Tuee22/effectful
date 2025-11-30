@@ -7,6 +7,8 @@ Tests verify:
 - Type union membership
 """
 
+from dataclasses import FrozenInstanceError
+
 import pytest
 
 from effectful.effects.metrics import (
@@ -42,8 +44,8 @@ def test_increment_counter_default_value() -> None:
 def test_increment_counter_is_frozen() -> None:
     """IncrementCounter is immutable (frozen dataclass)."""
     effect = IncrementCounter(metric_name="test_total", labels={}, value=1.0)
-    with pytest.raises(AttributeError, match="cannot assign"):
-        effect.value = 2.0  # type: ignore
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        setattr(effect, "value", 2.0)
 
 
 def test_increment_counter_empty_labels() -> None:
@@ -68,8 +70,8 @@ def test_record_gauge_creation() -> None:
 def test_record_gauge_is_frozen() -> None:
     """RecordGauge is immutable (frozen dataclass)."""
     effect = RecordGauge(metric_name="test_gauge", labels={}, value=1.0)
-    with pytest.raises(AttributeError, match="cannot assign"):
-        effect.value = 2.0  # type: ignore
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        setattr(effect, "value", 2.0)
 
 
 def test_record_gauge_negative_value() -> None:
@@ -94,8 +96,8 @@ def test_observe_histogram_creation() -> None:
 def test_observe_histogram_is_frozen() -> None:
     """ObserveHistogram is immutable (frozen dataclass)."""
     effect = ObserveHistogram(metric_name="test_seconds", labels={}, value=1.0)
-    with pytest.raises(AttributeError, match="cannot assign"):
-        effect.value = 2.0  # type: ignore
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        setattr(effect, "value", 2.0)
 
 
 # RecordSummary tests
@@ -114,8 +116,8 @@ def test_record_summary_creation() -> None:
 def test_record_summary_is_frozen() -> None:
     """RecordSummary is immutable (frozen dataclass)."""
     effect = RecordSummary(metric_name="test_summary", labels={}, value=1.0)
-    with pytest.raises(AttributeError, match="cannot assign"):
-        effect.value = 2.0  # type: ignore
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        setattr(effect, "value", 2.0)
 
 
 # QueryMetrics tests
@@ -146,8 +148,8 @@ def test_query_metrics_with_labels() -> None:
 def test_query_metrics_is_frozen() -> None:
     """QueryMetrics is immutable (frozen dataclass)."""
     effect = QueryMetrics()
-    with pytest.raises(AttributeError, match="cannot assign"):
-        effect.metric_name = "test_total"  # type: ignore
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        setattr(effect, "metric_name", "test_total")
 
 
 # ResetMetrics tests
@@ -162,8 +164,8 @@ def test_reset_metrics_is_frozen() -> None:
     """ResetMetrics is immutable (frozen dataclass)."""
     effect = ResetMetrics()
     # Try to add an attribute (should fail)
-    with pytest.raises(AttributeError):
-        effect.new_field = "value"  # type: ignore
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        setattr(effect, "new_field", "value")
 
 
 # MetricsEffect union type tests

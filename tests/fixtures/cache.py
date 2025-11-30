@@ -39,14 +39,27 @@ async def redis_client() -> AsyncGenerator[Redis, None]:
 async def clean_redis(redis_client: Redis) -> AsyncGenerator[Redis, None]:
     """Provide a clean Redis instance.
 
-    Flushes the database before yielding, ensuring test isolation.
-    Tests should seed their own data after receiving this fixture.
+    Flushes the database before AND after yielding, ensuring test isolation
+    even when tests fail.
 
     Yields:
         Clean Redis client with empty database
+
+    Note:
+        Pre-cleanup: Ensures clean starting state
+        Post-cleanup: Prevents cached data leaks when tests fail
     """
+    # PRE-CLEANUP: Clean up BEFORE test runs
     await redis_client.flushdb()
+
     yield redis_client
+
+    # POST-CLEANUP: Prevent cache pollution on test failure
+    try:
+        await redis_client.flushdb()
+    except Exception:
+        # Ignore cleanup errors - test isolation is more important
+        pass
 
 
 @pytest_asyncio.fixture

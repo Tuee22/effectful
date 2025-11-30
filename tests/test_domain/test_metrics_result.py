@@ -7,6 +7,7 @@ Tests verify:
 - Field access after type narrowing
 """
 
+from dataclasses import FrozenInstanceError
 import time
 
 import pytest
@@ -32,8 +33,8 @@ def test_metric_recorded_creation() -> None:
 def test_metric_recorded_is_frozen() -> None:
     """MetricRecorded is immutable (frozen dataclass)."""
     result = MetricRecorded(timestamp=123.45)
-    with pytest.raises(AttributeError, match="cannot assign"):
-        result.timestamp = 999.99  # type: ignore
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        setattr(result, "timestamp", 999.99)
 
 
 def test_metric_recorded_equality() -> None:
@@ -60,8 +61,8 @@ def test_metric_recording_failed_creation() -> None:
 def test_metric_recording_failed_is_frozen() -> None:
     """MetricRecordingFailed is immutable (frozen dataclass)."""
     result = MetricRecordingFailed(reason="metric_not_registered")
-    with pytest.raises(AttributeError, match="cannot assign"):
-        result.reason = "other_reason"  # type: ignore
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        setattr(result, "reason", "other_reason")
 
 
 def test_metric_recording_failed_all_reason_types() -> None:
@@ -93,8 +94,8 @@ def test_query_success_creation() -> None:
 def test_query_success_is_frozen() -> None:
     """QuerySuccess is immutable (frozen dataclass)."""
     result = QuerySuccess(metrics={"test_total": 1.0}, timestamp=123.45)
-    with pytest.raises(AttributeError, match="cannot assign"):
-        result.timestamp = 999.99  # type: ignore
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        setattr(result, "timestamp", 999.99)
 
 
 def test_query_success_empty_metrics() -> None:
@@ -113,8 +114,8 @@ def test_query_failure_creation() -> None:
 def test_query_failure_is_frozen() -> None:
     """QueryFailure is immutable (frozen dataclass)."""
     result = QueryFailure(reason="metric_not_found")
-    with pytest.raises(AttributeError, match="cannot assign"):
-        result.reason = "other_reason"  # type: ignore
+    with pytest.raises((FrozenInstanceError, AttributeError)):
+        setattr(result, "reason", "other_reason")
 
 
 def test_query_failure_all_reason_types() -> None:

@@ -35,17 +35,17 @@ Project engineering practices and standards:
 
 - **[Docker Workflow](engineering/docker_workflow.md)** - All development in Docker (SSoT)
 - **[Testing](engineering/testing.md)** - Coverage requirements, 22 test anti-patterns (SSoT)
-- **[Type Safety](engineering/type_safety.md)** - Eight type safety doctrines (SSoT)
+- **[Type Safety](engineering/type-safety-enforcement.md)** - Eight type safety doctrines (SSoT)
 - **[Architecture](engineering/architecture.md)** - 5-layer architecture, design decisions (SSoT)
 - **[Purity](engineering/purity.md)** - Pure functional programming rules (SSoT)
 - **[Purity Patterns](engineering/purity_patterns.md)** - Functional composition patterns (SSoT)
-- **[Code Quality](engineering/code_quality.md)** - MyPy strict, Black formatting, coverage
+- **[Code Quality](engineering/type-safety-enforcement.md)** - MyPy strict, Black formatting, coverage
 - **[Command Reference](engineering/command_reference.md)** - All Docker commands and test execution
 - **[Development Workflow](engineering/development_workflow.md)** - Daily development loop
 - **[Configuration](engineering/configuration.md)** - Environment variables for all services
 - **[Forbidden Patterns](engineering/forbidden_patterns.md)** - Anti-patterns to avoid
 - **[Effect Patterns](engineering/effect_patterns.md)** - Real-world effect program patterns
-- **[Documentation Guidelines](engineering/documentation_guidelines.md)** - SSoT/DRY principles, mermaid best practices (SSoT)
+- **[Documentation Guidelines](engineering/documentation-standards.md)** - SSoT/DRY principles, mermaid best practices (SSoT)
 
 **Observability**:
 - **[Observability](engineering/observability.md)** - Metrics philosophy and cardinality management (SSoT)
@@ -177,7 +177,7 @@ match divide(10, 2):
 - [Docker Workflow](engineering/docker_workflow.md)
 - [Architecture](engineering/architecture.md)
 - [Testing](engineering/testing.md)
-- [Type Safety](engineering/type_safety.md)
+- [Type Safety](engineering/type-safety-enforcement.md)
 - [Purity](engineering/purity.md)
 
 ## Examples
@@ -199,7 +199,7 @@ effectful enforces **strict type safety**:
 - Zero `# type: ignore` comments
 - 100% `mypy --strict` compliance
 
-See [Type Safety](engineering/type_safety.md) for type safety guidelines.
+See [Type Safety](engineering/type-safety-enforcement.md) for type safety guidelines.
 
 ## Testing
 

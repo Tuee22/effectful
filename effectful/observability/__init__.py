@@ -28,6 +28,7 @@ Example:
 """
 
 import re
+from collections import Counter
 from dataclasses import dataclass
 
 from effectful.algebraic.result import Err, Ok, Result
@@ -211,13 +212,9 @@ def validate_label_names(labels: tuple[str, ...]) -> Result[None, str]:
     if reserved_labels:
         return Err(reserved_labels[0][1])
 
-    # Check for duplicates
-    seen: set[str] = set()
-    duplicates: list[str] = []
-    for label in labels:
-        if label in seen:
-            duplicates.append(label)
-        seen.add(label)
+    # Check for duplicates using Counter (pure functional approach)
+    label_counts = Counter(labels)
+    duplicates = [label for label, count in label_counts.items() if count > 1]
     if duplicates:
         return Err(f"Duplicate label '{duplicates[0]}' in label_names")
 

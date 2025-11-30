@@ -631,7 +631,7 @@ buckets=(1024, 10240, 102400, 1048576, 10485760, 104857600)
 
 > **Core Doctrine**: For observability architecture, see [observability_doctrine.md](./observability.md)
 
-> **Core Doctrine**: For type safety patterns, see [type_safety_doctrine.md](./type_safety.md)
+> **Core Doctrine**: For type safety patterns, see [type_safety_doctrine.md](./type-safety-enforcement.md)
 
 ---
 

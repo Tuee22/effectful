@@ -497,5 +497,5 @@ class TestMetricsInterpreterImmutability:
         interpreter = MetricsInterpreter(collector=mock_collector)
 
         # Attempt to mutate should raise FrozenInstanceError
-        with pytest.raises(FrozenInstanceError):
-            interpreter.collector = mocker.AsyncMock(spec=MetricsCollector)  # type: ignore
+        with pytest.raises((FrozenInstanceError, AttributeError)):
+            setattr(interpreter, "collector", mocker.AsyncMock(spec=MetricsCollector))

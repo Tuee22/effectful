@@ -1,6 +1,6 @@
-# Documentation Guidelines
+# Documentation Standards
 
-> **SSoT** for all documentation practices in the effectful project.
+> **Single Source of Truth (SSoT)** for all documentation practices in the Effectful project.
 
 ## Documentation Philosophy
 
@@ -9,39 +9,47 @@
 - All other references LINK to the SSoT, never duplicate
 - Mark SSoT documents explicitly: "**SSoT** for [topic]"
 - Update SSoT first, links follow automatically
+- Reduces maintenance burden, prevents inconsistency, ensures accuracy
 
-### DRY (Don't Repeat Yourself)
-- Duplicate content creates maintenance burden
+###DRY (Don't Repeat Yourself)
+- Duplicate content creates maintenance burden and drift
 - Liberal linking instead of copy-paste
 - Acceptable repetition: navigation breadcrumbs, quick reference tables
 - Forbidden duplication: examples, procedures, explanations
+- Exception: Context-specific summaries (3-5 lines max with link to SSoT)
 
 ### Separation of Concerns
 - **Engineering standards** (documents/engineering/): HOW to build effectful code
-- **Tutorials** (documents/tutorials/): Step-by-step learning guides
+- **Tutorials** (documents/tutorials/): Step-by-step learning guides for users
 - **API reference** (documents/api/): Function signatures and usage
+- **Root docs** (documents/): High-level overview and getting started
+
+---
 
 ## File Organization Standards
 
 ### Naming Conventions
-- Lowercase with hyphens: `type-safety.md`, not `TypeSafety.md`
+- Lowercase with hyphens: `type-safety-enforcement.md`, not `TypeSafety.md`
 - Descriptive names: `docker-workflow.md`, not `docker.md`
 - Avoid abbreviations: `configuration.md`, not `config.md`
 - No version numbers in filenames: use git for versioning
+- Use full descriptive names: `documentation-standards.md`, not `docs.md`
 
 ### Directory Structure
 ```
 documents/
-├── engineering/        # Standards for contributors
-├── tutorials/         # Learning guides for users
-└── api/              # Technical reference
+├── engineering/        # Standards for contributors (HOW to build)
+├── tutorials/         # Learning guides for users (LEARNING)
+└── api/              # Technical reference (WHAT exists)
 ```
 
 ### Document Size Guidelines
 - Target: 300-800 lines per document
 - Minimum: 100 lines (otherwise merge with related doc)
 - Maximum: 1000 lines (consider splitting if larger)
-- Exception: testing.md (~3600 lines) due to 22 anti-patterns
+- Exception: Comprehensive standards like `testing.md` (~3600 lines) due to 22 anti-patterns
+
+---
 
 ## Writing Style Guidelines
 
@@ -51,10 +59,17 @@ documents/
 - ✅ "Avoid mutable state"
 - ❌ "It's better to avoid mutable state"
 
+### Active Voice Preferred
+- ✅ "The interpreter handles effects"
+- ❌ "Effects are handled by the interpreter"
+- ✅ "MyPy enforces type safety"
+- ❌ "Type safety is enforced by MyPy"
+
 ### Code Examples
-- Include explanations AFTER code blocks
-- Show both WRONG and CORRECT examples for anti-patterns
-- Use real effectful types, not generic placeholders
+
+**CRITICAL**: All code examples must follow zero-tolerance type safety policy:
+- ❌ **FORBIDDEN**: `Any`, `cast()`, or `# type: ignore` in ANY code examples
+- ✅ **REQUIRED**: Explicit types always, even in documentation
 
 **Example format:**
 ```python
@@ -69,7 +84,22 @@ class User:
 class User:
     name: str
     email: str
+
+# ❌ WRONG - Using Any (FORBIDDEN)
+def process(data: Any) -> Any:
+    return data
+
+# ✅ CORRECT - Explicit types always
+def process(data: UserData) -> Result[ProcessedData, ProcessingError]:
+    return Ok(ProcessedData(...))
 ```
+
+**Best Practices:**
+- Include explanations AFTER code blocks
+- Show both WRONG and CORRECT examples for anti-patterns
+- Use real effectful types, not generic placeholders
+- Always include function signatures with complete type hints
+- Never use `...` or `pass` without explanation of what goes there
 
 ### Tables for Reference Material
 Use tables for:
@@ -77,6 +107,15 @@ Use tables for:
 - Environment variables
 - Metric types
 - Test statistics
+- Configuration options
+
+**Example:**
+```markdown
+| Command | Purpose | Exit Code |
+|---------|---------|-----------|
+| check-code | Run Black + MyPy | 0 = pass |
+| test-all | Run all tests | 0 = pass |
+```
 
 ### Lists for Procedures
 Use numbered lists for sequential steps:
@@ -89,11 +128,9 @@ Use bullet lists for unordered items:
 - Purity
 - Testing
 
-### Active Voice Preferred
-- ✅ "The interpreter handles effects"
-- ❌ "Effects are handled by the interpreter"
+---
 
-## Mermaid Diagram Best Practices
+## Mermaid Diagram Standards
 
 ### Core Principle
 **Use only the "safe subset" that renders in both GitHub and VSCode.**
@@ -351,6 +388,7 @@ Before committing mermaid diagrams, verify:
 - [ ] No `Note over` in sequences
 - [ ] Labels use simple text (no `:`, `()`, `{}`)
 - [ ] Arrow types are consistent (don't mix styles)
+- [ ] Orientation is TB for diagrams with >3 sequential elements
 - [ ] Tested in GitHub preview
 - [ ] Tested in VSCode with recommended extension
 - [ ] Tested in Mermaid Live Editor (https://mermaid.live/)
@@ -413,6 +451,8 @@ If your diagram requires features not in the safe subset:
 [View Architecture Diagram](https://mermaid.live/edit#pako:eNpVjk...)
 ```
 
+---
+
 ## Cross-Reference Management
 
 ### Link Format
@@ -420,10 +460,10 @@ If your diagram requires features not in the safe subset:
 **Relative paths preferred:**
 ```markdown
 # From documents/tutorials/01_quickstart.md
-See [Type Safety](../engineering/type_safety.md)
+See [Type Safety Enforcement](../engineering/type-safety-enforcement.md)
 
 # From documents/engineering/purity.md
-See [Purity Patterns](purity_patterns.md)
+See [Purity Patterns](purity-patterns.md)
 ```
 
 **Absolute paths from root:**
@@ -439,14 +479,16 @@ See [Architecture](documents/engineering/architecture.md)
 # Run link verification script
 python tools/verify_links.py
 
-# Manually check for broken paths
+# Manually check for broken paths (example)
 grep -r "documents/core/" .
+grep -r "type-safety-enforcement.md" .  # Old filename
 ```
 
 **Forbidden:**
 - Dead links (target doesn't exist)
-- Links to deprecated docs
+- Links to deprecated/deleted docs
 - Circular references (doc A → doc B → doc A)
+- Links with old filenames after refactoring
 
 ### Updating Links After Refactors
 
@@ -456,42 +498,63 @@ grep -r "documents/core/" .
 3. Run automated updates
 4. Manually verify all references
 5. Run verification script
-6. Update any external references
+6. Update any external references (CLAUDE.md, README, etc.)
+
+**Example refactor workflow:**
+```bash
+# 1. Move file
+git mv documents/engineering/type-safety-enforcement.md documents/engineering/type_safety_enforcement.md
+
+# 2. Update all references
+find . -name "*.md" -exec sed -i 's/type_safety\.md/type_safety_enforcement.md/g' {} +
+
+# 3. Verify
+python tools/verify_links.py
+```
+
+---
 
 ## SSoT Enforcement
 
 ### How to Mark Documents as Authoritative
 
-Add explicit SSoT marker:
+Add explicit SSoT marker at the top:
 ```markdown
-# Type Safety Standards
+# Type Safety Enforcement
 
-> **SSoT** for all type safety rules in effectful.
+> **Single Source of Truth (SSoT)** for all type safety policy in Effectful.
 
-Referenced by: purity.md, architecture.md, CLAUDE.md, tutorials/03_adts_and_results.md
+[Content...]
+
+---
+
+**Last Updated**: YYYY-MM-DD
+**Supersedes**: old_file.md (if applicable)
+**Referenced by**: architecture.md, testing.md, CLAUDE.md
 ```
 
 ### When to Duplicate vs Link
 
 **Always link:**
 - Detailed explanations
-- Code examples
+- Code examples (except minimal 3-5 line summaries)
 - Procedures
 - Standards and rules
+- Mermaid diagrams (link instead of copying)
 
 **Acceptable duplication:**
 - Navigation breadcrumbs
 - Table of contents
 - Quick reference tables (with "See [X] for details")
-- Context-specific summaries (3-5 lines max)
+- Context-specific summaries (3-5 lines max with link)
 
 **Example of acceptable duplication:**
 ```markdown
 ## Type Safety (Summary)
 
-**Quick reminder**: Zero `Any`, `cast()`, or `type: ignore` allowed.
+**Quick reminder**: Zero `Any`, `cast()`, or `type: ignore` allowed - NO exceptions.
 
-**See [Type Safety Standards](../engineering/type_safety.md) for complete rules.**
+**See [Type Safety Enforcement](../engineering/type-safety-enforcement.md) for complete doctrines.**
 ```
 
 ### Forbidden Duplication
@@ -500,6 +563,10 @@ Referenced by: purity.md, architecture.md, CLAUDE.md, tutorials/03_adts_and_resu
 - Full code examples (link to canonical example)
 - Step-by-step procedures (link to procedure doc)
 - Explanations longer than 5 lines
+- Mermaid diagrams (link to diagram's original location)
+- Configuration settings (link to SSoT configuration doc)
+
+---
 
 ## Document Templates
 
@@ -507,7 +574,7 @@ Referenced by: purity.md, architecture.md, CLAUDE.md, tutorials/03_adts_and_resu
 ```markdown
 # [Topic] Standards
 
-> **SSoT** for all [topic] practices in effectful.
+> **Single Source of Truth (SSoT)** for all [topic] practices in Effectful.
 
 ## Overview
 
@@ -524,7 +591,7 @@ Referenced by: purity.md, architecture.md, CLAUDE.md, tutorials/03_adts_and_resu
 [Detailed explanation]
 
 **Example:**
-[Code example]
+[Code example - must follow zero-tolerance type safety]
 
 **Rationale:** [Why this standard exists]
 
@@ -540,7 +607,7 @@ Referenced by: purity.md, architecture.md, CLAUDE.md, tutorials/03_adts_and_resu
 
 ## See Also
 
-- [Related Standard](./related.md)
+- [Related Standard](./related-standard.md)
 - [Tutorial](../tutorials/example.md)
 
 ---
@@ -569,7 +636,7 @@ Referenced by: purity.md, architecture.md, CLAUDE.md, tutorials/03_adts_and_resu
 
 [Explanation]
 
-[Code example]
+[Code example - must follow zero-tolerance type safety]
 
 ## Step 2: [Action]
 
@@ -613,7 +680,7 @@ Referenced by: purity.md, architecture.md, CLAUDE.md, tutorials/03_adts_and_resu
 
 ### [function_name]
 
-[Function signature]
+[Function signature with complete type hints]
 
 **Parameters:**
 - `param` (Type): Description
@@ -634,21 +701,26 @@ Referenced by: purity.md, architecture.md, CLAUDE.md, tutorials/03_adts_and_resu
 - [Standard](../engineering/standard.md)
 ```
 
+---
+
 ## File Headers
 
 **All engineering documents should include:**
 ```markdown
 # Document Title
 
-> **SSoT** for [topic] (if applicable)
+> **Single Source of Truth (SSoT)** for [topic] (if applicable)
 
 [1-2 sentence overview]
 
 ---
 
 **Last Updated**: YYYY-MM-DD
-**Referenced by**: [List of documents]
+**Supersedes**: [old-file.md] (if refactoring)
+**Referenced by**: [List of documents that link here]
 ```
+
+---
 
 ## Markdown Formatting
 
@@ -656,6 +728,7 @@ Referenced by: purity.md, architecture.md, CLAUDE.md, tutorials/03_adts_and_resu
 - Always specify language: \`\`\`python, \`\`\`bash, \`\`\`markdown
 - Use \`\`\`markdown for showing markdown examples
 - Use comments to explain code: `# Explanation`
+- All code must follow zero-tolerance type safety (no Any/cast/type:ignore)
 
 ### Headings
 - h1 (`#`) - Document title only
@@ -665,40 +738,50 @@ Referenced by: purity.md, architecture.md, CLAUDE.md, tutorials/03_adts_and_resu
 - Never skip levels (h2 → h4)
 
 ### Emphasis
-- **Bold** for important terms, emphasis
-- *Italic* for introducing terms
-- `Code` for inline code, filenames, commands
+- **Bold** for important terms, emphasis, policy statements
+- *Italic* for introducing terms (first use)
+- `Code` for inline code, filenames, commands, Python identifiers
 
 ### Lists
 - Use `-` for unordered lists (not `*` or `+`)
 - Use `1.` for numbered lists
 - Indent nested lists with 2 spaces
+- Use checkboxes for checklists: `- [ ]` and `- [x]`
+
+---
 
 ## Version Control
 
 ### Git Commit Messages for Docs
 ```
-docs: add documentation guidelines
+docs: add documentation standards
 
-- Add SSoT and DRY principles
-- Include mermaid best practices
-- Define file organization standards
+- Merge documentation-standards.md content
+- Add mermaid diagram standards
+- Include SSoT/DRY enforcement
+- Add zero-tolerance policy for code examples
 ```
 
 ### When to Update Documentation
 - Immediately when code changes affect docs
 - When new features are added
 - When anti-patterns are discovered
-- After refactors
-
-## See Also
-
-- [Architecture](architecture.md) - Overall system design
-- [Testing](testing.md) - Test documentation practices
-- [Contributing](../CONTRIBUTING.md) - How to contribute
+- After refactors (update all cross-references)
+- When engineering standards change
 
 ---
 
-**Last Updated**: 2025-11-29
-**SSoT** for all documentation practices in effectful
-**Referenced by**: engineering/README.md, CONTRIBUTING.md
+## Related Documentation
+
+- **Type Safety Enforcement:** [type-safety-enforcement.md](type-safety-enforcement.md) - Zero-tolerance policy
+- **Architecture:** [architecture.md](architecture.md) - Overall system design
+- **Testing:** [testing.md](testing.md) - Test documentation practices
+- **Command Reference:** [command-reference.md](command-reference.md) - All Docker commands
+- **Contributing:** [../CONTRIBUTING.md](../CONTRIBUTING.md) - How to contribute
+
+---
+
+**Last Updated**: 2025-11-30
+**Supersedes**: documentation-standards.md (to be deleted)
+**Single Source of Truth (SSoT)** for all documentation practices in Effectful
+**Referenced by**: engineering/README.md, CONTRIBUTING.md, all engineering standards
