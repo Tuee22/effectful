@@ -1,0 +1,64 @@
+#!/bin/bash
+# Update all documentation links from documents/core/ to documents/engineering/
+# Also renames files to new naming convention
+
+set -e
+
+echo "Updating documentation cross-references..."
+
+# Find all markdown files in documents/ and root directory
+FILES=$(find documents/ README.md CLAUDE.md -name "*.md" -type f 2>/dev/null || true)
+
+for file in $FILES; do
+    if [ -f "$file" ]; then
+        echo "Updating: $file"
+
+        # Update absolute paths: documents/core/ → documents/engineering/
+        sed -i '' 's|documents/core/architecture\.md|documents/engineering/architecture.md|g' "$file"
+        sed -i '' 's|documents/core/type_safety_doctrine\.md|documents/engineering/type_safety.md|g' "$file"
+        sed -i '' 's|documents/core/purity\.md|documents/engineering/purity.md|g' "$file"
+        sed -i '' 's|documents/core/purity_patterns\.md|documents/engineering/purity_patterns.md|g' "$file"
+        sed -i '' 's|documents/core/testing_doctrine\.md|documents/engineering/testing.md|g' "$file"
+        sed -i '' 's|documents/core/docker_doctrine\.md|documents/engineering/docker_workflow.md|g' "$file"
+        sed -i '' 's|documents/core/observability_doctrine\.md|documents/engineering/observability.md|g' "$file"
+        sed -i '' 's|documents/core/monitoring_standards\.md|documents/engineering/monitoring_standards.md|g' "$file"
+        sed -i '' 's|documents/core/alerting_policy\.md|documents/engineering/alerting.md|g' "$file"
+
+        # Update relative paths: core/ → engineering/ (from documents/)
+        sed -i '' 's|core/architecture\.md|engineering/architecture.md|g' "$file"
+        sed -i '' 's|core/type_safety_doctrine\.md|engineering/type_safety.md|g' "$file"
+        sed -i '' 's|core/purity\.md|engineering/purity.md|g' "$file"
+        sed -i '' 's|core/purity_patterns\.md|engineering/purity_patterns.md|g' "$file"
+        sed -i '' 's|core/testing_doctrine\.md|engineering/testing.md|g' "$file"
+        sed -i '' 's|core/docker_doctrine\.md|engineering/docker_workflow.md|g' "$file"
+        sed -i '' 's|core/observability_doctrine\.md|engineering/observability.md|g' "$file"
+        sed -i '' 's|core/monitoring_standards\.md|engineering/monitoring_standards.md|g' "$file"
+        sed -i '' 's|core/alerting_policy\.md|engineering/alerting.md|g' "$file"
+
+        # Update parent-relative paths: ../core/ → ../engineering/ (from tutorials/api/)
+        sed -i '' 's|\.\./core/architecture\.md|../engineering/architecture.md|g' "$file"
+        sed -i '' 's|\.\./core/type_safety_doctrine\.md|../engineering/type_safety.md|g' "$file"
+        sed -i '' 's|\.\./core/purity\.md|../engineering/purity.md|g' "$file"
+        sed -i '' 's|\.\./core/purity_patterns\.md|../engineering/purity_patterns.md|g' "$file"
+        sed -i '' 's|\.\./core/testing_doctrine\.md|../engineering/testing.md|g' "$file"
+        sed -i '' 's|\.\./core/docker_doctrine\.md|../engineering/docker_workflow.md|g' "$file"
+        sed -i '' 's|\.\./core/observability_doctrine\.md|../engineering/observability.md|g' "$file"
+        sed -i '' 's|\.\./core/monitoring_standards\.md|../engineering/monitoring_standards.md|g' "$file"
+        sed -i '' 's|\.\./core/alerting_policy\.md|../engineering/alerting.md|g' "$file"
+
+        # Update text references to doctrines (not file paths)
+        sed -i '' 's|Testing Doctrine|Testing|g' "$file"
+        sed -i '' 's|Type Safety Doctrine|Type Safety|g' "$file"
+        sed -i '' 's|Purity Doctrine|Purity|g' "$file"
+        sed -i '' 's|Docker Doctrine|Docker Workflow|g' "$file"
+        sed -i '' 's|Observability Doctrine|Observability|g' "$file"
+        sed -i '' 's|Alerting Policy|Alerting|g' "$file"
+    fi
+done
+
+echo "✓ Link updates complete!"
+echo ""
+echo "Updated references:"
+echo "  - documents/core/* → documents/engineering/*"
+echo "  - File renames applied (e.g., type_safety_doctrine.md → type_safety.md)"
+echo "  - Text references updated (e.g., 'Testing Doctrine' → 'Testing')"

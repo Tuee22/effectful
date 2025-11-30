@@ -1,4 +1,4 @@
-# Purity Doctrine
+# Purity
 
 This is the Single Source of Truth (SSoT) for all purity rules and functional programming patterns in the Effectful project.
 
@@ -50,7 +50,7 @@ flowchart TB
 
 ---
 
-## Six Purity Doctrines
+## Six Puritys
 
 ### Doctrine 1: No Loops
 
@@ -63,7 +63,7 @@ for row in rows:
     users.append(User(id=row["id"], name=row["name"]))
 return users
 
-# CORRECT - List comprehension
+# CORRECT - List comprehension (preferred)
 return [
     User(id=row["id"], name=row["name"])
     for row in rows
@@ -85,9 +85,21 @@ result = trampoline(step(1024, ()))
 
 **Why**: Loops encourage mutation. Expressions and trampolines enforce immutability and make control flow explicit.
 
-**Exception**: The single `while True` in the trampoline driver is acceptable as the controlled iteration point.
+**Critical Policy - Single Exception**:
 
-See `documents/core/purity_patterns.md` for comprehensive trampoline and pure pattern examples.
+The ONLY acceptable while-loop in the entire codebase is the `while True` in the trampoline driver (`effectful/algebraic/trampoline.py`). This exception exists because:
+
+1. Python lacks tail-call optimization
+2. The trampoline pattern requires a controlled iteration point
+3. The while-loop is isolated to a single function with well-defined semantics
+
+**Zero tolerance for all other loops**:
+- ❌ No for-loops anywhere (use comprehensions)
+- ❌ No while-loops anywhere except trampoline driver
+- ✅ List/dict/set comprehensions are ACCEPTABLE and preferred
+- ✅ Trampoline pattern for recursive algorithms
+
+See `documents/engineering/purity_patterns.md` for comprehensive trampoline and pure pattern examples.
 
 ### Doctrine 2: Effects as Data
 
@@ -666,10 +678,10 @@ def handle_status(status: Status) -> str:
 
 ## Related Documentation
 
-- **Purity Patterns**: `documents/core/purity_patterns.md` - Trampoline and pure implementation patterns
-- **Type Safety Doctrine**: `documents/core/type_safety_doctrine.md`
-- **Testing Doctrine**: `documents/core/testing_doctrine.md`
-- **Architecture**: `documents/core/architecture.md`
+- **Purity Patterns**: `documents/engineering/purity_patterns.md` - Trampoline and pure implementation patterns
+- **Type Safety**: `documents/engineering/type_safety.md`
+- **Testing**: `documents/engineering/testing.md`
+- **Architecture**: `documents/engineering/architecture.md`
 - **Trampoline Module**: `effectful/algebraic/trampoline.py`
 - **Result Type**: `effectful/algebraic/result.py`
 - **Effect Definitions**: `effectful/effects/`
@@ -677,4 +689,4 @@ def handle_status(status: Status) -> str:
 
 ---
 
-**Last Updated**: 2025-11-22
+**Last Updated**: 2025-11-29

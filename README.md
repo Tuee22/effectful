@@ -335,16 +335,16 @@ async def test_example(mocker: MockerFixture):
 
 ### Core Doctrines
 
-- **[Testing Doctrine](documents/core/testing_doctrine.md)** - SSoT for all testing policy (22 anti-patterns)
-- **[Type Safety Doctrine](documents/core/type_safety_doctrine.md)** - Zero-tolerance type safety
-- **[Purity Doctrine](documents/core/purity.md)** - Functional programming rules
+- **[Testing](documents/engineering/testing.md)** - SSoT for all testing policy (22 anti-patterns)
+- **[Type Safety](documents/engineering/type_safety.md)** - Zero-tolerance type safety
+- **[Purity](documents/engineering/purity.md)** - Functional programming rules
 
 ### Architecture and Development
 
-- **[Architecture](documents/core/architecture.md)** - Design rationale and patterns
-- **[Docker Doctrine](documents/core/docker_doctrine.md)** - Development workflow (SSoT)
+- **[Architecture](documents/engineering/architecture.md)** - Design rationale and patterns
+- **[Docker Workflow](documents/engineering/docker_workflow.md)** - Development workflow (SSoT)
 - **[CLAUDE.md](CLAUDE.md)** - Complete development reference
-- **[Type Safety Doctrine](documents/core/type_safety_doctrine.md)** - Eight type safety rules
+- **[Type Safety](documents/engineering/type_safety.md)** - Eight type safety rules
 
 ## Examples
 
@@ -356,7 +356,7 @@ See [`examples/`](examples/) directory for complete working programs.
 
 **CRITICAL**: All development happens inside Docker containers. Poetry is configured to NOT create virtual environments (`poetry.toml`).
 
-See [Docker Doctrine](documents/core/docker_doctrine.md) for complete workflow.
+See [Docker Workflow](documents/engineering/docker_workflow.md) for complete workflow.
 
 ```bash
 # Clone repository
@@ -390,7 +390,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest --c
 docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tests/test_programs/test_runners.py
 ```
 
-See [Testing Doctrine](documents/core/testing_doctrine.md) for comprehensive guide.
+See [Testing](documents/engineering/testing.md) for comprehensive guide.
 
 ### Code Quality
 
@@ -407,7 +407,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run black effe
 docker compose -f docker/docker-compose.yml exec effectful poetry run ruff check effectful tests
 ```
 
-See [Docker Doctrine](documents/core/docker_doctrine.md) for complete command reference.
+See [Docker Workflow](documents/engineering/docker_workflow.md) for complete command reference.
 
 ## Project Structure
 
@@ -466,10 +466,10 @@ We welcome contributions! See [CLAUDE.md](CLAUDE.md) for:
 - Architecture guidelines
 
 **Key Doctrines**:
-- [Docker Doctrine](documents/core/docker_doctrine.md) - All development in Docker
-- [Testing Doctrine](documents/core/testing_doctrine.md) - Coverage and test patterns
-- [Type Safety Doctrine](documents/core/type_safety_doctrine.md) - Eight type safety rules
-- [Purity Doctrine](documents/core/purity.md) - Functional programming patterns
+- [Docker Workflow](documents/engineering/docker_workflow.md) - All development in Docker
+- [Testing](documents/engineering/testing.md) - Coverage and test patterns
+- [Type Safety](documents/engineering/type_safety.md) - Eight type safety rules
+- [Purity](documents/engineering/purity.md) - Functional programming patterns
 
 ## License
 
@@ -479,7 +479,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 - **Questions?** Open a [discussion](https://github.com/your-org/effectful/discussions)
 - **Bug reports?** File an [issue](https://github.com/your-org/effectful/issues)
-- **Contributing?** See [CLAUDE.md](CLAUDE.md) and [Docker Doctrine](documents/core/docker_doctrine.md)
+- **Contributing?** See [CLAUDE.md](CLAUDE.md) and [Docker Workflow](documents/engineering/docker_workflow.md)
 
 ---
 

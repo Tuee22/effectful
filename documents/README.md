@@ -4,7 +4,7 @@ Welcome to the **effectful** documentation!
 
 ## Prerequisites
 
-All development happens inside Docker containers. See [Docker Doctrine](core/docker_doctrine.md).
+All development happens inside Docker containers. See [Docker Workflow](engineering/docker_workflow.md).
 
 **CRITICAL**: Poetry is configured to NOT create virtual environments (`poetry.toml`). Do NOT run `poetry install` locally.
 
@@ -29,20 +29,28 @@ New to effectful? Start here:
 
 ## Documentation Structure
 
-### Core Doctrines (SSoT)
+### Engineering Standards (SSoT)
 
-Project policies and philosophies:
+Project engineering practices and standards:
 
-- **[docker_doctrine.md](core/docker_doctrine.md)** - All development in Docker (SSoT)
-- **[testing_doctrine.md](core/testing_doctrine.md)** - Coverage requirements, test anti-patterns
-- **[type_safety_doctrine.md](core/type_safety_doctrine.md)** - Eight type safety rules
-- **[architecture.md](core/architecture.md)** - 5-layer architecture, design decisions
-- **[purity.md](core/purity.md)** - Pure functional programming rules
+- **[Docker Workflow](engineering/docker_workflow.md)** - All development in Docker (SSoT)
+- **[Testing](engineering/testing.md)** - Coverage requirements, 22 test anti-patterns (SSoT)
+- **[Type Safety](engineering/type_safety.md)** - Eight type safety doctrines (SSoT)
+- **[Architecture](engineering/architecture.md)** - 5-layer architecture, design decisions (SSoT)
+- **[Purity](engineering/purity.md)** - Pure functional programming rules (SSoT)
+- **[Purity Patterns](engineering/purity_patterns.md)** - Functional composition patterns (SSoT)
+- **[Code Quality](engineering/code_quality.md)** - MyPy strict, Black formatting, coverage
+- **[Command Reference](engineering/command_reference.md)** - All Docker commands and test execution
+- **[Development Workflow](engineering/development_workflow.md)** - Daily development loop
+- **[Configuration](engineering/configuration.md)** - Environment variables for all services
+- **[Forbidden Patterns](engineering/forbidden_patterns.md)** - Anti-patterns to avoid
+- **[Effect Patterns](engineering/effect_patterns.md)** - Real-world effect program patterns
+- **[Documentation Guidelines](engineering/documentation_guidelines.md)** - SSoT/DRY principles, mermaid best practices (SSoT)
 
 **Observability**:
-- **[observability_doctrine.md](core/observability_doctrine.md)** - Metrics philosophy and cardinality management (SSoT)
-- **[monitoring_standards.md](core/monitoring_standards.md)** - Naming conventions and label standards (SSoT)
-- **[alerting_policy.md](core/alerting_policy.md)** - Alert severity levels and runbook requirements (SSoT)
+- **[Observability](engineering/observability.md)** - Metrics philosophy and cardinality management (SSoT)
+- **[Monitoring Standards](engineering/monitoring_standards.md)** - Naming conventions and label standards (SSoT)
+- **[Alerting](engineering/alerting.md)** - Alert severity levels and runbook requirements (SSoT)
 
 ### Tutorials
 
@@ -165,12 +173,12 @@ match divide(10, 2):
 
 - [GitHub Repository](https://github.com/your-org/effectful)
 - [Issue Tracker](https://github.com/your-org/effectful/issues)
-- [Development Guide](../CLAUDE.md)
-- [Docker Doctrine](core/docker_doctrine.md)
-- [Architecture](core/architecture.md)
-- [Testing Doctrine](core/testing_doctrine.md)
-- [Type Safety Doctrine](core/type_safety_doctrine.md)
-- [Purity Doctrine](core/purity.md)
+- [Engineering Standards](engineering/README.md)
+- [Docker Workflow](engineering/docker_workflow.md)
+- [Architecture](engineering/architecture.md)
+- [Testing](engineering/testing.md)
+- [Type Safety](engineering/type_safety.md)
+- [Purity](engineering/purity.md)
 
 ## Examples
 
@@ -191,7 +199,7 @@ effectful enforces **strict type safety**:
 - Zero `# type: ignore` comments
 - 100% `mypy --strict` compliance
 
-See [type_safety_doctrine.md](core/type_safety_doctrine.md) for type safety guidelines.
+See [Type Safety](engineering/type_safety.md) for type safety guidelines.
 
 ## Testing
 
@@ -236,7 +244,7 @@ async def test_my_program():
 
 - **Questions?** Open a [discussion](https://github.com/your-org/effectful/discussions)
 - **Bug reports?** File an [issue](https://github.com/your-org/effectful/issues)
-- **Contributing?** See [CLAUDE.md](../CLAUDE.md) and [Docker Doctrine](core/docker_doctrine.md)
+- **Contributing?** See [Contributing Guide](CONTRIBUTING.md) and [Engineering Standards](engineering/README.md)
 
 ---
 

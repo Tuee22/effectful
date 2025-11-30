@@ -3,10 +3,10 @@
 Welcome to **effectful**! This guide will get you writing effect programs in 10 minutes.
 
 > **Core Doctrines**: For comprehensive patterns, see:
-> - [Architecture](../core/architecture.md) - 5-layer architecture and design decisions
-> - [Type Safety Doctrine](../core/type_safety_doctrine.md) - Eight type safety rules
-> - [Testing Doctrine](../core/testing_doctrine.md) - Coverage requirements and test patterns
-> - [Docker Doctrine](../core/docker_doctrine.md) - All development happens in Docker
+> - [Architecture](../engineering/architecture.md) - 5-layer architecture and design decisions
+> - [Type Safety](../engineering/type_safety.md) - Eight type safety rules
+> - [Testing](../engineering/testing.md) - Coverage requirements and test patterns
+> - [Docker Workflow](../engineering/docker_workflow.md) - All development happens in Docker
 
 ## For Library Users
 
@@ -22,7 +22,7 @@ poetry add effectful
 
 > **CRITICAL**: All development happens inside Docker containers. Poetry is configured to NOT create virtual environments (`poetry.toml`).
 
-> See [Docker Doctrine](../core/docker_doctrine.md) for complete setup.
+> See [Docker Workflow](../engineering/docker_workflow.md) for complete setup.
 
 ```bash
 # Start development environment
@@ -220,7 +220,7 @@ async def handle_websocket(websocket: WebSocket):
 
 - [Tutorial 02: Effect Types](02_effect_types.md) - Learn about all available effects
 - [Tutorial 03: ADTs and Result Types](03_adts_and_results.md) - Master algebraic data types
-- [Tutorial 04: Testing Patterns](04_testing_patterns.md) - Write comprehensive tests
+- [Tutorial 04: Testing Patterns](04_testing_guide.md) - Write comprehensive tests
 - [Tutorial 05: Production Deployment](05_production_deployment.md) - Deploy to production
 
 ## Quick Reference

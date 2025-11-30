@@ -41,6 +41,7 @@ from tests.fixtures.storage import (
 
 # Messaging fixtures
 from tests.fixtures.messaging import (
+    clean_pulsar,
     pulsar_client,
     pulsar_consumer,
     pulsar_producer,
@@ -71,6 +72,7 @@ __all__ = [
     "pulsar_client",
     "pulsar_producer",
     "pulsar_consumer",
+    "clean_pulsar",
     # Auth
     "auth_service",
     # Base state

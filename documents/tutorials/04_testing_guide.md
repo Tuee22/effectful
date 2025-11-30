@@ -3,8 +3,8 @@
 This tutorial teaches you how to test effect programs using **generator-based mocking** with pytest-mock. This approach tests pure programs without requiring interpreters or real infrastructure.
 
 > **Core Doctrines**:
-> - [Testing Doctrine](../core/testing_doctrine.md) - Coverage requirements and test patterns
-> - [Docker Doctrine](../core/docker_doctrine.md) - All commands run inside Docker
+> - [Testing](../engineering/testing.md) - Coverage requirements and test patterns
+> - [Docker Workflow](../engineering/docker_workflow.md) - All commands run inside Docker
 
 ## Prerequisites
 
@@ -68,7 +68,7 @@ All test dependencies are installed in the Docker container. No local installati
 
 **CRITICAL**: `poetry.toml` prevents virtualenv creation. Running `poetry install` locally will fail.
 
-See [Docker Doctrine](../core/docker_doctrine.md) for development workflow.
+See [Docker Workflow](../engineering/docker_workflow.md) for development workflow.
 
 ### For Library Users
 
@@ -736,7 +736,7 @@ tests/
 
 Metrics effects follow the same testing patterns as other effects, with additional considerations for cardinality validation and metric registry integration.
 
-> **See Also**: [Metrics Quickstart](./07_metrics_quickstart.md) for metrics basics.
+> **See Also**: [Metrics Quickstart](./11_metrics_quickstart.md) for metrics basics.
 
 ### Unit Testing Metrics Programs
 

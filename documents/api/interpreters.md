@@ -2,7 +2,7 @@
 
 This document provides a comprehensive reference for effect interpreters and error types.
 
-> **Core Doctrine**: For the 5-layer architecture and data flow diagrams, see [architecture.md](../core/architecture.md#5-layer-architecture).
+> **Core Doctrine**: For the 5-layer architecture and data flow diagrams, see [architecture.md](../engineering/architecture.md#5-layer-architecture).
 
 ## Overview
 

@@ -2,7 +2,7 @@
 
 This document provides a comprehensive reference for all effect types in the effectful package.
 
-> **Core Doctrine**: For the effect type hierarchy diagram and architecture patterns, see [architecture.md](../core/architecture.md#effect-type-hierarchy).
+> **Core Doctrine**: For the effect type hierarchy diagram and architecture patterns, see [architecture.md](../engineering/architecture.md#effect-type-hierarchy).
 
 ## Overview
 

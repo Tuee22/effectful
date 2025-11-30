@@ -190,25 +190,32 @@ def validate_label_names(labels: tuple[str, ...]) -> Result[None, str]:
         Ok(None) if valid
         Err(reason) if invalid
     """
+    # Check basic pattern
+    invalid_pattern = [
+        (label, f"Label '{label}' must match [a-z_][a-z0-9_]* (snake_case, starts with letter or underscore)")
+        for label in labels
+        if not re.match(r"^[a-z_][a-z0-9_]*$", label)
+    ]
+    if invalid_pattern:
+        return Err(invalid_pattern[0][1])
+
+    # Check for reserved prefix
+    reserved_labels = [
+        (label, f"Label '{label}' must not start with __ (reserved)")
+        for label in labels
+        if label.startswith("__")
+    ]
+    if reserved_labels:
+        return Err(reserved_labels[0][1])
+
+    # Check for duplicates
     seen: set[str] = set()
-
-    for label in labels:
-        # Check basic pattern
-        if not re.match(r"^[a-z_][a-z0-9_]*$", label):
-            return Err(
-                f"Label '{label}' must match [a-z_][a-z0-9_]* (snake_case, "
-                "starts with letter or underscore)"
-            )
-
-        # Check for reserved prefix
-        if label.startswith("__"):
-            return Err(f"Label '{label}' must not start with __ (reserved)")
-
-        # Check for duplicates
-        if label in seen:
-            return Err(f"Duplicate label '{label}' in label_names")
-
-        seen.add(label)
+    duplicates = [
+        label for label in labels
+        if label in seen or (seen.add(label) or False)  # type: ignore[func-returns-value]
+    ]
+    if duplicates:
+        return Err(f"Duplicate label '{duplicates[0]}' in label_names")
 
     return Ok(None)
 
@@ -233,16 +240,18 @@ def validate_histogram_buckets(buckets: tuple[float, ...]) -> Result[None, str]:
         return Err("Histogram must have at least one bucket")
 
     # Check all positive
-    for bucket in buckets:
-        if bucket <= 0:
-            return Err(f"Histogram bucket {bucket} must be positive")
+    non_positive = [bucket for bucket in buckets if bucket <= 0]
+    if non_positive:
+        return Err(f"Histogram bucket {non_positive[0]} must be positive")
 
     # Check sorted ascending
-    for i in range(len(buckets) - 1):
-        if buckets[i] >= buckets[i + 1]:
-            return Err(
-                f"Histogram buckets must be sorted ascending: " f"{buckets[i]} >= {buckets[i + 1]}"
-            )
+    unordered_pairs = [
+        (buckets[i], buckets[i + 1])
+        for i in range(len(buckets) - 1)
+        if buckets[i] >= buckets[i + 1]
+    ]
+    if unordered_pairs:
+        return Err(f"Histogram buckets must be sorted ascending: {unordered_pairs[0][0]} >= {unordered_pairs[0][1]}")
 
     return Ok(None)
 
@@ -267,16 +276,20 @@ def validate_summary_quantiles(quantiles: tuple[float, ...]) -> Result[None, str
         return Err("Summary must have at least one quantile")
 
     # Check all in range [0.0, 1.0]
-    for quantile in quantiles:
-        if not (0.0 <= quantile <= 1.0):
-            return Err(f"Summary quantile {quantile} must be in range [0.0, 1.0]")
+    out_of_range = [q for q in quantiles if not (0.0 <= q <= 1.0)]
+    if out_of_range:
+        return Err(f"Summary quantile {out_of_range[0]} must be in range [0.0, 1.0]")
 
     # Check sorted ascending
-    for i in range(len(quantiles) - 1):
-        if quantiles[i] >= quantiles[i + 1]:
-            return Err(
-                f"Summary quantiles must be sorted ascending: "
-                f"{quantiles[i]} >= {quantiles[i + 1]}"
-            )
+    unordered_pairs = [
+        (quantiles[i], quantiles[i + 1])
+        for i in range(len(quantiles) - 1)
+        if quantiles[i] >= quantiles[i + 1]
+    ]
+    if unordered_pairs:
+        return Err(
+            f"Summary quantiles must be sorted ascending: "
+            f"{unordered_pairs[0][0]} >= {unordered_pairs[0][1]}"
+        )
 
     return Ok(None)

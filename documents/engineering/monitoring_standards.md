@@ -629,16 +629,16 @@ buckets=(1024, 10240, 102400, 1048576, 10485760, 104857600)
 
 ## Cross-References
 
-> **Core Doctrine**: For observability architecture, see [observability_doctrine.md](./observability_doctrine.md)
+> **Core Doctrine**: For observability architecture, see [observability_doctrine.md](./observability.md)
 
-> **Core Doctrine**: For type safety patterns, see [type_safety_doctrine.md](./type_safety_doctrine.md)
+> **Core Doctrine**: For type safety patterns, see [type_safety_doctrine.md](./type_safety.md)
 
 ---
 
 ## See Also
 
-- [Observability Doctrine](./observability_doctrine.md) - Metrics philosophy and architecture
-- [Alerting Policy](./alerting_policy.md) - Alert rules and severity levels
+- [Observability](./observability.md) - Metrics philosophy and architecture
+- [Alerting](./alerting.md) - Alert rules and severity levels
 - [Metrics API Reference](../api/metrics.md) - Complete metrics effects API
 - [Metrics Quickstart](../tutorials/11_metrics_quickstart.md) - Getting started guide
 

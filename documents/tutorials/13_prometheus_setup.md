@@ -2,9 +2,9 @@
 
 **Set up Prometheus and Grafana with Docker for effectful applications.**
 
-> **Core Doctrine**: For Docker services overview, see [docker_doctrine.md](../core/docker_doctrine.md)
+> **Core Doctrine**: For Docker services overview, see [docker_doctrine.md](../engineering/docker_workflow.md)
 
-> **Core Doctrine**: For observability architecture, see [observability_doctrine.md](../core/observability_doctrine.md)
+> **Core Doctrine**: For observability architecture, see [observability_doctrine.md](../engineering/observability.md)
 
 ---
 
@@ -702,8 +702,8 @@ docker/
 
 ## See Also
 
-- [Docker Doctrine](../core/docker_doctrine.md) - Container services overview
-- [Observability Doctrine](../core/observability_doctrine.md) - Metrics philosophy
+- [Docker Workflow](../engineering/docker_workflow.md) - Container services overview
+- [Observability](../engineering/observability.md) - Metrics philosophy
 - [Alert Rules Tutorial](./14_alert_rules.md) - Creating alerts
 - [Grafana Dashboards](./15_grafana_dashboards.md) - Building dashboards
 

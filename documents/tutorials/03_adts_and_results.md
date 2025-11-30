@@ -2,7 +2,7 @@
 
 This tutorial teaches you how to use **Algebraic Data Types (ADTs)** and the **Result type** to write type-safe, self-documenting code.
 
-> **Core Doctrine**: For the complete type safety patterns and diagrams, see [type_safety_doctrine.md](../core/type_safety_doctrine.md).
+> **Core Doctrine**: For the complete type safety patterns and diagrams, see [type_safety_doctrine.md](../engineering/type_safety.md).
 
 ## Why ADTs?
 
@@ -51,7 +51,7 @@ async def get_user(user_id: UUID) -> UserLookupResult:
 
 ### Visual Comparison: Optional vs ADT
 
-> **Diagram**: See the ADT vs Optional comparison diagram in [type_safety_doctrine.md](../core/type_safety_doctrine.md#2-adts-over-optional-types).
+> **Diagram**: See the ADT vs Optional comparison diagram in [type_safety_doctrine.md](../engineering/type_safety.md#2-adts-over-optional-types).
 
 **Key Differences:**
 - **Optional**: Single `None` value, many possible meanings (ambiguous)
@@ -588,10 +588,10 @@ print(message.id)  # mypy error: EffectResult has no attribute 'id'
 
 ## Next Steps
 
-- [Tutorial 04: Testing Patterns](04_testing_patterns.md) - Write comprehensive tests
+- [Tutorial 04: Testing Patterns](04_testing_guide.md) - Write comprehensive tests
 - [Tutorial 05: Production Deployment](05_production_deployment.md) - Deploy to production
 - [API Reference: Result Type](../api/result.md) - Complete Result API
 
 ---
 
-**Previous**: [Tutorial 02: Effect Types](02_effect_types.md) | **Next**: [Tutorial 04: Testing Patterns](04_testing_patterns.md)
+**Previous**: [Tutorial 02: Effect Types](02_effect_types.md) | **Next**: [Tutorial 04: Testing Patterns](04_testing_guide.md)

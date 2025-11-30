@@ -2,7 +2,7 @@
 
 **Get started with type-safe metrics in 15 minutes.**
 
-> **Core Doctrine**: For complete metrics philosophy, see [observability_doctrine.md](../core/observability_doctrine.md)
+> **Core Doctrine**: For complete metrics philosophy, see [observability_doctrine.md](../engineering/observability.md)
 
 > **API Reference**: For complete API documentation, see [metrics.md](../api/metrics.md)
 
@@ -592,8 +592,8 @@ You've learned:
 
 ## See Also
 
-- [Observability Doctrine](../core/observability_doctrine.md) - Metrics philosophy
-- [Monitoring Standards](../core/monitoring_standards.md) - Naming conventions
+- [Observability](../engineering/observability.md) - Metrics philosophy
+- [Monitoring Standards](../engineering/monitoring_standards.md) - Naming conventions
 - [Metrics API Reference](../api/metrics.md) - Complete API documentation
 - [Metric Types Guide](./12_metric_types_guide.md) - When to use each type
 

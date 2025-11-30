@@ -312,10 +312,10 @@ class TestMessaging:
         clean_db: asyncpg.Connection,
         clean_redis: Redis,
         ws_client: E2EWebSocketClient,
-        pulsar_producer: PulsarMessageProducer,
-        pulsar_consumer: PulsarMessageConsumer,
+        clean_pulsar: tuple[PulsarMessageProducer, PulsarMessageConsumer],
     ) -> None:
         """Publish a message to Pulsar."""
+        pulsar_producer, pulsar_consumer = clean_pulsar
         user_id = uuid4()
 
         def publish_notification(
@@ -359,10 +359,10 @@ class TestMessaging:
         clean_db: asyncpg.Connection,
         clean_redis: Redis,
         ws_client: E2EWebSocketClient,
-        pulsar_producer: PulsarMessageProducer,
-        pulsar_consumer: PulsarMessageConsumer,
+        clean_pulsar: tuple[PulsarMessageProducer, PulsarMessageConsumer],
     ) -> None:
         """Publish, consume, and acknowledge a message."""
+        pulsar_producer, pulsar_consumer = clean_pulsar
         user_id = uuid4()
         topic = f"e2e-ack-test-{uuid4()}"
         subscription = f"{topic}/e2e-ack-subscription"
@@ -433,10 +433,10 @@ class TestMessaging:
         clean_db: asyncpg.Connection,
         clean_redis: Redis,
         ws_client: E2EWebSocketClient,
-        pulsar_producer: PulsarMessageProducer,
-        pulsar_consumer: PulsarMessageConsumer,
+        clean_pulsar: tuple[PulsarMessageProducer, PulsarMessageConsumer],
     ) -> None:
         """Publish, consume, and negative acknowledge a message."""
+        pulsar_producer, pulsar_consumer = clean_pulsar
         user_id = uuid4()
         topic = f"e2e-nack-test-{uuid4()}"
         subscription = f"{topic}/e2e-nack-subscription"

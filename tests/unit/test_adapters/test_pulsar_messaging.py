@@ -56,7 +56,7 @@ class TestPulsarMessageProducer:
         assert "msg-123" in result.message_id
 
         # Verify calls
-        mock_client.create_producer.assert_called_once_with(topic, send_timeout_millis=30000)
+        mock_client.create_producer.assert_called_once_with(topic, send_timeout_millis=5000)
         mock_producer.send.assert_called_once_with(payload, properties=properties)
 
     @pytest.mark.asyncio

@@ -1,4 +1,4 @@
-# Type Safety Doctrine
+# Type Safety
 
 This is the Single Source of Truth (SSoT) for all type safety policy in the Effectful project.
 
@@ -38,7 +38,7 @@ flowchart TB
 
 ---
 
-## Eight Type Safety Doctrines
+## Eight Type Safetys
 
 ### 1. NO Escape Hatches
 
@@ -418,7 +418,7 @@ extra_checks = true
 - **Result Type:** `effectful/algebraic/result.py`
 - **ADT Examples:** `effectful/domain/user.py`, `effectful/domain/profile.py`
 - **Type Aliases:** `effectful/programs/program_types.py`
-- **Architecture:** `documents/core/architecture.md`
+- **Architecture:** `documents/engineering/architecture.md`
 
 ---
 

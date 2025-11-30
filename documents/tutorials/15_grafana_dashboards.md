@@ -4,7 +4,7 @@
 
 > **Tutorial**: For Prometheus setup, see [13_prometheus_setup.md](./13_prometheus_setup.md)
 
-> **Core Doctrine**: For observability philosophy, see [observability_doctrine.md](../core/observability_doctrine.md)
+> **Core Doctrine**: For observability philosophy, see [observability_doctrine.md](../engineering/observability.md)
 
 ---
 
@@ -698,7 +698,7 @@ curl 'http://localhost:9090/api/v1/query?query=effectful_effects_total'
 - [Prometheus Setup](./13_prometheus_setup.md) - Docker integration
 - [Alert Rules](./14_alert_rules.md) - Creating Prometheus alerts
 - [Metrics Quickstart](./11_metrics_quickstart.md) - Getting started with metrics
-- [Observability Doctrine](../core/observability_doctrine.md) - Metrics philosophy
+- [Observability](../engineering/observability.md) - Metrics philosophy
 
 ---
 

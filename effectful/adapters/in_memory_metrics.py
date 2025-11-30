@@ -1,14 +1,18 @@
 """In-memory metrics collector for testing.
 
-This adapter stores metrics in memory using dictionaries. Suitable for
-unit tests and development - NOT for production use.
+This adapter stores metrics in memory using native Python dicts and lists.
+Suitable for unit tests and development - NOT for production use.
 
 For production, use PrometheusMetricsCollector which integrates with
 real Prometheus infrastructure.
+
+Pattern: Frozen dataclass with mutable dict/list fields. The frozen decorator
+prevents field reassignment while allowing mutation of field contents. This
+follows the adapter purity doctrine: adapters are at the I/O boundary and may
+manage mutable state.
 """
 
 import time
-from collections import defaultdict
 from dataclasses import dataclass, field
 
 from effectful.domain.metrics_result import (
@@ -28,33 +32,26 @@ from effectful.observability import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class InMemoryMetricsCollector:
     """In-memory metrics collector for testing.
 
-    Stores all metrics in memory. NOT thread-safe - only use in tests.
+    Stores all metrics in memory using native Python dicts and lists.
+    NOT thread-safe - only use in tests.
 
     Attributes:
         registry: Currently registered metrics
-        counters: Counter values {metric_name: {label_combo: value}}
-        gauges: Gauge values {metric_name: {label_combo: value}}
-        histograms: Histogram observations {metric_name: {label_combo: [values]}}
-        summaries: Summary observations {metric_name: {label_combo: [values]}}
+        _counters: Counter values {metric_name: {label_key: value}}
+        _gauges: Gauge values {metric_name: {label_key: value}}
+        _histograms: Histogram observations {metric_name: {label_key: [values]}}
+        _summaries: Summary observations {metric_name: {label_key: [values]}}
     """
 
     registry: MetricsRegistry | None = None
-    counters: dict[str, dict[str, float]] = field(
-        default_factory=lambda: defaultdict(lambda: defaultdict(float))
-    )
-    gauges: dict[str, dict[str, float]] = field(
-        default_factory=lambda: defaultdict(lambda: defaultdict(float))
-    )
-    histograms: dict[str, dict[str, list[float]]] = field(
-        default_factory=lambda: defaultdict(lambda: defaultdict(list))
-    )
-    summaries: dict[str, dict[str, list[float]]] = field(
-        default_factory=lambda: defaultdict(lambda: defaultdict(list))
-    )
+    _counters: dict[str, dict[str, float]] = field(default_factory=dict, init=False)
+    _gauges: dict[str, dict[str, float]] = field(default_factory=dict, init=False)
+    _histograms: dict[str, dict[str, list[float]]] = field(default_factory=dict, init=False)
+    _summaries: dict[str, dict[str, list[float]]] = field(default_factory=dict, init=False)
 
     async def register_metrics(self, registry: MetricsRegistry) -> None:
         """Register metric definitions.
@@ -64,7 +61,12 @@ class InMemoryMetricsCollector:
         Args:
             registry: MetricsRegistry containing all metric definitions
         """
-        self.registry = registry
+        # Skip if already registered
+        if self.registry is not None:
+            return
+
+        # Use object.__setattr__ to set field on frozen dataclass
+        object.__setattr__(self, 'registry', registry)
 
     async def increment_counter(
         self,
@@ -111,9 +113,20 @@ class InMemoryMetricsCollector:
                 f"registered label_names {set(counter_def.label_names)}"
             )
 
-        # Increment counter
+        # Increment counter using native dicts
         label_key = self._serialize_labels(labels)
-        self.counters[metric_name][label_key] += value
+
+        # Get or create inner dict for this metric
+        if metric_name not in self._counters:
+            self._counters[metric_name] = {}
+
+        # Get or create entry for this label
+        if label_key not in self._counters[metric_name]:
+            self._counters[metric_name][label_key] = 0.0
+
+        # Increment counter value
+        self._counters[metric_name][label_key] += value
+
         return MetricRecorded(timestamp=time.time())
 
     async def record_gauge(
@@ -156,9 +169,16 @@ class InMemoryMetricsCollector:
                 f"registered label_names {set(gauge_def.label_names)}"
             )
 
-        # Set gauge value
+        # Set gauge value using native dicts
         label_key = self._serialize_labels(labels)
-        self.gauges[metric_name][label_key] = value
+
+        # Get or create inner dict for this metric
+        if metric_name not in self._gauges:
+            self._gauges[metric_name] = {}
+
+        # Set gauge value
+        self._gauges[metric_name][label_key] = value
+
         return MetricRecorded(timestamp=time.time())
 
     async def observe_histogram(
@@ -202,9 +222,20 @@ class InMemoryMetricsCollector:
                 f"registered label_names {set(histogram_def.label_names)}"
             )
 
-        # Record observation
+        # Record observation using native dicts/lists
         label_key = self._serialize_labels(labels)
-        self.histograms[metric_name][label_key].append(value)
+
+        # Get or create inner dict for this metric
+        if metric_name not in self._histograms:
+            self._histograms[metric_name] = {}
+
+        # Get or create list for this label
+        if label_key not in self._histograms[metric_name]:
+            self._histograms[metric_name][label_key] = []
+
+        # Append observation to list
+        self._histograms[metric_name][label_key].append(value)
+
         return MetricRecorded(timestamp=time.time())
 
     async def record_summary(
@@ -248,9 +279,20 @@ class InMemoryMetricsCollector:
                 f"registered label_names {set(summary_def.label_names)}"
             )
 
-        # Record observation
+        # Record observation using native dicts/lists
         label_key = self._serialize_labels(labels)
-        self.summaries[metric_name][label_key].append(value)
+
+        # Get or create inner dict for this metric
+        if metric_name not in self._summaries:
+            self._summaries[metric_name] = {}
+
+        # Get or create list for this label
+        if label_key not in self._summaries[metric_name]:
+            self._summaries[metric_name][label_key] = []
+
+        # Append observation to list
+        self._summaries[metric_name][label_key].append(value)
+
         return MetricRecorded(timestamp=time.time())
 
     async def query_metrics(
@@ -275,29 +317,36 @@ class InMemoryMetricsCollector:
 
         # Query all metrics if metric_name is None
         if metric_name is None:
-            # Collect all counters
-            for name, label_values in self.counters.items():
-                for label_key, value in label_values.items():
-                    key = f"{name}{{{label_key}}}"
-                    metrics[key] = value
+            # Collect all counters using dict comprehension
+            counter_metrics = {
+                f"{name}{{{label_key}}}": value
+                for name, label_values in self._counters.items()
+                for label_key, value in label_values.items()
+            }
 
-            # Collect all gauges
-            for name, label_values in self.gauges.items():
-                for label_key, value in label_values.items():
-                    key = f"{name}{{{label_key}}}"
-                    metrics[key] = value
+            # Collect all gauges using dict comprehension
+            gauge_metrics = {
+                f"{name}{{{label_key}}}": value
+                for name, label_values in self._gauges.items()
+                for label_key, value in label_values.items()
+            }
 
-            # Collect histogram counts
-            for name, hist_labels in self.histograms.items():
-                for label_key, hist_values in hist_labels.items():
-                    key = f"{name}_count{{{label_key}}}"
-                    metrics[key] = float(len(hist_values))
+            # Collect histogram counts using dict comprehension
+            histogram_metrics = {
+                f"{name}_count{{{label_key}}}": float(len(hist_values))
+                for name, hist_labels in self._histograms.items()
+                for label_key, hist_values in hist_labels.items()
+            }
 
-            # Collect summary counts
-            for name, sum_labels in self.summaries.items():
-                for label_key, sum_values in sum_labels.items():
-                    key = f"{name}_count{{{label_key}}}"
-                    metrics[key] = float(len(sum_values))
+            # Collect summary counts using dict comprehension
+            summary_metrics = {
+                f"{name}_count{{{label_key}}}": float(len(sum_values))
+                for name, sum_labels in self._summaries.items()
+                for label_key, sum_values in sum_labels.items()
+            }
+
+            # Combine all metrics
+            metrics = {**counter_metrics, **gauge_metrics, **histogram_metrics, **summary_metrics}
 
             return QuerySuccess(metrics=metrics, timestamp=time.time())
 
@@ -312,42 +361,54 @@ class InMemoryMetricsCollector:
 
         # Check counters
         if metric_name in counter_names:
+            inner_map = self._counters.get(metric_name, {})
             if label_filter_key:
-                value = self.counters[metric_name].get(label_filter_key, 0.0)
-                metrics[f"{metric_name}{{{label_filter_key}}}"] = value
+                value = inner_map.get(label_filter_key, 0.0)
+                metrics = {f"{metric_name}{{{label_filter_key}}}": value}
             else:
-                for label_key, value in self.counters[metric_name].items():
-                    metrics[f"{metric_name}{{{label_key}}}"] = value
+                metrics = {
+                    f"{metric_name}{{{label_key}}}": value
+                    for label_key, value in inner_map.items()
+                }
             return QuerySuccess(metrics=metrics, timestamp=time.time())
 
         # Check gauges
         if metric_name in gauge_names:
+            inner_map = self._gauges.get(metric_name, {})
             if label_filter_key:
-                value = self.gauges[metric_name].get(label_filter_key, 0.0)
-                metrics[f"{metric_name}{{{label_filter_key}}}"] = value
+                value = inner_map.get(label_filter_key, 0.0)
+                metrics = {f"{metric_name}{{{label_filter_key}}}": value}
             else:
-                for label_key, value in self.gauges[metric_name].items():
-                    metrics[f"{metric_name}{{{label_key}}}"] = value
+                metrics = {
+                    f"{metric_name}{{{label_key}}}": value
+                    for label_key, value in inner_map.items()
+                }
             return QuerySuccess(metrics=metrics, timestamp=time.time())
 
         # Check histograms
         if metric_name in histogram_names:
+            histogram_map: dict[str, list[float]] = self._histograms.get(metric_name, {})
             if label_filter_key:
-                hist_values = self.histograms[metric_name].get(label_filter_key, [])
-                metrics[f"{metric_name}_count{{{label_filter_key}}}"] = float(len(hist_values))
+                hist_values: list[float] = histogram_map.get(label_filter_key, [])
+                metrics = {f"{metric_name}_count{{{label_filter_key}}}": float(len(hist_values))}
             else:
-                for label_key, hist_values in self.histograms[metric_name].items():
-                    metrics[f"{metric_name}_count{{{label_key}}}"] = float(len(hist_values))
+                metrics = {
+                    f"{metric_name}_count{{{label_key}}}": float(len(hist_values))
+                    for label_key, hist_values in histogram_map.items()
+                }
             return QuerySuccess(metrics=metrics, timestamp=time.time())
 
         # Check summaries
         if metric_name in summary_names:
+            summary_map: dict[str, list[float]] = self._summaries.get(metric_name, {})
             if label_filter_key:
-                sum_values = self.summaries[metric_name].get(label_filter_key, [])
-                metrics[f"{metric_name}_count{{{label_filter_key}}}"] = float(len(sum_values))
+                sum_values: list[float] = summary_map.get(label_filter_key, [])
+                metrics = {f"{metric_name}_count{{{label_filter_key}}}": float(len(sum_values))}
             else:
-                for label_key, sum_values in self.summaries[metric_name].items():
-                    metrics[f"{metric_name}_count{{{label_key}}}"] = float(len(sum_values))
+                metrics = {
+                    f"{metric_name}_count{{{label_key}}}": float(len(sum_values))
+                    for label_key, sum_values in summary_map.items()
+                }
             return QuerySuccess(metrics=metrics, timestamp=time.time())
 
         return QueryFailure(reason=f"Metric '{metric_name}' not found")
@@ -360,11 +421,32 @@ class InMemoryMetricsCollector:
         Returns:
             MetricRecorded: Success with timestamp
         """
-        self.counters.clear()
-        self.gauges.clear()
-        self.histograms.clear()
-        self.summaries.clear()
+        # Clear all metrics using native dict/list .clear()
+        self._counters.clear()
+        self._gauges.clear()
+        self._histograms.clear()
+        self._summaries.clear()
         return MetricRecorded(timestamp=time.time())
+
+    @property
+    def counters(self) -> dict[str, dict[str, float]]:
+        """Public access to counter metrics (for testing)."""
+        return self._counters
+
+    @property
+    def gauges(self) -> dict[str, dict[str, float]]:
+        """Public access to gauge metrics (for testing)."""
+        return self._gauges
+
+    @property
+    def histograms(self) -> dict[str, dict[str, list[float]]]:
+        """Public access to histogram metrics (for testing)."""
+        return self._histograms
+
+    @property
+    def summaries(self) -> dict[str, dict[str, list[float]]]:
+        """Public access to summary metrics (for testing)."""
+        return self._summaries
 
     def _serialize_labels(self, labels: dict[str, str]) -> str:
         """Serialize labels dict to string for dict keys.

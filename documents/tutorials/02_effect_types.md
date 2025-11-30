@@ -2,7 +2,7 @@
 
 This tutorial covers all available effect types in **effectful** and how to use them.
 
-> **Core Doctrine**: For the complete architecture including effect hierarchy diagrams, see [architecture.md](../core/architecture.md).
+> **Core Doctrine**: For the complete architecture including effect hierarchy diagrams, see [architecture.md](../engineering/architecture.md).
 
 ## Effect Categories
 
@@ -17,7 +17,7 @@ effectful provides six categories of effects:
 
 ### Effect Type Hierarchy
 
-> **Diagram**: See the complete Effect Type Hierarchy diagram in [architecture.md](../core/architecture.md#effect-type-hierarchy).
+> **Diagram**: See the complete Effect Type Hierarchy diagram in [architecture.md](../engineering/architecture.md#effect-type-hierarchy).
 
 **Key Points:**
 - All effects are frozen dataclasses (immutable)
@@ -855,7 +855,7 @@ def program() -> Generator[AllEffects, EffectResult, str]:
 ## Next Steps
 
 - [Tutorial 03: ADTs and Result Types](03_adts_and_results.md) - Deep dive into type safety
-- [Tutorial 04: Testing Patterns](04_testing_patterns.md) - Write comprehensive tests
+- [Tutorial 04: Testing Patterns](04_testing_guide.md) - Write comprehensive tests
 - [API Reference](../api/effects.md) - Complete effect API documentation
 
 ---

@@ -47,11 +47,7 @@ class SystemInterpreter:
                 new_uuid = uuid4()
                 return Ok(EffectReturn(value=new_uuid, effect_name="GenerateUUID"))
             case _:
-                return (
-                    Ok(EffectReturn(value=None, effect_name="UnhandledEffectError"))
-                    if False
-                    else self._unhandled(effect)
-                )
+                return self._unhandled(effect)
 
     def _unhandled(self, effect: Effect) -> Result[EffectReturn[EffectResult], InterpreterError]:
         """Return UnhandledEffectError for unknown effects."""

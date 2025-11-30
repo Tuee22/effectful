@@ -2,9 +2,9 @@
 
 **effectful** - Complete reference for metrics effects, ADT return types, and observability primitives.
 
-> **Core Doctrine**: For metrics philosophy and architecture, see [observability_doctrine.md](../core/observability_doctrine.md)
+> **Core Doctrine**: For metrics philosophy and architecture, see [observability_doctrine.md](../engineering/observability.md)
 
-> **Core Doctrine**: For metric naming and labeling standards, see [monitoring_standards.md](../core/monitoring_standards.md)
+> **Core Doctrine**: For metric naming and labeling standards, see [monitoring_standards.md](../engineering/monitoring_standards.md)
 
 ---
 
@@ -858,11 +858,11 @@ async def main() -> None:
 
 ## Cross-References
 
-> **Core Doctrine**: For observability architecture, see [observability_doctrine.md](../core/observability_doctrine.md)
+> **Core Doctrine**: For observability architecture, see [observability_doctrine.md](../engineering/observability.md)
 
-> **Core Doctrine**: For metric naming standards, see [monitoring_standards.md](../core/monitoring_standards.md)
+> **Core Doctrine**: For metric naming standards, see [monitoring_standards.md](../engineering/monitoring_standards.md)
 
-> **Core Doctrine**: For alert rules, see [alerting_policy.md](../core/alerting_policy.md)
+> **Core Doctrine**: For alert rules, see [alerting_policy.md](../engineering/alerting.md)
 
 ---
 

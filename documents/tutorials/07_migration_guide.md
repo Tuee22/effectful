@@ -3,8 +3,8 @@
 This tutorial guides you through migrating from imperative WebSocket code to effectful programs.
 
 > **Core Doctrine**: For architecture patterns and type safety requirements, see:
-> - [architecture.md](../core/architecture.md) - 5-layer architecture
-> - [type_safety_doctrine.md](../core/type_safety_doctrine.md) - Result types and ADTs
+> - [architecture.md](../engineering/architecture.md) - 5-layer architecture
+> - [type_safety_doctrine.md](../engineering/type_safety.md) - Result types and ADTs
 
 ## Prerequisites
 

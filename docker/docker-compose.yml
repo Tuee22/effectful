@@ -108,9 +108,17 @@ services:
     command: >
       bin/pulsar standalone
       --advertised-address pulsar
+      --bookkeeper-dir data/standalone/bookkeeper
+      -nfw
     environment:
-      PULSAR_MEM: "-Xms512m -Xmx512m"
-      PULSAR_GC: "-XX:MaxDirectMemorySize=256m"
+      PULSAR_MEM: "-Xms2048m -Xmx2048m"  # Increased from 512m to 2GB for BookKeeper
+      PULSAR_GC: "-XX:MaxDirectMemorySize=1024m"  # Increased from 256m to 1GB
+      # BookKeeper single-bookie configuration for standalone mode
+      # These settings allow Pulsar to work with only one bookie instance
+      PULSAR_STANDALONE_USE_ZOOKEEPER: "1"
+      PULSAR_PREFIX_managedLedgerDefaultEnsembleSize: "1"
+      PULSAR_PREFIX_managedLedgerDefaultWriteQuorum: "1"
+      PULSAR_PREFIX_managedLedgerDefaultAckQuorum: "1"
     volumes:
       - effectful-pulsardata:/pulsar/data  # Named volume for message persistence
     healthcheck:

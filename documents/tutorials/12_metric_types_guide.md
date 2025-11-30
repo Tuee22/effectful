@@ -2,7 +2,7 @@
 
 **Choose the right metric type for your use case.**
 
-> **Core Doctrine**: For complete metrics philosophy, see [observability_doctrine.md](../core/observability_doctrine.md)
+> **Core Doctrine**: For complete metrics philosophy, see [observability_doctrine.md](../engineering/observability.md)
 
 > **Tutorial**: For quickstart, see [11_metrics_quickstart.md](./11_metrics_quickstart.md)
 
@@ -758,7 +758,7 @@ size_bytes{quantile="0.95"}
 - [Metrics Quickstart](./11_metrics_quickstart.md) - Getting started guide
 - [Prometheus Setup](./13_prometheus_setup.md) - Docker integration
 - [Alert Rules](./14_alert_rules.md) - Creating alerts
-- [Observability Doctrine](../core/observability_doctrine.md) - Metrics philosophy
+- [Observability](../engineering/observability.md) - Metrics philosophy
 
 ---
 

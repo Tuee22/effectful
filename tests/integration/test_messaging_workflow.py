@@ -37,11 +37,11 @@ class TestMessagingWorkflowIntegration:
     @pytest.mark.asyncio
     async def test_publish_message_workflow(
         self,
-        pulsar_producer: PulsarMessageProducer,
-        pulsar_consumer: PulsarMessageConsumer,
+        clean_pulsar: tuple[PulsarMessageProducer, PulsarMessageConsumer],
         mocker: MockerFixture,
     ) -> None:
         """Workflow publishes message to real Pulsar."""
+        pulsar_producer, pulsar_consumer = clean_pulsar
         topic = f"test-topic-{uuid4()}"
         payload = b'{"event": "test_event"}'
 
@@ -84,11 +84,11 @@ class TestMessagingWorkflowIntegration:
     @pytest.mark.asyncio
     async def test_publish_and_consume_workflow(
         self,
-        pulsar_producer: PulsarMessageProducer,
-        pulsar_consumer: PulsarMessageConsumer,
+        clean_pulsar: tuple[PulsarMessageProducer, PulsarMessageConsumer],
         mocker: MockerFixture,
     ) -> None:
         """Workflow publishes and consumes message from real Pulsar."""
+        pulsar_producer, pulsar_consumer = clean_pulsar
         topic = f"test-topic-{uuid4()}"
         subscription = f"{topic}/test-sub-{uuid4()}"
         payload = b'{"event": "roundtrip_test"}'
@@ -152,11 +152,11 @@ class TestMessagingWorkflowIntegration:
     @pytest.mark.asyncio
     async def test_consume_timeout_workflow(
         self,
-        pulsar_producer: PulsarMessageProducer,
-        pulsar_consumer: PulsarMessageConsumer,
+        clean_pulsar: tuple[PulsarMessageProducer, PulsarMessageConsumer],
         mocker: MockerFixture,
     ) -> None:
         """Workflow handles consume timeout gracefully."""
+        pulsar_producer, pulsar_consumer = clean_pulsar
         # Use unique subscription with no messages
         subscription = f"empty-topic-{uuid4()}/test-sub-{uuid4()}"
 
@@ -205,11 +205,11 @@ class TestMessagingWorkflowIntegration:
     @pytest.mark.asyncio
     async def test_negative_acknowledge_workflow(
         self,
-        pulsar_producer: PulsarMessageProducer,
-        pulsar_consumer: PulsarMessageConsumer,
+        clean_pulsar: tuple[PulsarMessageProducer, PulsarMessageConsumer],
         mocker: MockerFixture,
     ) -> None:
         """Workflow negative acknowledges message for redelivery."""
+        pulsar_producer, pulsar_consumer = clean_pulsar
         topic = f"test-topic-{uuid4()}"
         subscription = f"{topic}/test-sub-{uuid4()}"
         payload = b'{"event": "nack_test"}'
@@ -265,11 +265,11 @@ class TestMessagingWorkflowIntegration:
     @pytest.mark.asyncio
     async def test_publish_with_properties_workflow(
         self,
-        pulsar_producer: PulsarMessageProducer,
-        pulsar_consumer: PulsarMessageConsumer,
+        clean_pulsar: tuple[PulsarMessageProducer, PulsarMessageConsumer],
         mocker: MockerFixture,
     ) -> None:
         """Workflow publishes and receives message with properties."""
+        pulsar_producer, pulsar_consumer = clean_pulsar
         topic = f"test-topic-{uuid4()}"
         subscription = f"{topic}/test-sub-{uuid4()}"
         payload = b'{"event": "properties_test"}'
@@ -328,11 +328,11 @@ class TestMessagingWorkflowIntegration:
     @pytest.mark.asyncio
     async def test_multi_message_workflow(
         self,
-        pulsar_producer: PulsarMessageProducer,
-        pulsar_consumer: PulsarMessageConsumer,
+        clean_pulsar: tuple[PulsarMessageProducer, PulsarMessageConsumer],
         mocker: MockerFixture,
     ) -> None:
         """Workflow publishes and consumes multiple messages."""
+        pulsar_producer, pulsar_consumer = clean_pulsar
         topic = f"test-topic-{uuid4()}"
         subscription = f"{topic}/test-sub-{uuid4()}"
         messages = [f"message-{i}".encode() for i in range(3)]

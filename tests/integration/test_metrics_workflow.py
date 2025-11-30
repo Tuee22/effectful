@@ -435,8 +435,11 @@ class TestMetricsWorkflowIntegration:
         match result:
             case Ok(success):
                 assert success is True
-                # Verify metrics are cleared
-                assert len(metrics_collector.counters["requests_total"]) == 0
+                # Verify metrics are cleared (PMap is empty after reset)
+                assert len(metrics_collector.counters) == 0
+                assert len(metrics_collector.gauges) == 0
+                assert len(metrics_collector.histograms) == 0
+                assert len(metrics_collector.summaries) == 0
             case Err(error):
                 pytest.fail(f"Expected Ok, got Err({error})")
 

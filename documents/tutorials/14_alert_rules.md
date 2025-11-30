@@ -2,7 +2,7 @@
 
 **Write actionable Prometheus alert rules for effectful applications.**
 
-> **Core Doctrine**: For alerting philosophy, see [alerting_policy.md](../core/alerting_policy.md)
+> **Core Doctrine**: For alerting philosophy, see [alerting_policy.md](../engineering/alerting.md)
 
 > **Tutorial**: For Prometheus setup, see [13_prometheus_setup.md](./13_prometheus_setup.md)
 
@@ -743,7 +743,7 @@ curl http://localhost:9090/api/v1/alerts | jq
 
 ## See Also
 
-- [Alerting Policy](../core/alerting_policy.md) - Alert philosophy and severity levels
+- [Alerting](../engineering/alerting.md) - Alert philosophy and severity levels
 - [Prometheus Setup](./13_prometheus_setup.md) - Docker integration
 - [Grafana Dashboards](./15_grafana_dashboards.md) - Visualize metrics
 - [Metrics Quickstart](./11_metrics_quickstart.md) - Getting started

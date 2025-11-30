@@ -347,7 +347,7 @@ PROMETHEUS_URL=http://prometheus:9090
 
 **Data Persistence**: Named volume `prometheusdata`.
 
-**See Also**: `documents/core/observability_doctrine.md` for metrics philosophy.
+**See Also**: `documents/engineering/observability.md` for metrics philosophy.
 
 ### Grafana Container
 
@@ -429,9 +429,9 @@ docker compose -f docker/docker-compose.yml ps
 
 - **Command Reference**: See `CLAUDE.md` for complete command table
 - **Development Guide**: See `CLAUDE.md` for complete development reference
-- **Type Safety**: See `documents/core/type_safety_doctrine.md` for eight type safety rules
-- **Testing**: See `documents/core/testing_doctrine.md` for test organization and antipatterns
-- **Observability**: See `documents/core/observability_doctrine.md` for Prometheus/Grafana integration
+- **Type Safety**: See `documents/engineering/type_safety.md` for eight type safety rules
+- **Testing**: See `documents/engineering/testing.md` for test organization and antipatterns
+- **Observability**: See `documents/engineering/observability.md` for Prometheus/Grafana integration
 
 ---
 

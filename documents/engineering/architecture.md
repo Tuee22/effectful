@@ -16,7 +16,7 @@ We achieve this through:
 3. **Immutability** - Eliminate temporal coupling and race conditions
 4. **Exhaustive Matching** - Type checker enforces handling all cases
 
-For detailed type safety patterns, see `documents/core/type_safety_doctrine.md`.
+For detailed type safety patterns, see `documents/engineering/type_safety.md`.
 
 ## 5-Layer Architecture
 
@@ -546,9 +546,9 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, None]:
 
 ## Related Documentation
 
-- **Type Safety Doctrine**: `documents/core/type_safety_doctrine.md`
-- **Testing Doctrine**: `documents/core/testing_doctrine.md` (SSoT for all testing)
-- **Observability Doctrine**: `documents/core/observability_doctrine.md` (SSoT for metrics, monitoring, and alerting)
+- **Type Safety**: `documents/engineering/type_safety.md`
+- **Testing**: `documents/engineering/testing.md` (SSoT for all testing)
+- **Observability**: `documents/engineering/observability.md` (SSoT for metrics, monitoring, and alerting)
 - **Test Suite Audit**: `documents/testing/test_suite_audit.md`
 - **API Reference**: `documents/api/`
 

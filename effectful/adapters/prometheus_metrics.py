@@ -29,7 +29,7 @@ from effectful.domain.metrics_result import (
 from effectful.observability import MetricsRegistry
 
 
-@dataclass
+@dataclass(frozen=True)
 class PrometheusMetricsCollector:
     """Prometheus metrics collector for production use.
 
@@ -65,46 +65,53 @@ class PrometheusMetricsCollector:
         if self._metrics_registry is not None:
             return
 
-        self._metrics_registry = metrics_registry
+        # Use object.__setattr__ to set field on frozen dataclass
+        object.__setattr__(self, '_metrics_registry', metrics_registry)
 
         # Register counters
-        for counter_def in metrics_registry.counters:
-            self._counters[counter_def.name] = Counter(
+        self._counters.update({
+            counter_def.name: Counter(
                 name=counter_def.name,
                 documentation=counter_def.help_text,
                 labelnames=counter_def.label_names,
                 registry=self.registry,
             )
+            for counter_def in metrics_registry.counters
+        })
 
         # Register gauges
-        for gauge_def in metrics_registry.gauges:
-            self._gauges[gauge_def.name] = Gauge(
+        self._gauges.update({
+            gauge_def.name: Gauge(
                 name=gauge_def.name,
                 documentation=gauge_def.help_text,
                 labelnames=gauge_def.label_names,
                 registry=self.registry,
             )
+            for gauge_def in metrics_registry.gauges
+        })
 
         # Register histograms
-        for histogram_def in metrics_registry.histograms:
-            self._histograms[histogram_def.name] = Histogram(
+        self._histograms.update({
+            histogram_def.name: Histogram(
                 name=histogram_def.name,
                 documentation=histogram_def.help_text,
                 labelnames=histogram_def.label_names,
                 buckets=histogram_def.buckets,
                 registry=self.registry,
             )
+            for histogram_def in metrics_registry.histograms
+        })
 
         # Register summaries
-        for summary_def in metrics_registry.summaries:
-            # Convert quantiles tuple to dict for prometheus_client
-            quantiles_dict = {q: 0.01 for q in summary_def.quantiles}
-            self._summaries[summary_def.name] = Summary(
+        self._summaries.update({
+            summary_def.name: Summary(
                 name=summary_def.name,
                 documentation=summary_def.help_text,
                 labelnames=summary_def.label_names,
                 registry=self.registry,
             )
+            for summary_def in metrics_registry.summaries
+        })
 
     async def increment_counter(
         self,

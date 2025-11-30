@@ -1,4 +1,4 @@
-# Observability Doctrine
+# Observability
 
 **effectful** - Pure functional observability through type-safe metrics effects.
 
@@ -689,18 +689,18 @@ async def test_metrics_workflow() -> None:
 
 > **Core Doctrine**: For purity and effects as data, see [purity.md](./purity.md)
 
-> **Core Doctrine**: For type safety patterns, see [type_safety_doctrine.md](./type_safety_doctrine.md)
+> **Core Doctrine**: For type safety patterns, see [type_safety_doctrine.md](./type_safety.md)
 
-> **Core Doctrine**: For testing strategies, see [testing_doctrine.md](./testing_doctrine.md)
+> **Core Doctrine**: For testing strategies, see [testing_doctrine.md](./testing.md)
 
-> **Core Doctrine**: For Docker integration, see [docker_doctrine.md](./docker_doctrine.md)
+> **Core Doctrine**: For Docker integration, see [docker_doctrine.md](./docker_workflow.md)
 
 ---
 
 ## See Also
 
 - [Monitoring Standards](./monitoring_standards.md) - Metric naming conventions and labeling best practices
-- [Alerting Policy](./alerting_policy.md) - Alert rules philosophy and severity levels
+- [Alerting](./alerting.md) - Alert rules philosophy and severity levels
 - [Metrics API Reference](../api/metrics.md) - Complete metrics effects API
 - [Metrics Quickstart](../tutorials/11_metrics_quickstart.md) - Get started in 15 minutes
 

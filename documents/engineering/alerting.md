@@ -1,4 +1,4 @@
-# Alerting Policy
+# Alerting
 
 **effectful** - Alert rules, severity levels, and Prometheus Alertmanager integration.
 
@@ -595,15 +595,15 @@ Follow consistent naming for discoverability:
 
 ## Cross-References
 
-> **Core Doctrine**: For observability architecture, see [observability_doctrine.md](./observability_doctrine.md)
+> **Core Doctrine**: For observability architecture, see [observability_doctrine.md](./observability.md)
 
-> **Core Doctrine**: For testing strategies, see [testing_doctrine.md](./testing_doctrine.md)
+> **Core Doctrine**: For testing strategies, see [testing_doctrine.md](./testing.md)
 
 ---
 
 ## See Also
 
-- [Observability Doctrine](./observability_doctrine.md) - Metrics philosophy and architecture
+- [Observability](./observability.md) - Metrics philosophy and architecture
 - [Monitoring Standards](./monitoring_standards.md) - Metric naming and labeling
 - [Alert Rules Tutorial](../tutorials/14_alert_rules.md) - Writing Prometheus alert rules
 - [Grafana Dashboards](../tutorials/15_grafana_dashboards.md) - Visualizing metrics

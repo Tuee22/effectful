@@ -553,8 +553,8 @@ When refactoring existing code to pure patterns:
 
 ## Related Documentation
 
-- **Purity Doctrine**: `documents/core/purity.md` - Core purity rules
-- **Type Safety Doctrine**: `documents/core/type_safety_doctrine.md`
+- **Purity**: `documents/engineering/purity.md` - Core purity rules
+- **Type Safety**: `documents/engineering/type_safety.md`
 - **Trampoline Module**: `effectful/algebraic/trampoline.py`
 
 ---
