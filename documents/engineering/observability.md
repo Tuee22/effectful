@@ -689,11 +689,11 @@ async def test_metrics_workflow() -> None:
 
 > **Core Doctrine**: For purity and effects as data, see [purity.md](./purity.md)
 
-> **Core Doctrine**: For type safety patterns, see [type_safety_doctrine.md](./type-safety-enforcement.md)
+> **Core Doctrine**: For type safety patterns, see [type_safety_enforcement.md](./type_safety_enforcement.md)
 
-> **Core Doctrine**: For testing strategies, see [testing_doctrine.md](./testing.md)
+> **Core Doctrine**: For testing strategies, see [testing.md](./testing.md)
 
-> **Core Doctrine**: For Docker integration, see [docker_doctrine.md](./docker_workflow.md)
+> **Core Doctrine**: For Docker integration, see [docker_workflow.md](./docker_workflow.md)
 
 ---
 
@@ -707,4 +707,4 @@ async def test_metrics_workflow() -> None:
 ---
 
 **Status**: Single Source of Truth (SSoT) for observability architecture
-**Last Updated**: 2025-01-28
+**Last Updated**: 2025-11-30

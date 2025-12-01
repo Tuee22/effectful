@@ -1,5 +1,7 @@
 # Docker Development Doctrine
 
+> **Single Source of Truth (SSoT)** for all Docker development workflow and environment setup in effectful.
+
 ## Core Principle
 
 **ALL development commands MUST run inside the Docker container. NEVER run commands directly on the host machine.**
@@ -425,14 +427,16 @@ docker compose -f docker/docker-compose.yml ps
 # Should show: effectful, postgres, redis, minio, pulsar, prometheus, grafana all "Up"
 ```
 
-## References
+## See Also
 
-- **Command Reference**: See `CLAUDE.md` for complete command table
-- **Development Guide**: See `CLAUDE.md` for complete development reference
-- **Type Safety**: See `documents/engineering/type-safety-enforcement.md` for eight type safety rules
-- **Testing**: See `documents/engineering/testing.md` for test organization and antipatterns
-- **Observability**: See `documents/engineering/observability.md` for Prometheus/Grafana integration
+- [Command Reference](command_reference.md) - Complete Docker command table
+- [Type Safety Enforcement](type_safety_enforcement.md) - Eight type safety doctrines
+- [Testing](testing.md) - Test organization and 22 anti-patterns
+- [Observability](observability.md) - Prometheus/Grafana integration
+- [Development Workflow](development_workflow.md) - Daily development loop
+- [Forbidden Patterns](forbidden_patterns.md) - Docker anti-patterns
 
 ---
 
-**Remember**: If you're typing `poetry run` or `pytest` without the Docker prefix, you're doing it wrong.
+**Last Updated**: 2025-11-30
+**Referenced by**: CLAUDE.md, command_reference.md, testing.md, development_workflow.md, forbidden_patterns.md

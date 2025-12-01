@@ -8,7 +8,7 @@ This document provides **real-world patterns** for writing effect programs using
 
 **Core Principle**: Programs are pure generators that yield effects and receive typed results.
 
-For complete purity rules and functional programming patterns, see [Purity](purity.md) and [Purity Patterns](purity_patterns.md).
+For complete purity rules and functional programming patterns, see [Purity](purity.md).
 
 ## Pattern 1: Generator-Based DSL
 
@@ -54,7 +54,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, bool]:
 - **Type narrowing**: Use `isinstance()` checks before using result
 - **Return value**: Any type (bool, str, ADT, etc.)
 
-**See**: [Type Safety](type-safety-enforcement.md) - Doctrine 6: Type Narrowing for Union Types.
+**See**: [Type Safety](type_safety_enforcement.md) - Doctrine 6: Type Narrowing for Union Types.
 
 ---
 
@@ -86,7 +86,7 @@ async def execute() -> None:
 
 **Rationale**: Fail-fast prevents cascading failures and inconsistent state.
 
-**See**: [Type Safety](type-safety-enforcement.md) - Doctrine 3: Result Type for Error Handling.
+**See**: [Type Safety](type_safety_enforcement.md) - Doctrine 3: Result Type for Error Handling.
 
 ---
 
@@ -134,7 +134,7 @@ def greet_with_caching(user_id: UUID) -> Generator[AllEffects, EffectResult, str
 
 **Rationale**: Encourages modularity and code reuse.
 
-**See**: [Purity Patterns](purity_patterns.md) for functional composition patterns.
+**See**: [Purity](purity.md) for functional composition patterns.
 
 ---
 
@@ -245,7 +245,7 @@ def handle_user_lookup(user_id: UUID) -> Generator[AllEffects, EffectResult, str
 
 **Rationale**: Prevents forgotten error cases, ensures all paths handled.
 
-**See**: [Type Safety](type-safety-enforcement.md) - Doctrine 5: Exhaustive Pattern Matching.
+**See**: [Type Safety](type_safety_enforcement.md) - Doctrine 5: Exhaustive Pattern Matching.
 
 ---
 
@@ -313,13 +313,12 @@ def save_message(user_id: UUID, text: str) -> Generator[AllEffects, EffectResult
 
 ## See Also
 
-- [Purity](purity.md) - Six purity doctrines
-- [Purity Patterns](purity_patterns.md) - Functional programming patterns
-- [Type Safety](type-safety-enforcement.md) - Eight type safety doctrines
+- [Purity](purity.md) - Six purity doctrines and functional programming patterns
+- [Type Safety](type_safety_enforcement.md) - Eight type safety doctrines
 - [Forbidden Patterns](forbidden_patterns.md) - Anti-patterns to avoid
 - [Observability](observability.md) - Metrics and monitoring
 
 ---
 
 **Last Updated**: 2025-11-29
-**Referenced by**: CLAUDE.md, purity.md, type-safety-enforcement.md
+**Referenced by**: CLAUDE.md, purity.md, type_safety_enforcement.md

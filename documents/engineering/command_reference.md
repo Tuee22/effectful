@@ -92,7 +92,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest > /
 
 - [Docker Workflow](docker_workflow.md) - Complete Docker development policy
 - [Testing](testing.md) - Testing standards and anti-patterns
-- [Code Quality](type-safety-enforcement.md) - check-code workflow and MyPy strict enforcement
+- [Code Quality](type_safety_enforcement.md) - check-code workflow and MyPy strict enforcement
 
 ---
 

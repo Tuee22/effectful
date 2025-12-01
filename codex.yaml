@@ -1,0 +1,172 @@
+globals:
+  policies:
+    - "All development commands run via Docker: `docker compose -f docker/docker-compose.yml exec effectful poetry run <command>`"
+    - "Zero escape hatches: forbid Any, cast(), and `# type: ignore` anywhere (code, tests, docs)."
+    - "Favor immutable design: frozen dataclasses, pure programs, effects-as-data, exhaustive pattern matching, Result-based errors."
+    - "No git commits/pushes by agents; leave changes uncommitted."
+    - "Respect SSoT ordering: document SSoT statements override others; README navigation breaks ties."
+  quality_gates:
+    - "Run `check-code` (Black + mypy strict) before tests."
+    - "Run pytest inside Docker; no skipped tests; coverage threshold ≥ 45% (adapters excluded)."
+  command_prefix: "docker compose -f docker/docker-compose.yml exec effectful poetry run"
+
+agents:
+  - name: architecture
+    source: documents/engineering/architecture.md
+    intent: Enforce 5-layer flow (Application → Runner → Composite → Specialized Interpreters → Infra) with effects as pure data and fail-fast Result propagation.
+    enforce:
+      - Programs yield effects only; no direct infra calls.
+      - Composite routes every effect in AllEffects; keep AllEffects/EffectResult unions updated.
+      - Interpreters return Ok/Err and remain fail-fast; immutable dataclasses.
+      - Planned features (parallel, retries, timeouts, logging) not assumed delivered.
+    suggest:
+      - Add interpreter per new effect type and register in Composite.
+      - Use exhaustive match on Result at boundaries; propagate errors immediately.
+
+  - name: type_safety_enforcement
+    source: documents/engineering/type_safety_enforcement.md
+    intent: Uphold zero-tolerance type safety with strict mypy and explicit ADTs.
+    enforce:
+      - No Any/cast/type:ignore; ADTs over Optional; PEP 695 aliases.
+      - Frozen dataclasses; exhaustive pattern matching with type narrowing.
+      - check-code must pass; coverage ≥ 45%; no skipped tests.
+    suggest:
+      - Replace Optional returns with ADT unions; model errors via Result.
+      - Reject PRs with escape hatches or missing type hints.
+
+  - name: purity
+    source: documents/engineering/purity.md
+    intent: Keep programs pure descriptions; interpreters/adapters do all I/O.
+    enforce:
+      - No for/while loops except trampoline driver; prefer comprehensions/match expressions.
+      - Effects-as-data; no direct infra access from programs.
+      - Immutability by default; yield-don’t-call; trampoline for recursion.
+      - Comprehensions must be pure (no I/O/mutation/logging inside).
+    suggest:
+      - Refactor loops to comprehensions or trampolines; isolate impure work in interpreters.
+
+  - name: testing
+    source: documents/engineering/testing.md
+    intent: Testing finds problems; Docker-only execution with Result matchers and no skips.
+    enforce:
+      - Run pytest via Docker; capture full output to /tmp to avoid truncation.
+      - Zero skipped tests; assertion present; cleanup fixtures before/after for stateful infra.
+      - Use pytest-mock AsyncMock(spec=Protocol) for fakes; respect test pyramid.
+    suggest:
+      - Use effectful.testing matchers (assert_ok, assert_err, etc.) or exhaustive match.
+      - Reject local pytest runs or truncated outputs.
+
+  - name: docker_workflow
+    source: documents/engineering/docker_workflow.md
+    intent: All development in Docker; forbid host tooling and virtualenvs.
+    enforce:
+      - Commands prefixed with Docker/Poetry wrapper; no host poetry/pytest/mypy/pip/.venv.
+      - Use named volumes; ensure services up for integration tests.
+      - Agents must not perform git commit/push.
+    suggest:
+      - Provide docker-prefixed equivalents for any command; remove stray .venv.
+
+  - name: development_workflow
+    source: documents/engineering/development_workflow.md
+    intent: Daily loop and procedures for new effects/domain models with user-owned commits.
+    enforce:
+      - Daily sequence: up containers → check-code → pytest inside Docker.
+      - Follow 9-step effect and 5-step domain checklists; update unions/interpreters/docs.
+      - Git commits/pushes only by user.
+    suggest:
+      - Add unit + integration tests for new effects; refresh docs/API/tutorials as needed.
+
+  - name: command_reference
+    source: documents/engineering/command_reference.md
+    intent: Canonical commands and output-handling standards.
+    enforce:
+      - Use documented docker-prefixed commands for checks/tests/builds.
+      - Capture test output to file to avoid truncation; analyze full logs.
+    suggest:
+      - Reference test stats context when estimating runtime; prefer tabled commands.
+
+  - name: configuration
+    source: documents/engineering/configuration.md
+    intent: SSoT for env vars and compose services; highlight prod hardening.
+    enforce:
+      - Use documented env vars for Postgres/Redis/MinIO/Pulsar.
+      - Compose services/volumes as specified; no config files outside env vars.
+    suggest:
+      - Remind on production requirements: TLS, secrets management, pooling, resource limits.
+
+  - name: documentation_standards
+    source: documents/engineering/documentation_standards.md
+    intent: Enforce SSoT/DRY, naming, style, safe Mermaid subset, and type-safe examples.
+    enforce:
+      - SSoT markers; avoid duplication beyond brief summaries with links.
+      - Naming: lowercase_with_underscores; imperative/active voice.
+      - Mermaid safe subset: no dotted lines, subgraphs, or note-over; TB orientation when long.
+      - Code examples follow zero escape-hatch policy.
+    suggest:
+      - Run tools/verify_links.py after refactors; use provided templates; prefer links over copies.
+
+  - name: effect_patterns
+    source: documents/engineering/effect_patterns.md
+    intent: Promote generator DSL patterns, fail-fast handling, composition, metrics that don’t break business logic.
+    enforce:
+      - Use yield/yield from with type narrowing and exhaustive handling.
+      - Do not ignore effect results; no direct infra calls.
+      - Metrics errors must not fail business flow; handle ADTs explicitly.
+    suggest:
+      - Factor reusable sub-programs; pattern-match results; log metric failures without failing logic.
+
+  - name: forbidden_patterns
+    source: documents/engineering/forbidden_patterns.md
+    intent: Navigate anti-patterns and route to SSoTs for fixes.
+    enforce:
+      - Reject Any/cast/type:ignore, mutable domain models, Optional for domain logic, direct infra calls, skipped tests, local tooling.
+    suggest:
+      - Use quick scans (grep for Any/Optional in domain, unfrozen dataclasses, pytest.skip) and remediate per linked SSoT.
+
+  - name: observability
+    source: documents/engineering/observability.md
+    intent: Metrics as pure effects with immutable registries; interpreter handles I/O; Prometheus/Grafana integration.
+    enforce:
+      - Registries are frozen; metric names/labels validated; interpreter performs recording.
+      - Metric recording failures return ADTs; business logic should not fail on metrics errors.
+    suggest:
+      - Pre-register metrics; keep labels schema-aligned; keep metrics pure and typed.
+
+  - name: monitoring_standards
+    source: documents/engineering/monitoring_standards.md
+    intent: Standardize metric naming/labels/cardinality and default framework metrics.
+    enforce:
+      - Name pattern: namespace_subsystem_metric_unit; unit suffixes; _total for counters.
+      - Labels bounded, lowercase, snake_case; cardinality product < 10k.
+      - Registry pre-registration; sensible histogram buckets.
+    suggest:
+      - Use framework defaults for effect/program metrics; avoid dynamic names/timestamps/user IDs as labels.
+
+  - name: alerting
+    source: documents/engineering/alerting.md
+    intent: Alerts-as-code with actionable severities, runbooks, routing, and testing.
+    enforce:
+      - Every critical/warning alert has runbook_url; severity dictates routing; alerts live in VCS.
+      - Use grouping/throttling; SLO-based thresholds; validate PromQL.
+    suggest:
+      - Provide action items per alert; test alert expressions; align alert/component labels with monitoring standards.
+
+  - name: engineering_readme_meta
+    source: documents/engineering/README.md
+    intent: Maintain navigation, SSoT precedence, and core philosophy (“make invalid states unrepresentable”).
+    enforce:
+      - Quick navigation accuracy; SSoT documents override others; resolve conflicts per README guidance.
+    suggest:
+      - Update referenced-by lists and timestamps when standards change.
+
+assembler:
+  name: codex_assembler
+  intent: Merge agent guidance into a single authoritative view while honoring SSoT precedence.
+  process:
+    - Collect all agent enforce/suggest items.
+    - Resolve conflicts: engineering_readme_meta > specific SSoTs > navigation hubs.
+    - Deduplicate overlapping global rules (e.g., Docker-only, zero escape hatches).
+    - Emit final codex.yaml sections with globals, agents, and assembler notes.
+  validation:
+    - YAML must load (`python -c "import yaml; yaml.safe_load(open('codex.yaml'))"`).
+    - All commands use docker-prefixed pattern; paths are repo-relative.

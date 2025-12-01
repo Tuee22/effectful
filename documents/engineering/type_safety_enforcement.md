@@ -475,6 +475,102 @@ def my_program() -> WSProgram:
 
 ---
 
+## Anti-Pattern Detection
+
+### Automated Detection
+
+**MyPy strict mode** catches:
+- Any types (`disallow_any_explicit = true`)
+- Missing type annotations
+- Unhandled union cases
+- Type narrowing violations
+- Mutable default arguments
+- Incomplete pattern matches
+
+**pytest** catches:
+- Missing tests (coverage < 45%)
+- Skipped tests (forbidden - pytest.skip() not allowed)
+- Test failures
+- Assertion errors
+
+**Black** catches:
+- Formatting inconsistencies
+- Line length violations (> 100 chars)
+- Quote style inconsistencies
+
+### Manual Detection
+
+**Code review** catches:
+- Mutable domain models (missing `frozen=True`)
+- Optional instead of ADTs (semantic issue)
+- Exceptions instead of Result (control flow anti-pattern)
+- Imperative effect execution (architectural violation)
+- Immutability library usage in adapters (over-engineering)
+
+**Grep patterns** for static analysis:
+```bash
+# Find mutable dataclasses
+grep -r "@dataclass" effectful/ | grep -v "frozen=True"
+
+# Find Optional usage in domain
+grep -r "Optional\[" effectful/domain/
+
+# Find exception raising in business logic
+grep -r "raise " effectful/programs/ effectful/domain/
+
+# Find Any types
+grep -r "Any" effectful/ tests/
+```
+
+### Remediation
+
+**When anti-pattern detected**:
+1. Stop immediately - do not proceed with broken code
+2. Identify which doctrine is violated (reference section above)
+3. Consult relevant SSoT document:
+   - Type safety → this document
+   - Purity → [purity.md](purity.md)
+   - Testing → [testing.md](testing.md)
+   - Docker → [docker_workflow.md](docker_workflow.md)
+4. Refactor to correct pattern (see examples in relevant sections)
+5. Add test to prevent regression
+6. Verify fix with `poetry run check-code`
+
+**Detection workflow**:
+```mermaid
+flowchart TB
+    Code[Write Code]
+    Auto[Automated Detection]
+    MyPy{MyPy Pass?}
+    Pytest{Tests Pass?}
+    Coverage{Coverage ≥ 45%?}
+    Manual[Code Review]
+    Violation{Violation Found?}
+    Identify[Identify Doctrine]
+    Consult[Consult SSoT]
+    Fix[Refactor Code]
+    Test[Add Regression Test]
+    Success[Ready for Review]
+
+    Code --> Auto
+    Auto --> MyPy
+    MyPy -->|Fail| Fix
+    MyPy -->|Pass| Pytest
+    Pytest -->|Fail| Fix
+    Pytest -->|Pass| Coverage
+    Coverage -->|Fail| Fix
+    Coverage -->|Pass| Manual
+    Manual --> Violation
+    Violation -->|Yes| Identify
+    Violation -->|No| Success
+    Identify --> Consult
+    Consult --> Fix
+    Fix --> Test
+    Test --> Auto
+```
+
+---
+
 ## MyPy Strict Configuration
 
 **pyproject.toml settings** (30+ strict options enabled):
@@ -646,5 +742,4 @@ Black automatically fixes these, but check-code will fail if code isn't formatte
 ---
 
 **Last Updated:** 2025-11-30
-**Supersedes:** type-safety-enforcement.md, type-safety-enforcement.md (to be deleted)
-**Referenced by:** CLAUDE.md, development_workflow.md, CONTRIBUTING.md, testing.md
+**Referenced by:** CLAUDE.md, development_workflow.md, CONTRIBUTING.md, testing.md, architecture.md, forbidden_patterns.md, docker_workflow.md

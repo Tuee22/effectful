@@ -29,11 +29,11 @@
 ## File Organization Standards
 
 ### Naming Conventions
-- Lowercase with hyphens: `type-safety-enforcement.md`, not `TypeSafety.md`
-- Descriptive names: `docker-workflow.md`, not `docker.md`
+- Lowercase with underscores: `type_safety_enforcement.md`, not `TypeSafety.md` or `type-safety-enforcement.md`
+- Descriptive names: `docker_workflow.md`, not `docker.md`
 - Avoid abbreviations: `configuration.md`, not `config.md`
 - No version numbers in filenames: use git for versioning
-- Use full descriptive names: `documentation-standards.md`, not `docs.md`
+- Use full descriptive names: `documentation_standards.md`, not `docs.md`
 
 ### Directory Structure
 ```
@@ -460,7 +460,7 @@ If your diagram requires features not in the safe subset:
 **Relative paths preferred:**
 ```markdown
 # From documents/tutorials/01_quickstart.md
-See [Type Safety Enforcement](../engineering/type-safety-enforcement.md)
+See [Type Safety Enforcement](../engineering/type_safety_enforcement.md)
 
 # From documents/engineering/purity.md
 See [Purity Patterns](purity-patterns.md)
@@ -554,7 +554,7 @@ Add explicit SSoT marker at the top:
 
 **Quick reminder**: Zero `Any`, `cast()`, or `type: ignore` allowed - NO exceptions.
 
-**See [Type Safety Enforcement](../engineering/type-safety-enforcement.md) for complete doctrines.**
+**See [Type Safety Enforcement](../engineering/type_safety_enforcement.md) for complete doctrines.**
 ```
 
 ### Forbidden Duplication
@@ -771,17 +771,17 @@ docs: add documentation standards
 
 ---
 
-## Related Documentation
+## See Also
 
-- **Type Safety Enforcement:** [type-safety-enforcement.md](type-safety-enforcement.md) - Zero-tolerance policy
-- **Architecture:** [architecture.md](architecture.md) - Overall system design
-- **Testing:** [testing.md](testing.md) - Test documentation practices
-- **Command Reference:** [command-reference.md](command-reference.md) - All Docker commands
-- **Contributing:** [../CONTRIBUTING.md](../CONTRIBUTING.md) - How to contribute
+- [Type Safety Enforcement](type_safety_enforcement.md) - Zero-tolerance policy
+- [Architecture](architecture.md) - Overall system design
+- [Testing](testing.md) - Test documentation practices
+- [Command Reference](command_reference.md) - All Docker commands
+- [Purity](purity.md) - Six purity doctrines
+- [Forbidden Patterns](forbidden_patterns.md) - Anti-patterns navigation hub
+- [CONTRIBUTING](../CONTRIBUTING.md) - How to contribute
 
 ---
 
 **Last Updated**: 2025-11-30
-**Supersedes**: documentation-standards.md (to be deleted)
-**Single Source of Truth (SSoT)** for all documentation practices in Effectful
-**Referenced by**: engineering/README.md, CONTRIBUTING.md, all engineering standards
+**Referenced by**: README.md, CONTRIBUTING.md, type_safety_enforcement.md, purity.md, testing.md, docker_workflow.md, forbidden_patterns.md

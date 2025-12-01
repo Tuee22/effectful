@@ -384,7 +384,7 @@ route:
 Alerts flow through Prometheus → Alertmanager → Notification Channels:
 
 ```mermaid
-flowchart LR
+flowchart TB
     Prometheus[Prometheus Server<br/>Evaluates alert rules]
     Alertmanager[Alertmanager<br/>Routes and groups alerts]
     PagerDuty[PagerDuty<br/>Critical alerts]
@@ -595,9 +595,9 @@ Follow consistent naming for discoverability:
 
 ## Cross-References
 
-> **Core Doctrine**: For observability architecture, see [observability_doctrine.md](./observability.md)
+> **Core Doctrine**: For observability architecture, see [observability.md](./observability.md)
 
-> **Core Doctrine**: For testing strategies, see [testing_doctrine.md](./testing.md)
+> **Core Doctrine**: For testing strategies, see [testing.md](./testing.md)
 
 ---
 

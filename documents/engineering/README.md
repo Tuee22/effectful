@@ -11,11 +11,11 @@ The **engineering/** directory contains **effectful-specific engineering standar
 | What do you need? | Document to read |
 |-------------------|------------------|
 | Understand system design | [Architecture](architecture.md) |
-| Write type-safe code | [Type Safety](type-safety-enforcement.md) |
-| Pure functional patterns | [Purity](purity.md) + [Purity Patterns](purity_patterns.md) |
+| Write type-safe code | [Type Safety](type_safety_enforcement.md) |
+| Pure functional patterns | [Purity](purity.md) |
 | Test programs correctly | [Testing](testing.md) |
 | Set up development environment | [Docker Workflow](docker_workflow.md) |
-| Run quality checks | [Code Quality](type-safety-enforcement.md) |
+| Run quality checks | [Code Quality](type_safety_enforcement.md) |
 | Add metrics/observability | [Observability](observability.md) |
 | Avoid common mistakes | [Forbidden Patterns](forbidden_patterns.md) |
 | Write documentation | [Documentation Guidelines](documentation-standards.md) |
@@ -28,7 +28,7 @@ The **engineering/** directory contains **effectful-specific engineering standar
 - Effect system design decisions
 - Why pure functional programming for Python
 
-**[Type Safety](type-safety-enforcement.md)** (425 lines)
+**[Type Safety](type_safety_enforcement.md)** (425 lines)
 - Eight type safety doctrines
 - ADTs over Optional types
 - Result type for error handling
@@ -42,7 +42,7 @@ The **engineering/** directory contains **effectful-specific engineering standar
 - Yield don't call pattern
 - Immutability by default
 
-**[Purity Patterns](purity_patterns.md)** (562 lines)
+**[Purity](purity.md)** (~1400 lines, includes all purity doctrines and functional patterns)
 - Trampoline pattern for recursion
 - Comprehensions over loops
 - Functional composition
@@ -78,7 +78,7 @@ The **engineering/** directory contains **effectful-specific engineering standar
 - Test statistics (329 tests, ~1.6s execution)
 - Output capture techniques
 
-**[Code Quality](type-safety-enforcement.md)** (200 lines)
+**[Code Quality](type_safety_enforcement.md)** (200 lines)
 - check-code workflow (Black → MyPy)
 - Universal success criteria
 - MyPy strict mode enforcement
@@ -137,7 +137,7 @@ The **engineering/** directory contains **effectful-specific engineering standar
 ### Engineering → Tutorials
 - **Engineering** defines standards and patterns (HOW)
 - **Tutorials** teach how to apply them step-by-step (LEARN)
-- Example: [Type Safety](type-safety-enforcement.md) (standard) → [tutorials/03_adts_and_results.md](../tutorials/03_adts_and_results.md) (tutorial)
+- Example: [Type Safety](type_safety_enforcement.md) (standard) → [tutorials/03_adts_and_results.md](../tutorials/03_adts_and_results.md) (tutorial)
 
 ### Engineering → API
 - **Engineering** explains architectural decisions (WHY)

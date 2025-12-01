@@ -629,9 +629,9 @@ buckets=(1024, 10240, 102400, 1048576, 10485760, 104857600)
 
 ## Cross-References
 
-> **Core Doctrine**: For observability architecture, see [observability_doctrine.md](./observability.md)
+> **Core Doctrine**: For observability architecture, see [observability.md](./observability.md)
 
-> **Core Doctrine**: For type safety patterns, see [type_safety_doctrine.md](./type-safety-enforcement.md)
+> **Core Doctrine**: For type safety patterns, see [type_safety_enforcement.md](./type_safety_enforcement.md)
 
 ---
 
@@ -645,4 +645,4 @@ buckets=(1024, 10240, 102400, 1048576, 10485760, 104857600)
 ---
 
 **Status**: Single Source of Truth (SSoT) for monitoring standards
-**Last Updated**: 2025-01-28
+**Last Updated**: 2025-11-30

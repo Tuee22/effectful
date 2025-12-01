@@ -6,7 +6,7 @@
 
 1. `docker compose -f docker/docker-compose.yml up -d`
 2. Make code changes
-3. `poetry run check-code` (see [Code Quality](type-safety-enforcement.md))
+3. `poetry run check-code` (see [Code Quality](type_safety_enforcement.md))
 4. `poetry run pytest` (see [Command Reference](command_reference.md))
 5. Leave changes uncommitted (see Git Workflow Policy below)
 
@@ -215,7 +215,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry add --group de
 
 - [Architecture](architecture.md) - 5-layer architecture design
 - [Command Reference](command_reference.md) - All Docker commands
-- [Code Quality](type-safety-enforcement.md) - check-code workflow
+- [Code Quality](type_safety_enforcement.md) - check-code workflow
 - [Testing](testing.md) - Testing standards and anti-patterns
 - [Docker Workflow](docker_workflow.md) - Complete Docker policy
 

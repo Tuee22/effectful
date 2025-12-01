@@ -3648,7 +3648,7 @@ All code changes must meet these requirements:
 
 - **Test Suite Audit:** `documents/testing/test_suite_audit.md` - Current test status and inventory
 - **Tutorial:** `documents/tutorials/04_testing_guide.md` - Step-by-step testing guide
-- **Type Safety:** `documents/engineering/type-safety-enforcement.md` - Type system enforcement
+- **Type Safety:** `documents/engineering/type_safety_enforcement.md` - Type system enforcement
 - **Purity:** `documents/engineering/purity.md` - Functional programming rules
 - **Pulsar Fixtures:** `tests/fixtures/messaging.py` - clean_pulsar fixture implementation
 - **Pulsar Adapter:** `effectful/adapters/pulsar_messaging.py` - PulsarMessageProducer/Consumer with cleanup
