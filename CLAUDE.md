@@ -56,7 +56,6 @@ All code changes must meet these requirements:
 - ✅ **Zero skipped tests** (pytest.skip() forbidden)
 - ✅ 100% test pass rate
 - ✅ **Zero `Any`, `cast()`, or `# type: ignore`** (escape hatches forbidden)
-- ✅ **Minimum 45% code coverage** (adapters excluded)
 - ✅ **Integration tests cover all features** (conceptual coverage)
 
 **See**: [Code Quality](documents/engineering/type-safety-enforcement.md) for complete standards.

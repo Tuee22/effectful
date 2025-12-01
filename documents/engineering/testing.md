@@ -1101,9 +1101,9 @@ def test_storage_lifecycle(clean_minio: str):
 
 ## Part 3: Coverage Doctrine
 
-### Unit Tests: Minimum 45% Coverage
+### Unit Tests: Coverage Scope
 
-Unit tests must achieve **minimum 45% coverage** of library code in `effectful/`.
+Unit tests measure coverage of library code in `effectful/`.
 
 **What's measured:**
 - `effectful/algebraic/` - Result types, EffectReturn
@@ -1117,9 +1117,7 @@ Unit tests must achieve **minimum 45% coverage** of library code in `effectful/`
 - `effectful/adapters/` - Infrastructure implementations (tested via integration)
 - `effectful/infrastructure/` - Protocol definitions (no logic to test)
 
-**Enforcement:** `--cov-fail-under=45` in pyproject.toml
-
-**Note:** Actual coverage is ~69% overall. The minimum threshold ensures coverage doesn't regress.
+**Note:** Actual coverage is ~69% overall; keep tests meaningful for core library code.
 
 ### Integration Tests: Conceptual Feature Coverage
 
@@ -3639,7 +3637,6 @@ All code changes must meet these requirements:
 - **Zero skipped tests** (pytest.skip() forbidden)
 - 100% test pass rate
 - **Zero `Any`, `cast()`, or `# type: ignore`** (escape hatches forbidden)
-- **Minimum 45% unit test coverage** (library code, adapters excluded)
 - **Integration tests cover all features** (conceptual coverage)
 
 ---

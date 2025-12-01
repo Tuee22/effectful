@@ -78,7 +78,7 @@ services:
       dockerfile: demo/healthhub/docker/Dockerfile
     container_name: healthhub_backend
     ports:
-      - "8850:8850"
+      - "8851:8851"
     depends_on:
       postgres:
         condition: service_healthy

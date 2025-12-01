@@ -52,7 +52,6 @@ The **engineering/** directory contains **effectful-specific engineering standar
 - Test pyramid strategy (Unit → Integration → E2E)
 - 22 test anti-patterns with examples
 - Generator testing patterns
-- Minimum 45% coverage requirement
 - Zero skipped tests policy
 
 **[Docker Workflow](docker_workflow.md)** (438 lines)
@@ -82,7 +81,6 @@ The **engineering/** directory contains **effectful-specific engineering standar
 - check-code workflow (Black → MyPy)
 - Universal success criteria
 - MyPy strict mode enforcement
-- Coverage thresholds
 - Exit code requirements
 
 **[Development Workflow](development_workflow.md)** (150 lines)

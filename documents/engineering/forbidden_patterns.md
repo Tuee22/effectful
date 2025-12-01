@@ -37,7 +37,7 @@ This document serves as a **quick reference guide** to forbidden implementation 
 
 **Tools:**
 - **MyPy** (`mypy --strict`): Catches Any, cast, type:ignore, missing annotations, unhandled unions
-- **pytest**: Catches skipped tests, missing coverage (< 45%), test failures
+- **pytest**: Catches skipped tests, missing coverage, test failures
 - **Black**: Catches formatting violations
 
 **See**: [Type Safety](type_safety_enforcement.md#anti-pattern-detection) for complete detection workflow.

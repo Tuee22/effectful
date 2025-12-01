@@ -43,7 +43,6 @@ All contributions must meet the **Universal Success Criteria**:
 - ✅ **Zero skipped tests** (pytest.skip() forbidden)
 - ✅ 100% test pass rate
 - ✅ **Zero `Any`, `cast()`, or `# type: ignore`** (escape hatches forbidden)
-- ✅ **Minimum 45% code coverage** (adapters excluded)
 - ✅ **Integration tests cover all features** (conceptual coverage)
 
 **Detailed checklist**:

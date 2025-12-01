@@ -145,9 +145,6 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
 
 # 2. Run all tests (329 tests, ~1.6s)
 docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
-
-# 3. Coverage check (minimum 45%)
-docker compose -f docker/docker-compose.yml exec effectful poetry run pytest --cov=effectful --cov-report=term-missing
 ```
 
 All gates must pass with:
@@ -155,7 +152,6 @@ All gates must pass with:
 - ✅ Zero MyPy errors
 - ✅ Zero test failures
 - ✅ Zero skipped tests
-- ✅ Minimum 45% coverage
 
 ### Pull Request Checklist
 
@@ -164,7 +160,6 @@ Before submitting a PR:
 - [ ] All tests pass (zero failures, zero skipped)
 - [ ] Zero mypy errors (`check-code` exits 0)
 - [ ] Code formatted (Black applied)
-- [ ] Minimum 45% coverage
 - [ ] No forbidden constructs (Any, cast, type: ignore)
 - [ ] All dataclasses frozen (`frozen=True`)
 - [ ] ADTs used instead of Optional

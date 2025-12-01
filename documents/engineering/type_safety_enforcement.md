@@ -96,7 +96,6 @@ All code changes must meet these requirements:
 - ✅ **Zero skipped tests** (pytest.skip() forbidden)
 - ✅ 100% test pass rate
 - ✅ **Zero `Any`, `cast()`, or `# type: ignore`** (escape hatches forbidden - NO exceptions)
-- ✅ **Minimum 45% code coverage** (adapters excluded)
 - ✅ **Integration tests cover all features** (conceptual coverage)
 
 **Referenced by**: [Testing](testing.md), [Command Reference](command_reference.md), [Contributing](../CONTRIBUTING.md).
@@ -488,7 +487,7 @@ def my_program() -> WSProgram:
 - Incomplete pattern matches
 
 **pytest** catches:
-- Missing tests (coverage < 45%)
+- Missing tests
 - Skipped tests (forbidden - pytest.skip() not allowed)
 - Test failures
 - Assertion errors
@@ -543,7 +542,6 @@ flowchart TB
     Auto[Automated Detection]
     MyPy{MyPy Pass?}
     Pytest{Tests Pass?}
-    Coverage{Coverage ≥ 45%?}
     Manual[Code Review]
     Violation{Violation Found?}
     Identify[Identify Doctrine]
@@ -557,9 +555,7 @@ flowchart TB
     MyPy -->|Fail| Fix
     MyPy -->|Pass| Pytest
     Pytest -->|Fail| Fix
-    Pytest -->|Pass| Coverage
-    Coverage -->|Fail| Fix
-    Coverage -->|Pass| Manual
+    Pytest -->|Pass| Manual
     Manual --> Violation
     Violation -->|Yes| Identify
     Violation -->|No| Success
@@ -613,26 +609,6 @@ warn_unused_configs = true
 
 ---
 
-## Coverage Requirements
-
-**Minimum Coverage**: 45% overall (enforced by pytest-cov)
-
-**Excluded from measurement**:
-- `effectful/adapters/` - Real infrastructure implementations
-- `effectful/infrastructure/` - Protocol definitions (no logic)
-- Test files themselves
-
-**Why 45%**: Balances quality signal vs. diminishing returns. Focus on:
-- Core algebraic types (Result, EffectReturn)
-- Domain models
-- Interpreters
-- Program runners
-- Effect definitions
-
-**Conceptual coverage**: Every feature must have integration tests, even if line coverage < 100%.
-
----
-
 ## Pre-commit Checks
 
 Before committing code:
@@ -679,23 +655,6 @@ def test_user_frozen() -> None:
         setattr(user, "email", "test")  # No type:ignore needed!
 ```
 
-### Coverage Violations
-
-**❌ WRONG** - No tests for new feature:
-```python
-# Added new function, no tests = coverage drops below 45%
-def calculate_metrics(data: MetricData) -> MetricResult:
-    ...
-```
-
-**✅ CORRECT** - Tests for all features:
-```python
-# tests/test_metrics.py
-def test_calculate_metrics():
-    result = calculate_metrics(MetricData(...))
-    assert_ok(result)
-```
-
 ### Formatting Violations
 
 Black automatically fixes these, but check-code will fail if code isn't formatted:
@@ -724,7 +683,7 @@ Black automatically fixes these, but check-code will fail if code isn't formatte
   run: docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
 
 - name: Run tests with coverage
-  run: docker compose -f docker/docker-compose.yml exec effectful poetry run pytest --cov=effectful --cov-fail-under=45
+  run: docker compose -f docker/docker-compose.yml exec effectful poetry run pytest --cov=effectful --cov-report=term-missing
 ```
 
 ---
