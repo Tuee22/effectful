@@ -141,7 +141,7 @@ All new features require documentation updates:
 - **Tutorials**: Add step-by-step guides to `documents/tutorials/` if complex
 - **Engineering Standards**: Update `documents/engineering/` if new patterns introduced
 
-Follow [Documentation Guidelines](engineering/documentation_standards.md) for SSoT, DRY, and mermaid best practices.
+Follow [Documentation Guidelines](documentation_standards.md) for SSoT, DRY, and mermaid best practices.
 
 ## Code Quality Standards
 
@@ -174,3 +174,9 @@ Thank you for contributing to effectful!
 - [Code Quality](engineering/code_quality.md) - Type safety + purity doctrines
 - [Testing](engineering/testing.md) - Testing standards
 - [Documentation Hub](README.md) - Complete documentation index
+
+---
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: README.md, engineering/README.md

@@ -1,6 +1,6 @@
 # Authentication System
 
-> JWT dual-token authentication with access and refresh tokens.
+> Extends base [Documentation Standards](../../../../documents/documentation_standards.md) and [Architecture](../../../../documents/engineering/architecture.md); base rules apply. HealthHub-specific authentication deltas only.
 
 ---
 
@@ -347,5 +347,7 @@ async def get_current_user(
 
 ---
 
-**Last Updated**: 2025-11-26
+**Last Updated**: 2025-11-26  
+**Supersedes**: none  
+**Referenced by**: ../README.md, ../engineering/security_hardening.md
 **Maintainer**: HealthHub Team

@@ -836,3 +836,9 @@ You learned how to:
 - ✅ Apply advanced patterns (Builder, Saga)
 
 Your programs are now composable and maintainable! 🎯
+
+---
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: documents/README.md

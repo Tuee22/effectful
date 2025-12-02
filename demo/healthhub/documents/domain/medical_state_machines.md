@@ -1,6 +1,6 @@
 # Medical State Machines
 
-> General state machine patterns for healthcare workflows.
+> Extends base [Documentation Standards](../../../../documents/documentation_standards.md); base rules apply. HealthHub-specific medical state machine deltas only.
 
 ---
 
@@ -631,9 +631,11 @@ def test_cannot_start_appointment_before_scheduled_time() -> None:
 
 ### Best Practices
 - [State Machine Patterns](../engineering/state_machine_patterns.md) - Implementation patterns and anti-patterns
-- [Effect Program Patterns](../engineering/effect_program_patterns.md) - Using state machines in effect programs
+- [Effect Patterns](../engineering/effect_patterns.md) - Using state machines in effect programs
 
 ---
 
-**Last Updated**: 2025-11-26
+**Last Updated**: 2025-11-26  
+**Supersedes**: none  
+**Referenced by**: ../README.md, ../product/appointment_state_machine.md
 **Maintainer**: HealthHub Team

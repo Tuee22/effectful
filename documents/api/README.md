@@ -215,3 +215,9 @@ def process(user_id):  # Missing type hints
 - [Architecture](../engineering/architecture.md) - Design principles and architecture overview
 - [Docker Workflow](../engineering/docker_workflow.md) - Development workflow (SSoT)
 - [CLAUDE.md](/CLAUDE.md) - Complete development reference
+
+---
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: documents/README.md

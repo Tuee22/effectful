@@ -25,7 +25,7 @@ flowchart TB
 | Metrics/registry architecture | [Observability](observability.md) |
 | Effect metrics + adapters | [Observability](observability.md#metrics-pipeline) |
 | Alert testing patterns | [Testing](testing.md#part-5-testing-patterns) |
-| Doc/link hygiene | [Documentation Standards](documentation_standards.md) |
+| Doc/link hygiene | [Documentation Standards](../documentation_standards.md) |
 | Type/purity guarantees around metrics | [Code Quality](code_quality.md) |
 
 ---
@@ -52,6 +52,7 @@ Monitoring tracks **what is happening**; alerting pages humans when thresholds b
 - Pre-register label schemas in registries; all labels are required unless documented optional.
 - Hard cap cardinality: keep total combinations under ~10k; never use IDs, timestamps, or free text as labels.
 - Boolean labels are `"true"` / `"false"` only.
+- **No PHI/PII** in labels: never emit patient IDs, names, emails, phone numbers, addresses, or other identifiers; aggregate to categorical buckets instead (e.g., `portal="patient"`).
 
 ### Cardinality Anti-Patterns
 - ❌ Unbounded labels (`user_id`, `session_id`, `trace_id`)
@@ -117,11 +118,11 @@ Monitoring tracks **what is happening**; alerting pages humans when thresholds b
 
 - **Observability pipeline**: [observability.md](observability.md) — dual-layer metrics, collectors, and dashboards.
 - **Testing strategy**: [testing.md](testing.md#part-5-testing-patterns) — alert expression tests and integration coverage.
-- **Documentation hygiene**: [documentation_standards.md](documentation_standards.md) — link-first, DRY policy for observability docs.
+- **Documentation hygiene**: [documentation_standards.md](../documentation_standards.md) — link-first, DRY policy for observability docs.
 - **Code quality**: [code_quality.md](code_quality.md) — purity/type guarantees around metrics and interpreters.
 
 ---
 
 **Last Updated**: 2025-12-01  
 **Supersedes**: alerting.md, monitoring_standards.md  
-**Referenced by**: README.md, observability.md, documentation_standards.md, testing.md
+**Referenced by**: README.md, observability.md, ../documentation_standards.md, testing.md

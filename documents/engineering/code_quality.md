@@ -28,7 +28,7 @@ flowchart TB
 |------|------|
 | Layer boundaries and imports | [Architecture](architecture.md#core-abstractions) |
 | Generator + interpreter testing | [Testing](testing.md#part-4-four-layer-testing-architecture) |
-| Documentation + link hygiene | [Documentation Standards](documentation_standards.md) |
+| Documentation + link hygiene | [Documentation Standards](../documentation_standards.md) |
 | Metrics/alert hooks | [Observability](observability.md) |
 | Canonical effect patterns | [Effect Patterns](effect_patterns.md) |
 | Docker-only contract | [Docker Workflow](docker_workflow.md#development-contract) |
@@ -152,7 +152,7 @@ Code quality = **type safety + purity**. Programs remain pure descriptions, inte
 
 - **Testing:** effect generators, integration policies, and anti-pattern catalog live in [testing.md](testing.md).
 - **Observability:** metrics/alert hooks and registries live in [observability.md](observability.md) and [monitoring_and_alerting.md](monitoring_and_alerting.md).
-- **Documentation:** SSoT/DRY rules and mermaid safety in [documentation_standards.md](documentation_standards.md).
+- **Documentation:** SSoT/DRY rules and mermaid safety in [documentation_standards.md](../documentation_standards.md).
 - **Architecture:** import boundaries and layer rules in [architecture.md](architecture.md).
 - **Effect Patterns:** canonical program and interpreter shapes in [effect_patterns.md](effect_patterns.md).
 
@@ -160,4 +160,4 @@ Code quality = **type safety + purity**. Programs remain pure descriptions, inte
 
 **Last Updated**: 2025-12-01  
 **Supersedes**: type_safety_enforcement.md, purity.md  
-**Referenced by**: README.md, documentation_standards.md, development_workflow.md, testing.md, architecture.md, observability.md
+**Referenced by**: README.md, ../documentation_standards.md, development_workflow.md, testing.md, architecture.md, observability.md

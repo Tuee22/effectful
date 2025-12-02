@@ -41,7 +41,7 @@ Project engineering practices and standards:
 - **[Command Reference](engineering/command_reference.md)** - All Docker commands and test execution
 - **[Development Workflow](engineering/development_workflow.md)** - Daily development loop
 - **[Configuration](engineering/configuration.md)** - Environment variables for all services
-- **[Documentation Guidelines](engineering/documentation_standards.md)** - SSoT/DRY principles, mermaid best practices (SSoT)
+- **[Documentation Guidelines](documentation_standards.md)** - SSoT/DRY principles, mermaid best practices (SSoT)
 
 **Observability**:
 - **[Observability](engineering/observability.md)** - Metrics philosophy and cardinality management (SSoT)
@@ -256,3 +256,7 @@ async def test_my_program():
 ---
 
 **Happy effect programming!**
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: README.md, CONTRIBUTING.md, demo/healthhub/documents/README.md

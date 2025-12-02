@@ -1,6 +1,6 @@
 # Notification System
 
-> Real-time WebSocket notifications via Redis pub/sub.
+> Extends base [Documentation Standards](../../../../documents/documentation_standards.md) and [Observability](../../../../documents/engineering/observability.md); base rules apply. HealthHub-specific notification deltas only.
 
 ---
 
@@ -367,8 +367,8 @@ REDIS_DB=0
 ## Related Documentation
 
 ### Best Practices
-- [Effect Program Patterns](../engineering/effect_program_patterns.md) - Fire-and-forget notifications (Pattern 3)
-- [Testing Doctrine](../engineering/testing_doctrine.md) - Testing notification workflows
+- [Effect Patterns](../engineering/effect_patterns.md) - Fire-and-forget notifications (Pattern 3)
+- [Testing](../engineering/testing.md) - Testing notification workflows
 
 ### Product Documentation
 - [Architecture Overview](architecture_overview.md) - How messaging fits in the 5-layer architecture
@@ -377,5 +377,7 @@ REDIS_DB=0
 
 ---
 
-**Last Updated**: 2025-11-26
+**Last Updated**: 2025-11-26  
+**Supersedes**: none  
+**Referenced by**: ../README.md, ../engineering/websocket_security.md
 **Maintainer**: HealthHub Team

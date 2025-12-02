@@ -271,3 +271,7 @@ def fallible() -> Result[int, str]:
 ---
 
 **Next**: [Tutorial 02: Effect Types](02_effect_types.md)
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: documents/README.md

@@ -1,6 +1,6 @@
 # Tutorial 08: Testing HealthHub
 
-> Writing and running tests for effect programs.
+> Extends base [Tutorial 08: Messaging Effects](../../../../documents/tutorials/08_messaging_effects.md); base steps apply. This tutorial documents HealthHub-specific testing flows only.
 
 ---
 
@@ -298,9 +298,11 @@ Must pass with zero errors.
 ## Related Documentation
 
 - [Testing Patterns](../engineering/testing_patterns.md)
-- [Effect Program Patterns](../engineering/effect_program_patterns.md)
+- [Effect Patterns](../engineering/effect_patterns.md)
 - [Architecture Overview](../product/architecture_overview.md)
 
 ---
 
-**Last Updated**: 2025-11-25
+**Last Updated**: 2025-11-25  
+**Supersedes**: none  
+**Referenced by**: ../README.md, ../engineering/testing.md

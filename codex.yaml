@@ -86,7 +86,7 @@ agents:
       - Remind on production requirements: TLS, secrets management, pooling, resource limits.
 
   - name: documentation_standards
-    source: documents/engineering/documentation_standards.md
+    source: documents/documentation_standards.md
     intent: Enforce SSoT/DRY, naming, style, safe Mermaid subset, and type-safe examples.
     enforce:
       - SSoT markers; avoid duplication beyond brief summaries with links.

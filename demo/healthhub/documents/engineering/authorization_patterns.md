@@ -1,6 +1,6 @@
-# Authorization Patterns
+# Authorization Patterns (HealthHub supplement)
 
-> HealthHub-specific patterns for using the ADT-based authorization system.
+> Supplements base [Architecture](../../../../documents/engineering/architecture.md) and [Code Quality](../../../../documents/engineering/code_quality.md); use this for HealthHub-specific authorization details. Base rules apply; see `architecture.md` overlay for core deltas.
 
 ---
 
@@ -236,8 +236,10 @@ def test_unauthorized_has_reason() -> None:
 - [Authentication](../product/authentication.md) - JWT token handling
 
 ### Best Practices
-- [Testing Doctrine](testing_doctrine.md) - Comprehensive testing patterns
+- [Testing](testing.md) - Comprehensive testing patterns
 
 ---
 
-**Last Updated**: 2025-11-25
+**Last Updated**: 2025-11-25  
+**Supersedes**: none  
+**Referenced by**: README.md, ../product/authorization_system.md

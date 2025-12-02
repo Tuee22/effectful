@@ -1,4 +1,6 @@
-# Frontend Architecture - FastAPI Static Serving
+# Frontend Architecture - FastAPI Static Serving (HealthHub supplement)
+
+> Supplements base [Architecture](../../../../documents/engineering/architecture.md). Base layer rules apply; see `architecture.md` overlay for canonical HealthHub deltas.
 
 ## Overview
 
@@ -333,8 +335,8 @@ async def add_security_headers(request: Request, call_next):
 - N/A (frontend is not healthcare-specific)
 
 ### Engineering Patterns
-- [Effect Program Patterns](effect_program_patterns.md) - Backend effect programs that power the API
-- [Testing Doctrine](testing_doctrine.md) - Backend testing strategies
+- [Effect Patterns](effect_patterns.md) - Backend effect programs that power the API
+- [Testing](testing.md) - Backend testing strategies
 
 ### Product Documentation
 - [Architecture Overview](../product/architecture_overview.md) - 5-layer backend architecture
@@ -347,8 +349,10 @@ async def add_security_headers(request: Request, call_next):
 
 **SSoT Status**: This document is the Single Source of Truth for frontend architecture in HealthHub.
 **Last Updated**: 2025-11-28
+**Supersedes**: none
 **Related Files**:
 - `backend/app/main.py` - Frontend serving implementation
 - `frontend/vite.config.ts` - Build configuration
 - `docker/Dockerfile` - Frontend build steps
-- `../CLAUDE.md` - Development commands and workflows
+- `../CLAUDE.md` - Development commands and workflows  
+**Referenced by**: README.md, architecture.md

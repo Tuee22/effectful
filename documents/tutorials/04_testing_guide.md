@@ -54,10 +54,10 @@ flowchart TB
   Organization --> Coverage[Coverage Guidelines]
   Coverage --> End[Complete - Ready to Test]
 
-  Simple -.-> SimpleNote[Instantiate effects - No mocks]
-  Interpreter -.-> InterpNote[pytest-mock infrastructure]
-  MultiStep -.-> MultiNote[Manual next and send]
-  Complex -.-> ComplexNote[run_ws_program with mocks]
+  Simple --> SimpleNote[Instantiate effects - No mocks]
+  Interpreter --> InterpNote[pytest-mock infrastructure]
+  MultiStep --> MultiNote[Manual next and send]
+  Complex --> ComplexNote[run_ws_program with mocks]
 ```
 
 ## Setup
@@ -1047,3 +1047,9 @@ You learned how to:
 **Key Takeaway**: Test effect programs as pure generators without requiring interpreters or real infrastructure. This provides fast, reliable, type-safe tests that verify program logic in isolation.
 
 Happy testing! 🧪
+
+---
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: documents/README.md

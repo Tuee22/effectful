@@ -27,7 +27,7 @@ flowchart TB
 | Daily loop | [Development Workflow](development_workflow.md) |
 | Environment variables | [Configuration](configuration.md) |
 | How to test | [Testing](testing.md#running-tests) |
-| Documentation requirements | [Documentation Standards](documentation_standards.md) |
+| Documentation requirements | [Documentation Standards](../documentation_standards.md) |
 
 ## Core Principle
 
@@ -461,4 +461,5 @@ docker compose -f docker/docker-compose.yml ps
 ---
 
 **Last Updated**: 2025-12-01
+**Supersedes**: none
 **Referenced by**: CLAUDE.md, command_reference.md, testing.md, development_workflow.md, README.md

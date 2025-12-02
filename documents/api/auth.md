@@ -404,3 +404,9 @@ def logout_flow(
 - [Tutorial: Auth Effects](../tutorials/10_auth_effects.md) - Step-by-step guide
 - [Interpreters](interpreters.md) - AuthInterpreter details
 - [Testing Guide](../tutorials/04_testing_guide.md) - Testing auth programs
+
+---
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: documents/api/README.md, ../README.md

@@ -342,4 +342,5 @@ def save_message(user_id: UUID, text: str) -> Generator[AllEffects, EffectResult
 ---
 
 **Last Updated**: 2025-12-01
+**Supersedes**: none
 **Referenced by**: CLAUDE.md, code_quality.md, README.md

@@ -1,6 +1,6 @@
 # Healthcare Domain Knowledge
 
-> Medical workflows, compliance requirements, and domain-specific patterns that apply to ANY healthcare application.
+> Extends base [Effectful Documentation](../../documents/README.md) and [Documentation Standards](../../documents/documentation_standards.md); base standards apply. This section captures HealthHub-specific domain deltas only.
 
 ---
 
@@ -70,7 +70,7 @@ The **engineering/** tier provides **HealthHub-specific implementation patterns*
 
 - [State Machine Patterns](../engineering/state_machine_patterns.md) - How to implement medical state machines using ADTs
 - [Authorization Patterns](../engineering/authorization_patterns.md) - How to use ADT-based authorization for medical roles
-- [Effect Program Patterns](../engineering/effect_program_patterns.md) - How to compose medical workflows as effect programs
+- [Effect Patterns](../engineering/effect_patterns.md) - How to compose medical workflows as effect programs
 
 **Flow**: Domain knowledge → HealthHub implementation patterns
 
@@ -194,5 +194,7 @@ Update **domain/** documents when:
 ---
 
 **Last Updated**: 2025-11-26
+**Supersedes**: none
 **Maintainer**: HealthHub Team
-**Document Count**: 3 domain documents
+**Document Count**: 3 domain documents  
+**Referenced by**: ../README.md, product/architecture_overview.md

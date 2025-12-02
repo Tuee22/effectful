@@ -1,6 +1,6 @@
 # Appointment State Machine
 
-> ADT-based appointment lifecycle with validated transitions.
+> Extends base [Documentation Standards](../../../../documents/documentation_standards.md) and [Architecture](../../../../documents/engineering/architecture.md); base rules apply. HealthHub-specific appointment state machine deltas only.
 
 ---
 
@@ -439,5 +439,7 @@ def get_available_actions(
 
 ---
 
-**Last Updated**: 2025-11-26
+**Last Updated**: 2025-11-26  
+**Supersedes**: none  
+**Referenced by**: ../README.md, ../engineering/state_machine_patterns.md
 **Maintainer**: HealthHub Team

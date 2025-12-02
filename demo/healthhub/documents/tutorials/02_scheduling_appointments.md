@@ -1,6 +1,6 @@
 # Tutorial 02: Scheduling Appointments
 
-> Learn the appointment workflow from request to completion.
+> Extends base [Tutorial 02: Effect Types](../../../../documents/tutorials/02_effect_types.md); base steps apply. This tutorial documents HealthHub-specific deltas only.
 
 ---
 
@@ -202,4 +202,6 @@ ws.onmessage = (event) => {
 
 ---
 
-**Last Updated**: 2025-11-25
+**Last Updated**: 2025-11-25  
+**Supersedes**: none  
+**Referenced by**: ../README.md

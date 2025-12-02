@@ -165,4 +165,5 @@ pool = redis.ConnectionPool(
 ---
 
 **Last Updated**: 2025-12-01
+**Supersedes**: none
 **Referenced by**: CLAUDE.md, docker_workflow.md, development_workflow.md

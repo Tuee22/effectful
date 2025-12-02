@@ -1,6 +1,6 @@
 # Tutorial 04: Lab Results
 
-> Managing lab test results with critical value alerts.
+> Extends base [Tutorial 04: Testing Guide](../../../../documents/tutorials/04_testing_guide.md); base steps apply. This tutorial documents HealthHub-specific lab workflows only.
 
 ---
 
@@ -175,4 +175,6 @@ def create_lab_result_program(
 
 ---
 
-**Last Updated**: 2025-11-25
+**Last Updated**: 2025-11-25  
+**Supersedes**: none  
+**Referenced by**: ../README.md

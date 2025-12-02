@@ -735,4 +735,5 @@ async def test_metrics_workflow() -> None:
 
 **Status**: Single Source of Truth (SSoT) for observability architecture
 **Last Updated**: 2025-12-01
+**Supersedes**: none
 **Referenced by**: monitoring_and_alerting.md, README.md

@@ -820,3 +820,9 @@ def create_message_with_id(user_id: UUID, text: str) -> Generator[AllEffects, Ef
 - [Interpreters API](./interpreters.md) - How effects are executed
 - [Programs API](./programs.md) - Program execution and types
 - [Testing Standards](../engineering/testing.md) - Testing programs with effects
+
+---
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: documents/api/README.md, ../README.md

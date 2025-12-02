@@ -325,3 +325,9 @@ def generate_presigned_manifest(
 - [Messaging Effects](messaging.md) - Pub/sub messaging effects
 - [Interpreters](interpreters.md) - StorageInterpreter details
 - [Tutorial: Storage Effects](../tutorials/09_storage_effects.md) - Step-by-step guide
+
+---
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: documents/api/README.md, ../README.md

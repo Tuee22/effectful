@@ -1,6 +1,6 @@
 # Appointment Workflows
 
-> Healthcare domain knowledge for medical appointment lifecycle management.
+> Extends base [Documentation Standards](../../../../documents/documentation_standards.md); base rules apply. HealthHub-specific appointment workflow deltas only.
 
 ---
 
@@ -293,4 +293,6 @@ Every appointment state transition must be logged for:
 
 ---
 
-**Last Updated**: 2025-11-26
+**Last Updated**: 2025-11-26  
+**Supersedes**: none  
+**Referenced by**: ../README.md, ../product/appointment_state_machine.md

@@ -353,3 +353,9 @@ def event_processor() -> Generator[AllEffects, EffectResult, dict[str, int]]:
 - [Storage Effects](storage.md) - S3/object storage effects
 - [Interpreters](interpreters.md) - MessagingInterpreter details
 - [Tutorial: Messaging Effects](../tutorials/08_messaging_effects.md) - Step-by-step guide
+
+---
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: documents/api/README.md, ../README.md

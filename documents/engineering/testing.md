@@ -23,7 +23,7 @@ flowchart TB
 | Type safety + purity rules driving test shape | [Code Quality](code_quality.md) |
 | Container + infra contract | [Docker Workflow](docker_workflow.md#development-contract) |
 | Command prefixes for pytest | [Command Reference](command_reference.md#command-table) |
-| Documentation format | [Documentation Standards](documentation_standards.md) |
+| Documentation format | [Documentation Standards](../documentation_standards.md) |
 | Observability expectations | [Monitoring & Alerting](monitoring_and_alerting.md#testing-alerts) |
 
 ---
@@ -3677,4 +3677,5 @@ All code changes must meet these requirements:
 ---
 
 **Last Updated:** 2025-12-01
-**Referenced by:** README.md, command_reference.md, documentation_standards.md, code_quality.md
+**Supersedes**: none
+**Referenced by:** README.md, command_reference.md, ../documentation_standards.md, code_quality.md

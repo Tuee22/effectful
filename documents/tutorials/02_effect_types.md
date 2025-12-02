@@ -861,3 +861,7 @@ def program() -> Generator[AllEffects, EffectResult, str]:
 ---
 
 **Previous**: [Tutorial 01: Quickstart](01_quickstart.md) | **Next**: [Tutorial 03: ADTs and Result Types](03_adts_and_results.md)
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: documents/README.md

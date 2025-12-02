@@ -23,9 +23,7 @@ sequenceDiagram
 
     App->>Program: Request file upload
     Program->>S3: PutObject(bucket, key, content)
-    S3-->>Program: object_key
-
-    Note over S3: Object stored<br/>with metadata
+    S3-->>Program: object_key (stored with metadata)
 
     Program->>S3: GetObject(bucket, key)
     S3-->>Program: S3Object with content
@@ -34,7 +32,7 @@ sequenceDiagram
 
     alt Cleanup Needed
         Program->>S3: DeleteObject(bucket, key)
-        Note over S3: Object removed
+        S3-->>Program: Object removed
     end
 ```
 
@@ -820,3 +818,7 @@ async def test_upload_quota_exceeded(mocker):
 ---
 
 **Previous**: [Tutorial 08: Messaging Effects](08_messaging_effects.md) | **Next**: [Examples README](/examples/README.md)
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: documents/README.md

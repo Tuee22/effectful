@@ -528,3 +528,9 @@ int_result = map_twice(Ok(42))
 - [Interpreters API](./interpreters.md) - How interpreters return Results
 - [Programs API](./programs.md) - Program execution with Result types
 - [Testing Standards](../engineering/testing.md) - Testing Result values
+
+---
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: documents/api/README.md, ../README.md

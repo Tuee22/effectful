@@ -660,3 +660,9 @@ Access effect names for tracing:
 - [Result Type API](./result.md) - Return types from run_ws_program
 - [Interpreters API](./interpreters.md) - Executing programs
 - [Testing Standards](../engineering/testing.md) - Testing programs
+
+---
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: documents/api/README.md, ../README.md

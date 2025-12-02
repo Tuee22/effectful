@@ -1,6 +1,6 @@
 # API Reference
 
-> REST API endpoint documentation for HealthHub.
+> Extends base [Documentation Standards](../../../../documents/documentation_standards.md); base rules apply. HealthHub-specific API reference only.
 
 ---
 
@@ -477,7 +477,7 @@ All errors return consistent format:
 
 ### Best Practices
 - [Authorization Patterns](../engineering/authorization_patterns.md) - Route-level authorization checks
-- [Testing Doctrine](../engineering/testing_doctrine.md) - API endpoint testing strategies
+- [Testing](../engineering/testing.md) - API endpoint testing strategies
 
 ### Product Documentation
 - [Authentication](authentication.md) - JWT token details and login/logout endpoints
@@ -488,5 +488,7 @@ All errors return consistent format:
 
 ---
 
-**Last Updated**: 2025-11-26
+**Last Updated**: 2025-11-26  
+**Supersedes**: none  
+**Referenced by**: ../README.md, ../engineering/fastapi_integration_patterns.md
 **Maintainer**: HealthHub Team

@@ -1,6 +1,6 @@
 # HIPAA Compliance
 
-> Audit logging requirements for healthcare data protection.
+> Extends base [Documentation Standards](../../../../documents/documentation_standards.md); base rules apply. HealthHub-specific HIPAA compliance deltas only.
 
 ---
 
@@ -249,4 +249,6 @@ yield LogAuditEvent(
 
 ---
 
-**Last Updated**: 2025-11-25
+**Last Updated**: 2025-11-25  
+**Supersedes**: none  
+**Referenced by**: ../README.md, ../product/audit_logging.md

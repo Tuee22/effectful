@@ -1,6 +1,6 @@
 # Medication Interactions
 
-> Drug interaction checking system for prescription safety.
+> Extends base [Documentation Standards](../../../../documents/documentation_standards.md); base rules apply. HealthHub-specific medication interaction deltas only.
 
 ---
 
@@ -332,7 +332,7 @@ For moderate interactions with override option:
 - [Medical State Machines](../domain/medical_state_machines.md) - Prescription lifecycle (Pending → Active → Completed/Expired)
 
 ### Best Practices
-- [Effect Program Patterns](../engineering/effect_program_patterns.md) - Early return on severe interactions (Pattern 5)
+- [Effect Patterns](../engineering/effect_patterns.md) - Early return on severe interactions (Pattern 5)
 
 ### Product Documentation
 - [Effects Reference](effects_reference.md) - CheckMedicationInteractions effect
@@ -341,5 +341,7 @@ For moderate interactions with override option:
 
 ---
 
-**Last Updated**: 2025-11-26
+**Last Updated**: 2025-11-26  
+**Supersedes**: none  
+**Referenced by**: ../README.md, ../engineering/purity_standards.md
 **Maintainer**: HealthHub Team

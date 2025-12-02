@@ -243,6 +243,13 @@ class WebSocketInterpreter:
 **Production interpreter**: Uses real WebSocket connection (FastAPI, asyncio)
 **Test interpreter**: Uses pytest-mock AsyncMock
 
+### WebSocket Security Pattern
+- Use **one-time tickets**: issue a short-lived JWT (aud = `ws`) and store `jti` in Redis; consume with `GETDEL` on connect to enforce single use.
+- Enforce **origin allowlist** and `wss://` only; reject upgrades from unknown origins in middleware.
+- Apply **defense-in-depth**: ticket validation → server-side channel authorization (deny by default) → per-connection/user/global rate limits.
+- Set CSP `connect-src` to the explicit WebSocket endpoints to block exfiltration.
+- Treat WebSocket interpreters like any other I/O: return typed errors (e.g., `WebSocketClosedError`) and keep programs pure.
+
 ---
 
 ## Effect Type Hierarchy
@@ -598,4 +605,5 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, None]:
 **Philosophy**: Correctness first, performance second. Make invalid states unrepresentable.
 
 **Last Updated:** 2025-12-01
-**Referenced by**: README.md, CLAUDE.md, code_quality.md, testing.md, documentation_standards.md
+**Supersedes**: none
+**Referenced by**: README.md, CLAUDE.md, code_quality.md, testing.md, ../documentation_standards.md

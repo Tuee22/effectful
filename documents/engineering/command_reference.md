@@ -24,7 +24,7 @@ flowchart TB
 | Docker contract | [Docker Workflow](docker_workflow.md#development-contract) |
 | Which tests to run | [Testing](testing.md#running-tests) |
 | Daily development loop | [Development Workflow](development_workflow.md) |
-| Formatting + linking rules | [Documentation Standards](documentation_standards.md) |
+| Formatting + linking rules | [Documentation Standards](../documentation_standards.md) |
 
 ## Command Map (Mermaid)
 
@@ -144,4 +144,5 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest > /
 ---
 
 **Last Updated**: 2025-12-01
+**Supersedes**: none
 **Referenced by**: CLAUDE.md, development_workflow.md

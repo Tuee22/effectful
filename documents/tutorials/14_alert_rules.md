@@ -750,4 +750,6 @@ curl http://localhost:9090/api/v1/alerts | jq
 
 ---
 
-**Last Updated**: 2025-01-28
+**Last Updated**: 2025-01-28  
+**Supersedes**: none  
+**Referenced by**: documents/README.md, ../api/metrics.md

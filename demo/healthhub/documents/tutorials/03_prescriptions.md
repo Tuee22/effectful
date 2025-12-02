@@ -1,6 +1,6 @@
 # Tutorial 03: Creating Prescriptions
 
-> Learn the prescription workflow with medication interaction checking.
+> Extends base [Tutorial 03: ADTs and Results](../../../../documents/tutorials/03_adts_and_results.md); base steps apply. This tutorial documents HealthHub-specific deltas only.
 
 ---
 
@@ -224,4 +224,6 @@ curl http://localhost:8850/api/v1/patients/me/prescriptions \
 
 ---
 
-**Last Updated**: 2025-11-25
+**Last Updated**: 2025-11-25  
+**Supersedes**: none  
+**Referenced by**: ../README.md

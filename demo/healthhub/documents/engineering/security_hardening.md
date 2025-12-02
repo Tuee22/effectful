@@ -1,6 +1,6 @@
-# Security Hardening
+# Security Hardening (HealthHub supplement)
 
-> Production security patterns for HIPAA-compliant medical data protection.
+> Supplements base [Architecture](../../../../documents/engineering/architecture.md) and [Observability](../../../../documents/engineering/observability.md); HealthHub-specific controls for HIPAA data protection. Base rules apply; see `architecture.md` overlay for canonical deltas.
 
 ---
 
@@ -850,7 +850,7 @@ response.set_cookie(
 
 **Best Practices:**
 - [Authorization Patterns](authorization_patterns.md) - ADT authorization implementation
-- [Monitoring & Observability](monitoring_observability.md) - Security metrics and alerts
+- [Monitoring & Alerting](monitoring_and_alerting.md) - Security metrics and alerts
 
 **Product Features:**
 - [Authorization System](../product/authorization_system.md) - ADT definitions and architecture
@@ -863,5 +863,7 @@ response.set_cookie(
 ---
 
 **Last Updated**: 2025-11-27
+**Supersedes**: none
 **Maintainer**: HealthHub Security Team
-**Document Status**: Production-Ready for Healthcare Applications
+**Document Status**: Production-Ready for Healthcare Applications  
+**Referenced by**: README.md, architecture.md

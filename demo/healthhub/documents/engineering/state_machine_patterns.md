@@ -1,6 +1,6 @@
-# State Machine Patterns
+# State Machine Patterns (HealthHub supplement)
 
-> ADT-based state machine implementation patterns for HealthHub.
+> Supplements base [Effect Patterns](../../../../documents/engineering/effect_patterns.md) and [Architecture](../../../../documents/engineering/architecture.md); HealthHub-specific implementations and examples. Base rules apply; see `architecture.md` overlay for canonical deltas.
 
 ---
 
@@ -446,10 +446,12 @@ def test_terminal_states_have_no_actions() -> None:
 - [Domain Models](../product/domain_models.md) - Appointment, Prescription, LabResult, Invoice entities
 
 ### Best Practices
-- [Effect Program Patterns](effect_program_patterns.md) - Using state machines in effect programs
-- [Testing Doctrine](testing_doctrine.md) - Comprehensive testing patterns
+- [Effect Patterns](effect_patterns.md) - Using state machines in effect programs
+- [Testing](testing.md) - Comprehensive testing patterns
 
 ---
 
 **Last Updated**: 2025-11-26
+**Supersedes**: none
 **Maintainer**: HealthHub Team
+**Referenced by**: README.md, ../product/appointment_state_machine.md

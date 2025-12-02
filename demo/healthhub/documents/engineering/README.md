@@ -1,6 +1,6 @@
 # HealthHub Engineering Best Practices
 
-> Implementation patterns for building HealthHub using ADTs, effect programs, and pure functional programming.
+> Extends base [Engineering Standards](../../../../documents/engineering/README.md). Base rules apply; this doc indexes HealthHub-specific overlays only.
 
 ---
 
@@ -14,11 +14,12 @@ The **engineering/** tier contains **HealthHub-specific implementation patterns*
 
 ## Document Organization
 
+All overlays in this folder inherit the base engineering SSoTs by filename; each doc links to the base and only lists HealthHub-specific deltas.
+
 ### Core Patterns
 
-**[Authorization Patterns](authorization_patterns.md)** (244 lines)
-- HOW to use HealthHub's ADT-based authorization system
-- Pattern matching for access control (PatientAuthorized, DoctorAuthorized, AdminAuthorized, Unauthorized)
+**[Authorization Patterns](authorization_patterns.md)** (HealthHub implementation)
+- ADT-based authorization system (PatientAuthorized, DoctorAuthorized, AdminAuthorized, Unauthorized)
 - Capability-based fields (can_prescribe)
 - Testing authorization logic
 - Anti-patterns: string-based roles, boolean authorization, exception-based auth
@@ -27,7 +28,7 @@ The **engineering/** tier contains **HealthHub-specific implementation patterns*
 
 ---
 
-**[State Machine Patterns](state_machine_patterns.md)** (456 lines)
+**[State Machine Patterns](state_machine_patterns.md)** (HealthHub implementation)
 - HOW to implement ADT-based state machines in HealthHub
 - Five core patterns:
   1. ADT Status Types (frozen dataclasses with state-specific fields)
@@ -42,23 +43,12 @@ The **engineering/** tier contains **HealthHub-specific implementation patterns*
 
 ---
 
-**[Effect Program Patterns](effect_program_patterns.md)** (318 lines)
-- HOW to write pure effect programs as generators
-- Six core patterns:
-  1. Generator-Based Programs (yield effects, receive results)
-  2. Type Narrowing After Effects (isinstance checks)
-  3. Fire-and-Forget Notifications (don't block on notification failures)
-  4. Program Composition (yield from for sub-programs)
-  5. Early Return on Failure (guard clauses)
-  6. Audit Logging Pattern (log all PHI access)
-- Six anti-patterns: direct infrastructure calls, missing type narrowing, silent failures, blocking on notifications, imperative loops, skipping validation
-- Generator testing patterns
-
-**Use this when**: Writing new effect programs or refactoring existing business logic.
+**[Effect Patterns](effect_patterns.md)** (HealthHub deltas)
+- Extends base [effect_patterns.md](../../../../documents/engineering/effect_patterns.md) — base rules apply; this doc lists only HealthHub-specific additions (PHI audit logging, fire-and-forget notifications, medical ADT narrowing, state-machine composition).
 
 ---
 
-**[Purity Standards](purity_standards.md)** (750+ lines)
+**[Purity Standards](purity_standards.md)** (HealthHub implementation; extends base purity doctrine)
 - HIPAA-compliant code review standards for effect system purity
 - Six purity standards mapped to §164.312 requirements:
   1. Effects as Data (§164.312(b) Audit Controls)
@@ -79,17 +69,10 @@ The **engineering/** tier contains **HealthHub-specific implementation patterns*
 
 ### Quality & Testing
 
-**[Testing Doctrine](testing_doctrine.md)** (1,345 lines)
-- Comprehensive testing philosophy and patterns for HealthHub
-- Three test tiers: Backend Unit, Integration, E2E
-- 22 test anti-patterns with examples
-- Generator testing patterns (step through yield statements)
-- Integration testing with real infrastructure (PostgreSQL, Redis, Pulsar)
-- E2E testing for complete workflows
-- Test output management (30,000 char truncation handling)
-- Coverage requirements (backend: comprehensive, integration: conceptual)
-
-**Use this when**: Writing tests for any HealthHub component (programs, interpreters, repositories).
+**[Testing](testing.md)** (HealthHub deltas)
+- Extends base [testing.md](../../../../documents/engineering/testing.md) — doctrine lives in the base; this doc adds HealthHub layout, generator stepping, PHI-safe fixtures, and stack commands.
+- HealthHub-only additions: test layout under `tests/pytest/backend` and `tests/pytest/e2e`, generator stepping for programs, PHI-safe fixtures, and real-stack integration guidance (PostgreSQL/Redis/Pulsar/MinIO).
+- Use this when applying base testing doctrine to HealthHub’s stack and PHI requirements.
 
 ---
 
@@ -110,37 +93,21 @@ The **engineering/** tier contains **HealthHub-specific implementation patterns*
 
 ### Observability & Operations
 
-**[Monitoring & Observability](monitoring_observability.md)** (1,431 lines)
-- Prometheus metrics architecture for healthcare
-- Healthcare-specific metrics catalog (PHI access, appointments, prescriptions, lab results, audit logs)
-- Recording rules (PHI access rate, appointment success, lab result delivery)
-- Service Level Objectives (SLOs) with multi-window burn rates
-- Alert rules by severity (P1/P2/P3 with thresholds)
-- Grafana dashboards (6 healthcare dashboards)
-- Four Golden Signals (Latency, Traffic, Errors, Saturation)
-- Developer workflow (adding metrics, testing, dashboard creation)
-
-**Use this when**: Adding metrics to features, creating dashboards, defining alerts, tracking SLOs, or monitoring PHI access.
+**[Monitoring & Alerting](monitoring_and_alerting.md)** (HealthHub deltas)
+- Extends base [monitoring_and_alerting.md](../../../../documents/engineering/monitoring_and_alerting.md) and [observability.md](../../../../documents/engineering/observability.md) — base rules apply; this doc adds PHI-safe metrics catalog, healthcare SLO thresholds, Grafana dashboards, and clinical alert routing.
 
 ---
 
 ### Development Quality
 
-**[Code Quality Enforcement](code_quality_enforcement.md)** (590 lines)
-- Ruff linting architecture (F, E, W, B, ANN, PT, UP rules)
-- Tool responsibility split (Ruff → Black → MyPy)
-- Healthcare-specific quality rules (no mutable defaults, no bare except, type hints required)
-- Effect system boundary enforcement (banned APIs: asyncpg, Redis, Pulsar in effect programs)
-- check-code integration (Ruff → Black → MyPy fail-fast workflow)
-- pyproject.toml configuration examples
-
-**Use this when**: Setting up linting, enforcing code standards, or onboarding developers.
+**[Code Quality](code_quality.md)** (HealthHub deltas)
+- Extends base [code_quality.md](../../../../documents/engineering/code_quality.md) — base doctrine applies; this doc adds HIPAA-focused lint bans and demo-specific command wrappers.
 
 ---
 
 ### Real-Time Communication
 
-**[WebSocket Security](websocket_security.md)** (690 lines)
+**[WebSocket Security](websocket_security.md)** (HealthHub implementation; extends base WebSocket guidance)
 - Native WebSocket architecture with Redis Pub/Sub
 - One-time ticket authentication (60s expiry, Redis GETDEL)
 - Channel isolation for patient PHI (server-side authorization)
@@ -184,16 +151,9 @@ The **engineering/** tier contains **HealthHub-specific implementation patterns*
 
 ### Documentation Standards
 
-**[Mermaid Standards](mermaid_standards.md)** (270 lines)
-- Universal compatibility subset (GitHub + VSCode)
-- Diagram types (state machines, sequence diagrams, flowcharts)
-- Healthcare patterns (appointment state machine, prescription workflow, authorization flows, lab result alerts)
-- Style guide (color coding, node shapes, arrow types)
-- Accessibility guidelines (WCAG AA compliance, descriptive labels, maximum 15 nodes)
-- Safe subset (flowchart TB, solid arrows only, no subgraphs)
-- Testing checklist
-
-**Use this when**: Creating state machine diagrams, authorization flows, or architecture visualizations.
+**[Documentation Standards](documentation_standards.md)** (HealthHub deltas)
+- Extends base [documentation_standards.md](../../../../documents/documentation_standards.md) — base rules apply; this doc adds accessibility/alt-text reminders and PHI-free diagrams.
+- Use this when documenting HealthHub and needing demo-specific reminders on top of the base standards.
 
 ---
 
@@ -205,7 +165,7 @@ The **domain/** tier provides **healthcare domain knowledge** that best_practice
 
 - [Appointment Workflows](../domain/appointment_workflows.md) → Implemented using state_machine_patterns.md
 - [Medical State Machines](../domain/medical_state_machines.md) → General patterns implemented in state_machine_patterns.md
-- [HIPAA Compliance](../domain/hipaa_compliance.md) → Audit logging implemented in effect_program_patterns.md
+- [HIPAA Compliance](../domain/hipaa_compliance.md) → Audit logging implemented in effect_patterns.md
 
 **Flow**: Healthcare requirements → HealthHub implementation patterns
 
@@ -217,8 +177,8 @@ The **product/** tier contains **HealthHub-specific implementations** that use t
 
 - authorization_patterns.md → [Authorization System](../product/authorization_system.md)
 - state_machine_patterns.md → [Appointment State Machine](../product/appointment_state_machine.md)
-- effect_program_patterns.md → [Effects Reference](../product/effects_reference.md)
-- testing_doctrine.md → All product testing
+- effect_patterns.md → [Effects Reference](../product/effects_reference.md)
+- testing.md → All product testing
 
 **Flow**: Implementation patterns → Actual HealthHub code
 
@@ -230,7 +190,7 @@ The **tutorials/** tier provides **step-by-step guides** that teach these patter
 
 - authorization_patterns.md → [Tutorial 05: Authorization](../tutorials/05_authorization.md)
 - state_machine_patterns.md → [Tutorial 07: State Machines](../tutorials/07_state_machines.md)
-- effect_program_patterns.md → [Tutorial 03: Effect Programs](../tutorials/03_effect_programs.md)
+- effect_patterns.md → [Tutorial 03: Effect Programs](../tutorials/03_effect_programs.md)
 
 **Flow**: Patterns reference → Guided implementation
 
@@ -239,16 +199,16 @@ The **tutorials/** tier provides **step-by-step guides** that teach these patter
 ## Cross-Tier Navigation
 
 **Starting Point**: If you're new to HealthHub development, start here:
-1. Read [Effect Program Patterns](effect_program_patterns.md) to understand program structure
+1. Read [Effect Patterns](effect_patterns.md) to understand program structure
 2. Read [State Machine Patterns](state_machine_patterns.md) to understand workflow implementation
 3. Read [Authorization Patterns](authorization_patterns.md) to understand access control
-4. Read [Testing Doctrine](testing_doctrine.md) to understand testing philosophy
+4. Read [Testing](testing.md) to understand testing philosophy
 
 **Reference Material**: If you're implementing a specific feature:
 - **Authorization**: authorization_patterns.md → ../product/authorization_system.md
 - **State Machine**: state_machine_patterns.md → ../product/appointment_state_machine.md
-- **Effect Program**: effect_program_patterns.md → ../product/effects_reference.md
-- **Testing**: testing_doctrine.md → tests/pytest/*
+- **Effect Program**: effect_patterns.md → ../product/effects_reference.md
+- **Testing**: testing.md → tests/pytest/*
 
 **Architectural Context**: For healthcare domain understanding:
 1. Read [domain/medical_state_machines.md](../domain/medical_state_machines.md) for healthcare requirements
@@ -267,8 +227,8 @@ graph TB
 
     BP1[engineering/authorization_patterns.md]
     BP2[engineering/state_machine_patterns.md]
-    BP3[engineering/effect_program_patterns.md]
-    BP4[engineering/testing_doctrine.md]
+    BP3[engineering/effect_patterns.md]
+    BP4[engineering/testing.md]
 
     P1[product/authorization_system.md]
     P2[product/appointment_state_machine.md]
@@ -350,16 +310,16 @@ Update **engineering/** documents when:
 |-------------------|------------------|
 | Implement authorization | [Authorization Patterns](authorization_patterns.md) |
 | Implement state machine | [State Machine Patterns](state_machine_patterns.md) |
-| Write effect program | [Effect Program Patterns](effect_program_patterns.md) |
+| Write effect program | [Effect Patterns](effect_patterns.md) |
 | **Review code purity** | **[Purity Standards](purity_standards.md)** |
-| Write tests | [Testing Doctrine](testing_doctrine.md) |
+| Write tests | [Testing](testing.md) |
 | Implement security | [Security Hardening](security_hardening.md) |
-| Add monitoring | [Monitoring & Observability](monitoring_observability.md) |
-| Enforce code quality | [Code Quality Enforcement](code_quality_enforcement.md) |
+| Add monitoring | [Monitoring & Alerting](monitoring_and_alerting.md) |
+| Enforce code quality | [Code Quality](code_quality.md) |
 | Implement WebSockets | [WebSocket Security](websocket_security.md) |
 | Integrate FastAPI | [FastAPI Integration Patterns](fastapi_integration_patterns.md) |
 | Serve frontend | [Frontend Architecture](frontend_architecture.md) |
-| Create diagrams | [Mermaid Standards](mermaid_standards.md) |
+| Create diagrams | [Documentation Standards](documentation_standards.md) |
 | Understand domain | [../domain/](../domain/) |
 | See actual code | [../product/](../product/) |
 | Learn step-by-step | [../tutorials/](../tutorials/) |
@@ -367,5 +327,7 @@ Update **engineering/** documents when:
 ---
 
 **Last Updated**: 2025-11-28
+**Supersedes**: none
 **Maintainer**: HealthHub Team
-**Document Count**: 12 engineering documents
+**Document Count**: 13 engineering documents  
+**Referenced by**: ../README.md, product/architecture_overview.md

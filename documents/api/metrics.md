@@ -876,4 +876,6 @@ async def main() -> None:
 ---
 
 **Status**: API Reference for metrics effect system
-**Last Updated**: 2025-01-28
+**Last Updated**: 2025-01-28  
+**Supersedes**: none  
+**Referenced by**: engineering/observability.md, tutorials/11_metrics_quickstart.md, tutorials/12_metric_types_guide.md, tutorials/13_prometheus_setup.md, tutorials/14_alert_rules.md, tutorials/15_grafana_dashboards.md

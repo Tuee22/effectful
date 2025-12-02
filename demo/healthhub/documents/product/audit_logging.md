@@ -1,6 +1,6 @@
 # Audit Logging
 
-> HIPAA-compliant audit logging for healthcare data access.
+> Extends base [Documentation Standards](../../../../documents/documentation_standards.md) and [Monitoring & Alerting](../../../../documents/engineering/monitoring_and_alerting.md); base rules apply. HealthHub-specific audit logging deltas only.
 
 ---
 
@@ -379,7 +379,7 @@ def test_audit_event_logged() -> None:
 - [HIPAA Compliance](../domain/hipaa_compliance.md) - Legal requirements for audit logging of PHI access
 
 ### Best Practices
-- [Effect Program Patterns](../engineering/effect_program_patterns.md) - Audit logging pattern for effect programs
+- [Effect Patterns](../engineering/effect_patterns.md) - Audit logging pattern for effect programs
 
 ### Product Documentation
 - [Authorization System](authorization_system.md) - Access control and user identification
@@ -388,5 +388,7 @@ def test_audit_event_logged() -> None:
 
 ---
 
-**Last Updated**: 2025-11-26
+**Last Updated**: 2025-11-26  
+**Supersedes**: none  
+**Referenced by**: ../README.md, ../engineering/monitoring_and_alerting.md
 **Maintainer**: HealthHub Team

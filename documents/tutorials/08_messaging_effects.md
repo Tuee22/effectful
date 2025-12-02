@@ -22,9 +22,7 @@ sequenceDiagram
     participant Consumer as Consumer Program
 
     Publisher->>Pulsar: PublishMessage(topic, payload)
-    Pulsar-->>Publisher: message_id
-
-    Note over Pulsar: Message queued<br/>for subscribers
+    Pulsar-->>Publisher: message_id (queued for subscribers)
 
     Consumer->>Pulsar: ConsumeMessage(subscription)
     Pulsar-->>Consumer: MessageEnvelope or None
@@ -32,14 +30,13 @@ sequenceDiagram
     alt Processing Success
         Consumer->>Consumer: Process message payload
         Consumer->>Pulsar: AcknowledgeMessage(message_id)
-        Note over Pulsar: Message removed<br/>from queue
+        Pulsar-->>Pulsar: Message removed from queue
     else Processing Failure
         Consumer->>Consumer: Processing error
         Consumer->>Pulsar: NegativeAcknowledge(message_id, delay_ms)
-        Note over Pulsar: Message redelivered<br/>after delay
+        Pulsar-->>Consumer: Message redelivered after delay
     else Timeout
-        Consumer->>Consumer: No message available
-        Note over Consumer: Return None<br/>Not an error
+        Consumer->>Consumer: No message available (return None - not an error)
     end
 ```
 
@@ -743,3 +740,7 @@ async def test_consume_timeout(mocker):
 ---
 
 **Previous**: [Tutorial 07: Migration Guide](07_migration_guide.md) | **Next**: [Example 05: Messaging Workflow](/examples/05_messaging_workflow.py)
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: documents/README.md

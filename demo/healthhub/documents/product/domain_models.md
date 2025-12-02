@@ -1,6 +1,6 @@
 # HealthHub Domain Models
 
-> Healthcare domain models using immutable frozen dataclasses and ADT patterns.
+> Extends base [Documentation Standards](../../../../documents/documentation_standards.md) and [Architecture](../../../../documents/engineering/architecture.md); base rules apply. HealthHub-specific domain model deltas only.
 
 ---
 
@@ -433,5 +433,7 @@ def process_interaction_check(result: MedicationCheckResult) -> bool:
 
 ---
 
-**Last Updated**: 2025-11-26
+**Last Updated**: 2025-11-26  
+**Supersedes**: none  
+**Referenced by**: ../README.md, ../engineering/code_quality.md
 **Maintainer**: HealthHub Team

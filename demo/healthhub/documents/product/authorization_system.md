@@ -1,6 +1,6 @@
 # HealthHub Authorization System
 
-> ADT-based authorization making illegal states unrepresentable.
+> Extends base [Documentation Standards](../../../../documents/documentation_standards.md) and [Code Quality](../../../../documents/engineering/code_quality.md); base rules apply. HealthHub-specific authorization deltas only.
 
 ---
 
@@ -374,5 +374,7 @@ def test_unauthorized_captures_reason() -> None:
 
 ---
 
-**Last Updated**: 2025-11-25
+**Last Updated**: 2025-11-25  
+**Supersedes**: none  
+**Referenced by**: ../README.md, ../engineering/authorization_patterns.md
 **Maintainer**: HealthHub Team

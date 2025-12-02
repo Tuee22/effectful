@@ -28,9 +28,9 @@ By the end of this tutorial, you will:
 
 ```mermaid
 flowchart LR
-    App[Effectful Application<br/>/metrics endpoint]
-    Prometheus[Prometheus Server<br/>:9090]
-    Grafana[Grafana<br/>:3000]
+    App[Effectful Application<br/>metrics endpoint]
+    Prometheus[Prometheus Server port 9090]
+    Grafana[Grafana port 3000]
 
     Prometheus -->|scrapes every 15s| App
     Grafana -->|queries| Prometheus
@@ -709,4 +709,6 @@ docker/
 
 ---
 
-**Last Updated**: 2025-01-28
+**Last Updated**: 2025-01-28  
+**Supersedes**: none  
+**Referenced by**: documents/README.md, ../api/metrics.md

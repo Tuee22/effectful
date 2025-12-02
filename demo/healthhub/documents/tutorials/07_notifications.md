@@ -1,6 +1,6 @@
 # Tutorial 07: Real-Time Notifications
 
-> Working with WebSocket notifications.
+> Extends base [Tutorial 07: Migration Guide](../../../../documents/tutorials/07_migration_guide.md); base steps apply. This tutorial documents HealthHub-specific notification flows only.
 
 ---
 
@@ -267,4 +267,6 @@ class NotificationClient {
 
 ---
 
-**Last Updated**: 2025-11-25
+**Last Updated**: 2025-11-25  
+**Supersedes**: none  
+**Referenced by**: ../README.md, ../engineering/websocket_security.md

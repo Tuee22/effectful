@@ -1,6 +1,11 @@
 # Documentation Standards
 
-> **Single Source of Truth (SSoT)** for all documentation practices in the Effectful project.
+> **Single Source of Truth (SSoT)** for all documentation practices across Effectful core and demo projects.
+
+**Scope**
+- Governs docs in `documents/` and demo overlays such as `demo/healthhub/documents/engineering`.
+- Base documentation applies to demos by default; demo docs may only document deltas/overrides and must link back here.
+- Avoid duplicating base content in demo docs—reference the canonical section instead.
 
 ## SSoT Link Map
 
@@ -23,11 +28,11 @@ flowchart TB
 
 | Need | Link |
 |------|------|
-| Navigation entry point | [Engineering README](README.md) |
-| Code quality (type safety + purity) | [Code Quality](code_quality.md) |
-| Architecture canonical doc | [Architecture](architecture.md) |
-| Test documentation rules | [Testing](testing.md) |
-| Monitoring + alerting policy | [Monitoring & Alerting](monitoring_and_alerting.md) |
+| Navigation entry point | [Engineering README](engineering/README.md) |
+| Code quality (type safety + purity) | [Code Quality](engineering/code_quality.md) |
+| Architecture canonical doc | [Architecture](engineering/architecture.md) |
+| Test documentation rules | [Testing](engineering/testing.md) |
+| Monitoring + alerting policy | [Monitoring & Alerting](engineering/monitoring_and_alerting.md) |
 
 ## Documentation Philosophy
 
@@ -37,6 +42,7 @@ flowchart TB
 - Mark SSoT documents explicitly: "**SSoT** for [topic]" and include `Supersedes` when refactoring.
 - Update SSoT first, links follow automatically.
 - Reduces maintenance burden, prevents inconsistency, ensures accuracy.
+- Demo standards inherit from base SSoTs; demo docs must state explicit overrides and keep links back to the canonical base section (e.g., `demo/healthhub/documents/engineering` links here).
 
 ### Link Liberally
 - Default to linking existing SSoTs rather than rephrasing content.
@@ -56,6 +62,14 @@ flowchart TB
 - **Tutorials** (documents/tutorials/): Step-by-step learning guides for users
 - **API reference** (documents/api/): Function signatures and usage
 - **Root docs** (documents/): High-level overview and getting started
+- **Demo overlays** (demo/<project>/documents/): Project-specific deltas that reference and do not duplicate the base standards
+
+### Demo Documentation (Inheritance)
+- Assume every base standard applies to demo projects unless the demo doc clearly documents an override.
+- Demo docs (e.g., `demo/healthhub/documents/engineering/`) must use the **same filename** as the base document they extend.
+- Every demo override starts with a link to the full base document and then lists only the project-specific deltas/overrides.
+- When demo behavior differs, describe the delta succinctly and point back to the canonical section for rationale and examples.
+- Forbidden: copying base examples or procedures into demo docs; prefer short reminders plus a link.
 
 ---
 
@@ -74,12 +88,15 @@ documents/
 ├── engineering/        # Standards for contributors (HOW to build)
 ├── tutorials/         # Learning guides for users (LEARNING)
 └── api/              # Technical reference (WHAT exists)
+
+demo/<project>/documents/
+└── engineering/      # Demo overlays (deltas only; always reference base standards)
 ```
 
 ### Document Size Guidelines
 - Target: 300-800 lines per document
 - Minimum: 100 lines (otherwise merge with related doc)
-- Maximum: 1000 lines (consider splitting if larger)
+- No hard maximum; split when readability suffers or navigation becomes unclear
 - Exception: Comprehensive standards like `testing.md` (~3600 lines) due to 22 anti-patterns
 
 ---
@@ -287,7 +304,7 @@ flowchart TB
 #### Problem 1: Dotted Lines for "Blocked" Connections
 
 **❌ WRONG** (fails in VSCode):
-```mermaid
+```text
 flowchart TB
   Browser[Browser]
   AllowedAPI[Allowed API]
@@ -313,7 +330,7 @@ flowchart TB
 #### Problem 2: Subgraphs for Grouping
 
 **❌ WRONG** (fails in VSCode):
-```mermaid
+```text
 flowchart LR
   subgraph Client
     SPA[React SPA]
@@ -347,7 +364,7 @@ flowchart TB
 #### Problem 3: Note Over in Sequence Diagrams
 
 **❌ WRONG** (fails in some VSCode):
-```mermaid
+```text
 sequenceDiagram
   User->>Server: POST /login
   Server-->>User: Return access token
@@ -366,7 +383,7 @@ sequenceDiagram
 #### Problem 4: Complex Alt Blocks
 
 **❌ WRONG** (fails in some VSCode):
-```mermaid
+```text
 sequenceDiagram
   Client->>Server: Request
   alt Success
@@ -394,7 +411,7 @@ sequenceDiagram
 #### Problem 5: Special Characters in Labels
 
 **❌ WRONG** (may fail parsing):
-```mermaid
+```text
 flowchart TB
   A[User: Alice (admin)]
   B[Function: process_data()]
@@ -468,7 +485,7 @@ If your diagram requires features not in the safe subset:
 1. Create diagram in Mermaid Live Editor: https://mermaid.live/
 2. Export as SVG or PNG
 3. Commit image to repo
-4. Reference in markdown: `![Architecture](architecture.md)`  <!-- Example uses existing doc to keep links valid -->
+4. Reference in markdown: `![Architecture](engineering/architecture.md)`  <!-- Example uses existing doc to keep links valid -->
 
 #### Alternative 3: PlantUML
 
@@ -493,16 +510,16 @@ If your diagram requires features not in the safe subset:
 **Relative paths preferred:**
 ```markdown
 # From documents/tutorials/01_quickstart.md
-See [Code Quality](../engineering/code_quality.md)
+See [Code Quality](engineering/code_quality.md)
 
 # From documents/engineering/code_quality.md
-See [Effect Patterns](effect_patterns.md)
+See [Effect Patterns](engineering/effect_patterns.md)
 ```
 
 **Absolute paths from root:**
 ```markdown
 # From anywhere
-See [Architecture](architecture.md)
+See [Architecture](engineering/architecture.md)
 ```
 
 ### Link Verification
@@ -587,7 +604,7 @@ Add explicit SSoT marker at the top:
 
 **Quick reminder**: Zero `Any`, `cast()`, or `type: ignore` allowed - NO exceptions.
 
-See [Code Quality](../engineering/code_quality.md#1-no-escape-hatches-zero-exceptions) for complete doctrines.
+See [Code Quality](engineering/code_quality.md#1-no-escape-hatches-zero-exceptions) for complete doctrines.
 ```
 
 ### Forbidden Duplication
@@ -640,8 +657,8 @@ See [Code Quality](../engineering/code_quality.md#1-no-escape-hatches-zero-excep
 
 ## See Also
 
-- [Related Standard](code_quality.md)
-- [Tutorial](../tutorials/01_quickstart.md)
+- [Related Standard](engineering/code_quality.md)
+- [Tutorial](tutorials/01_quickstart.md)
 
 ---
 
@@ -681,12 +698,12 @@ See [Code Quality](../engineering/code_quality.md#1-no-escape-hatches-zero-excep
 
 ## Next Steps
 
-- [Tutorial 2](../tutorials/02_effect_types.md)
-- [Related Standard](../engineering/code_quality.md)
+- [Tutorial 2](tutorials/02_effect_types.md)
+- [Related Standard](engineering/code_quality.md)
 
 ---
 
-**Previous**: [Tutorial 1](../tutorials/01_quickstart.md) | **Next**: [Tutorial 3](../tutorials/03_adts_and_results.md)
+**Previous**: [Tutorial 1](tutorials/01_quickstart.md) | **Next**: [Tutorial 3](tutorials/03_adts_and_results.md)
 ```
 
 ### API Reference Template
@@ -729,9 +746,9 @@ See [Code Quality](../engineering/code_quality.md#1-no-escape-hatches-zero-excep
 
 ## See Also
 
-- [Related API](../api/effects.md)
-- [Tutorial](../tutorials/01_quickstart.md)
-- [Standard](../engineering/architecture.md)
+- [Related API](api/effects.md)
+- [Tutorial](tutorials/01_quickstart.md)
+- [Standard](engineering/architecture.md)
 ```
 
 ---
@@ -806,12 +823,12 @@ docs: add documentation standards
 
 ## See Also
 
-- [Code Quality](code_quality.md) - Zero-tolerance type safety + purity
-- [Architecture](architecture.md) - Overall system design
-- [Testing](testing.md) - Test documentation practices
-- [Command Reference](command_reference.md) - All Docker commands
-- [Monitoring & Alerting](monitoring_and_alerting.md) - Metric + alert policy
-- [CONTRIBUTING](../CONTRIBUTING.md) - How to contribute
+- [Code Quality](engineering/code_quality.md) - Zero-tolerance type safety + purity
+- [Architecture](engineering/architecture.md) - Overall system design
+- [Testing](engineering/testing.md) - Test documentation practices
+- [Command Reference](engineering/command_reference.md) - All Docker commands
+- [Monitoring & Alerting](engineering/monitoring_and_alerting.md) - Metric + alert policy
+- [CONTRIBUTING](CONTRIBUTING.md) - How to contribute
 
 ---
 

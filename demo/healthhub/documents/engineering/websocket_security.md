@@ -1,6 +1,6 @@
-# WebSocket Security for HealthHub
+# WebSocket Security for HealthHub (HealthHub supplement)
 
-> **Healthcare-specific guide** for secure real-time notifications covering authentication, authorization, patient isolation, and critical medical alerts.
+> Supplements base [Architecture](../../../../documents/engineering/architecture.md) and [Observability](../../../../documents/engineering/observability.md); HealthHub-specific real-time notification security. Base rules apply; see `architecture.md` overlay for canonical deltas.
 
 ---
 
@@ -1114,7 +1114,7 @@ NOTIFICATIONS_SENT = Counter(
 - [Authorization Patterns](authorization_patterns.md) - ADT-based authorization, pattern matching
 
 **Observability**:
-- [Monitoring & Observability](monitoring_observability.md) - WebSocket connection metrics, message rate tracking
+- [Monitoring & Alerting](monitoring_and_alerting.md) - WebSocket connection metrics, message rate tracking
 
 **Implementation**:
 - [../product/notification_system.md](../product/notification_system.md) - WebSocket implementation details
@@ -1133,5 +1133,7 @@ NOTIFICATIONS_SENT = Counter(
 
 ---
 
-**Last Updated**: November 2025
-**Version**: 1.0
+**Last Updated**: 2025-11-30
+**Version**: 1.0  
+**Supersedes**: none  
+**Referenced by**: README.md, architecture.md, monitoring_and_alerting.md

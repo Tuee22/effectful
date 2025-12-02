@@ -40,7 +40,7 @@ flowchart TB
 | Run quality checks | [Code Quality](code_quality.md#detection-and-enforcement) |
 | Add metrics/observability | [Observability](observability.md) |
 | Monitoring + alerting policy | [Monitoring & Alerting](monitoring_and_alerting.md) |
-| Write documentation | [Documentation Standards](documentation_standards.md) |
+| Write documentation | [Documentation Standards](../documentation_standards.md) |
 
 ## Core Standards
 
@@ -71,7 +71,7 @@ flowchart TB
 
 ## Development Guides
 
-**[Documentation Guidelines](documentation_standards.md)** (500+ lines)
+**[Documentation Guidelines](../documentation_standards.md)** (500+ lines)
 - SSoT (Single Source of Truth) enforcement
 - DRY (Don't Repeat Yourself) principles
 - Mermaid diagram best practices (GitHub + VSCode compatibility)
@@ -168,7 +168,7 @@ All engineering documents marked with "**SSoT**" are authoritative. When conflic
 ## Meta-Documentation
 
 **How to update these standards:**
-1. Read [Documentation Guidelines](documentation_standards.md) for standards
+1. Read [Documentation Guidelines](../documentation_standards.md) for standards
 2. Make changes to appropriate SSoT document
 3. Update "Last Updated" timestamp
 4. Update "Referenced by" list if adding new cross-references
@@ -188,3 +188,4 @@ All engineering documents marked with "**SSoT**" are authoritative. When conflic
 **Last Updated**: 2025-12-01
 **Document Count**: 18 engineering standards
 **Status**: Authoritative engineering reference for effectful library
+**Supersedes**: none

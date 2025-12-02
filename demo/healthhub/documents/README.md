@@ -1,6 +1,6 @@
 # HealthHub Documentation
 
-> Comprehensive documentation for the HealthHub Medical Center demo application built on the Effectful effect system library.
+> Extends base [Effectful Documentation](../../documents/README.md) and [Documentation Standards](../../documents/documentation_standards.md). Base standards apply; this hub lists HealthHub-specific deltas.
 
 ---
 
@@ -31,8 +31,8 @@
 | **Patterns & Testing** | |
 | Authorization Patterns | [engineering/authorization_patterns.md](engineering/authorization_patterns.md) |
 | State Machine Implementation | [engineering/state_machine_patterns.md](engineering/state_machine_patterns.md) |
-| Effect Programs | [engineering/effect_program_patterns.md](engineering/effect_program_patterns.md) |
-| Testing Doctrine | [engineering/testing_doctrine.md](engineering/testing_doctrine.md) |
+| Effect Programs | [engineering/effect_patterns.md](engineering/effect_patterns.md) |
+| Testing | [engineering/testing.md](engineering/testing.md) |
 
 ---
 
@@ -77,8 +77,8 @@ HealthHub documentation follows a strict **Single Source of Truth (SSoT)** hiera
 |----------|-------|-------------|
 | [authorization_patterns.md](engineering/authorization_patterns.md) | 244 | ADT-based authorization patterns (PatientAuthorized, DoctorAuthorized) |
 | [state_machine_patterns.md](engineering/state_machine_patterns.md) | 456 | ADT state machine implementation (frozen dataclasses, TransitionResult ADT) |
-| [effect_program_patterns.md](engineering/effect_program_patterns.md) | 318 | Pure effect programs (generators, type narrowing, fire-and-forget notifications) |
-| [testing_doctrine.md](engineering/testing_doctrine.md) | 1,345 | Comprehensive testing philosophy (22 anti-patterns, generator testing) |
+| [effect_patterns.md](engineering/effect_patterns.md) | 318 | Pure effect programs (generators, type narrowing, fire-and-forget notifications) |
+| [testing.md](engineering/testing.md) | 1,345 | Comprehensive testing philosophy (22 anti-patterns, generator testing) |
 | [README.md](engineering/README.md) | 240 | Engineering tier overview and navigation |
 
 **Total**: 5+ documents (2,603+ lines)
@@ -171,7 +171,7 @@ HealthHub documentation follows a strict **Single Source of Truth (SSoT)** hiera
 **Use case**: Understanding related concepts at the same level
 
 - **Domain tier**: [appointment_workflows.md](domain/appointment_workflows.md) references [medical_state_machines.md](domain/medical_state_machines.md) and [hipaa_compliance.md](domain/hipaa_compliance.md)
-- **Engineering tier**: [effect_program_patterns.md](engineering/effect_program_patterns.md) references [state_machine_patterns.md](engineering/state_machine_patterns.md)
+- **Engineering tier**: [effect_patterns.md](engineering/effect_patterns.md) references [state_machine_patterns.md](engineering/state_machine_patterns.md)
 - **Product tier**: [api_reference.md](product/api_reference.md) references [authorization_system.md](product/authorization_system.md), [authentication.md](product/authentication.md), [audit_logging.md](product/audit_logging.md)
 
 ---
@@ -322,6 +322,8 @@ HealthHub demonstrates comprehensive medical workflows:
 ---
 
 **Last Updated**: 2025-11-26
+**Supersedes**: none
 **Maintainer**: HealthHub Team
 **Documentation Version**: 2.0 (4-tier architecture with SSoT)
-**Status**: All tiers complete with bidirectional cross-references
+**Status**: All tiers complete with bidirectional cross-references  
+**Referenced by**: engineering/README.md, product/architecture_overview.md, domain/README.md

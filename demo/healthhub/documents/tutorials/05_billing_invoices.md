@@ -1,6 +1,6 @@
 # Tutorial 05: Billing and Invoices
 
-> Creating and managing healthcare invoices.
+> Extends base [Tutorial 05: Production Deployment](../../../../documents/tutorials/05_production_deployment.md); base steps apply. This tutorial documents HealthHub-specific billing flows only.
 
 ---
 
@@ -171,4 +171,6 @@ class LineItem:
 
 ---
 
-**Last Updated**: 2025-11-25
+**Last Updated**: 2025-11-25  
+**Supersedes**: none  
+**Referenced by**: ../README.md

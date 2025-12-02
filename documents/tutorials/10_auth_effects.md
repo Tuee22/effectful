@@ -330,3 +330,9 @@ match result:
 - [Auth API Reference](../api/auth.md) - Complete effect documentation
 - [Effects Overview](../api/effects.md) - All effect types
 - [Testing Guide](04_testing_guide.md) - Testing patterns
+
+---
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: documents/README.md

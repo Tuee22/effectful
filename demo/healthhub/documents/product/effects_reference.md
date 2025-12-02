@@ -1,6 +1,6 @@
 # Healthcare Effects Reference
 
-> Complete API reference for all healthcare and notification effects.
+> Extends base [Documentation Standards](../../../../documents/documentation_standards.md) and [Effect Patterns](../../../../documents/engineering/effect_patterns.md); base rules apply. HealthHub-specific effects reference only.
 
 ---
 
@@ -464,8 +464,8 @@ type PublishResult = NotificationPublished | PublishFailed
 ## Related Documentation
 
 ### Best Practices
-- [Effect Program Patterns](../engineering/effect_program_patterns.md) - How to use effects in programs (yield, type narrowing, composition)
-- [Testing Doctrine](../engineering/testing_doctrine.md) - Testing effect programs with generator stepping
+- [Effect Patterns](../engineering/effect_patterns.md) - How to use effects in programs (yield, type narrowing, composition)
+- [Testing](../engineering/testing.md) - Testing effect programs with generator stepping
 
 ### Product Documentation
 - [Architecture Overview](architecture_overview.md) - How effects fit in the 5-layer architecture
@@ -476,5 +476,7 @@ type PublishResult = NotificationPublished | PublishFailed
 
 ---
 
-**Last Updated**: 2025-11-26
+**Last Updated**: 2025-11-26  
+**Supersedes**: none  
+**Referenced by**: ../README.md, ../engineering/effect_patterns.md
 **Maintainer**: HealthHub Team

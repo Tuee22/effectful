@@ -676,3 +676,9 @@ except asyncio.TimeoutError:
 - [Result Type API](./result.md) - Return types for interpreter operations
 - [Programs API](./programs.md) - Running programs with interpreters
 - [Testing Standards](../engineering/testing.md) - Testing with mock interpreters
+
+---
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: documents/api/README.md, ../README.md

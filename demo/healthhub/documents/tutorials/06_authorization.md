@@ -1,6 +1,6 @@
 # Tutorial 06: Authorization
 
-> Understanding ADT-based role authorization.
+> Extends base [Tutorial 06: Advanced Composition](../../../../documents/tutorials/06_advanced_composition.md); base steps apply. This tutorial documents HealthHub-specific authorization flows only.
 
 ---
 
@@ -205,4 +205,6 @@ def test_doctor_can_access_any_patient() -> None:
 
 ---
 
-**Last Updated**: 2025-11-25
+**Last Updated**: 2025-11-25  
+**Supersedes**: none  
+**Referenced by**: ../README.md, ../engineering/authorization_patterns.md

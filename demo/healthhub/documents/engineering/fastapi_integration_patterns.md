@@ -1,6 +1,6 @@
-# FastAPI Integration Patterns
+# FastAPI Integration Patterns (HealthHub supplement)
 
-> **Bridging FastAPI and Effectful** - How to integrate FastAPI HTTP routes with the effectful effect system while maintaining separation of concerns.
+> Supplements base [Architecture](../../../../documents/engineering/architecture.md) and [Effect Patterns](../../../../documents/engineering/effect_patterns.md); base rules apply. See `architecture.md` and `effect_patterns.md` overlays for canonical HealthHub deltas.
 
 ---
 
@@ -798,7 +798,7 @@ async def create_appointment(request: CreateAppointmentRequest):
 
 **Architecture**:
 - [Architecture Overview](../product/architecture_overview.md) - 5-layer architecture diagram
-- [Effect Program Patterns](effect_program_patterns.md) - Generator-based business logic
+- [Effect Patterns](effect_patterns.md) - Generator-based business logic
 
 **Authorization**:
 - [Authorization Patterns](authorization_patterns.md) - ADT-based authorization
@@ -809,5 +809,7 @@ async def create_appointment(request: CreateAppointmentRequest):
 
 ---
 
-**Last Updated**: November 2025
-**Version**: 1.0
+**Last Updated**: 2025-11-30
+**Version**: 1.0  
+**Supersedes**: none  
+**Referenced by**: README.md, architecture.md

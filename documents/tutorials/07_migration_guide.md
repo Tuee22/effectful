@@ -167,35 +167,22 @@ The following diagrams show the key architectural differences:
 
 ```mermaid
 flowchart TB
-    subgraph Imperative[Imperative Pattern - Direct I/O]
-        I1[WebSocket Handler]
-        I2[Direct DB Connection]
-        I3[Try-Except Blocks]
-        I4[Mutable State]
-        I5[Direct WebSocket Send/Receive]
-        I6[Resource Cleanup in Finally]
+    ImperativeStart[Imperative - WebSocket Handler]
+    ImperativeDB[Imperative - Direct DB Connection]
+    ImperativeErrors[Imperative - Try/Except]
+    ImperativeState[Imperative - Mutable State]
+    ImperativeIO[Imperative - Direct WebSocket I/O]
+    ImperativeCleanup[Imperative - Finally Cleanup]
 
-        I1 --> I2
-        I2 --> I3
-        I3 --> I4
-        I4 --> I5
-        I5 --> I6
-    end
+    FunctionalStart[Functional - Effect Program Generator]
+    FunctionalYield[Functional - Yield Effects (Pure Data)]
+    FunctionalMatch[Functional - Pattern Match Results]
+    FunctionalImmutable[Functional - Immutable Values]
+    FunctionalInterpreter[Functional - Interpreter Owns I/O]
+    FunctionalManage[Functional - Managed Resources]
 
-    subgraph Functional[Functional Pattern - Effects]
-        F1[Effect Program Generator]
-        F2[Yield Effects Pure Data]
-        F3[Pattern Match on Results]
-        F4[Immutable Values Only]
-        F5[Interpreter Handles I/O]
-        F6[Automatic Resource Management]
-
-        F1 --> F2
-        F2 --> F3
-        F3 --> F4
-        F4 --> F5
-        F5 --> F6
-    end
+    ImperativeStart --> ImperativeDB --> ImperativeErrors --> ImperativeState --> ImperativeIO --> ImperativeCleanup
+    FunctionalStart --> FunctionalYield --> FunctionalMatch --> FunctionalImmutable --> FunctionalInterpreter --> FunctionalManage
 ```
 
 **Key Differences:**
@@ -795,13 +782,13 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
 3. **Don't Ignore Type Safety**
    ```python
-   # ❌ Using Any during migration
-   def migrate_handler(data: Any) -> Any:  # Lost type safety!
-       pass
+   # ❌ Using overly generic types during migration (breaks guarantees)
+   def migrate_handler(data: object) -> object:  # Lost type safety!
+       return data
 
    # ✅ Maintain type safety
    def migrate_handler(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
-       pass
+       ...
    ```
 
 4. **Don't Skip Error Handling Migration**
@@ -839,3 +826,9 @@ You learned how to:
 - ✅ Handle common migration challenges (request-response cycles, shared state, background tasks)
 
 Your migration strategy is solid and low-risk! 🎉
+
+---
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: documents/README.md

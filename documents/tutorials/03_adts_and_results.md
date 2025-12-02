@@ -595,3 +595,7 @@ print(message.id)  # mypy error: EffectResult has no attribute 'id'
 ---
 
 **Previous**: [Tutorial 02: Effect Types](02_effect_types.md) | **Next**: [Tutorial 04: Testing Patterns](04_testing_guide.md)
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: documents/README.md

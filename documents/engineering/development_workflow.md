@@ -27,7 +27,7 @@ flowchart TB
 | Container policy | [Docker Workflow](docker_workflow.md) |
 | Exact command syntax | [Command Reference](command_reference.md) |
 | Environment variables | [Configuration](configuration.md) |
-| Documentation rules | [Documentation Standards](documentation_standards.md) |
+| Documentation rules | [Documentation Standards](../documentation_standards.md) |
 | Test sequencing | [Testing](testing.md#running-tests) |
 
 ## Daily Development Loop
@@ -250,4 +250,5 @@ docker compose -f docker/docker-compose.yml exec effectful poetry add --group de
 ---
 
 **Last Updated**: 2025-12-01
+**Supersedes**: none
 **Referenced by**: CLAUDE.md, README.md, contributing.md
