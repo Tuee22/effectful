@@ -143,8 +143,6 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
       - effectful-prometheusdata:/prometheus  # Named volume for metrics data
-    ports:
-      - "9090:9090"  # Prometheus UI
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
       interval: 10s
@@ -166,8 +164,6 @@ services:
       - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
       - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
       - effectful-grafanadata:/var/lib/grafana  # Named volume for dashboard data
-    ports:
-      - "3000:3000"  # Grafana UI
     depends_on:
       prometheus:
         condition: service_healthy
