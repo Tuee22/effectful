@@ -46,7 +46,13 @@ class TestIncrementCounter:
     async def test_increment_counter_success(self, mocker: MockerFixture) -> None:
         """Interpreter returns MetricRecorded when counter incremented successfully."""
         mock_collector = mocker.AsyncMock(spec=MetricsCollector)
-        mock_collector.increment_counter.return_value = MetricRecorded(timestamp=123.45)
+        mock_collector.increment_counter.return_value = MetricRecorded(
+            metric_name="requests_total",
+            metric_type="counter",
+            labels={"method": "GET", "status": "200"},
+            value=1.0,
+            timestamp=123.45,
+        )
 
         interpreter = MetricsInterpreter(collector=mock_collector)
 
@@ -59,9 +65,7 @@ class TestIncrementCounter:
 
         # Verify result
         match result:
-            case Ok(
-                EffectReturn(value=MetricRecorded(timestamp=123.45), effect_name="IncrementCounter")
-            ):
+            case Ok(EffectReturn(value=MetricRecorded(), effect_name="IncrementCounter")):
                 pass  # Success
             case _:
                 pytest.fail(f"Expected Ok with MetricRecorded, got {result}")
@@ -78,7 +82,9 @@ class TestIncrementCounter:
         """Interpreter returns MetricRecordingFailed when validation fails."""
         mock_collector = mocker.AsyncMock(spec=MetricsCollector)
         mock_collector.increment_counter.return_value = MetricRecordingFailed(
-            reason="Counter 'unknown' not registered"
+            metric_name="unknown",
+            reason="metric_not_registered",
+            message="Counter 'unknown' not registered",
         )
 
         interpreter = MetricsInterpreter(collector=mock_collector)
@@ -93,9 +99,14 @@ class TestIncrementCounter:
         # Verify result
         match result:
             case Ok(
-                EffectReturn(value=MetricRecordingFailed(reason=r), effect_name="IncrementCounter")
+                EffectReturn(
+                    value=MetricRecordingFailed(
+                        metric_name="unknown", reason="metric_not_registered", message=msg
+                    ),
+                    effect_name="IncrementCounter",
+                )
             ):
-                assert "not registered" in r
+                assert "not registered" in msg
             case _:
                 pytest.fail(f"Expected Ok with MetricRecordingFailed, got {result}")
 
@@ -104,7 +115,9 @@ class TestIncrementCounter:
         """Interpreter returns MetricRecordingFailed for negative counter value."""
         mock_collector = mocker.AsyncMock(spec=MetricsCollector)
         mock_collector.increment_counter.return_value = MetricRecordingFailed(
-            reason="Counter value must be >= 0, got -1.0"
+            metric_name="requests_total",
+            reason="invalid_value",
+            message="Counter value must be >= 0, got -1.0",
         )
 
         interpreter = MetricsInterpreter(collector=mock_collector)
@@ -119,9 +132,14 @@ class TestIncrementCounter:
         # Verify result
         match result:
             case Ok(
-                EffectReturn(value=MetricRecordingFailed(reason=r), effect_name="IncrementCounter")
+                EffectReturn(
+                    value=MetricRecordingFailed(
+                        metric_name="requests_total", reason="invalid_value", message=msg
+                    ),
+                    effect_name="IncrementCounter",
+                )
             ):
-                assert ">= 0" in r
+                assert ">= 0" in msg
             case _:
                 pytest.fail(f"Expected Ok with MetricRecordingFailed, got {result}")
 
@@ -133,7 +151,13 @@ class TestRecordGauge:
     async def test_record_gauge_success(self, mocker: MockerFixture) -> None:
         """Interpreter returns MetricRecorded when gauge recorded successfully."""
         mock_collector = mocker.AsyncMock(spec=MetricsCollector)
-        mock_collector.record_gauge.return_value = MetricRecorded(timestamp=123.45)
+        mock_collector.record_gauge.return_value = MetricRecorded(
+            metric_name="active_connections",
+            metric_type="gauge",
+            labels={"protocol": "http"},
+            value=42.0,
+            timestamp=123.45,
+        )
 
         interpreter = MetricsInterpreter(collector=mock_collector)
 
@@ -146,9 +170,7 @@ class TestRecordGauge:
 
         # Verify result
         match result:
-            case Ok(
-                EffectReturn(value=MetricRecorded(timestamp=123.45), effect_name="RecordGauge")
-            ):
+            case Ok(EffectReturn(value=MetricRecorded(), effect_name="SetGauge")):
                 pass  # Success
             case _:
                 pytest.fail(f"Expected Ok with MetricRecorded, got {result}")
@@ -164,7 +186,13 @@ class TestRecordGauge:
     async def test_record_gauge_negative_value(self, mocker: MockerFixture) -> None:
         """Interpreter allows negative gauge values (unlike counters)."""
         mock_collector = mocker.AsyncMock(spec=MetricsCollector)
-        mock_collector.record_gauge.return_value = MetricRecorded(timestamp=123.45)
+        mock_collector.record_gauge.return_value = MetricRecorded(
+            metric_name="temperature_celsius",
+            metric_type="gauge",
+            labels={"location": "arctic"},
+            value=-15.5,
+            timestamp=123.45,
+        )
 
         interpreter = MetricsInterpreter(collector=mock_collector)
 
@@ -177,7 +205,7 @@ class TestRecordGauge:
 
         # Verify result
         match result:
-            case Ok(EffectReturn(value=MetricRecorded(), effect_name="RecordGauge")):
+            case Ok(EffectReturn(value=MetricRecorded(), effect_name="SetGauge")):
                 pass  # Success
             case _:
                 pytest.fail(f"Expected Ok with MetricRecorded, got {result}")
@@ -187,7 +215,9 @@ class TestRecordGauge:
         """Interpreter returns MetricRecordingFailed when gauge validation fails."""
         mock_collector = mocker.AsyncMock(spec=MetricsCollector)
         mock_collector.record_gauge.return_value = MetricRecordingFailed(
-            reason="Gauge 'unknown' not registered"
+            metric_name="unknown",
+            reason="metric_not_registered",
+            message="Gauge 'unknown' not registered",
         )
 
         interpreter = MetricsInterpreter(collector=mock_collector)
@@ -201,8 +231,15 @@ class TestRecordGauge:
 
         # Verify result
         match result:
-            case Ok(EffectReturn(value=MetricRecordingFailed(reason=r), effect_name="RecordGauge")):
-                assert "not registered" in r
+            case Ok(
+                EffectReturn(
+                    value=MetricRecordingFailed(
+                        metric_name="unknown", reason="metric_not_registered", message=msg
+                    ),
+                    effect_name="SetGauge",
+                )
+            ):
+                assert "not registered" in msg
             case _:
                 pytest.fail(f"Expected Ok with MetricRecordingFailed, got {result}")
 
@@ -214,7 +251,13 @@ class TestObserveHistogram:
     async def test_observe_histogram_success(self, mocker: MockerFixture) -> None:
         """Interpreter returns MetricRecorded when histogram observed successfully."""
         mock_collector = mocker.AsyncMock(spec=MetricsCollector)
-        mock_collector.observe_histogram.return_value = MetricRecorded(timestamp=123.45)
+        mock_collector.observe_histogram.return_value = MetricRecorded(
+            metric_name="request_duration_seconds",
+            metric_type="histogram",
+            labels={"endpoint": "/chat"},
+            value=0.5,
+            timestamp=123.45,
+        )
 
         interpreter = MetricsInterpreter(collector=mock_collector)
 
@@ -227,9 +270,7 @@ class TestObserveHistogram:
 
         # Verify result
         match result:
-            case Ok(
-                EffectReturn(value=MetricRecorded(timestamp=123.45), effect_name="ObserveHistogram")
-            ):
+            case Ok(EffectReturn(value=MetricRecorded(), effect_name="ObserveHistogram")):
                 pass  # Success
             case _:
                 pytest.fail(f"Expected Ok with MetricRecorded, got {result}")
@@ -246,7 +287,9 @@ class TestObserveHistogram:
         """Interpreter returns MetricRecordingFailed when histogram validation fails."""
         mock_collector = mocker.AsyncMock(spec=MetricsCollector)
         mock_collector.observe_histogram.return_value = MetricRecordingFailed(
-            reason="Histogram 'unknown' not registered"
+            metric_name="unknown",
+            reason="metric_not_registered",
+            message="Histogram 'unknown' not registered",
         )
 
         interpreter = MetricsInterpreter(collector=mock_collector)
@@ -261,9 +304,14 @@ class TestObserveHistogram:
         # Verify result
         match result:
             case Ok(
-                EffectReturn(value=MetricRecordingFailed(reason=r), effect_name="ObserveHistogram")
+                EffectReturn(
+                    value=MetricRecordingFailed(
+                        metric_name="unknown", reason="metric_not_registered", message=msg
+                    ),
+                    effect_name="ObserveHistogram",
+                )
             ):
-                assert "not registered" in r
+                assert "not registered" in msg
             case _:
                 pytest.fail(f"Expected Ok with MetricRecordingFailed, got {result}")
 
@@ -275,7 +323,13 @@ class TestRecordSummary:
     async def test_record_summary_success(self, mocker: MockerFixture) -> None:
         """Interpreter returns MetricRecorded when summary recorded successfully."""
         mock_collector = mocker.AsyncMock(spec=MetricsCollector)
-        mock_collector.record_summary.return_value = MetricRecorded(timestamp=123.45)
+        mock_collector.record_summary.return_value = MetricRecorded(
+            metric_name="response_size_bytes",
+            metric_type="summary",
+            labels={"content_type": "application/json"},
+            value=1024.0,
+            timestamp=123.45,
+        )
 
         interpreter = MetricsInterpreter(collector=mock_collector)
 
@@ -288,9 +342,7 @@ class TestRecordSummary:
 
         # Verify result
         match result:
-            case Ok(
-                EffectReturn(value=MetricRecorded(timestamp=123.45), effect_name="RecordSummary")
-            ):
+            case Ok(EffectReturn(value=MetricRecorded(), effect_name="RecordSummary")):
                 pass  # Success
             case _:
                 pytest.fail(f"Expected Ok with MetricRecorded, got {result}")
@@ -307,7 +359,9 @@ class TestRecordSummary:
         """Interpreter returns MetricRecordingFailed when summary validation fails."""
         mock_collector = mocker.AsyncMock(spec=MetricsCollector)
         mock_collector.record_summary.return_value = MetricRecordingFailed(
-            reason="Summary 'unknown' not registered"
+            metric_name="unknown",
+            reason="metric_not_registered",
+            message="Summary 'unknown' not registered",
         )
 
         interpreter = MetricsInterpreter(collector=mock_collector)
@@ -322,9 +376,14 @@ class TestRecordSummary:
         # Verify result
         match result:
             case Ok(
-                EffectReturn(value=MetricRecordingFailed(reason=r), effect_name="RecordSummary")
+                EffectReturn(
+                    value=MetricRecordingFailed(
+                        metric_name="unknown", reason="metric_not_registered", message=msg
+                    ),
+                    effect_name="RecordSummary",
+                )
             ):
-                assert "not registered" in r
+                assert "not registered" in msg
             case _:
                 pytest.fail(f"Expected Ok with MetricRecordingFailed, got {result}")
 
@@ -424,7 +483,13 @@ class TestResetMetrics:
     async def test_reset_metrics_success(self, mocker: MockerFixture) -> None:
         """Interpreter returns MetricRecorded when metrics reset successfully."""
         mock_collector = mocker.AsyncMock(spec=MetricsCollector)
-        mock_collector.reset_metrics.return_value = MetricRecorded(timestamp=123.45)
+        mock_collector.reset_metrics.return_value = MetricRecorded(
+            metric_name="reset_metrics",
+            metric_type="gauge",
+            labels={},
+            value=0.0,
+            timestamp=123.45,
+        )
 
         interpreter = MetricsInterpreter(collector=mock_collector)
 
@@ -433,9 +498,7 @@ class TestResetMetrics:
 
         # Verify result
         match result:
-            case Ok(
-                EffectReturn(value=MetricRecorded(timestamp=123.45), effect_name="ResetMetrics")
-            ):
+            case Ok(EffectReturn(value=MetricRecorded(), effect_name="ResetMetrics")):
                 pass  # Success
             case _:
                 pytest.fail(f"Expected Ok with MetricRecorded, got {result}")
@@ -448,7 +511,9 @@ class TestResetMetrics:
         """Interpreter returns MetricRecordingFailed when reset not supported (Prometheus)."""
         mock_collector = mocker.AsyncMock(spec=MetricsCollector)
         mock_collector.reset_metrics.return_value = MetricRecordingFailed(
-            reason="reset_metrics() not supported for Prometheus"
+            metric_name="reset_metrics",
+            reason="collector_error",
+            message="reset_metrics() not supported for Prometheus",
         )
 
         interpreter = MetricsInterpreter(collector=mock_collector)
@@ -459,9 +524,14 @@ class TestResetMetrics:
         # Verify result
         match result:
             case Ok(
-                EffectReturn(value=MetricRecordingFailed(reason=r), effect_name="ResetMetrics")
+                EffectReturn(
+                    value=MetricRecordingFailed(
+                        metric_name="reset_metrics", reason="collector_error", message=msg
+                    ),
+                    effect_name="ResetMetrics",
+                )
             ):
-                assert "not supported" in r
+                assert "not supported" in msg
             case _:
                 pytest.fail(f"Expected Ok with MetricRecordingFailed, got {result}")
 

@@ -8,6 +8,7 @@ making error handling explicit in the type system.
 """
 
 from dataclasses import dataclass
+from typing import Literal
 
 
 @dataclass(frozen=True)
@@ -15,9 +16,17 @@ class MetricRecorded:
     """Metric was successfully recorded.
 
     Attributes:
+        metric_name: Name of the recorded metric
+        metric_type: Metric type ("counter" | "gauge" | "histogram" | "summary")
+        labels: Label key-value pairs used for this observation
+        value: Observed value (increment for counters, set value for gauges, sample for histograms/summaries)
         timestamp: Unix timestamp when metric was recorded
     """
 
+    metric_name: str
+    metric_type: Literal["counter", "gauge", "histogram", "summary"]
+    labels: dict[str, str]
+    value: float
     timestamp: float
 
 
@@ -26,19 +35,29 @@ class MetricRecordingFailed:
     """Metric recording failed with explicit reason.
 
     Attributes:
-        reason: Why the metric wasn't recorded
+        metric_name: Name of the metric that failed to record
+        reason: Categorical failure reason
+        message: Human-readable context for the failure
 
     Possible reason values:
-        - "metric_not_registered": Metric not found in MetricsRegistry
-        - "type_mismatch": Metric exists but is different type (counter vs gauge)
-        - "missing_label: <label_name>": Required label not provided
-        - "unexpected_label: <label_name>": Label provided but not in schema
-        - "invalid_value: <details>": Value is invalid (negative, NaN, etc.)
-        - "cardinality_limit_exceeded": Too many unique label combinations
-        - "collector_error: <message>": Internal collector error
+        - "metric_not_registered"
+        - "type_mismatch"
+        - "invalid_labels"
+        - "invalid_value"
+        - "cardinality_limit_exceeded"
+        - "collector_error"
     """
 
-    reason: str
+    metric_name: str
+    reason: Literal[
+        "metric_not_registered",
+        "type_mismatch",
+        "invalid_labels",
+        "invalid_value",
+        "cardinality_limit_exceeded",
+        "collector_error",
+    ]
+    message: str
 
 
 @dataclass(frozen=True)

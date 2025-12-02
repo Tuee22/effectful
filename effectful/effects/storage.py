@@ -49,7 +49,7 @@ class GetObject:
 
     Returns:
         S3Object with content and metadata if object exists.
-        None if object does not exist.
+        ObjectNotFound ADT if object does not exist.
 
     Raises:
         StorageError: If retrieval fails (permission denied, network error, etc.)
@@ -59,7 +59,7 @@ class GetObject:
         ...     obj = yield GetObject(bucket="my-bucket", key="data/file.txt")
         ...
         ...     match obj:
-        ...         case None:
+        ...         case ObjectNotFound():
         ...             yield SendText(text="File not found")
         ...             return b""
         ...         case S3Object(content=content):

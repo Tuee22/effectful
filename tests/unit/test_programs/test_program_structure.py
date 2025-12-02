@@ -70,7 +70,7 @@ class TestComplexWorkflows:
         user_result = yield GetUserById(user_id=user_id)
 
         match user_result:
-            case None:
+            case UserNotFound():
                 yield SendText(text="User not found")
                 return "not_found"
             case User(name=name):
@@ -144,7 +144,7 @@ class TestConditionalLogic:
         user_result = yield GetUserById(user_id=user_id)
 
         match user_result:
-            case None:
+            case UserNotFound():
                 return "user_not_found"
             case User(name=name):
                 greeting = f"Hello {name}!"

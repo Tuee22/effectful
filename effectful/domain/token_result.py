@@ -12,6 +12,7 @@ All possible validation outcomes are explicitly modeled:
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 
@@ -56,3 +57,20 @@ class TokenInvalid:
 
 # ADT: Union of all token validation results (no Optional!) using PEP 695 type statement
 type TokenValidationResult = TokenValid | TokenExpired | TokenInvalid
+
+
+@dataclass(frozen=True)
+class TokenRefreshed:
+    """Successful token refresh result."""
+
+    access_token: str
+
+
+@dataclass(frozen=True)
+class TokenRefreshRejected:
+    """Refresh token is invalid or expired."""
+
+    reason: Literal["invalid_refresh_token", "expired_refresh_token"]
+
+
+type TokenRefreshResult = TokenRefreshed | TokenRefreshRejected

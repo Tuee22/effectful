@@ -47,7 +47,7 @@ class IncrementCounter:
 
 
 @dataclass(frozen=True)
-class RecordGauge:
+class SetGauge:
     """Effect: Set gauge metric to specific value.
 
     Gauges are point-in-time values that can go up or down.
@@ -66,6 +66,10 @@ class RecordGauge:
     metric_name: str
     labels: dict[str, str]
     value: float
+
+
+# Backwards-compatible alias (previous name used in code)
+RecordGauge = SetGauge
 
 
 @dataclass(frozen=True)
@@ -150,5 +154,5 @@ class ResetMetrics:
 
 # ADT: Union of all metrics effects using PEP 695 type statement
 type MetricsEffect = (
-    IncrementCounter | RecordGauge | ObserveHistogram | RecordSummary | QueryMetrics | ResetMetrics
+    IncrementCounter | SetGauge | ObserveHistogram | RecordSummary | QueryMetrics | ResetMetrics
 )

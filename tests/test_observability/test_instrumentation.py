@@ -28,6 +28,22 @@ from effectful.observability.instrumentation import (
 )
 
 
+def _recorded(
+    metric_name: str,
+    metric_type: str,
+    labels: dict[str, str],
+    value: float = 1.0,
+    timestamp: float = 1.0,
+) -> MetricRecorded:
+    return MetricRecorded(
+        metric_name=metric_name,
+        metric_type=metric_type,  # type: ignore[arg-type]
+        labels=labels,
+        value=value,
+        timestamp=timestamp,
+    )
+
+
 # Successful wrapping and forwarding
 
 
@@ -42,8 +58,26 @@ async def test_wraps_interpreter_and_forwards_calls(mocker: MockerFixture) -> No
     mock_wrapped.interpret.return_value = expected_result
 
     mock_collector = mocker.AsyncMock(spec=MetricsCollector)
-    mock_collector.increment_counter.return_value = MetricRecorded(timestamp=1.0)
-    mock_collector.observe_histogram.return_value = MetricRecorded(timestamp=1.0)
+    mock_collector.increment_counter.return_value = _recorded(
+        metric_name="effectful_effects_total",
+        metric_type="counter",
+        labels={"effect_type": "GetUserById", "result": "ok"},
+    )
+    mock_collector.observe_histogram.return_value = _recorded(
+        metric_name="effectful_effect_duration_seconds",
+        metric_type="histogram",
+        labels={"effect_type": "GetUserById"},
+    )
+    mock_collector.increment_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "GetUserById"},
+    )
+    mock_collector.decrement_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "GetUserById"},
+    )
 
     # Create instrumented interpreter
     instrumented = InstrumentedInterpreter(
@@ -71,8 +105,26 @@ async def test_returns_wrapped_interpreter_result_unchanged(
     mock_wrapped.interpret.return_value = expected_result
 
     mock_collector = mocker.AsyncMock(spec=MetricsCollector)
-    mock_collector.increment_counter.return_value = MetricRecorded(timestamp=1.0)
-    mock_collector.observe_histogram.return_value = MetricRecorded(timestamp=1.0)
+    mock_collector.increment_counter.return_value = _recorded(
+        metric_name="effectful_effects_total",
+        metric_type="counter",
+        labels={"effect_type": "SendText", "result": "ok"},
+    )
+    mock_collector.observe_histogram.return_value = _recorded(
+        metric_name="effectful_effect_duration_seconds",
+        metric_type="histogram",
+        labels={"effect_type": "SendText"},
+    )
+    mock_collector.increment_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "SendText"},
+    )
+    mock_collector.decrement_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "SendText"},
+    )
 
     instrumented = InstrumentedInterpreter(
         wrapped=mock_wrapped,
@@ -98,8 +150,26 @@ async def test_increments_counter_on_success(mocker: MockerFixture) -> None:
     )
 
     mock_collector = mocker.AsyncMock(spec=MetricsCollector)
-    mock_collector.increment_counter.return_value = MetricRecorded(timestamp=1.0)
-    mock_collector.observe_histogram.return_value = MetricRecorded(timestamp=1.0)
+    mock_collector.increment_counter.return_value = _recorded(
+        metric_name="effectful_effects_total",
+        metric_type="counter",
+        labels={"effect_type": "GetCurrentTime", "result": "ok"},
+    )
+    mock_collector.observe_histogram.return_value = _recorded(
+        metric_name="effectful_effect_duration_seconds",
+        metric_type="histogram",
+        labels={"effect_type": "GetCurrentTime"},
+    )
+    mock_collector.increment_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "GetCurrentTime"},
+    )
+    mock_collector.decrement_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "GetCurrentTime"},
+    )
 
     instrumented = InstrumentedInterpreter(
         wrapped=mock_wrapped,
@@ -127,8 +197,26 @@ async def test_increments_counter_on_error(mocker: MockerFixture) -> None:
     )
 
     mock_collector = mocker.AsyncMock(spec=MetricsCollector)
-    mock_collector.increment_counter.return_value = MetricRecorded(timestamp=1.0)
-    mock_collector.observe_histogram.return_value = MetricRecorded(timestamp=1.0)
+    mock_collector.increment_counter.return_value = _recorded(
+        metric_name="effectful_effects_total",
+        metric_type="counter",
+        labels={"effect_type": "GetUserById", "result": "error"},
+    )
+    mock_collector.observe_histogram.return_value = _recorded(
+        metric_name="effectful_effect_duration_seconds",
+        metric_type="histogram",
+        labels={"effect_type": "GetUserById"},
+    )
+    mock_collector.increment_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "GetUserById"},
+    )
+    mock_collector.decrement_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "GetUserById"},
+    )
 
     instrumented = InstrumentedInterpreter(
         wrapped=mock_wrapped,
@@ -155,8 +243,26 @@ async def test_observes_histogram_with_duration(mocker: MockerFixture) -> None:
     mock_wrapped.interpret.return_value = Ok(EffectReturn(value=None, effect_name="SendText"))
 
     mock_collector = mocker.AsyncMock(spec=MetricsCollector)
-    mock_collector.increment_counter.return_value = MetricRecorded(timestamp=1.0)
-    mock_collector.observe_histogram.return_value = MetricRecorded(timestamp=1.0)
+    mock_collector.increment_counter.return_value = _recorded(
+        metric_name="effectful_effects_total",
+        metric_type="counter",
+        labels={"effect_type": "SendText", "result": "ok"},
+    )
+    mock_collector.observe_histogram.return_value = _recorded(
+        metric_name="effectful_effect_duration_seconds",
+        metric_type="histogram",
+        labels={"effect_type": "SendText"},
+    )
+    mock_collector.increment_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "SendText"},
+    )
+    mock_collector.decrement_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "SendText"},
+    )
 
     instrumented = InstrumentedInterpreter(
         wrapped=mock_wrapped,
@@ -185,8 +291,26 @@ async def test_histogram_duration_is_reasonable(mocker: MockerFixture) -> None:
     )
 
     mock_collector = mocker.AsyncMock(spec=MetricsCollector)
-    mock_collector.increment_counter.return_value = MetricRecorded(timestamp=1.0)
-    mock_collector.observe_histogram.return_value = MetricRecorded(timestamp=1.0)
+    mock_collector.increment_counter.return_value = _recorded(
+        metric_name="effectful_effects_total",
+        metric_type="counter",
+        labels={"effect_type": "GetCurrentTime", "result": "ok"},
+    )
+    mock_collector.observe_histogram.return_value = _recorded(
+        metric_name="effectful_effect_duration_seconds",
+        metric_type="histogram",
+        labels={"effect_type": "GetCurrentTime"},
+    )
+    mock_collector.increment_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "GetCurrentTime"},
+    )
+    mock_collector.decrement_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "GetCurrentTime"},
+    )
 
     instrumented = InstrumentedInterpreter(
         wrapped=mock_wrapped,
@@ -218,8 +342,26 @@ async def test_tracks_different_effect_types_separately(mocker: MockerFixture) -
     mock_wrapped.interpret.return_value = Ok(EffectReturn(value=None, effect_name="test"))
 
     mock_collector = mocker.AsyncMock(spec=MetricsCollector)
-    mock_collector.increment_counter.return_value = MetricRecorded(timestamp=1.0)
-    mock_collector.observe_histogram.return_value = MetricRecorded(timestamp=1.0)
+    mock_collector.increment_counter.return_value = _recorded(
+        metric_name="effectful_effects_total",
+        metric_type="counter",
+        labels={"effect_type": "test", "result": "ok"},
+    )
+    mock_collector.observe_histogram.return_value = _recorded(
+        metric_name="effectful_effect_duration_seconds",
+        metric_type="histogram",
+        labels={"effect_type": "test"},
+    )
+    mock_collector.increment_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "test"},
+    )
+    mock_collector.decrement_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "test"},
+    )
 
     instrumented = InstrumentedInterpreter(
         wrapped=mock_wrapped,
@@ -254,10 +396,26 @@ async def test_continues_when_counter_fails(mocker: MockerFixture) -> None:
     mock_collector = mocker.AsyncMock(spec=MetricsCollector)
     # Counter fails
     mock_collector.increment_counter.return_value = MetricRecordingFailed(
-        reason="metric_not_registered"
+        metric_name="effectful_effects_total",
+        reason="metric_not_registered",
+        message="not registered",
     )
     # Histogram succeeds
-    mock_collector.observe_histogram.return_value = MetricRecorded(timestamp=1.0)
+    mock_collector.observe_histogram.return_value = _recorded(
+        metric_name="effectful_effect_duration_seconds",
+        metric_type="histogram",
+        labels={"effect_type": "SendText"},
+    )
+    mock_collector.increment_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "SendText"},
+    )
+    mock_collector.decrement_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "SendText"},
+    )
 
     instrumented = InstrumentedInterpreter(
         wrapped=mock_wrapped,
@@ -281,9 +439,27 @@ async def test_continues_when_histogram_fails(mocker: MockerFixture) -> None:
 
     mock_collector = mocker.AsyncMock(spec=MetricsCollector)
     # Counter succeeds
-    mock_collector.increment_counter.return_value = MetricRecorded(timestamp=1.0)
+    mock_collector.increment_counter.return_value = _recorded(
+        metric_name="effectful_effects_total",
+        metric_type="counter",
+        labels={"effect_type": "GetCurrentTime", "result": "ok"},
+    )
     # Histogram fails
-    mock_collector.observe_histogram.return_value = MetricRecordingFailed(reason="invalid_labels")
+    mock_collector.observe_histogram.return_value = MetricRecordingFailed(
+        metric_name="effectful_effect_duration_seconds",
+        reason="invalid_labels",
+        message="bad labels",
+    )
+    mock_collector.increment_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "GetCurrentTime"},
+    )
+    mock_collector.decrement_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "GetCurrentTime"},
+    )
 
     instrumented = InstrumentedInterpreter(
         wrapped=mock_wrapped,
@@ -308,10 +484,24 @@ async def test_continues_when_all_metrics_fail(mocker: MockerFixture) -> None:
     mock_collector = mocker.AsyncMock(spec=MetricsCollector)
     # Both fail
     mock_collector.increment_counter.return_value = MetricRecordingFailed(
-        reason="metric_not_registered"
+        metric_name="effectful_effects_total",
+        reason="metric_not_registered",
+        message="not registered",
     )
     mock_collector.observe_histogram.return_value = MetricRecordingFailed(
-        reason="metric_not_registered"
+        metric_name="effectful_effect_duration_seconds",
+        reason="metric_not_registered",
+        message="not registered",
+    )
+    mock_collector.increment_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "SendText"},
+    )
+    mock_collector.decrement_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "SendText"},
     )
 
     instrumented = InstrumentedInterpreter(
@@ -328,14 +518,16 @@ async def test_continues_when_all_metrics_fail(mocker: MockerFixture) -> None:
 # Factory function
 
 
-def test_create_instrumented_interpreter_returns_correct_type(
+@pytest.mark.asyncio
+async def test_create_instrumented_interpreter_returns_correct_type(
     mocker: MockerFixture,
 ) -> None:
     """create_instrumented_interpreter factory returns InstrumentedInterpreter."""
     mock_wrapped = mocker.AsyncMock(spec=Interpreter)
     mock_collector = mocker.AsyncMock(spec=MetricsCollector)
+    mock_collector.register_metrics.return_value = None
 
-    result = create_instrumented_interpreter(
+    result = await create_instrumented_interpreter(
         wrapped=mock_wrapped,
         metrics_collector=mock_collector,
     )
@@ -345,7 +537,8 @@ def test_create_instrumented_interpreter_returns_correct_type(
     assert result.metrics_collector is mock_collector
 
 
-def test_create_instrumented_interpreter_with_different_interpreters(
+@pytest.mark.asyncio
+async def test_create_instrumented_interpreter_with_different_interpreters(
     mocker: MockerFixture,
 ) -> None:
     """create_instrumented_interpreter works with any interpreter."""
@@ -356,9 +549,10 @@ def test_create_instrumented_interpreter_with_different_interpreters(
     ]
 
     mock_collector = mocker.AsyncMock(spec=MetricsCollector)
+    mock_collector.register_metrics.return_value = None
 
     for mock_interp in interpreters:
-        result = create_instrumented_interpreter(
+        result = await create_instrumented_interpreter(
             wrapped=mock_interp,
             metrics_collector=mock_collector,
         )
@@ -394,8 +588,26 @@ async def test_handles_multiple_effects_sequentially(mocker: MockerFixture) -> N
     mock_wrapped.interpret.return_value = Ok(EffectReturn(value=None, effect_name="SendText"))
 
     mock_collector = mocker.AsyncMock(spec=MetricsCollector)
-    mock_collector.increment_counter.return_value = MetricRecorded(timestamp=1.0)
-    mock_collector.observe_histogram.return_value = MetricRecorded(timestamp=1.0)
+    mock_collector.increment_counter.return_value = _recorded(
+        metric_name="effectful_effects_total",
+        metric_type="counter",
+        labels={"effect_type": "SendText", "result": "ok"},
+    )
+    mock_collector.observe_histogram.return_value = _recorded(
+        metric_name="effectful_effect_duration_seconds",
+        metric_type="histogram",
+        labels={"effect_type": "SendText"},
+    )
+    mock_collector.increment_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "SendText"},
+    )
+    mock_collector.decrement_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "SendText"},
+    )
 
     instrumented = InstrumentedInterpreter(
         wrapped=mock_wrapped,
@@ -426,8 +638,26 @@ async def test_preserves_error_details_from_wrapped_interpreter(
     mock_wrapped.interpret.return_value = Err(expected_error)
 
     mock_collector = mocker.AsyncMock(spec=MetricsCollector)
-    mock_collector.increment_counter.return_value = MetricRecorded(timestamp=1.0)
-    mock_collector.observe_histogram.return_value = MetricRecorded(timestamp=1.0)
+    mock_collector.increment_counter.return_value = _recorded(
+        metric_name="effectful_effects_total",
+        metric_type="counter",
+        labels={"effect_type": "GetUserById", "result": "error"},
+    )
+    mock_collector.observe_histogram.return_value = _recorded(
+        metric_name="effectful_effect_duration_seconds",
+        metric_type="histogram",
+        labels={"effect_type": "GetUserById"},
+    )
+    mock_collector.increment_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "GetUserById"},
+    )
+    mock_collector.decrement_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "GetUserById"},
+    )
 
     instrumented = InstrumentedInterpreter(
         wrapped=mock_wrapped,
@@ -462,10 +692,28 @@ async def test_metrics_collection_does_not_block_execution(
         import asyncio
 
         await asyncio.sleep(0.001)
-        return MetricRecorded(timestamp=1.0)
+        return _recorded(
+            metric_name="effectful_effects_total",
+            metric_type="counter",
+            labels={"effect_type": "SendText", "result": "ok"},
+        )
 
     mock_collector.increment_counter.side_effect = slow_increment
-    mock_collector.observe_histogram.return_value = MetricRecorded(timestamp=1.0)
+    mock_collector.observe_histogram.return_value = _recorded(
+        metric_name="effectful_effect_duration_seconds",
+        metric_type="histogram",
+        labels={"effect_type": "SendText"},
+    )
+    mock_collector.increment_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "SendText"},
+    )
+    mock_collector.decrement_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "SendText"},
+    )
 
     instrumented = InstrumentedInterpreter(
         wrapped=mock_wrapped,
@@ -499,8 +747,26 @@ async def test_tracks_success_and_error_rates_correctly(mocker: MockerFixture) -
 
     mock_wrapped = mocker.AsyncMock(spec=Interpreter)
     mock_collector = mocker.AsyncMock(spec=MetricsCollector)
-    mock_collector.increment_counter.return_value = MetricRecorded(timestamp=1.0)
-    mock_collector.observe_histogram.return_value = MetricRecorded(timestamp=1.0)
+    mock_collector.increment_counter.return_value = _recorded(
+        metric_name="effectful_effects_total",
+        metric_type="counter",
+        labels={"effect_type": "SendText", "result": "ok"},
+    )
+    mock_collector.observe_histogram.return_value = _recorded(
+        metric_name="effectful_effect_duration_seconds",
+        metric_type="histogram",
+        labels={"effect_type": "SendText"},
+    )
+    mock_collector.increment_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "SendText"},
+    )
+    mock_collector.decrement_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "SendText"},
+    )
 
     instrumented = InstrumentedInterpreter(
         wrapped=mock_wrapped,
@@ -540,8 +806,26 @@ async def test_mixed_effect_types_tracked_independently(mocker: MockerFixture) -
     mock_wrapped.interpret.return_value = Ok(EffectReturn(value=None, effect_name="test"))
 
     mock_collector = mocker.AsyncMock(spec=MetricsCollector)
-    mock_collector.increment_counter.return_value = MetricRecorded(timestamp=1.0)
-    mock_collector.observe_histogram.return_value = MetricRecorded(timestamp=1.0)
+    mock_collector.increment_counter.return_value = _recorded(
+        metric_name="effectful_effects_total",
+        metric_type="counter",
+        labels={"effect_type": "test", "result": "ok"},
+    )
+    mock_collector.observe_histogram.return_value = _recorded(
+        metric_name="effectful_effect_duration_seconds",
+        metric_type="histogram",
+        labels={"effect_type": "test"},
+    )
+    mock_collector.increment_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "test"},
+    )
+    mock_collector.decrement_gauge.return_value = _recorded(
+        metric_name="effectful_effects_in_progress",
+        metric_type="gauge",
+        labels={"effect_type": "test"},
+    )
 
     instrumented = InstrumentedInterpreter(
         wrapped=mock_wrapped,

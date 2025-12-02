@@ -26,7 +26,7 @@ This document defines **purity standards for HealthHub** as a style guide for au
 
 **What This Document Is NOT**:
 - ❌ Tutorial (see [tutorials/](../tutorials/))
-- ❌ Comprehensive reference (see [effectful purity doctrine](../../../../documents/core/purity.md))
+- ❌ Comprehensive reference (see [effectful code quality doctrine](../../../../documents/engineering/code_quality.md#purity-doctrines))
 - ❌ Implementation guide (see [Effect Program Patterns](effect_program_patterns.md))
 
 ---
@@ -1223,9 +1223,8 @@ Financial Risk: $750,000+ potential fines
 
 ### Effectful Core (Parent Library)
 
-- [Purity Doctrine](../../../../documents/core/purity.md) - Complete 6 doctrines with detailed patterns
-- [Purity Patterns](../../../../documents/core/purity_patterns.md) - Trampolines, comprehensions, functional patterns
-- [Type Safety Doctrine](../../../../documents/core/type_safety_doctrine.md) - ADTs, Result types, exhaustive matching
+- [Code Quality](../../../../documents/engineering/code_quality.md#purity-doctrines) - Purity doctrines and patterns
+- [Type Safety](../../../../documents/engineering/code_quality.md#type-safety-doctrines) - ADTs, Result types, exhaustive matching
 
 ### HealthHub Best Practices
 

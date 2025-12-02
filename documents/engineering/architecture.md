@@ -28,8 +28,8 @@ flowchart TB
 
 | Need | Link |
 |------|------|
-| Doctrine for types | [Type Safety Enforcement](type_safety_enforcement.md) |
-| Purity boundaries | [Purity](purity.md) |
+| Doctrine for types + purity | [Code Quality](code_quality.md) |
+| Purity boundaries | [Code Quality](code_quality.md#purity-doctrines) |
 | Test shape by layer | [Testing](testing.md#part-4-four-layer-testing-architecture) |
 | Observability guidance | [Observability](observability.md) |
 | Container contract | [Docker Workflow](docker_workflow.md) |
@@ -47,7 +47,7 @@ We achieve this through:
 3. **Immutability** - Eliminate temporal coupling and race conditions
 4. **Exhaustive Matching** - Type checker enforces handling all cases
 
-For detailed type safety patterns, see `documents/engineering/type_safety_enforcement.md`.
+For detailed type safety patterns, see `documents/engineering/code_quality.md`.
 
 ## 5-Layer Architecture
 
@@ -577,7 +577,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, None]:
 
 ## Related Documentation
 
-- **Type Safety**: `documents/engineering/type_safety_enforcement.md`
+- **Code Quality**: `documents/engineering/code_quality.md`
 - **Testing**: `documents/engineering/testing.md` (SSoT for all testing)
 - **Observability**: `documents/engineering/observability.md` (SSoT for metrics, monitoring, and alerting)
 - **Test Suite Audit**: `documents/testing/test_suite_audit.md`
@@ -598,4 +598,4 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, None]:
 **Philosophy**: Correctness first, performance second. Make invalid states unrepresentable.
 
 **Last Updated:** 2025-12-01
-**Referenced by**: README.md, CLAUDE.md, type_safety_enforcement.md, purity.md, testing.md, forbidden_patterns.md, documentation_standards.md
+**Referenced by**: README.md, CLAUDE.md, code_quality.md, testing.md, documentation_standards.md

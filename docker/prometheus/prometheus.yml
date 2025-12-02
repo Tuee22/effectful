@@ -1,5 +1,5 @@
 # Prometheus configuration for Effectful metrics
-# SSoT: documents/core/monitoring_standards.md
+# SSoT: documents/engineering/monitoring_and_alerting.md
 
 global:
   scrape_interval: 15s  # Default scrape interval

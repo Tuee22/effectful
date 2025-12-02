@@ -23,7 +23,7 @@ from effectful.adapters.redis_cache import RedisProfileCache
 from effectful.adapters.s3_storage import S3ObjectStorage
 from effectful.domain.cache_result import CacheHit, CacheMiss
 from effectful.domain.profile import ProfileData
-from effectful.domain.s3_object import PutSuccess, S3Object
+from effectful.domain.s3_object import ObjectNotFound, PutSuccess, S3Object
 from effectful.domain.user import User, UserFound, UserNotFound
 
 
@@ -182,9 +182,9 @@ class TestS3ObjectStorage:
     async def test_get_nonexistent_object(
         self, object_storage: S3ObjectStorage, s3_bucket: str
     ) -> None:
-        """get_object returns None for nonexistent key."""
+        """get_object returns ObjectNotFound for nonexistent key."""
         result = await object_storage.get_object(s3_bucket, "nonexistent/key.txt")
-        assert result is None
+        assert result == ObjectNotFound(bucket=s3_bucket, key="nonexistent/key.txt")
 
     @pytest.mark.asyncio
     async def test_put_and_get_object(
@@ -237,7 +237,9 @@ class TestS3ObjectStorage:
         await object_storage.delete_object(s3_bucket, key)
 
         # Verify it's gone
-        assert await object_storage.get_object(s3_bucket, key) is None
+        assert await object_storage.get_object(s3_bucket, key) == ObjectNotFound(
+            bucket=s3_bucket, key=key
+        )
 
     @pytest.mark.asyncio
     async def test_delete_nonexistent_idempotent(

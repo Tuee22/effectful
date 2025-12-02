@@ -22,6 +22,9 @@ from redis.asyncio import Redis
 from effectful.domain.token_result import (
     TokenExpired,
     TokenInvalid,
+    TokenRefreshed,
+    TokenRefreshRejected,
+    TokenRefreshResult,
     TokenValid,
     TokenValidationResult,
 )
@@ -151,7 +154,7 @@ class RedisAuthService(AuthService):
 
         return token
 
-    async def refresh_token(self, refresh_token: str) -> str | None:
+    async def refresh_token(self, refresh_token: str) -> TokenRefreshResult:
         """Refresh an existing token to extend validity.
 
         Validates the refresh token and generates a new access token with extended TTL.
@@ -160,7 +163,8 @@ class RedisAuthService(AuthService):
             refresh_token: The refresh token to exchange
 
         Returns:
-            New JWT access token, or None if refresh token is invalid/expired
+            TokenRefreshed(access_token) when successful
+            TokenRefreshRejected(reason) when refresh token is invalid/expired
         """
         # Validate refresh token
         validation_result = await self.validate_token(refresh_token)
@@ -173,10 +177,11 @@ class RedisAuthService(AuthService):
                     claims,
                     ttl_seconds=int(os.getenv("JWT_REFRESH_TOKEN_TTL_SECONDS", "3600")),
                 )
-                return new_token
-            case TokenExpired() | TokenInvalid():
-                # Refresh token invalid/expired - cannot refresh
-                return None
+                return TokenRefreshed(access_token=new_token)
+            case TokenExpired():
+                return TokenRefreshRejected(reason="expired_refresh_token")
+            case TokenInvalid():
+                return TokenRefreshRejected(reason="invalid_refresh_token")
 
     async def revoke_token(self, token: str) -> None:
         """Revoke/blacklist a token to prevent further use.

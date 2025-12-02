@@ -11,7 +11,13 @@ import pytest
 from pytest_mock import MockerFixture
 
 from effectful.algebraic.result import Err, Ok
-from effectful.domain.token_result import TokenExpired, TokenInvalid, TokenValid
+from effectful.domain.token_result import (
+    TokenExpired,
+    TokenInvalid,
+    TokenRefreshRejected,
+    TokenRefreshed,
+    TokenValid,
+)
 from effectful.effects.auth import (
     GenerateToken,
     GetUserByEmail,
@@ -190,10 +196,8 @@ class TestRefreshToken:
     async def test_returns_new_token(self, mocker: MockerFixture) -> None:
         """RefreshToken returns new JWT token on success."""
         # Setup
-        new_token = "new.jwt.token"
-
         mock_auth = mocker.AsyncMock(spec=AuthService)
-        mock_auth.refresh_token.return_value = new_token
+        mock_auth.refresh_token.return_value = TokenRefreshed(access_token="new.jwt.token")
 
         interpreter = AuthInterpreter(auth_service=mock_auth)
         effect = RefreshToken(refresh_token="old.refresh.token")
@@ -204,7 +208,7 @@ class TestRefreshToken:
         # Assert
         match result:
             case Ok(effect_return):
-                assert effect_return.value == new_token
+                assert effect_return.value == TokenRefreshed(access_token="new.jwt.token")
                 assert effect_return.effect_name == "RefreshToken"
             case Err(error):
                 pytest.fail(f"Expected Ok, got Err({error})")
@@ -212,11 +216,11 @@ class TestRefreshToken:
         mock_auth.refresh_token.assert_called_once_with("old.refresh.token")
 
     @pytest.mark.asyncio
-    async def test_returns_none_for_invalid_refresh_token(self, mocker: MockerFixture) -> None:
-        """RefreshToken returns None when refresh token is invalid/expired."""
+    async def test_returns_rejection_for_invalid_refresh_token(self, mocker: MockerFixture) -> None:
+        """RefreshToken returns TokenRefreshRejected when refresh token is invalid/expired."""
         # Setup
         mock_auth = mocker.AsyncMock(spec=AuthService)
-        mock_auth.refresh_token.return_value = None
+        mock_auth.refresh_token.return_value = TokenRefreshRejected(reason="invalid_refresh_token")
 
         interpreter = AuthInterpreter(auth_service=mock_auth)
         effect = RefreshToken(refresh_token="invalid.refresh.token")
@@ -227,7 +231,7 @@ class TestRefreshToken:
         # Assert
         match result:
             case Ok(effect_return):
-                assert effect_return.value is None
+                assert effect_return.value == TokenRefreshRejected(reason="invalid_refresh_token")
             case Err(error):
                 pytest.fail(f"Expected Ok, got Err({error})")
 

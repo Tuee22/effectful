@@ -46,10 +46,11 @@ See Also:
 """
 
 from effectful.programs.program_types import AllEffects, EffectResult, WSProgram
-from effectful.programs.runners import run_ws_program
+from effectful.programs.runners import run_ws_program, run_ws_program_with_metrics
 
 __all__ = [
     "run_ws_program",
+    "run_ws_program_with_metrics",
     "AllEffects",
     "EffectResult",
     "WSProgram",

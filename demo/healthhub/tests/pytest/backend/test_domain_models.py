@@ -129,5 +129,4 @@ class TestDomainModelImmutability:
         """NoInteractions should be immutable."""
         result = NoInteractions(medications_checked=["Lisinopril"])
 
-        with pytest.raises(AttributeError):
-            result.medications_checked = []  # type: ignore[misc]
+        assert_frozen(result, "medications_checked", [])

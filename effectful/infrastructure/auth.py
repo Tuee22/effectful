@@ -8,7 +8,7 @@ Uses ADTs instead of Optional for type safety.
 from typing import Protocol
 from uuid import UUID
 
-from effectful.domain.token_result import TokenValidationResult
+from effectful.domain.token_result import TokenRefreshResult, TokenValidationResult
 from effectful.domain.user import UserLookupResult
 
 
@@ -42,14 +42,15 @@ class AuthService(Protocol):
         """
         ...
 
-    async def refresh_token(self, refresh_token: str) -> str | None:
+    async def refresh_token(self, refresh_token: str) -> TokenRefreshResult:
         """Refresh an existing token to extend validity.
 
         Args:
             refresh_token: The refresh token to exchange
 
         Returns:
-            New JWT access token, or None if refresh token is invalid/expired
+            TokenRefreshed(access_token) when successful
+            TokenRefreshRejected(reason) when refresh token is invalid/expired
         """
         ...
 

@@ -18,7 +18,7 @@ Example:
 
 See Also:
     - documents/core/observability_doctrine.md - Metrics philosophy
-    - documents/core/monitoring_standards.md - Naming conventions
+    - documents/engineering/monitoring_and_alerting.md - Naming conventions
 """
 
 from effectful.observability import (

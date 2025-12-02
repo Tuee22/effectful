@@ -457,7 +457,7 @@ CRITICAL_LAB_RESULT_DELIVERY_TIME_SECONDS.observe(delivery_time)
 - Use normalized labels: `{role="patient"}`, `{status="confirmed"}`, `{portal="doctor"}`
 - Instrument business-critical healthcare operations only
 - Write integration tests verifying metrics
-- Use strict type hints for all metric definitions (see `documents/core/type_safety_doctrine.md`)
+- Use strict type hints for all metric definitions (see `documents/engineering/code_quality.md`)
 - Add dashboard panels for every new metric
 - Track PHI access events in structured audit logs (HIPAA requirement)
 

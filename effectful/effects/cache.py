@@ -54,6 +54,13 @@ class InvalidateCache:
 
 
 @dataclass(frozen=True)
+class DeleteCachedProfile:
+    """Alias effect to invalidate a cached profile by user id."""
+
+    user_id: UUID
+
+
+@dataclass(frozen=True)
 class GetCachedValue:
     """Effect: Get cached value by key (generic).
 
@@ -85,5 +92,10 @@ class PutCachedValue:
 
 # ADT: Union of all cache effects using PEP 695 type statement
 type CacheEffect = (
-    GetCachedProfile | PutCachedProfile | InvalidateCache | GetCachedValue | PutCachedValue
+    GetCachedProfile
+    | PutCachedProfile
+    | InvalidateCache
+    | DeleteCachedProfile
+    | GetCachedValue
+    | PutCachedValue
 )

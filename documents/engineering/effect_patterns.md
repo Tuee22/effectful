@@ -7,22 +7,20 @@
 ```mermaid
 flowchart TB
   Effects[Effect Patterns SSoT]
-  Purity[Purity SSoT]
-  TypeSafety[Type Safety SSoT]
+  CodeQuality[Code Quality SSoT]
   Testing[Testing SSoT]
   Architecture[Architecture SSoT]
 
-  Effects --> Purity
-  Effects --> TypeSafety
+  Effects --> CodeQuality
   Effects --> Testing
   Effects --> Architecture
-  Purity --> Architecture
+  CodeQuality --> Architecture
 ```
 
 | Need | Link |
 |------|------|
-| Purity doctrine backing patterns | [Purity](purity.md) |
-| Type signatures and unions | [Type Safety Enforcement](type_safety_enforcement.md) |
+| Purity + type doctrine backing patterns | [Code Quality](code_quality.md) |
+| Type signatures and unions | [Code Quality](code_quality.md#type-safety-doctrines) |
 | How to test programs | [Testing](testing.md#generator-testing-flow-layer-3) |
 | Where patterns sit in layers | [Architecture](architecture.md#core-abstractions) |
 
@@ -32,7 +30,7 @@ This document provides **real-world patterns** for writing effect programs using
 
 **Core Principle**: Programs are pure generators that yield effects and receive typed results.
 
-For complete purity rules and functional programming patterns, see [Purity](purity.md).
+For complete purity and type safety rules, see [Code Quality](code_quality.md).
 
 ## Pattern 1: Generator-Based DSL
 
@@ -78,7 +76,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, bool]:
 - **Type narrowing**: Use `isinstance()` checks before using result
 - **Return value**: Any type (bool, str, ADT, etc.)
 
-**See**: [Type Safety](type_safety_enforcement.md) - Doctrine 6: Type Narrowing for Union Types.
+**See**: [Code Quality](code_quality.md#6-type-narrowing-for-union-types) - Doctrine 6: Type Narrowing for Union Types.
 
 ---
 
@@ -110,7 +108,7 @@ async def execute() -> None:
 
 **Rationale**: Fail-fast prevents cascading failures and inconsistent state.
 
-**See**: [Type Safety](type_safety_enforcement.md) - Doctrine 3: Result Type for Error Handling.
+**See**: [Code Quality](code_quality.md#3-result-type-for-error-handling) - Doctrine 3: Result Type for Error Handling.
 
 ---
 
@@ -158,7 +156,7 @@ def greet_with_caching(user_id: UUID) -> Generator[AllEffects, EffectResult, str
 
 **Rationale**: Encourages modularity and code reuse.
 
-**See**: [Purity](purity.md) for functional composition patterns.
+**See**: [Code Quality](code_quality.md#purity-doctrines) for functional composition patterns.
 
 ---
 
@@ -269,7 +267,7 @@ def handle_user_lookup(user_id: UUID) -> Generator[AllEffects, EffectResult, str
 
 **Rationale**: Prevents forgotten error cases, ensures all paths handled.
 
-**See**: [Type Safety](type_safety_enforcement.md) - Doctrine 5: Exhaustive Pattern Matching.
+**See**: [Code Quality](code_quality.md#5-exhaustive-pattern-matching) - Doctrine 5: Exhaustive Pattern Matching.
 
 ---
 
@@ -313,7 +311,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
     # ...
 ```
 
-**See**: [Forbidden Patterns](forbidden_patterns.md) - Anti-Pattern 5.
+**See**: [Code Quality](code_quality.md#anti-pattern-index-routing-to-canonical-fixes) - Anti-pattern routing.
 
 ### Mistake 3: Ignoring Effect Results
 
@@ -337,12 +335,11 @@ def save_message(user_id: UUID, text: str) -> Generator[AllEffects, EffectResult
 
 ## See Also
 
-- [Purity](purity.md) - Six purity doctrines and functional programming patterns
-- [Type Safety](type_safety_enforcement.md) - Eight type safety doctrines
-- [Forbidden Patterns](forbidden_patterns.md) - Anti-patterns to avoid
+- [Code Quality](code_quality.md) - Type safety and purity doctrines
+- [Testing](testing.md) - Generator testing and anti-patterns
 - [Observability](observability.md) - Metrics and monitoring
 
 ---
 
 **Last Updated**: 2025-12-01
-**Referenced by**: CLAUDE.md, purity.md, type_safety_enforcement.md, README.md
+**Referenced by**: CLAUDE.md, code_quality.md, README.md

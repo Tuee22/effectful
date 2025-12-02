@@ -13,7 +13,13 @@ from pytest_mock import MockerFixture
 
 from effectful.adapters.redis_auth import RedisAuthService
 from effectful.algebraic.result import Err, Ok
-from effectful.domain.token_result import TokenExpired, TokenInvalid, TokenValid
+from effectful.domain.token_result import (
+    TokenExpired,
+    TokenInvalid,
+    TokenRefreshRejected,
+    TokenRefreshed,
+    TokenValid,
+)
 from effectful.domain.user import UserNotFound
 from effectful.effects.auth import (
     GenerateToken,
@@ -195,14 +201,14 @@ class TestAuthWorkflowIntegration:
             assert isinstance(token, str)
 
             # Refresh token
-            new_token = yield RefreshToken(refresh_token=token)
+            refresh_result = yield RefreshToken(refresh_token=token)
 
-            match new_token:
-                case str():
+            match refresh_result:
+                case TokenRefreshed(access_token=new_access_token):
                     yield SendText(text="Token refreshed")
 
                     # Validate new token
-                    validation = yield ValidateToken(token=new_token)
+                    validation = yield ValidateToken(token=new_access_token)
                     match validation:
                         case TokenValid(user_id=validated_uid):
                             assert validated_uid == uid
@@ -210,7 +216,7 @@ class TestAuthWorkflowIntegration:
                             return "refreshed"
                         case _:
                             return "invalid"
-                case None:
+                case TokenRefreshRejected():
                     yield SendText(text="Refresh failed")
                     return "failed"
                 case _:

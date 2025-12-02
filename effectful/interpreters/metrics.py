@@ -18,9 +18,9 @@ from effectful.effects.metrics import (
     IncrementCounter,
     ObserveHistogram,
     QueryMetrics,
-    RecordGauge,
     RecordSummary,
     ResetMetrics,
+    SetGauge,
 )
 from effectful.infrastructure.metrics import MetricsCollector
 from effectful.interpreters.errors import InterpreterError, UnhandledEffectError
@@ -55,7 +55,7 @@ class MetricsInterpreter:
         match effect:
             case IncrementCounter(metric_name=name, labels=labels, value=value):
                 return await self._handle_increment_counter(name, labels, value)
-            case RecordGauge(metric_name=name, labels=labels, value=value):
+            case SetGauge(metric_name=name, labels=labels, value=value):
                 return await self._handle_record_gauge(name, labels, value)
             case ObserveHistogram(metric_name=name, labels=labels, value=value):
                 return await self._handle_observe_histogram(name, labels, value)
@@ -101,7 +101,7 @@ class MetricsInterpreter:
             labels=labels,
             value=value,
         )
-        return Ok(EffectReturn(value=result, effect_name="RecordGauge"))
+        return Ok(EffectReturn(value=result, effect_name="SetGauge"))
 
     async def _handle_observe_histogram(
         self, metric_name: str, labels: dict[str, str], value: float

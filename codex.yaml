@@ -23,27 +23,18 @@ agents:
       - Add interpreter per new effect type and register in Composite.
       - Use exhaustive match on Result at boundaries; propagate errors immediately.
 
-  - name: type_safety_enforcement
-    source: documents/engineering/type_safety_enforcement.md
-    intent: Uphold zero-tolerance type safety with strict mypy and explicit ADTs.
+  - name: code_quality
+    source: documents/engineering/code_quality.md
+    intent: Uphold zero-tolerance type safety and purity across programs, interpreters, and docs.
     enforce:
-      - No Any/cast/type:ignore; ADTs over Optional; PEP 695 aliases.
-      - Frozen dataclasses; exhaustive pattern matching with type narrowing.
-      - check-code must pass; coverage ≥ 45%; no skipped tests.
+      - No Any/cast/type:ignore; ADTs over Optional; Result for errors; PEP 695 aliases only for concrete types.
+      - Frozen dataclasses; exhaustive pattern matching with assert_never; explicit type narrowing.
+      - Programs yield effect descriptions only; effects-as-data; interpreters/adapters own I/O and controlled mutation.
+      - No for/while loops in pure layers except trampoline/program runner drivers; prefer comprehensions/match expressions.
+      - check-code must pass (Black + mypy strict + doc links); coverage ≥ 45%; no skipped tests.
     suggest:
-      - Replace Optional returns with ADT unions; model errors via Result.
-      - Reject PRs with escape hatches or missing type hints.
-
-  - name: purity
-    source: documents/engineering/purity.md
-    intent: Keep programs pure descriptions; interpreters/adapters do all I/O.
-    enforce:
-      - No for/while loops except trampoline driver; prefer comprehensions/match expressions.
-      - Effects-as-data; no direct infra access from programs.
-      - Immutability by default; yield-don’t-call; trampoline for recursion.
-      - Comprehensions must be pure (no I/O/mutation/logging inside).
-    suggest:
-      - Refactor loops to comprehensions or trampolines; isolate impure work in interpreters.
+      - Replace Optional returns with ADT unions and pattern match results; refactor mutations to immutable updates.
+      - Move side effects into interpreters; refactor loops to comprehensions or trampolines.
 
   - name: testing
     source: documents/engineering/testing.md
@@ -115,14 +106,6 @@ agents:
     suggest:
       - Factor reusable sub-programs; pattern-match results; log metric failures without failing logic.
 
-  - name: forbidden_patterns
-    source: documents/engineering/forbidden_patterns.md
-    intent: Navigate anti-patterns and route to SSoTs for fixes.
-    enforce:
-      - Reject Any/cast/type:ignore, mutable domain models, Optional for domain logic, direct infra calls, skipped tests, local tooling.
-    suggest:
-      - Use quick scans (grep for Any/Optional in domain, unfrozen dataclasses, pytest.skip) and remediate per linked SSoT.
-
   - name: observability
     source: documents/engineering/observability.md
     intent: Metrics as pure effects with immutable registries; interpreter handles I/O; Prometheus/Grafana integration.
@@ -132,24 +115,15 @@ agents:
     suggest:
       - Pre-register metrics; keep labels schema-aligned; keep metrics pure and typed.
 
-  - name: monitoring_standards
-    source: documents/engineering/monitoring_standards.md
-    intent: Standardize metric naming/labels/cardinality and default framework metrics.
+  - name: monitoring_and_alerting
+    source: documents/engineering/monitoring_and_alerting.md
+    intent: Standardize metric naming/labels/cardinality and maintain actionable alert policy.
     enforce:
-      - Name pattern: namespace_subsystem_metric_unit; unit suffixes; _total for counters.
-      - Labels bounded, lowercase, snake_case; cardinality product < 10k.
-      - Registry pre-registration; sensible histogram buckets.
+      - Metric names follow namespace_subsystem_metric_unit with units/_total; labels snake_case, bounded, and pre-registered; cardinality product < 10k.
+      - Registries pre-register metrics; collectors validate names/labels/buckets; avoid dynamic names and ID/timestamp labels.
+      - Alerts-as-code with severity-driven routing, runbook_url for critical/warning, and grouping/throttling configured.
     suggest:
-      - Use framework defaults for effect/program metrics; avoid dynamic names/timestamps/user IDs as labels.
-
-  - name: alerting
-    source: documents/engineering/alerting.md
-    intent: Alerts-as-code with actionable severities, runbooks, routing, and testing.
-    enforce:
-      - Every critical/warning alert has runbook_url; severity dictates routing; alerts live in VCS.
-      - Use grouping/throttling; SLO-based thresholds; validate PromQL.
-    suggest:
-      - Provide action items per alert; test alert expressions; align alert/component labels with monitoring standards.
+      - Use framework default metrics; choose sensible histogram buckets; test PromQL expressions and runbook coverage in CI.
 
   - name: engineering_readme_meta
     source: documents/engineering/README.md

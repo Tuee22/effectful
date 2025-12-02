@@ -12,12 +12,12 @@ without coupling to a specific adapter.
 
 Example:
     >>> from effectful.infrastructure.storage import ObjectStorage
-    >>> from effectful.domain.s3_object import PutResult, S3Object
+    >>> from effectful.domain.s3_object import GetObjectResult, PutResult, S3Object
     >>>
     >>> class MyStorageAdapter:
     ...     async def get_object(
     ...         self, bucket: str, key: str
-    ...     ) -> S3Object | None:
+    ...     ) -> GetObjectResult:
     ...         # Implementation...
     ...         pass
     ...
@@ -48,7 +48,7 @@ Example:
 
 from typing import Protocol
 
-from effectful.domain.s3_object import PutResult, S3Object
+from effectful.domain.s3_object import GetObjectResult, PutResult, S3Object
 
 
 class ObjectStorage(Protocol):
@@ -58,7 +58,7 @@ class ObjectStorage(Protocol):
     implementing these methods can be used as an ObjectStorage adapter.
 
     Methods must follow these contracts:
-    - get_object: Returns S3Object if exists, None if not found
+    - get_object: Returns S3Object if exists, ObjectNotFound if not found
     - put_object: Returns PutSuccess or PutFailure ADT
     - delete_object: Always succeeds (idempotent)
     - list_objects: Returns list of keys (empty if no matches)
@@ -68,7 +68,7 @@ class ObjectStorage(Protocol):
     quota exceeded) are represented as ADTs, not exceptions.
     """
 
-    async def get_object(self, bucket: str, key: str) -> S3Object | None:
+    async def get_object(self, bucket: str, key: str) -> GetObjectResult:
         """Retrieve object from storage.
 
         Args:
@@ -77,13 +77,13 @@ class ObjectStorage(Protocol):
 
         Returns:
             S3Object with content and metadata if object exists.
-            None if object does not exist (not an error).
+            ObjectNotFound ADT if object does not exist (not an error).
 
         Raises:
             Exception: For infrastructure failures (network, permissions, etc.)
 
         Note:
-            Object not found is NOT an exception - it returns None.
+            Object not found is NOT an exception - it returns ObjectNotFound.
             This is a domain outcome, not an error.
         """
         ...

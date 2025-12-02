@@ -33,24 +33,19 @@ New to effectful? Start here:
 
 Project engineering practices and standards:
 
+- **[Code Quality](engineering/code_quality.md)** - Type safety + purity doctrines, anti-pattern routing (SSoT)
+- **[Architecture](engineering/architecture.md)** - 5-layer architecture, design decisions (SSoT)
 - **[Docker Workflow](engineering/docker_workflow.md)** - All development in Docker (SSoT)
 - **[Testing](engineering/testing.md)** - Coverage requirements, 22 test anti-patterns (SSoT)
-- **[Type Safety](engineering/type_safety_enforcement.md)** - Eight type safety doctrines (SSoT)
-- **[Architecture](engineering/architecture.md)** - 5-layer architecture, design decisions (SSoT)
-- **[Purity](engineering/purity.md)** - Pure functional programming rules (SSoT)
 - **[Effect Patterns](engineering/effect_patterns.md)** - Functional composition patterns (SSoT)
-- **[Code Quality](engineering/type_safety_enforcement.md)** - MyPy strict, Black formatting, coverage
 - **[Command Reference](engineering/command_reference.md)** - All Docker commands and test execution
 - **[Development Workflow](engineering/development_workflow.md)** - Daily development loop
 - **[Configuration](engineering/configuration.md)** - Environment variables for all services
-- **[Forbidden Patterns](engineering/forbidden_patterns.md)** - Anti-patterns to avoid
-- **[Effect Patterns](engineering/effect_patterns.md)** - Real-world effect program patterns
 - **[Documentation Guidelines](engineering/documentation_standards.md)** - SSoT/DRY principles, mermaid best practices (SSoT)
 
 **Observability**:
 - **[Observability](engineering/observability.md)** - Metrics philosophy and cardinality management (SSoT)
-- **[Monitoring Standards](engineering/monitoring_standards.md)** - Naming conventions and label standards (SSoT)
-- **[Alerting](engineering/alerting.md)** - Alert severity levels and runbook requirements (SSoT)
+- **[Monitoring & Alerting](engineering/monitoring_and_alerting.md)** - Naming conventions, label standards, severity levels, and runbook requirements (SSoT)
 
 ### Tutorials
 
@@ -186,8 +181,7 @@ match divide(10, 2):
 - [Docker Workflow](engineering/docker_workflow.md)
 - [Architecture](engineering/architecture.md)
 - [Testing](engineering/testing.md)
-- [Type Safety](engineering/type_safety_enforcement.md)
-- [Purity](engineering/purity.md)
+- [Code Quality](engineering/code_quality.md)
 
 ## Examples
 
@@ -199,16 +193,16 @@ See the `examples/` directory for complete working programs:
 - **04_error_handling.py** - Comprehensive error handling patterns
 - **05_messaging_workflow.py** - Pub/sub messaging with Apache Pulsar
 
-## Type Safety
+## Code Quality
 
-effectful enforces **strict type safety**:
+effectful enforces **strict type safety and purity**:
 
-- Zero `Any` types
-- Zero `cast()` calls
-- Zero `# type: ignore` comments
-- 100% `mypy --strict` compliance
+- Zero `Any`, `cast()`, or `# type: ignore`
+- ADTs over Optional; Result for all fallible operations
+- Programs are pure generators (`yield` effects) and return immutable data
+- Frozen dataclasses and exhaustive pattern matching
 
-See [Type Safety](engineering/type_safety_enforcement.md) for type safety guidelines.
+See [Code Quality](engineering/code_quality.md) for detailed doctrines and anti-pattern routing.
 
 ## Testing
 

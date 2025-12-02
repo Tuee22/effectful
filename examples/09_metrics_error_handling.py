@@ -11,7 +11,7 @@ Run this example:
 
 SSoT References:
     - documents/core/observability_doctrine.md - Fire-and-forget pattern
-    - documents/core/monitoring_standards.md - Error handling guidelines
+    - documents/engineering/monitoring_and_alerting.md - Error handling guidelines
 """
 
 import asyncio

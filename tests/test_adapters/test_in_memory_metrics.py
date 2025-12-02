@@ -174,7 +174,8 @@ async def test_increment_counter_fails_without_registry() -> None:
     )
 
     assert isinstance(result, MetricRecordingFailed)
-    assert "No metrics registered" in result.reason
+    assert result.reason == "collector_error"
+    assert "No metrics registered" in result.message
 
 
 @pytest.mark.asyncio
@@ -189,7 +190,8 @@ async def test_increment_counter_fails_with_negative_value(
     )
 
     assert isinstance(result, MetricRecordingFailed)
-    assert "must be >= 0" in result.reason
+    assert result.reason == "invalid_value"
+    assert "must be >= 0" in result.message
 
 
 @pytest.mark.asyncio
@@ -204,7 +206,8 @@ async def test_increment_counter_fails_with_unregistered_metric(
     )
 
     assert isinstance(result, MetricRecordingFailed)
-    assert "not registered" in result.reason
+    assert result.reason == "metric_not_registered"
+    assert "not registered" in result.message
 
 
 @pytest.mark.asyncio
@@ -219,7 +222,8 @@ async def test_increment_counter_fails_with_wrong_labels(
     )
 
     assert isinstance(result, MetricRecordingFailed)
-    assert "don't match" in result.reason
+    assert result.reason == "invalid_labels"
+    assert "don't match" in result.message
 
 
 @pytest.mark.asyncio
@@ -234,7 +238,8 @@ async def test_increment_counter_fails_with_missing_labels(
     )
 
     assert isinstance(result, MetricRecordingFailed)
-    assert "don't match" in result.reason
+    assert result.reason == "invalid_labels"
+    assert "don't match" in result.message
 
 
 # Gauge tests
@@ -315,7 +320,8 @@ async def test_record_gauge_fails_without_registry() -> None:
     )
 
     assert isinstance(result, MetricRecordingFailed)
-    assert "No metrics registered" in result.reason
+    assert result.reason == "collector_error"
+    assert "No metrics registered" in result.message
 
 
 @pytest.mark.asyncio
@@ -330,7 +336,8 @@ async def test_record_gauge_fails_with_unregistered_metric(
     )
 
     assert isinstance(result, MetricRecordingFailed)
-    assert "not registered" in result.reason
+    assert result.reason == "metric_not_registered"
+    assert "not registered" in result.message
 
 
 @pytest.mark.asyncio
@@ -345,7 +352,8 @@ async def test_record_gauge_fails_with_wrong_labels(
     )
 
     assert isinstance(result, MetricRecordingFailed)
-    assert "don't match" in result.reason
+    assert result.reason == "invalid_labels"
+    assert "don't match" in result.message
 
 
 # Histogram tests
@@ -427,7 +435,8 @@ async def test_observe_histogram_fails_without_registry() -> None:
     )
 
     assert isinstance(result, MetricRecordingFailed)
-    assert "No metrics registered" in result.reason
+    assert result.reason == "collector_error"
+    assert "No metrics registered" in result.message
 
 
 @pytest.mark.asyncio
@@ -442,7 +451,8 @@ async def test_observe_histogram_fails_with_unregistered_metric(
     )
 
     assert isinstance(result, MetricRecordingFailed)
-    assert "not registered" in result.reason
+    assert result.reason == "metric_not_registered"
+    assert "not registered" in result.message
 
 
 @pytest.mark.asyncio
@@ -457,7 +467,8 @@ async def test_observe_histogram_fails_with_wrong_labels(
     )
 
     assert isinstance(result, MetricRecordingFailed)
-    assert "don't match" in result.reason
+    assert result.reason == "invalid_labels"
+    assert "don't match" in result.message
 
 
 # Summary tests
@@ -515,7 +526,8 @@ async def test_record_summary_fails_without_registry() -> None:
     )
 
     assert isinstance(result, MetricRecordingFailed)
-    assert "No metrics registered" in result.reason
+    assert result.reason == "collector_error"
+    assert "No metrics registered" in result.message
 
 
 @pytest.mark.asyncio
@@ -530,7 +542,8 @@ async def test_record_summary_fails_with_unregistered_metric(
     )
 
     assert isinstance(result, MetricRecordingFailed)
-    assert "not registered" in result.reason
+    assert result.reason == "metric_not_registered"
+    assert "not registered" in result.message
 
 
 @pytest.mark.asyncio
@@ -545,7 +558,8 @@ async def test_record_summary_fails_with_wrong_labels(
     )
 
     assert isinstance(result, MetricRecordingFailed)
-    assert "don't match" in result.reason
+    assert result.reason == "invalid_labels"
+    assert "don't match" in result.message
 
 
 # Query metrics tests

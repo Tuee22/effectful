@@ -12,7 +12,13 @@ from pytest_mock import MockerFixture
 from redis.asyncio import Redis
 
 from effectful.adapters.redis_auth import RedisAuthService
-from effectful.domain.token_result import TokenExpired, TokenInvalid, TokenValid
+from effectful.domain.token_result import (
+    TokenExpired,
+    TokenInvalid,
+    TokenRefreshRejected,
+    TokenRefreshed,
+    TokenValid,
+)
 
 
 class TestRedisAuthServiceValidateToken:
@@ -266,14 +272,15 @@ class TestRedisAuthServiceRefreshToken:
         auth_service = RedisAuthService(mock_redis, secret)
 
         # Execute
-        new_token = await auth_service.refresh_token(refresh_token)
+        refresh_result = await auth_service.refresh_token(refresh_token)
 
         # Assert
-        assert isinstance(new_token, str)
+        assert isinstance(refresh_result, TokenRefreshed)
+        assert isinstance(refresh_result.access_token, str)
         # New token will have different expiration (1 hour from now vs 30 minutes)
         # so it should be different
         decoded_old = jwt.decode(refresh_token, secret, algorithms=["HS256"])
-        decoded_new = jwt.decode(new_token, secret, algorithms=["HS256"])
+        decoded_new = jwt.decode(refresh_result.access_token, secret, algorithms=["HS256"])
         assert decoded_new["exp"] > decoded_old["exp"]
 
         # Verify new token has correct claims
@@ -281,10 +288,10 @@ class TestRedisAuthServiceRefreshToken:
         assert decoded_new["role"] == "user"
 
     @pytest.mark.asyncio
-    async def test_refresh_token_returns_none_for_expired_token(
+    async def test_refresh_token_returns_rejected_for_expired_token(
         self, mocker: MockerFixture
     ) -> None:
-        """Test refreshing expired token returns None."""
+        """Test refreshing expired token returns rejection ADT."""
         # Setup
         user_id = uuid4()
         secret = "test-secret"
@@ -303,13 +310,13 @@ class TestRedisAuthServiceRefreshToken:
         result = await auth_service.refresh_token(refresh_token)
 
         # Assert
-        assert result is None
+        assert result == TokenRefreshRejected(reason="expired_refresh_token")
 
     @pytest.mark.asyncio
-    async def test_refresh_token_returns_none_for_invalid_token(
+    async def test_refresh_token_returns_rejected_for_invalid_token(
         self, mocker: MockerFixture
     ) -> None:
-        """Test refreshing invalid token returns None."""
+        """Test refreshing invalid token returns rejection ADT."""
         # Setup
         mock_redis = mocker.AsyncMock(spec=Redis)
         auth_service = RedisAuthService(mock_redis, "test-secret")
@@ -318,7 +325,7 @@ class TestRedisAuthServiceRefreshToken:
         result = await auth_service.refresh_token("invalid-token")
 
         # Assert
-        assert result is None
+        assert result == TokenRefreshRejected(reason="invalid_refresh_token")
 
 
 class TestRedisAuthServiceRevokeToken:

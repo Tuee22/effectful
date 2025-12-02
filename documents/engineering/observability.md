@@ -9,25 +9,25 @@ This is the Single Source of Truth (SSoT) for the Effectful observability archit
 ```mermaid
 flowchart TB
   Observability[Observability SSoT]
-  Monitoring[Monitoring Standards SSoT]
-  Alerting[Alerting SSoT]
+  MonAlert[Monitoring & Alerting SSoT]
+  CodeQuality[Code Quality SSoT]
   Architecture[Architecture SSoT]
   Docker[Docker Workflow SSoT]
   Testing[Testing SSoT]
 
-  Observability --> Monitoring
-  Observability --> Alerting
+  Observability --> MonAlert
+  Observability --> CodeQuality
   Observability --> Architecture
   Observability --> Docker
   Observability --> Testing
-  Monitoring --> Docker
-  Alerting --> Testing
+  MonAlert --> Testing
+  CodeQuality --> Architecture
 ```
 
 | Need | Link |
 |------|------|
-| Naming + label policy | [Monitoring Standards](monitoring_standards.md) |
-| Alert rules + runbooks | [Alerting](alerting.md) |
+| Naming + label policy | [Monitoring & Alerting](monitoring_and_alerting.md#monitoring-standards) |
+| Alert rules + runbooks | [Monitoring & Alerting](monitoring_and_alerting.md#alerting-policy) |
 | Where observability fits in architecture | [Architecture](architecture.md#5-layer-architecture) |
 | Container and tooling setup | [Docker Workflow](docker_workflow.md) |
 | Testing metrics flows | [Testing](testing.md#part-5-testing-patterns) |
@@ -715,9 +715,9 @@ async def test_metrics_workflow() -> None:
 
 > **Core Doctrine**: For 5-layer architecture, see [architecture.md](./architecture.md)
 
-> **Core Doctrine**: For purity and effects as data, see [purity.md](./purity.md)
+> **Core Doctrine**: For purity and effects as data, see [code_quality.md](./code_quality.md#purity-doctrines)
 
-> **Core Doctrine**: For type safety patterns, see [type_safety_enforcement.md](./type_safety_enforcement.md)
+> **Core Doctrine**: For type safety patterns, see [code_quality.md](./code_quality.md#type-safety-doctrines)
 
 > **Core Doctrine**: For testing strategies, see [testing.md](./testing.md)
 
@@ -727,8 +727,7 @@ async def test_metrics_workflow() -> None:
 
 ## See Also
 
-- [Monitoring Standards](./monitoring_standards.md) - Metric naming conventions and labeling best practices
-- [Alerting](./alerting.md) - Alert rules philosophy and severity levels
+- [Monitoring & Alerting](./monitoring_and_alerting.md) - Metric naming conventions, labeling best practices, and alert rules
 - [Metrics API Reference](../api/metrics.md) - Complete metrics effects API
 - [Metrics Quickstart](../tutorials/11_metrics_quickstart.md) - Get started in 15 minutes
 
@@ -736,4 +735,4 @@ async def test_metrics_workflow() -> None:
 
 **Status**: Single Source of Truth (SSoT) for observability architecture
 **Last Updated**: 2025-12-01
-**Referenced by**: monitoring_standards.md, alerting.md, README.md
+**Referenced by**: monitoring_and_alerting.md, README.md

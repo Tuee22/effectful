@@ -13,7 +13,7 @@ from pytest_mock import MockerFixture
 
 from effectful.adapters.s3_storage import S3ObjectStorage
 from effectful.algebraic.result import Err, Ok
-from effectful.domain.s3_object import PutSuccess, S3Object
+from effectful.domain.s3_object import ObjectNotFound, PutSuccess, S3Object
 from effectful.effects.storage import DeleteObject, GetObject, ListObjects, PutObject
 from effectful.effects.websocket import SendText
 from effectful.infrastructure.cache import ProfileCache
@@ -76,7 +76,7 @@ class TestStorageWorkflowIntegration:
                 case S3Object(content=retrieved_content):
                     yield SendText(text=f"Retrieved {len(retrieved_content)} bytes")
                     return "success"
-                case None:
+                case ObjectNotFound():
                     yield SendText(text="Object not found")
                     return "not_found"
                 case _:
@@ -128,7 +128,7 @@ class TestStorageWorkflowIntegration:
             match obj:
                 case S3Object():
                     return "found"
-                case None:
+                case ObjectNotFound():
                     yield SendText(text="Object not found")
                     return "not_found"
                 case _:
@@ -176,8 +176,13 @@ class TestStorageWorkflowIntegration:
 
             # Verify it exists
             obj1 = yield GetObject(bucket=bucket, key=obj_key)
-            if obj1 is None:
-                return False
+            match obj1:
+                case ObjectNotFound():
+                    return False
+                case S3Object():
+                    pass
+                case _:
+                    return False
 
             # Delete it
             yield DeleteObject(bucket=bucket, key=obj_key)
@@ -185,7 +190,7 @@ class TestStorageWorkflowIntegration:
 
             # Verify it's gone
             obj2 = yield GetObject(bucket=bucket, key=obj_key)
-            return obj2 is None
+            return isinstance(obj2, ObjectNotFound)
 
         # Act
         result = await run_ws_program(delete_object_program(clean_minio, key), interpreter)

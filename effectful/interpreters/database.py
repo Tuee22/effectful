@@ -13,6 +13,7 @@ from effectful.effects.base import Effect
 from effectful.effects.database import (
     CreateUser,
     DeleteUser,
+    GetChatMessages,
     GetUserById,
     ListMessagesForUser,
     ListUsers,
@@ -65,7 +66,9 @@ class DatabaseInterpreter:
             case SaveChatMessage(user_id=user_id, text=text):
                 return await self._handle_save_message(user_id, text, effect)
             case ListMessagesForUser(user_id=user_id):
-                return await self._handle_list_messages(user_id, effect)
+                return await self._handle_list_messages(user_id, effect, "ListMessagesForUser")
+            case GetChatMessages(user_id=user_id):
+                return await self._handle_list_messages(user_id, effect, "GetChatMessages")
             case ListUsers(limit=limit, offset=offset):
                 return await self._handle_list_users(limit, offset, effect)
             case CreateUser(email=email, name=name, password_hash=password_hash):
@@ -126,12 +129,12 @@ class DatabaseInterpreter:
             )
 
     async def _handle_list_messages(
-        self, user_id: UUID, effect: Effect
+        self, user_id: UUID, effect: Effect, effect_name: str
     ) -> Result[EffectReturn[EffectResult], InterpreterError]:
         """Handle ListMessagesForUser effect."""
         try:
             messages = await self.message_repo.list_messages_for_user(user_id)
-            return Ok(EffectReturn(value=messages, effect_name="ListMessagesForUser"))
+            return Ok(EffectReturn(value=messages, effect_name=effect_name))
         except Exception as e:
             return Err(
                 DatabaseError(

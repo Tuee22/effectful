@@ -92,7 +92,7 @@ class MessageConsumer(Protocol):
         ...
         ...     async def receive(
         ...         self, subscription: str, timeout_ms: int
-        ...     ) -> MessageEnvelope | None:
+        ...     ) -> ConsumeResult:
         ...         consumer = self._get_or_create_consumer(subscription)
         ...         try:
         ...             msg = consumer.receive(timeout_millis=timeout_ms)
@@ -104,7 +104,7 @@ class MessageConsumer(Protocol):
         ...                 topic=msg.topic_name(),
         ...             )
         ...         except pulsar.Timeout:
-        ...             return None
+        ...             return ConsumeTimeout(subscription=subscription, timeout_ms=timeout_ms)
     """
 
     async def receive(self, subscription: str, timeout_ms: int) -> ConsumeResult:

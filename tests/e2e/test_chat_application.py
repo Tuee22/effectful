@@ -34,6 +34,7 @@ from effectful.domain.message_envelope import (
     NackSuccess,
 )
 from effectful.domain.profile import ProfileData
+from effectful.domain.s3_object import ObjectNotFound, S3Object
 from effectful.domain.token_result import TokenExpired, TokenInvalid, TokenValid
 from effectful.domain.user import User, UserNotFound
 from effectful.effects.auth import GenerateToken, HashPassword, ValidatePassword, ValidateToken
@@ -538,11 +539,14 @@ class TestStorage:
 
             obj = yield GetObject(bucket=bucket, key=key)
 
-            if obj is not None:
-                yield SendText(text="Archive verified")
-                return True
-
-            return False
+            match obj:
+                case S3Object():
+                    yield SendText(text="Archive verified")
+                    return True
+                case ObjectNotFound():
+                    return False
+                case _:
+                    return False
 
         interpreter = create_composite_interpreter(
             websocket_connection=ws_client,

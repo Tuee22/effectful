@@ -120,27 +120,20 @@ async def main() -> None:
 
     # Register framework metrics
     print("📝 Registering FRAMEWORK_METRICS...")
-    registration_result = collector.register_metrics(FRAMEWORK_METRICS)
-    match registration_result:
-        case {"registered_count": count}:
-            print(f"✅ Registered {count} framework metrics:")
-            print("   • effectful_effects_total (counter)")
-            print("   • effectful_effect_duration_seconds (histogram)")
-        case {"reason": reason}:
-            print(f"❌ Failed to register metrics: {reason}")
-            return
+    await collector.register_metrics(FRAMEWORK_METRICS)
+    print("✅ Registered framework metrics for instrumentation")
 
     print()
 
     # Wrap each interpreter with instrumentation
     print("🔧 Wrapping interpreters with instrumentation...")
-    instrumented_db = create_instrumented_interpreter(
+    instrumented_db = await create_instrumented_interpreter(
         wrapped=db_interp, metrics_collector=collector
     )
-    instrumented_system = create_instrumented_interpreter(
+    instrumented_system = await create_instrumented_interpreter(
         wrapped=system_interp, metrics_collector=collector
     )
-    instrumented_ws = create_instrumented_interpreter(
+    instrumented_ws = await create_instrumented_interpreter(
         wrapped=ws_interp, metrics_collector=collector
     )
 

@@ -23,7 +23,7 @@ Configure Prometheus to scrape this endpoint by updating:
 
 SSoT References:
     - documents/core/observability_doctrine.md - Dual-layer metrics
-    - documents/core/monitoring_standards.md - Metric naming
+    - documents/engineering/monitoring_and_alerting.md - Metric naming
     - documents/tutorials/11_metrics_quickstart.md - Setup guide
 """
 
@@ -176,19 +176,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         summaries=(),
     )
 
-    app_result = metrics_collector.register_metrics(app_metrics)
-    match app_result:
-        case {"registered_count": count}:
-            print(f"✅ Registered {count} application metrics")
-        case {"reason": reason}:
-            print(f"❌ Failed to register application metrics: {reason}")
-            raise RuntimeError(f"Application metrics registration failed: {reason}")
+    await metrics_collector.register_metrics(app_metrics)
 
     # Create metrics interpreter
     metrics_interp = MetricsInterpreter(metrics_collector=metrics_collector)
 
     # Wrap in instrumented interpreter for automatic framework metrics
-    instrumented_metrics_interp = create_instrumented_interpreter(
+    instrumented_metrics_interp = await create_instrumented_interpreter(
         wrapped=metrics_interp, metrics_collector=metrics_collector
     )
 

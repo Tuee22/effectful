@@ -19,7 +19,7 @@ Example:
     >>> assert_err(result, DatabaseError)
 """
 
-from typing import TypeVar
+from typing import TypeVar, overload
 
 import pytest
 
@@ -50,12 +50,22 @@ def assert_ok(result: Result[T, E]) -> None:
             pytest.fail(f"Expected Ok, got Err({error})")
 
 
+@overload
+def assert_err(result: Result[T, E]) -> None:
+    ...
+
+
+@overload
+def assert_err(result: Result[T, E], error_type: type[E]) -> None:
+    ...
+
+
 def assert_err(result: Result[T, E], error_type: type[E] | None = None) -> None:
     """Assert that result is Err, optionally checking error type.
 
     Args:
         result: The Result to check
-        error_type: Optional error type to match
+        error_type: Error type to match; when omitted, accepts any error
 
     Raises:
         AssertionError: If result is Ok or error type doesn't match

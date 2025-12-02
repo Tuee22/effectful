@@ -11,7 +11,7 @@ Run this example:
 
 SSoT References:
     - documents/core/observability_doctrine.md - Metrics philosophy
-    - documents/core/monitoring_standards.md - Naming conventions
+    - documents/engineering/monitoring_and_alerting.md - Naming conventions
     - documents/tutorials/11_metrics_quickstart.md - Getting started
 """
 

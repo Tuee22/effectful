@@ -8,43 +8,48 @@
 flowchart TB
   Docs[Documentation Standards SSoT]
   EngineeringHub[Engineering README]
-  Forbidden[Forbidden Patterns SSoT]
+  CodeQuality[Code Quality SSoT]
   Architecture[Architecture SSoT]
   Testing[Testing SSoT]
-  TypeSafety[Type Safety SSoT]
+  MonAlert[Monitoring & Alerting SSoT]
 
   Docs --> EngineeringHub
-  Docs --> Forbidden
+  Docs --> CodeQuality
   Docs --> Architecture
   Docs --> Testing
-  Docs --> TypeSafety
-  Forbidden --> Testing
-  Architecture --> TypeSafety
+  Docs --> MonAlert
+  Architecture --> CodeQuality
 ```
 
 | Need | Link |
 |------|------|
 | Navigation entry point | [Engineering README](README.md) |
-| Anti-pattern hub | [Forbidden Patterns](forbidden_patterns.md) |
+| Code quality (type safety + purity) | [Code Quality](code_quality.md) |
 | Architecture canonical doc | [Architecture](architecture.md) |
 | Test documentation rules | [Testing](testing.md) |
-| Type safety doctrine | [Type Safety Enforcement](type_safety_enforcement.md) |
+| Monitoring + alerting policy | [Monitoring & Alerting](monitoring_and_alerting.md) |
 
 ## Documentation Philosophy
 
 ### Single Source of Truth (SSoT)
-- Each piece of knowledge has exactly ONE authoritative location
-- All other references LINK to the SSoT, never duplicate
-- Mark SSoT documents explicitly: "**SSoT** for [topic]"
-- Update SSoT first, links follow automatically
-- Reduces maintenance burden, prevents inconsistency, ensures accuracy
+- Each piece of knowledge has exactly ONE authoritative location.
+- All other references LINK to the SSoT, never duplicate—prefer deep links into the precise subsection.
+- Mark SSoT documents explicitly: "**SSoT** for [topic]" and include `Supersedes` when refactoring.
+- Update SSoT first, links follow automatically.
+- Reduces maintenance burden, prevents inconsistency, ensures accuracy.
 
-###DRY (Don't Repeat Yourself)
-- Duplicate content creates maintenance burden and drift
-- Liberal linking instead of copy-paste
-- Acceptable repetition: navigation breadcrumbs, quick reference tables
-- Forbidden duplication: examples, procedures, explanations
-- Exception: Context-specific summaries (3-5 lines max with link to SSoT)
+### Link Liberally
+- Default to linking existing SSoTs rather than rephrasing content.
+- When adding new sections, include cross-links to related standards (code quality, testing, observability, tutorials).
+- Inline reminders (one sentence max) are fine if followed by a link to the canonical section.
+- When unsure, err on the side of **more links** to reinforce DRY navigation.
+
+### DRY (Don't Repeat Yourself)
+- Duplicate content creates maintenance burden and drift.
+- Liberal linking instead of copy-paste.
+- Acceptable repetition: navigation breadcrumbs, quick reference tables.
+- Forbidden duplication: examples, procedures, explanations.
+- Exception: Context-specific summaries (3-5 lines max with link to SSoT).
 
 ### Separation of Concerns
 - **Engineering standards** (documents/engineering/): HOW to build effectful code
@@ -57,7 +62,7 @@ flowchart TB
 ## File Organization Standards
 
 ### Naming Conventions
-- Lowercase with underscores: `type_safety_enforcement.md`, not `TypeSafety.md` or `type-safety-enforcement.md`
+- Lowercase with underscores: `code_quality.md`, not `CodeQuality.md` or `code-quality.md`
 - Descriptive names: `docker_workflow.md`, not `docker.md`
 - Avoid abbreviations: `configuration.md`, not `config.md`
 - No version numbers in filenames: use git for versioning
@@ -488,9 +493,9 @@ If your diagram requires features not in the safe subset:
 **Relative paths preferred:**
 ```markdown
 # From documents/tutorials/01_quickstart.md
-See [Type Safety Enforcement](../engineering/type_safety_enforcement.md)
+See [Code Quality](../engineering/code_quality.md)
 
-# From documents/engineering/purity.md
+# From documents/engineering/code_quality.md
 See [Effect Patterns](effect_patterns.md)
 ```
 
@@ -509,7 +514,7 @@ python tools/verify_links.py
 
 # Manually check for broken paths (example)
 grep -r "documents/core/" .
-grep -r "type-safety-enforcement.md" .  # Old filename
+grep -r "type_safety_enforcement.md" .  # Old filename
 ```
 
 **Forbidden:**
@@ -531,10 +536,10 @@ grep -r "type-safety-enforcement.md" .  # Old filename
 **Example refactor workflow:**
 ```bash
 # 1. Move file
-git mv documents/engineering/type-safety-enforcement.md documents/engineering/type_safety_enforcement.md
+git mv documents/engineering/monitoring_standards.md documents/engineering/monitoring_and_alerting.md
 
 # 2. Update all references
-find . -name "*.md" -exec sed -i 's/type_safety\.md/type_safety_enforcement.md/g' {} +
+find . -name "*.md" -exec sed -i 's/monitoring_standards\\.md/monitoring_and_alerting.md/g' {} +
 
 # 3. Verify
 python tools/verify_links.py
@@ -548,9 +553,9 @@ python tools/verify_links.py
 
 Add explicit SSoT marker at the top:
 ```markdown
-# Type Safety Enforcement
+# Code Quality
 
-> **Single Source of Truth (SSoT)** for all type safety policy in Effectful.
+> **Single Source of Truth (SSoT)** for all type safety and purity policy in Effectful.
 
 [Content...]
 
@@ -582,7 +587,7 @@ Add explicit SSoT marker at the top:
 
 **Quick reminder**: Zero `Any`, `cast()`, or `type: ignore` allowed - NO exceptions.
 
-**See [Type Safety Enforcement](../engineering/type_safety_enforcement.md) for complete doctrines.**
+See [Code Quality](../engineering/code_quality.md#1-no-escape-hatches-zero-exceptions) for complete doctrines.
 ```
 
 ### Forbidden Duplication
@@ -635,7 +640,7 @@ Add explicit SSoT marker at the top:
 
 ## See Also
 
-- [Related Standard](purity.md)
+- [Related Standard](code_quality.md)
 - [Tutorial](../tutorials/01_quickstart.md)
 
 ---
@@ -677,7 +682,7 @@ Add explicit SSoT marker at the top:
 ## Next Steps
 
 - [Tutorial 2](../tutorials/02_effect_types.md)
-- [Related Standard](../engineering/type_safety_enforcement.md)
+- [Related Standard](../engineering/code_quality.md)
 
 ---
 
@@ -801,15 +806,14 @@ docs: add documentation standards
 
 ## See Also
 
-- [Type Safety Enforcement](type_safety_enforcement.md) - Zero-tolerance policy
+- [Code Quality](code_quality.md) - Zero-tolerance type safety + purity
 - [Architecture](architecture.md) - Overall system design
 - [Testing](testing.md) - Test documentation practices
 - [Command Reference](command_reference.md) - All Docker commands
-- [Purity](purity.md) - Six purity doctrines
-- [Forbidden Patterns](forbidden_patterns.md) - Anti-patterns navigation hub
+- [Monitoring & Alerting](monitoring_and_alerting.md) - Metric + alert policy
 - [CONTRIBUTING](../CONTRIBUTING.md) - How to contribute
 
 ---
 
 **Last Updated**: 2025-12-01
-**Referenced by**: README.md, CONTRIBUTING.md, type_safety_enforcement.md, purity.md, testing.md, docker_workflow.md, forbidden_patterns.md
+**Referenced by**: README.md, CONTRIBUTING.md, code_quality.md, testing.md, docker_workflow.md, monitoring_and_alerting.md

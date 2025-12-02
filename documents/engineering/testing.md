@@ -7,30 +7,24 @@ This is the Single Source of Truth (SSoT) for all testing policy in the Effectfu
 ```mermaid
 flowchart TB
   Testing[Testing SSoT]
-  TypeSafety[Type Safety SSoT]
-  Purity[Purity SSoT]
+  CodeQuality[Code Quality SSoT]
   Docker[Docker Workflow SSoT]
   Commands[Command Reference]
   Docs[Documentation Standards]
-  Forbidden[Forbidden Patterns]
 
-  Testing --> TypeSafety
-  Testing --> Purity
+  Testing --> CodeQuality
   Testing --> Docker
   Testing --> Commands
   Testing --> Docs
-  Testing --> Forbidden
-  Forbidden --> TypeSafety
 ```
 
 | Need | Link |
 |------|------|
-| Type system doctrine behind matchers | [Type Safety Enforcement](type_safety_enforcement.md) |
-| Purity rules that drive test shape | [Purity](purity.md) |
+| Type safety + purity rules driving test shape | [Code Quality](code_quality.md) |
 | Container + infra contract | [Docker Workflow](docker_workflow.md#development-contract) |
 | Command prefixes for pytest | [Command Reference](command_reference.md#command-table) |
 | Documentation format | [Documentation Standards](documentation_standards.md) |
-| Anti-pattern catalog | [Forbidden Patterns](forbidden_patterns.md) |
+| Observability expectations | [Monitoring & Alerting](monitoring_and_alerting.md#testing-alerts) |
 
 ---
 
@@ -871,7 +865,7 @@ Unlike relational databases or key-value stores, S3 doesn't have a "delete all" 
 - **O(n) cleanup**: Speed depends on number of objects (acceptable for test isolation)
 - **Idempotent**: Safe to call even if bucket is already empty
 - **Complete**: Removes all objects, ensuring clean slate
-- **for-loop acceptable**: Infrastructure cleanup at I/O boundary per purity.md
+- **for-loop acceptable**: Infrastructure cleanup at I/O boundary per [code_quality.md#doctrine-1-no-loops](code_quality.md#doctrine-1-no-loops)
 
 **From `tests/fixtures/storage.py:49-78`**:
 
@@ -3675,8 +3669,7 @@ All code changes must meet these requirements:
 
 - **Test Suite Audit:** `documents/testing/test_suite_audit.md` - Current test status and inventory
 - **Tutorial:** `documents/tutorials/04_testing_guide.md` - Step-by-step testing guide
-- **Type Safety:** `documents/engineering/type_safety_enforcement.md` - Type system enforcement
-- **Purity:** `documents/engineering/purity.md` - Functional programming rules
+- **Code Quality:** `documents/engineering/code_quality.md` - Type safety + purity enforcement
 - **Pulsar Fixtures:** `tests/fixtures/messaging.py` - clean_pulsar fixture implementation
 - **Pulsar Adapter:** `effectful/adapters/pulsar_messaging.py` - PulsarMessageProducer/Consumer with cleanup
 - **Pulsar Integration Tests:** `tests/integration/test_messaging_workflow.py` - Complete Pulsar test examples
@@ -3684,4 +3677,4 @@ All code changes must meet these requirements:
 ---
 
 **Last Updated:** 2025-12-01
-**Referenced by:** README.md, command_reference.md, forbidden_patterns.md, documentation_standards.md
+**Referenced by:** README.md, command_reference.md, documentation_standards.md, code_quality.md

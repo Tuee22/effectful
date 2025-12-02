@@ -452,13 +452,13 @@ docker compose -f docker/docker-compose.yml ps
 ## See Also
 
 - [Command Reference](command_reference.md) - Complete Docker command table
-- [Type Safety Enforcement](type_safety_enforcement.md) - Eight type safety doctrines
+- [Code Quality](code_quality.md) - Type safety + purity doctrines
 - [Testing](testing.md) - Test organization and 22 anti-patterns
 - [Observability](observability.md) - Prometheus/Grafana integration
 - [Development Workflow](development_workflow.md) - Daily development loop
-- [Forbidden Patterns](forbidden_patterns.md) - Docker anti-patterns
+- [Monitoring & Alerting](monitoring_and_alerting.md) - Metric/alert policy executed from Docker
 
 ---
 
 **Last Updated**: 2025-12-01
-**Referenced by**: CLAUDE.md, command_reference.md, testing.md, development_workflow.md, forbidden_patterns.md, README.md
+**Referenced by**: CLAUDE.md, command_reference.md, testing.md, development_workflow.md, README.md

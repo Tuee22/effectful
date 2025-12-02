@@ -141,19 +141,28 @@ class PrometheusMetricsCollector:
         # Validate registry exists
         if self._metrics_registry is None:
             return MetricRecordingFailed(
-                reason="No metrics registered - call register_metrics() first"
+                metric_name=metric_name,
+                reason="collector_error",
+                message="No metrics registered - call register_metrics() first",
             )
 
         # Validate value is non-negative
         if value < 0:
-            return MetricRecordingFailed(reason=f"Counter value must be >= 0, got {value}")
+            return MetricRecordingFailed(
+                metric_name=metric_name,
+                reason="invalid_value",
+                message=f"Counter value must be >= 0, got {value}",
+            )
 
         # Validate metric is registered
         if metric_name not in self._counters:
             counter_names = tuple(self._counters.keys())
             return MetricRecordingFailed(
-                reason=f"Counter '{metric_name}' not registered. "
-                f"Registered counters: {counter_names}"
+                metric_name=metric_name,
+                reason="metric_not_registered",
+                message=(
+                    f"Counter '{metric_name}' not registered. Registered counters: {counter_names}"
+                ),
             )
 
         # Get counter and validate labels
@@ -162,16 +171,30 @@ class PrometheusMetricsCollector:
 
         if set(labels.keys()) != set(counter_def.label_names):
             return MetricRecordingFailed(
-                reason=f"Labels {set(labels.keys())} don't match "
-                f"registered label_names {set(counter_def.label_names)}"
+                metric_name=metric_name,
+                reason="invalid_labels",
+                message=(
+                    f"Labels {set(labels.keys())} don't match "
+                    f"registered label_names {set(counter_def.label_names)}"
+                ),
             )
 
         # Increment counter
         try:
             counter.labels(**labels).inc(value)
-            return MetricRecorded(timestamp=time.time())
+            return MetricRecorded(
+                metric_name=metric_name,
+                metric_type="counter",
+                labels=labels,
+                value=value,
+                timestamp=time.time(),
+            )
         except Exception as e:
-            return MetricRecordingFailed(reason=f"Prometheus error: {str(e)}")
+            return MetricRecordingFailed(
+                metric_name=metric_name,
+                reason="collector_error",
+                message=f"Prometheus error: {str(e)}",
+            )
 
     async def record_gauge(
         self,
@@ -193,14 +216,18 @@ class PrometheusMetricsCollector:
         # Validate registry exists
         if self._metrics_registry is None:
             return MetricRecordingFailed(
-                reason="No metrics registered - call register_metrics() first"
+                metric_name=metric_name,
+                reason="collector_error",
+                message="No metrics registered - call register_metrics() first",
             )
 
         # Validate metric is registered
         if metric_name not in self._gauges:
             gauge_names = tuple(self._gauges.keys())
             return MetricRecordingFailed(
-                reason=f"Gauge '{metric_name}' not registered. " f"Registered gauges: {gauge_names}"
+                metric_name=metric_name,
+                reason="metric_not_registered",
+                message=f"Gauge '{metric_name}' not registered. Registered gauges: {gauge_names}",
             )
 
         # Get gauge and validate labels
@@ -209,16 +236,30 @@ class PrometheusMetricsCollector:
 
         if set(labels.keys()) != set(gauge_def.label_names):
             return MetricRecordingFailed(
-                reason=f"Labels {set(labels.keys())} don't match "
-                f"registered label_names {set(gauge_def.label_names)}"
+                metric_name=metric_name,
+                reason="invalid_labels",
+                message=(
+                    f"Labels {set(labels.keys())} don't match "
+                    f"registered label_names {set(gauge_def.label_names)}"
+                ),
             )
 
         # Set gauge value
         try:
             gauge.labels(**labels).set(value)
-            return MetricRecorded(timestamp=time.time())
+            return MetricRecorded(
+                metric_name=metric_name,
+                metric_type="gauge",
+                labels=labels,
+                value=value,
+                timestamp=time.time(),
+            )
         except Exception as e:
-            return MetricRecordingFailed(reason=f"Prometheus error: {str(e)}")
+            return MetricRecordingFailed(
+                metric_name=metric_name,
+                reason="collector_error",
+                message=f"Prometheus error: {str(e)}",
+            )
 
     async def increment_gauge(
         self,
@@ -240,14 +281,18 @@ class PrometheusMetricsCollector:
         # Validate registry exists
         if self._metrics_registry is None:
             return MetricRecordingFailed(
-                reason="No metrics registered - call register_metrics() first"
+                metric_name=metric_name,
+                reason="collector_error",
+                message="No metrics registered - call register_metrics() first",
             )
 
         # Validate metric is registered
         if metric_name not in self._gauges:
             gauge_names = tuple(self._gauges.keys())
             return MetricRecordingFailed(
-                reason=f"Gauge '{metric_name}' not registered. " f"Registered gauges: {gauge_names}"
+                metric_name=metric_name,
+                reason="metric_not_registered",
+                message=f"Gauge '{metric_name}' not registered. Registered gauges: {gauge_names}",
             )
 
         # Get gauge and validate labels
@@ -256,16 +301,30 @@ class PrometheusMetricsCollector:
 
         if set(labels.keys()) != set(gauge_def.label_names):
             return MetricRecordingFailed(
-                reason=f"Labels {set(labels.keys())} don't match "
-                f"registered label_names {set(gauge_def.label_names)}"
+                metric_name=metric_name,
+                reason="invalid_labels",
+                message=(
+                    f"Labels {set(labels.keys())} don't match "
+                    f"registered label_names {set(gauge_def.label_names)}"
+                ),
             )
 
         # Increment gauge value
         try:
             gauge.labels(**labels).inc(value)
-            return MetricRecorded(timestamp=time.time())
+            return MetricRecorded(
+                metric_name=metric_name,
+                metric_type="gauge",
+                labels=labels,
+                value=value,
+                timestamp=time.time(),
+            )
         except Exception as e:
-            return MetricRecordingFailed(reason=f"Prometheus error: {str(e)}")
+            return MetricRecordingFailed(
+                metric_name=metric_name,
+                reason="collector_error",
+                message=f"Prometheus error: {str(e)}",
+            )
 
     async def decrement_gauge(
         self,
@@ -287,14 +346,18 @@ class PrometheusMetricsCollector:
         # Validate registry exists
         if self._metrics_registry is None:
             return MetricRecordingFailed(
-                reason="No metrics registered - call register_metrics() first"
+                metric_name=metric_name,
+                reason="collector_error",
+                message="No metrics registered - call register_metrics() first",
             )
 
         # Validate metric is registered
         if metric_name not in self._gauges:
             gauge_names = tuple(self._gauges.keys())
             return MetricRecordingFailed(
-                reason=f"Gauge '{metric_name}' not registered. " f"Registered gauges: {gauge_names}"
+                metric_name=metric_name,
+                reason="metric_not_registered",
+                message=f"Gauge '{metric_name}' not registered. Registered gauges: {gauge_names}",
             )
 
         # Get gauge and validate labels
@@ -303,16 +366,30 @@ class PrometheusMetricsCollector:
 
         if set(labels.keys()) != set(gauge_def.label_names):
             return MetricRecordingFailed(
-                reason=f"Labels {set(labels.keys())} don't match "
-                f"registered label_names {set(gauge_def.label_names)}"
+                metric_name=metric_name,
+                reason="invalid_labels",
+                message=(
+                    f"Labels {set(labels.keys())} don't match "
+                    f"registered label_names {set(gauge_def.label_names)}"
+                ),
             )
 
         # Decrement gauge value
         try:
             gauge.labels(**labels).dec(value)
-            return MetricRecorded(timestamp=time.time())
+            return MetricRecorded(
+                metric_name=metric_name,
+                metric_type="gauge",
+                labels=labels,
+                value=value,
+                timestamp=time.time(),
+            )
         except Exception as e:
-            return MetricRecordingFailed(reason=f"Prometheus error: {str(e)}")
+            return MetricRecordingFailed(
+                metric_name=metric_name,
+                reason="collector_error",
+                message=f"Prometheus error: {str(e)}",
+            )
 
     async def observe_histogram(
         self,
@@ -334,15 +411,21 @@ class PrometheusMetricsCollector:
         # Validate registry exists
         if self._metrics_registry is None:
             return MetricRecordingFailed(
-                reason="No metrics registered - call register_metrics() first"
+                metric_name=metric_name,
+                reason="collector_error",
+                message="No metrics registered - call register_metrics() first",
             )
 
         # Validate metric is registered
         if metric_name not in self._histograms:
             histogram_names = tuple(self._histograms.keys())
             return MetricRecordingFailed(
-                reason=f"Histogram '{metric_name}' not registered. "
-                f"Registered histograms: {histogram_names}"
+                metric_name=metric_name,
+                reason="metric_not_registered",
+                message=(
+                    f"Histogram '{metric_name}' not registered. "
+                    f"Registered histograms: {histogram_names}"
+                ),
             )
 
         # Get histogram and validate labels
@@ -353,16 +436,30 @@ class PrometheusMetricsCollector:
 
         if set(labels.keys()) != set(histogram_def.label_names):
             return MetricRecordingFailed(
-                reason=f"Labels {set(labels.keys())} don't match "
-                f"registered label_names {set(histogram_def.label_names)}"
+                metric_name=metric_name,
+                reason="invalid_labels",
+                message=(
+                    f"Labels {set(labels.keys())} don't match "
+                    f"registered label_names {set(histogram_def.label_names)}"
+                ),
             )
 
         # Record observation
         try:
             histogram.labels(**labels).observe(value)
-            return MetricRecorded(timestamp=time.time())
+            return MetricRecorded(
+                metric_name=metric_name,
+                metric_type="histogram",
+                labels=labels,
+                value=value,
+                timestamp=time.time(),
+            )
         except Exception as e:
-            return MetricRecordingFailed(reason=f"Prometheus error: {str(e)}")
+            return MetricRecordingFailed(
+                metric_name=metric_name,
+                reason="collector_error",
+                message=f"Prometheus error: {str(e)}",
+            )
 
     async def record_summary(
         self,
@@ -384,15 +481,18 @@ class PrometheusMetricsCollector:
         # Validate registry exists
         if self._metrics_registry is None:
             return MetricRecordingFailed(
-                reason="No metrics registered - call register_metrics() first"
+                metric_name=metric_name,
+                reason="collector_error",
+                message="No metrics registered - call register_metrics() first",
             )
 
         # Validate metric is registered
         if metric_name not in self._summaries:
             summary_names = tuple(self._summaries.keys())
             return MetricRecordingFailed(
-                reason=f"Summary '{metric_name}' not registered. "
-                f"Registered summaries: {summary_names}"
+                metric_name=metric_name,
+                reason="metric_not_registered",
+                message=f"Summary '{metric_name}' not registered. Registered summaries: {summary_names}",
             )
 
         # Get summary and validate labels
@@ -401,16 +501,30 @@ class PrometheusMetricsCollector:
 
         if set(labels.keys()) != set(summary_def.label_names):
             return MetricRecordingFailed(
-                reason=f"Labels {set(labels.keys())} don't match "
-                f"registered label_names {set(summary_def.label_names)}"
+                metric_name=metric_name,
+                reason="invalid_labels",
+                message=(
+                    f"Labels {set(labels.keys())} don't match "
+                    f"registered label_names {set(summary_def.label_names)}"
+                ),
             )
 
         # Record observation
         try:
             summary.labels(**labels).observe(value)
-            return MetricRecorded(timestamp=time.time())
+            return MetricRecorded(
+                metric_name=metric_name,
+                metric_type="summary",
+                labels=labels,
+                value=value,
+                timestamp=time.time(),
+            )
         except Exception as e:
-            return MetricRecordingFailed(reason=f"Prometheus error: {str(e)}")
+            return MetricRecordingFailed(
+                metric_name=metric_name,
+                reason="collector_error",
+                message=f"Prometheus error: {str(e)}",
+            )
 
     async def query_metrics(
         self,
@@ -449,8 +563,11 @@ class PrometheusMetricsCollector:
             MetricRecordingFailed: Operation not supported
         """
         return MetricRecordingFailed(
-            reason="reset_metrics() not supported for Prometheus - "
-            "metrics are managed by Prometheus server"
+            metric_name="reset_metrics",
+            reason="collector_error",
+            message=(
+                "reset_metrics() not supported for Prometheus - metrics are managed by Prometheus server"
+            ),
         )
 
 

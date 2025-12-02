@@ -18,14 +18,12 @@ Quick links to key standards:
 |----------|---------|
 | [Engineering Standards](documents/engineering/README.md) | Master index of all standards |
 | [Architecture](documents/engineering/architecture.md) | 5-layer architecture design |
-| [Type Safety](documents/engineering/type_safety_enforcement.md) | Eight type safety doctrines |
-| [Purity](documents/engineering/purity.md) | Six purity doctrines |
+| [Code Quality](documents/engineering/code_quality.md) | Type safety + purity doctrines and anti-pattern routing |
 | [Testing](documents/engineering/testing.md) | 22 test anti-patterns |
 | [Docker Workflow](documents/engineering/docker_workflow.md) | All development in Docker |
 | [Command Reference](documents/engineering/command_reference.md) | Docker commands and test execution |
-| [Code Quality](documents/engineering/type_safety_enforcement.md) | check-code workflow |
+| [Monitoring & Alerting](documents/engineering/monitoring_and_alerting.md) | Metric standards + alert policy |
 | [Development Workflow](documents/engineering/development_workflow.md) | Daily development loop |
-| [Forbidden Patterns](documents/engineering/forbidden_patterns.md) | Anti-patterns to avoid |
 | [Effect Patterns](documents/engineering/effect_patterns.md) | Real-world effect program patterns |
 
 ## Quick Reference
@@ -58,7 +56,7 @@ All code changes must meet these requirements:
 - ✅ **Zero `Any`, `cast()`, or `# type: ignore`** (escape hatches forbidden)
 - ✅ **Integration tests cover all features** (conceptual coverage)
 
-**See**: [Code Quality](documents/engineering/type_safety_enforcement.md) for complete standards.
+**See**: [Code Quality](documents/engineering/code_quality.md) for complete standards.
 
 ## Claude Code-Specific Patterns
 
@@ -121,7 +119,7 @@ See [documents/CONTRIBUTING.md](documents/CONTRIBUTING.md) for complete contribu
 - [ ] Code quality: `poetry run check-code` exits 0
 - [ ] Tests for all features (unit + integration)
 - [ ] No forbidden constructs (Any/cast/type:ignore)
-- [ ] No anti-patterns (see [Forbidden Patterns](documents/engineering/forbidden_patterns.md))
+- [ ] No anti-patterns (see [Code Quality](documents/engineering/code_quality.md#anti-pattern-index-routing-to-canonical-fixes))
 - [ ] All dataclasses frozen (`frozen=True`)
 - [ ] ADTs used instead of Optional for domain logic
 - [ ] Result type used for all fallible operations
@@ -136,8 +134,7 @@ See [documents/CONTRIBUTING.md](documents/CONTRIBUTING.md) for complete contribu
 
 **Core standards**:
 - [Architecture](documents/engineering/architecture.md) - 5-layer design
-- [Type Safety](documents/engineering/type_safety_enforcement.md) - Eight doctrines
-- [Purity](documents/engineering/purity.md) - Six doctrines
+- [Code Quality](documents/engineering/code_quality.md) - Type safety + purity doctrines
 - [Testing](documents/engineering/testing.md) - 22 anti-patterns
 - [Docker Workflow](documents/engineering/docker_workflow.md) - All development in Docker
 

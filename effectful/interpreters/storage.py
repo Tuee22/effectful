@@ -20,7 +20,7 @@ from typing import Literal
 
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok, Result
-from effectful.domain.s3_object import PutFailure, PutSuccess
+from effectful.domain.s3_object import GetObjectResult, ObjectNotFound, PutFailure, PutSuccess
 from effectful.effects.base import Effect
 from effectful.effects.storage import DeleteObject, GetObject, ListObjects, PutObject
 from effectful.infrastructure.storage import ObjectStorage
@@ -56,8 +56,11 @@ class StorageInterpreter:
         >>>
         >>> match result:
         ...     case Ok(EffectReturn(value=s3_object, effect_name="GetObject")):
-        ...         if s3_object is not None:
-        ...             print(f"Retrieved: {s3_object.key}")
+        ...         match s3_object:
+        ...             case S3Object():
+        ...                 print(f"Retrieved: {s3_object.key}")
+        ...             case ObjectNotFound():
+        ...                 print("Object missing")
     """
 
     storage: ObjectStorage
@@ -109,12 +112,12 @@ class StorageInterpreter:
 
         Returns:
             Ok with S3Object if object exists.
-            Ok with None if object does not exist (not an error).
+            Ok with ObjectNotFound ADT if object does not exist (not an error).
             Err(StorageError) on infrastructure failure.
         """
         try:
-            s3_object = await self.storage.get_object(bucket, key)
-            return Ok(EffectReturn(value=s3_object, effect_name="GetObject"))
+            get_result: GetObjectResult = await self.storage.get_object(bucket, key)
+            return Ok(EffectReturn(value=get_result, effect_name="GetObject"))
         except Exception as e:
             return Err(
                 StorageError(

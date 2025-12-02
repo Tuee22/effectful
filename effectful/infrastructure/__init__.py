@@ -15,16 +15,17 @@ Available protocols:
 - **MetricsCollector** - Metrics collection protocol (Prometheus, in-memory, etc.)
 
 Example:
-    >>> from effectful.infrastructure import UserRepository, ObjectStorage
-    >>> class PostgresUserRepository:
-    ...     async def get_by_id(self, user_id: UUID) -> UserLookupResult:
-    ...         # Implementation using PostgreSQL
-    ...         ...
-    >>>
-    >>> class S3ObjectStorage:
-    ...     async def get_object(self, bucket: str, key: str) -> S3Object | None:
-    ...         # Implementation using AWS S3
-    ...         ...
+>>> from effectful.infrastructure import UserRepository, ObjectStorage
+>>> from effectful.domain.s3_object import ObjectNotFound, S3Object
+>>> class PostgresUserRepository:
+...     async def get_by_id(self, user_id: UUID) -> UserLookupResult:
+...         # Implementation using PostgreSQL
+...         ...
+>>>
+>>> class S3ObjectStorage:
+...     async def get_object(self, bucket: str, key: str) -> S3Object | ObjectNotFound:
+...         # Implementation using AWS S3
+...         ...
 
 See Also:
     - effectful.interpreters - Interpreters using these protocols

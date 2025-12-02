@@ -9,6 +9,7 @@ Tests verify:
 
 from dataclasses import FrozenInstanceError
 import time
+from typing import Literal
 
 import pytest
 
@@ -24,60 +25,118 @@ from effectful.domain.metrics_result import (
 
 # MetricRecorded tests
 def test_metric_recorded_creation() -> None:
-    """MetricRecorded can be created with timestamp."""
+    """MetricRecorded can be created with full metadata."""
     timestamp = time.time()
-    result = MetricRecorded(timestamp=timestamp)
+    result = MetricRecorded(
+        metric_name="requests_total",
+        metric_type="counter",
+        labels={"method": "GET"},
+        value=1.0,
+        timestamp=timestamp,
+    )
     assert result.timestamp == timestamp
+    assert result.metric_name == "requests_total"
+    assert result.metric_type == "counter"
+    assert result.labels == {"method": "GET"}
+    assert result.value == 1.0
 
 
 def test_metric_recorded_is_frozen() -> None:
     """MetricRecorded is immutable (frozen dataclass)."""
-    result = MetricRecorded(timestamp=123.45)
+    result = MetricRecorded(
+        metric_name="requests_total",
+        metric_type="counter",
+        labels={},
+        value=1.0,
+        timestamp=123.45,
+    )
     with pytest.raises((FrozenInstanceError, AttributeError)):
         setattr(result, "timestamp", 999.99)
 
 
 def test_metric_recorded_equality() -> None:
     """Two MetricRecorded instances with same timestamp are equal."""
-    result1 = MetricRecorded(timestamp=123.45)
-    result2 = MetricRecorded(timestamp=123.45)
+    result1 = MetricRecorded(
+        metric_name="requests_total",
+        metric_type="counter",
+        labels={},
+        value=1.0,
+        timestamp=123.45,
+    )
+    result2 = MetricRecorded(
+        metric_name="requests_total",
+        metric_type="counter",
+        labels={},
+        value=1.0,
+        timestamp=123.45,
+    )
     assert result1 == result2
 
 
 def test_metric_recorded_inequality() -> None:
     """MetricRecorded instances with different timestamps are not equal."""
-    result1 = MetricRecorded(timestamp=123.45)
-    result2 = MetricRecorded(timestamp=678.90)
+    result1 = MetricRecorded(
+        metric_name="requests_total",
+        metric_type="counter",
+        labels={},
+        value=1.0,
+        timestamp=123.45,
+    )
+    result2 = MetricRecorded(
+        metric_name="requests_total",
+        metric_type="counter",
+        labels={},
+        value=1.0,
+        timestamp=678.90,
+    )
     assert result1 != result2
 
 
 # MetricRecordingFailed tests
 def test_metric_recording_failed_creation() -> None:
     """MetricRecordingFailed can be created with reason."""
-    result = MetricRecordingFailed(reason="metric_not_registered")
+    result = MetricRecordingFailed(
+        metric_name="requests_total",
+        reason="metric_not_registered",
+        message="not registered",
+    )
     assert result.reason == "metric_not_registered"
+    assert result.metric_name == "requests_total"
 
 
 def test_metric_recording_failed_is_frozen() -> None:
     """MetricRecordingFailed is immutable (frozen dataclass)."""
-    result = MetricRecordingFailed(reason="metric_not_registered")
+    result = MetricRecordingFailed(
+        metric_name="requests_total",
+        reason="metric_not_registered",
+        message="not registered",
+    )
     with pytest.raises((FrozenInstanceError, AttributeError)):
         setattr(result, "reason", "other_reason")
 
 
 def test_metric_recording_failed_all_reason_types() -> None:
     """MetricRecordingFailed handles all documented reason strings."""
-    reasons = [
+    reasons: tuple[
+        Literal[
+            "metric_not_registered",
+            "type_mismatch",
+            "invalid_labels",
+            "invalid_value",
+            "cardinality_limit_exceeded",
+            "collector_error",
+        ],
+        ...,
+    ] = (
         "metric_not_registered",
         "type_mismatch",
-        "missing_label: method",
-        "unexpected_label: extra",
-        "invalid_value: negative",
+        "invalid_labels",
+        "invalid_value",
         "cardinality_limit_exceeded",
-        "collector_error: connection timeout",
-    ]
+        "collector_error",
+    )
     for reason in reasons:
-        result = MetricRecordingFailed(reason=reason)
+        result = MetricRecordingFailed(metric_name="test_metric", reason=reason, message="msg")
         assert result.reason == reason
 
 
@@ -133,7 +192,13 @@ def test_query_failure_all_reason_types() -> None:
 # Pattern matching tests
 def test_metric_result_pattern_matching_recorded() -> None:
     """MetricResult pattern matching handles MetricRecorded case."""
-    result: MetricResult = MetricRecorded(timestamp=123.45)
+    result: MetricResult = MetricRecorded(
+        metric_name="requests_total",
+        metric_type="counter",
+        labels={},
+        value=1.0,
+        timestamp=123.45,
+    )
     match result:
         case MetricRecorded(timestamp=ts):
             assert ts == 123.45
@@ -143,7 +208,11 @@ def test_metric_result_pattern_matching_recorded() -> None:
 
 def test_metric_result_pattern_matching_failed() -> None:
     """MetricResult pattern matching handles MetricRecordingFailed case."""
-    result: MetricResult = MetricRecordingFailed(reason="metric_not_registered")
+    result: MetricResult = MetricRecordingFailed(
+        metric_name="requests_total",
+        reason="metric_not_registered",
+        message="missing",
+    )
     match result:
         case MetricRecorded(timestamp=_):
             pytest.fail("Should not match MetricRecorded")
@@ -175,7 +244,13 @@ def test_metric_query_result_pattern_matching_failure() -> None:
 # Type narrowing tests
 def test_isinstance_narrowing_metric_recorded() -> None:
     """isinstance correctly narrows MetricResult to MetricRecorded."""
-    result: MetricResult = MetricRecorded(timestamp=123.45)
+    result: MetricResult = MetricRecorded(
+        metric_name="requests_total",
+        metric_type="counter",
+        labels={},
+        value=1.0,
+        timestamp=123.45,
+    )
     assert isinstance(result, MetricRecorded)
     # After isinstance check, can access timestamp directly
     assert result.timestamp == 123.45
@@ -183,7 +258,11 @@ def test_isinstance_narrowing_metric_recorded() -> None:
 
 def test_isinstance_narrowing_metric_recording_failed() -> None:
     """isinstance correctly narrows MetricResult to MetricRecordingFailed."""
-    result: MetricResult = MetricRecordingFailed(reason="metric_not_registered")
+    result: MetricResult = MetricRecordingFailed(
+        metric_name="requests_total",
+        reason="metric_not_registered",
+        message="missing",
+    )
     assert isinstance(result, MetricRecordingFailed)
     # After isinstance check, can access reason directly
     assert result.reason == "metric_not_registered"

@@ -12,40 +12,34 @@ The **engineering/** directory contains **effectful-specific engineering standar
 flowchart TB
   Hub[Engineering Hub SSoT]
   Arch[Architecture SSoT]
-  TypeSafety[Type Safety SSoT]
-  Purity[Purity SSoT]
+  CodeQuality[Code Quality SSoT]
   Testing[Testing SSoT]
   Docker[Docker Workflow SSoT]
   Docs[Documentation Standards SSoT]
-  Forbidden[Forbidden Patterns SSoT]
   Observability[Observability SSoT]
+  MonAlert[Monitoring & Alerting SSoT]
 
   Hub --> Arch
-  Hub --> TypeSafety
-  Hub --> Purity
+  Hub --> CodeQuality
   Hub --> Testing
   Hub --> Docker
   Hub --> Docs
-  Hub --> Forbidden
   Hub --> Observability
+  Hub --> MonAlert
   Observability --> Arch
-  Forbidden --> Testing
-  Forbidden --> TypeSafety
   CommandRef[Command Reference]
   Docker --> CommandRef
-  Docs --> Forbidden
 ```
 
 | What do you need? | SSoT Document |
 |-------------------|---------------|
 | Understand system design | [Architecture](architecture.md) |
-| Write type-safe code | [Type Safety Enforcement](type_safety_enforcement.md) |
-| Pure functional patterns | [Purity](purity.md) |
+| Write type-safe, pure code | [Code Quality](code_quality.md) |
 | Test programs correctly | [Testing](testing.md) |
 | Set up development environment | [Docker Workflow](docker_workflow.md) |
-| Run quality checks | [Type Safety Enforcement](type_safety_enforcement.md#anti-pattern-detection) |
+| Run quality checks | [Code Quality](code_quality.md#detection-and-enforcement) |
 | Add metrics/observability | [Observability](observability.md) |
-| Avoid common mistakes | [Forbidden Patterns](forbidden_patterns.md) |
+| Monitoring + alerting policy | [Monitoring & Alerting](monitoring_and_alerting.md) |
 | Write documentation | [Documentation Standards](documentation_standards.md) |
 
 ## Core Standards
@@ -56,23 +50,11 @@ flowchart TB
 - Effect system design decisions
 - Why pure functional programming for Python
 
-**[Type Safety](type_safety_enforcement.md)** (425 lines)
-- Eight type safety doctrines
-- ADTs over Optional types
-- Result type for error handling
-- Zero escape hatches (Any/cast/type:ignore forbidden)
-- PEP 695 type aliases
-
-**[Purity](purity.md)** (~1400 lines, includes all purity doctrines and functional patterns)
-- Six purity doctrines
-- Expressions over statements
-- Effects as data (not execution)
-- Yield don't call pattern
-- Immutability by default
-- Trampoline pattern for recursion
-- Comprehensions over loops
-- Functional composition
-- Exhaustive pattern matching
+**[Code Quality](code_quality.md)** (Type safety + purity, consolidated)
+- Eight type safety doctrines (zero escape hatches, ADTs over Optional, Result for errors, immutable/frozen dataclasses)
+- Six purity doctrines (effects as data, yield-don't-call, exhaustive matches)
+- Generator rules and anti-pattern routing
+- Detection + remediation workflow (check-code, MyPy strict, link verification)
 
 **[Testing](testing.md)** (3,659 lines)
 - Test pyramid strategy (Unit → Integration → E2E)
@@ -103,11 +85,11 @@ flowchart TB
 - Test statistics (329 tests, ~1.6s execution)
 - Output capture techniques
 
-**[Code Quality](type_safety_enforcement.md)** (200 lines)
+**[Code Quality](code_quality.md)** (combined)
 - check-code workflow (Black → MyPy → doc link verification)
 - Universal success criteria
-- MyPy strict mode enforcement
-- Exit code requirements
+- Purity + type safety doctrines and generators
+- Anti-pattern routing and remediation
 
 **[Development Workflow](development_workflow.md)** (150 lines)
 - Daily development loop
@@ -122,12 +104,6 @@ flowchart TB
 - Redis configuration
 - MinIO S3 configuration
 - Apache Pulsar configuration
-
-**[Forbidden Patterns](forbidden_patterns.md)** (150 lines)
-- Implementation anti-patterns (Using Any, mutable models, Optional for domain logic)
-- Test anti-patterns summary (link to testing.md for complete list)
-- Docker anti-patterns
-- Detection and remediation strategies
 
 **[Effect Patterns](effect_patterns.md)** (200 lines)
 - Generator-based DSL pattern
@@ -144,24 +120,18 @@ flowchart TB
 - Cardinality management
 - What to measure and why
 
-**[Monitoring Standards](monitoring_standards.md)** (648 lines)
-- Metric naming conventions (snake_case, descriptive)
-- Label standards (cardinality limits)
-- Counter vs Gauge vs Histogram vs Summary
-- Anti-patterns (high cardinality, meaningless names)
-
-**[Alerting](alerting.md)** (614 lines)
-- Alert severity levels (critical, warning, info)
-- Runbook requirements
-- Alert design patterns
-- SLO-based alerting
+**[Monitoring & Alerting](monitoring_and_alerting.md)** (combined)
+- Metric naming conventions, label standards, default framework metrics
+- Cardinality rules and registry pattern
+- Alert severity levels, runbook requirements, routing patterns
+- Alert/PromQL testing expectations
 
 ## Relationship to Other Documentation
 
 ### Engineering → Tutorials
 - **Engineering** defines standards and patterns (HOW)
 - **Tutorials** teach how to apply them step-by-step (LEARN)
-- Example: [Type Safety](type_safety_enforcement.md) (standard) → [tutorials/03_adts_and_results.md](../tutorials/03_adts_and_results.md) (tutorial)
+- Example: [Code Quality](code_quality.md) (standard) → [tutorials/03_adts_and_results.md](../tutorials/03_adts_and_results.md) (tutorial)
 
 ### Engineering → API
 - **Engineering** explains architectural decisions (WHY)
@@ -189,7 +159,7 @@ All engineering decisions flow from this principle. Every standard, pattern, and
 
 ## Document Status
 
-**Total**: 18 engineering documents (9 core + 9 guides)
+**Total**: 16 engineering documents (8 core + 8 guides)
 **Lines of Code**: ~9,000 lines of engineering documentation
 **Last Major Update**: 2025-11-29 (documentation refactor - moved from core/)
 
@@ -205,7 +175,7 @@ All engineering documents marked with "**SSoT**" are authoritative. When conflic
 5. Run link verification: `python tools/verify_links.py`
 6. Create pull request (see [Contributing](../CONTRIBUTING.md))
 
-**Naming convention**: All files lowercase with underscores, descriptive names (e.g., `type_safety_enforcement.md` not `types.md`)
+**Naming convention**: All files lowercase with underscores, descriptive names (e.g., `code_quality.md` not `types.md`)
 
 ## See Also
 

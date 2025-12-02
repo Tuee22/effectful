@@ -12,6 +12,7 @@ from effectful.domain.cache_result import CacheHit, CacheMiss
 from effectful.domain.profile import ProfileData
 from effectful.effects.base import Effect
 from effectful.effects.cache import (
+    DeleteCachedProfile,
     GetCachedProfile,
     GetCachedValue,
     InvalidateCache,
@@ -64,6 +65,8 @@ class CacheInterpreter:
                 return await self._handle_put_value(key, value, ttl, effect)
             case InvalidateCache(key=key):
                 return await self._handle_invalidate(key, effect)
+            case DeleteCachedProfile(user_id=user_id):
+                return await self._handle_invalidate(str(user_id), effect, "DeleteCachedProfile")
             case _:
                 return Err(
                     UnhandledEffectError(
@@ -155,12 +158,12 @@ class CacheInterpreter:
             )
 
     async def _handle_invalidate(
-        self, key: str, effect: Effect
+        self, key: str, effect: Effect, effect_name: str = "InvalidateCache"
     ) -> Result[EffectReturn[EffectResult], InterpreterError]:
         """Handle InvalidateCache effect."""
         try:
             deleted = await self.cache.invalidate(key)
-            return Ok(EffectReturn(value=deleted, effect_name="InvalidateCache"))
+            return Ok(EffectReturn(value=deleted, effect_name=effect_name))
         except Exception as e:
             return Err(
                 CacheError(

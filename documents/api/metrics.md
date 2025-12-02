@@ -4,7 +4,7 @@
 
 > **Core Doctrine**: For metrics philosophy and architecture, see [observability_doctrine.md](../engineering/observability.md)
 
-> **Core Doctrine**: For metric naming and labeling standards, see [monitoring_standards.md](../engineering/monitoring_standards.md)
+> **Core Doctrine**: For metric naming and labeling standards, see [monitoring_and_alerting.md](../engineering/monitoring_and_alerting.md#monitoring-standards)
 
 ---
 
@@ -860,9 +860,9 @@ async def main() -> None:
 
 > **Core Doctrine**: For observability architecture, see [observability_doctrine.md](../engineering/observability.md)
 
-> **Core Doctrine**: For metric naming standards, see [monitoring_standards.md](../engineering/monitoring_standards.md)
+> **Core Doctrine**: For metric naming standards, see [monitoring_and_alerting.md](../engineering/monitoring_and_alerting.md#monitoring-standards)
 
-> **Core Doctrine**: For alert rules, see [alerting_policy.md](../engineering/alerting.md)
+> **Core Doctrine**: For alert rules, see [monitoring_and_alerting.md](../engineering/monitoring_and_alerting.md#alerting-policy)
 
 ---
 

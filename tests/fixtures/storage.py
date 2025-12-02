@@ -65,7 +65,7 @@ def clean_minio(s3_bucket: str) -> str:
     )
 
     # List and delete all objects in bucket
-    # NOTE: for-loop acceptable here per purity.md - infrastructure cleanup at I/O boundary
+    # NOTE: for-loop acceptable here per code_quality.md - infrastructure cleanup at I/O boundary
     try:
         response = s3_client.list_objects_v2(Bucket=s3_bucket)
         if "Contents" in response:

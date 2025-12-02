@@ -473,8 +473,8 @@ class TestMetricsWorkflowIntegration:
             match result:
                 case MetricRecorded():
                     return "success"
-                case MetricRecordingFailed(reason=reason):
-                    return reason
+                case MetricRecordingFailed(message=message):
+                    return message
                 case _:
                     return "unknown"
 
@@ -483,8 +483,8 @@ class TestMetricsWorkflowIntegration:
 
         # Assert
         match result:
-            case Ok(reason):
-                assert "must be >= 0" in reason
+            case Ok(message):
+                assert "must be >= 0" in message
             case Err(error):
                 pytest.fail(f"Expected Ok, got Err({error})")
 
@@ -518,8 +518,8 @@ class TestMetricsWorkflowIntegration:
             match result:
                 case MetricRecorded():
                     return "success"
-                case MetricRecordingFailed(reason=reason):
-                    return reason
+                case MetricRecordingFailed(message=message):
+                    return message
                 case _:
                     return "unknown"
 
@@ -528,8 +528,8 @@ class TestMetricsWorkflowIntegration:
 
         # Assert
         match result:
-            case Ok(reason):
-                assert "not registered" in reason
+            case Ok(message):
+                assert "not registered" in message
             case Err(error):
                 pytest.fail(f"Expected Ok, got Err({error})")
 
@@ -563,8 +563,8 @@ class TestMetricsWorkflowIntegration:
             match result:
                 case MetricRecorded():
                     return "success"
-                case MetricRecordingFailed(reason=reason):
-                    return reason
+                case MetricRecordingFailed(message=message):
+                    return message
                 case _:
                     return "unknown"
 
@@ -573,8 +573,8 @@ class TestMetricsWorkflowIntegration:
 
         # Assert
         match result:
-            case Ok(reason):
-                assert "don't match" in reason
+            case Ok(message):
+                assert "don't match" in message
             case Err(error):
                 pytest.fail(f"Expected Ok, got Err({error})")
 

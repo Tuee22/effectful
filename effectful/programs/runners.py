@@ -28,10 +28,13 @@ Example:
 """
 
 from collections.abc import Generator
+import time
 from typing import TypeVar
 
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok, Result
+from effectful.infrastructure.metrics import MetricsCollector
+from effectful.observability.framework_metrics import FRAMEWORK_METRICS
 from effectful.interpreters.base import EffectInterpreter
 from effectful.interpreters.errors import InterpreterError
 from effectful.programs.program_types import AllEffects, EffectResult
@@ -126,3 +129,38 @@ async def run_ws_program(
         # StopIteration.value contains the program's return value
         final_value: T = stop.value
         return Ok(final_value)
+
+
+async def run_ws_program_with_metrics(
+    program: Generator[AllEffects, EffectResult, T],
+    interpreter: EffectInterpreter,
+    metrics_collector: MetricsCollector,
+    program_name: str,
+) -> Result[T, InterpreterError]:
+    """Run program and emit framework program-level metrics.
+
+    This complements InstrumentedInterpreter by recording program-level
+    counters and duration histograms:
+        - effectful_programs_total (program_name, result)
+        - effectful_program_duration_seconds (program_name)
+    """
+    await metrics_collector.register_metrics(FRAMEWORK_METRICS)
+
+    start_time = time.perf_counter()
+    result = await run_ws_program(program, interpreter)
+    duration = time.perf_counter() - start_time
+
+    result_label = "ok" if isinstance(result, Ok) else "error"
+
+    await metrics_collector.increment_counter(
+        metric_name="effectful_programs_total",
+        labels={"program_name": program_name, "result": result_label},
+        value=1.0,
+    )
+    await metrics_collector.observe_histogram(
+        metric_name="effectful_program_duration_seconds",
+        labels={"program_name": program_name},
+        value=duration,
+    )
+
+    return result

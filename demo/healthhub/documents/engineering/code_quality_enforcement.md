@@ -114,7 +114,7 @@ flowchart TB
 - ❌ Effect program purity
 - ❌ HIPAA compliance
 
-**HealthHub Policy**: Zero tolerance for `Any`, `cast()`, or `# type: ignore`. See `documents/core/type_safety_doctrine.md`.
+**HealthHub Policy**: Zero tolerance for `Any`, `cast()`, or `# type: ignore`. See `documents/engineering/code_quality.md`.
 
 ---
 
@@ -401,7 +401,7 @@ result = cast(dict, some_value)
 
 # ❌ FORBIDDEN
 def broken() -> LabResult:
-    return "not a lab result"  # type: ignore
+    return "not a lab result"
 
 # ✅ CORRECT
 def process_lab_result(data: LabResultData) -> LabResult:
@@ -512,7 +512,7 @@ def book_appointment(
 **Example 3: Frozen Dataclasses for Immutability**
 
 ```python
-# MyPy enforces frozen=True (see type_safety_doctrine.md)
+# MyPy enforces frozen=True (see code_quality.md)
 @dataclass(frozen=True)
 class Patient:
     id: UUID
@@ -670,7 +670,7 @@ class Appointment:
     status: AppointmentStatus
 ```
 
-**See Also**: `documents/core/type_safety_doctrine.md` - Doctrine 4: Immutability by Default.
+**See Also**: `documents/engineering/code_quality.md` - Doctrine 4: Immutability by Default.
 
 ### Exhaustive Pattern Matching
 
@@ -693,7 +693,7 @@ def handle_appointment_result(result: AppointmentResult) -> str:
             assert_never(unreachable)  # MyPy catches missing cases
 ```
 
-**See Also**: `documents/core/type_safety_doctrine.md` - Doctrine 5: Exhaustive Pattern Matching.
+**See Also**: `documents/engineering/code_quality.md` - Doctrine 5: Exhaustive Pattern Matching.
 
 ### No PHI in Metric Labels
 
@@ -819,8 +819,7 @@ fi
 ### HealthHub Documentation
 
 - **[../../CLAUDE.md](../../CLAUDE.md)** - HealthHub project overview, command reference, Universal Success Criteria
-- **[../core/type_safety_doctrine.md](../core/type_safety_doctrine.md)** - Eight type safety doctrines (SSoT for type policy)
-- **[../core/purity.md](../core/purity.md)** - Purity enforcement doctrines (six purity rules)
+- **[../../../../documents/engineering/code_quality.md](../../../../documents/engineering/code_quality.md)** - Type safety + purity doctrines (SSoT)
 - **[effect_program_patterns.md](./effect_program_patterns.md)** - Effect system patterns (generator-based DSL)
 - **[authorization_patterns.md](./authorization_patterns.md)** - ADT-based authorization (PatientAuthorized | DoctorAuthorized)
 - **[monitoring_observability.md](./monitoring_observability.md)** - HIPAA-compliant metrics (no PHI in labels)
@@ -829,8 +828,7 @@ fi
 ### Effectful Project Documentation
 
 - **[../../../CLAUDE.md](../../../CLAUDE.md)** - Effectful project patterns, command reference
-- **[../../../documents/core/type_safety_doctrine.md](../../../documents/core/type_safety_doctrine.md)** - Type safety doctrines (SSoT)
-- **[../../../documents/core/purity.md](../../../documents/core/purity.md)** - Purity doctrines (SSoT)
+- **[../../../documents/engineering/code_quality.md](../../../documents/engineering/code_quality.md)** - Code quality doctrines (SSoT)
 
 ### External Resources
 

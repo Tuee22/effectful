@@ -53,7 +53,9 @@ class GenerateToken:
 class RefreshToken:
     """Effect: Refresh an existing token to extend its validity.
 
-    Returns new JWT token as string, or None if refresh token is invalid/expired.
+    Returns TokenRefreshResult ADT:
+    - TokenRefreshed(access_token) if refresh succeeds
+    - TokenRefreshRejected(reason) if refresh token is invalid/expired
 
     Attributes:
         refresh_token: The refresh token to exchange for new access token
@@ -79,7 +81,7 @@ class RevokeToken:
 class GetUserByEmail:
     """Effect: Get user by email address.
 
-    Returns User object if found, None otherwise.
+    Returns UserFound | UserNotFound ADT (interpreter unwraps to User | UserNotFound).
 
     Attributes:
         email: Email address to search for

@@ -19,7 +19,7 @@ from pytest_mock import MockerFixture
 
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok
-from effectful.domain.s3_object import PutFailure, PutSuccess, S3Object
+from effectful.domain.s3_object import ObjectNotFound, PutFailure, PutSuccess, S3Object
 from effectful.effects.storage import DeleteObject, GetObject, ListObjects, PutObject
 from effectful.effects.websocket import SendText
 from effectful.infrastructure.storage import ObjectStorage
@@ -64,22 +64,29 @@ class TestGetObject:
 
     @pytest.mark.asyncio()
     async def test_get_object_not_found(self, mocker: MockerFixture) -> None:
-        """Interpreter should return None when object does not exist."""
+        """Interpreter should return ObjectNotFound when object does not exist."""
         # Setup
         mock_storage = mocker.AsyncMock(spec=ObjectStorage)
-        mock_storage.get_object.return_value = None
+        mock_storage.get_object.return_value = ObjectNotFound(
+            bucket="my-bucket", key="nonexistent.txt"
+        )
 
         interpreter = StorageInterpreter(storage=mock_storage)
 
         effect = GetObject(bucket="my-bucket", key="nonexistent.txt")
         result = await interpreter.interpret(effect)
 
-        # Verify result - not found returns None (not an error)
+        # Verify result - not found returns ObjectNotFound (not an error)
         match result:
-            case Ok(EffectReturn(value=None, effect_name="GetObject")):
+            case Ok(
+                EffectReturn(
+                    value=ObjectNotFound(bucket="my-bucket", key="nonexistent.txt"),
+                    effect_name="GetObject",
+                )
+            ):
                 pass  # Success
             case _:
-                pytest.fail(f"Expected Ok with None, got {result}")
+                pytest.fail(f"Expected Ok with ObjectNotFound, got {result}")
 
         # Verify mock was called correctly
         mock_storage.get_object.assert_called_once_with("my-bucket", "nonexistent.txt")

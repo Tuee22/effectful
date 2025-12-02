@@ -74,20 +74,24 @@ class ConsumeMessage:
         timeout_ms: Timeout for receive operation in milliseconds (default: 5000)
 
     Returns:
-        When yielded in a program, returns MessageEnvelope on success, None on timeout.
+        When yielded in a program, returns MessageEnvelope on success, ConsumeTimeout on timeout.
 
     Example:
         >>> def process_events() -> Generator[AllEffects, EffectResult, int]:
         ...     processed = 0
         ...     while True:
-        ...         envelope = yield ConsumeMessage(
+        ...         consume_result = yield ConsumeMessage(
         ...             subscription="my-subscription",
         ...             timeout_ms=1000,
         ...         )
-        ...         if envelope is None:
-        ...             break  # Timeout - no more messages
-        ...         # Process message...
-        ...         processed += 1
+        ...         match consume_result:
+        ...             case ConsumeTimeout():
+        ...                 break  # Timeout - no more messages
+        ...             case MessageEnvelope():
+        ...                 # Process message...
+        ...                 processed += 1
+        ...             case ConsumeFailure():
+        ...                 raise RuntimeError("Failed to consume message")
         ...     return processed
     """
 
@@ -110,11 +114,15 @@ class AcknowledgeMessage:
 
     Example:
         >>> def consume_and_ack() -> Generator[AllEffects, EffectResult, None]:
-        ...     envelope = yield ConsumeMessage(subscription="my-sub")
-        ...     if envelope is not None:
-        ...         # Process message...
-        ...         yield AcknowledgeMessage(message_id=envelope.message_id)
-        ...     return None
+        ...     envelope_result = yield ConsumeMessage(subscription="my-sub")
+        ...     match envelope_result:
+        ...         case MessageEnvelope(message_id=msg_id):
+        ...             # Process message...
+        ...             yield AcknowledgeMessage(message_id=msg_id)
+        ...         case ConsumeTimeout():
+        ...             return None
+        ...         case ConsumeFailure():
+        ...             return None
     """
 
     message_id: str

@@ -593,7 +593,7 @@ You've learned:
 ## See Also
 
 - [Observability](../engineering/observability.md) - Metrics philosophy
-- [Monitoring Standards](../engineering/monitoring_standards.md) - Naming conventions
+- [Monitoring & Alerting](../engineering/monitoring_and_alerting.md#monitoring-standards) - Naming conventions
 - [Metrics API Reference](../api/metrics.md) - Complete API documentation
 - [Metric Types Guide](./12_metric_types_guide.md) - When to use each type
 

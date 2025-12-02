@@ -12,11 +12,14 @@ import asyncpg
 import pytest
 import redis.asyncio as redis
 from pytest_mock import MockerFixture
+from typing import NoReturn
 
 # Override pytest.skip to enforce "zero skipped tests" policy
-# type: ignore is necessary because we're replacing a built-in fixture
-# with incompatible signature for policy enforcement purposes
-pytest.skip = lambda *args, **kwargs: pytest.fail("Test skipping is forbidden")  # type: ignore[assignment]
+def _forbid_skip(*args: object, **kwargs: object) -> NoReturn:
+    pytest.fail("Test skipping is forbidden")
+
+
+pytest.skip = _forbid_skip
 
 
 def assert_frozen(obj: object, attr: str, value: object) -> None:
@@ -35,7 +38,7 @@ def assert_frozen(obj: object, attr: str, value: object) -> None:
         AssertionError: If attribute assignment succeeds (object is mutable)
     """
     with pytest.raises(AttributeError):
-        setattr(obj, attr, value)  # type: ignore[misc]
+        setattr(obj, attr, value)
 
 
 async def _init_connection(conn: asyncpg.Connection[asyncpg.Record]) -> None:

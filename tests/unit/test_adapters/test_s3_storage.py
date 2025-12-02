@@ -10,7 +10,7 @@ from botocore.exceptions import ClientError
 from pytest_mock import MockerFixture
 
 from effectful.adapters.s3_storage import S3ObjectStorage
-from effectful.domain.s3_object import PutFailure, PutSuccess, S3Object
+from effectful.domain.s3_object import ObjectNotFound, PutFailure, PutSuccess, S3Object
 
 
 class TestS3ObjectStorageGetObject:
@@ -59,8 +59,8 @@ class TestS3ObjectStorageGetObject:
         mock_client.get_object.assert_called_once_with(Bucket=bucket, Key=key)
 
     @pytest.mark.asyncio
-    async def test_get_object_returns_none_when_not_found(self, mocker: MockerFixture) -> None:
-        """Test object retrieval returns None for NoSuchKey."""
+    async def test_get_object_returns_not_found_when_missing(self, mocker: MockerFixture) -> None:
+        """Test object retrieval returns ObjectNotFound for NoSuchKey."""
         # Setup
         mock_client = mocker.MagicMock()
 
@@ -73,7 +73,7 @@ class TestS3ObjectStorageGetObject:
         result = await storage.get_object("test-bucket", "nonexistent.txt")
 
         # Assert
-        assert result is None
+        assert result == ObjectNotFound(bucket="test-bucket", key="nonexistent.txt")
 
     @pytest.mark.asyncio
     async def test_get_object_raises_on_permission_error(self, mocker: MockerFixture) -> None:

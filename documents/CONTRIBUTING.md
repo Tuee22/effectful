@@ -27,8 +27,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
 |----------|---------|
 | [Engineering Standards](engineering/README.md) | Master index of all standards |
 | [Architecture](engineering/architecture.md) | 5-layer architecture design |
-| [Type Safety](engineering/type_safety_enforcement.md) | Eight type safety doctrines |
-| [Purity](engineering/purity.md) | Six purity doctrines |
+| [Code Quality](engineering/code_quality.md) | Type safety + purity doctrines and anti-pattern routing |
 | [Testing](engineering/testing.md) | Testing standards and 22 anti-patterns |
 | [Docker Workflow](engineering/docker_workflow.md) | All development in Docker |
 
@@ -50,7 +49,7 @@ All contributions must meet the **Universal Success Criteria**:
 - [ ] Code quality: `poetry run check-code` exits 0
 - [ ] Tests for all features (unit + integration)
 - [ ] No forbidden constructs (Any/cast/type:ignore)
-- [ ] No anti-patterns (see [Forbidden Patterns](engineering/forbidden_patterns.md))
+- [ ] No anti-patterns (see [Code Quality](engineering/code_quality.md#anti-pattern-index-routing-to-canonical-fixes))
 - [ ] All dataclasses frozen (`frozen=True`)
 - [ ] ADTs used instead of Optional for domain logic
 - [ ] Result type used for all fallible operations
@@ -61,7 +60,7 @@ All contributions must meet the **Universal Success Criteria**:
 - [ ] Unit tests use pytest-mock only
 - [ ] Changes left uncommitted (see Git Workflow below)
 
-See [Code Quality](engineering/type_safety_enforcement.md) for complete standards.
+See [Code Quality](engineering/code_quality.md) for complete standards.
 
 ## Development Workflow
 
@@ -146,24 +145,12 @@ Follow [Documentation Guidelines](engineering/documentation_standards.md) for SS
 
 ## Code Quality Standards
 
-**Type Safety** (enforced via mypy --strict):
-- Zero `Any` types
-- Zero `cast()` calls
-- Zero `# type: ignore` comments
-- ADTs over Optional types
-- Result type for error handling
-- Exhaustive pattern matching
+- Zero `Any`/`cast()`/`# type: ignore`; ADTs over Optional; Result for fallible operations
+- Frozen dataclasses and exhaustive pattern matching with `assert_never`
+- Programs are pure generators (yield effects), no direct I/O; interpreters own impurity
+- No loops in pure layers (use comprehensions/trampolines); immutable updates by default
 
-**Purity** (enforced via code review):
-- No loops (use comprehensions/trampolines)
-- Effects as data (immutable descriptions)
-- Yield don't call (never call infrastructure)
-- Immutability by default (frozen dataclasses)
-
-**See**:
-- [Type Safety](engineering/type_safety_enforcement.md) - Eight type safety doctrines
-- [Purity](engineering/purity.md) - Six purity doctrines
-- [Forbidden Patterns](engineering/forbidden_patterns.md) - Anti-patterns to avoid
+See [Code Quality](engineering/code_quality.md) for full doctrines and anti-pattern routing.
 
 ## Questions or Issues?
 
@@ -184,6 +171,6 @@ Thank you for contributing to effectful!
 **See Also**:
 - [Engineering Standards](engineering/README.md) - Master index
 - [Architecture](engineering/architecture.md) - System design
-- [Type Safety](engineering/type_safety_enforcement.md) - Type safety doctrines
+- [Code Quality](engineering/code_quality.md) - Type safety + purity doctrines
 - [Testing](engineering/testing.md) - Testing standards
 - [Documentation Hub](README.md) - Complete documentation index

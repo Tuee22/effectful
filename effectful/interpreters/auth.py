@@ -20,7 +20,13 @@ from uuid import UUID
 
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok, Result
-from effectful.domain.token_result import TokenExpired, TokenInvalid, TokenValid
+from effectful.domain.token_result import (
+    TokenExpired,
+    TokenInvalid,
+    TokenRefreshRejected,
+    TokenRefreshed,
+    TokenValid,
+)
 from effectful.domain.user import UserFound, UserNotFound
 from effectful.effects.auth import (
     GenerateToken,
@@ -154,11 +160,13 @@ class AuthInterpreter:
     ) -> Result[EffectReturn[EffectResult], InterpreterError]:
         """Handle RefreshToken effect.
 
-        Returns new JWT token as string, or None if refresh token is invalid/expired.
+        Returns TokenRefreshResult ADT for explicit refresh outcomes.
         """
         try:
-            new_token = await self.auth_service.refresh_token(refresh_token)
-            return Ok(EffectReturn(value=new_token, effect_name="RefreshToken"))
+            refresh_result = await self.auth_service.refresh_token(refresh_token)
+            match refresh_result:  # pragma: no branch
+                case TokenRefreshed() | TokenRefreshRejected():
+                    return Ok(EffectReturn(value=refresh_result, effect_name="RefreshToken"))
         except Exception as e:
             return Err(
                 AuthError(

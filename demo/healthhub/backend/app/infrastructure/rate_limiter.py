@@ -6,6 +6,7 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, status
 import redis.asyncio as redis
+from redis.asyncio.client import Pipeline
 
 
 class RateLimiter:
@@ -29,7 +30,7 @@ class RateLimiter:
         window_start = now - timedelta(seconds=window_seconds)
 
         # Use sorted set to store timestamps
-        pipe = self.redis_client.pipeline()  # type: ignore[attr-defined]
+        pipe: Pipeline[bytes] = self.redis_client.pipeline()
 
         # Remove old entries outside the window
         pipe.zremrangebyscore(key, 0, window_start.timestamp())

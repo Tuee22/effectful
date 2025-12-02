@@ -85,6 +85,22 @@ class S3Object:
 
 
 @dataclass(frozen=True)
+class ObjectNotFound:
+    """Object lookup result when the key does not exist.
+
+    This ADT replaces None to make the "not found" state explicit and
+    pattern-matchable.
+
+    Attributes:
+        bucket: Bucket that was queried
+        key: Object key that was requested
+    """
+
+    bucket: str
+    key: str
+
+
+@dataclass(frozen=True)
 class PutSuccess:
     """Successful object storage operation.
 
@@ -151,3 +167,6 @@ class PutFailure:
 
 # ADT: PutResult can be either success or failure (not Optional)
 type PutResult = PutSuccess | PutFailure
+
+# ADT: GetObjectResult is either the object or an explicit not-found marker
+type GetObjectResult = S3Object | ObjectNotFound

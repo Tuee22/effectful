@@ -88,19 +88,26 @@ class InMemoryMetricsCollector:
         # Validate registry exists
         if self.registry is None:
             return MetricRecordingFailed(
-                reason="No metrics registered - call register_metrics() first"
+                metric_name=metric_name,
+                reason="collector_error",
+                message="No metrics registered - call register_metrics() first",
             )
 
         # Validate value is non-negative
         if value < 0:
-            return MetricRecordingFailed(reason=f"Counter value must be >= 0, got {value}")
+            return MetricRecordingFailed(
+                metric_name=metric_name,
+                reason="invalid_value",
+                message=f"Counter value must be >= 0, got {value}",
+            )
 
         # Validate metric is registered
         counter_names = tuple(c.name for c in self.registry.counters)
         if metric_name not in counter_names:
             return MetricRecordingFailed(
-                reason=f"Counter '{metric_name}' not registered. "
-                f"Registered counters: {counter_names}"
+                metric_name=metric_name,
+                reason="metric_not_registered",
+                message=f"Counter '{metric_name}' not registered. Registered counters: {counter_names}",
             )
 
         # Get counter definition
@@ -109,8 +116,12 @@ class InMemoryMetricsCollector:
         # Validate labels match definition
         if set(labels.keys()) != set(counter_def.label_names):
             return MetricRecordingFailed(
-                reason=f"Labels {set(labels.keys())} don't match "
-                f"registered label_names {set(counter_def.label_names)}"
+                metric_name=metric_name,
+                reason="invalid_labels",
+                message=(
+                    f"Labels {set(labels.keys())} don't match registered label_names "
+                    f"{set(counter_def.label_names)}"
+                ),
             )
 
         # Increment counter using native dicts
@@ -127,7 +138,13 @@ class InMemoryMetricsCollector:
         # Increment counter value
         self._counters[metric_name][label_key] += value
 
-        return MetricRecorded(timestamp=time.time())
+        return MetricRecorded(
+            metric_name=metric_name,
+            metric_type="counter",
+            labels=labels,
+            value=value,
+            timestamp=time.time(),
+        )
 
     async def record_gauge(
         self,
@@ -149,14 +166,18 @@ class InMemoryMetricsCollector:
         # Validate registry exists
         if self.registry is None:
             return MetricRecordingFailed(
-                reason="No metrics registered - call register_metrics() first"
+                metric_name=metric_name,
+                reason="collector_error",
+                message="No metrics registered - call register_metrics() first",
             )
 
         # Validate metric is registered
         gauge_names = tuple(g.name for g in self.registry.gauges)
         if metric_name not in gauge_names:
             return MetricRecordingFailed(
-                reason=f"Gauge '{metric_name}' not registered. " f"Registered gauges: {gauge_names}"
+                metric_name=metric_name,
+                reason="metric_not_registered",
+                message=f"Gauge '{metric_name}' not registered. Registered gauges: {gauge_names}",
             )
 
         # Get gauge definition
@@ -165,8 +186,12 @@ class InMemoryMetricsCollector:
         # Validate labels match definition
         if set(labels.keys()) != set(gauge_def.label_names):
             return MetricRecordingFailed(
-                reason=f"Labels {set(labels.keys())} don't match "
-                f"registered label_names {set(gauge_def.label_names)}"
+                metric_name=metric_name,
+                reason="invalid_labels",
+                message=(
+                    f"Labels {set(labels.keys())} don't match "
+                    f"registered label_names {set(gauge_def.label_names)}"
+                ),
             )
 
         # Set gauge value using native dicts
@@ -179,7 +204,13 @@ class InMemoryMetricsCollector:
         # Set gauge value
         self._gauges[metric_name][label_key] = value
 
-        return MetricRecorded(timestamp=time.time())
+        return MetricRecorded(
+            metric_name=metric_name,
+            metric_type="gauge",
+            labels=labels,
+            value=value,
+            timestamp=time.time(),
+        )
 
     async def increment_gauge(
         self,
@@ -201,14 +232,18 @@ class InMemoryMetricsCollector:
         # Validate registry exists
         if self.registry is None:
             return MetricRecordingFailed(
-                reason="No metrics registered - call register_metrics() first"
+                metric_name=metric_name,
+                reason="collector_error",
+                message="No metrics registered - call register_metrics() first",
             )
 
         # Validate metric is registered
         gauge_names = tuple(g.name for g in self.registry.gauges)
         if metric_name not in gauge_names:
             return MetricRecordingFailed(
-                reason=f"Gauge '{metric_name}' not registered. " f"Registered gauges: {gauge_names}"
+                metric_name=metric_name,
+                reason="metric_not_registered",
+                message=f"Gauge '{metric_name}' not registered. Registered gauges: {gauge_names}",
             )
 
         # Get gauge definition
@@ -217,8 +252,12 @@ class InMemoryMetricsCollector:
         # Validate labels match definition
         if set(labels.keys()) != set(gauge_def.label_names):
             return MetricRecordingFailed(
-                reason=f"Labels {set(labels.keys())} don't match "
-                f"registered label_names {set(gauge_def.label_names)}"
+                metric_name=metric_name,
+                reason="invalid_labels",
+                message=(
+                    f"Labels {set(labels.keys())} don't match "
+                    f"registered label_names {set(gauge_def.label_names)}"
+                ),
             )
 
         # Increment gauge value using native dicts
@@ -232,7 +271,13 @@ class InMemoryMetricsCollector:
         current_value = self._gauges[metric_name].get(label_key, 0.0)
         self._gauges[metric_name][label_key] = current_value + value
 
-        return MetricRecorded(timestamp=time.time())
+        return MetricRecorded(
+            metric_name=metric_name,
+            metric_type="gauge",
+            labels=labels,
+            value=value,
+            timestamp=time.time(),
+        )
 
     async def decrement_gauge(
         self,
@@ -254,14 +299,18 @@ class InMemoryMetricsCollector:
         # Validate registry exists
         if self.registry is None:
             return MetricRecordingFailed(
-                reason="No metrics registered - call register_metrics() first"
+                metric_name=metric_name,
+                reason="collector_error",
+                message="No metrics registered - call register_metrics() first",
             )
 
         # Validate metric is registered
         gauge_names = tuple(g.name for g in self.registry.gauges)
         if metric_name not in gauge_names:
             return MetricRecordingFailed(
-                reason=f"Gauge '{metric_name}' not registered. " f"Registered gauges: {gauge_names}"
+                metric_name=metric_name,
+                reason="metric_not_registered",
+                message=f"Gauge '{metric_name}' not registered. Registered gauges: {gauge_names}",
             )
 
         # Get gauge definition
@@ -270,8 +319,12 @@ class InMemoryMetricsCollector:
         # Validate labels match definition
         if set(labels.keys()) != set(gauge_def.label_names):
             return MetricRecordingFailed(
-                reason=f"Labels {set(labels.keys())} don't match "
-                f"registered label_names {set(gauge_def.label_names)}"
+                metric_name=metric_name,
+                reason="invalid_labels",
+                message=(
+                    f"Labels {set(labels.keys())} don't match "
+                    f"registered label_names {set(gauge_def.label_names)}"
+                ),
             )
 
         # Decrement gauge value using native dicts
@@ -285,7 +338,13 @@ class InMemoryMetricsCollector:
         current_value = self._gauges[metric_name].get(label_key, 0.0)
         self._gauges[metric_name][label_key] = current_value - value
 
-        return MetricRecorded(timestamp=time.time())
+        return MetricRecorded(
+            metric_name=metric_name,
+            metric_type="gauge",
+            labels=labels,
+            value=value,
+            timestamp=time.time(),
+        )
 
     async def observe_histogram(
         self,
@@ -307,15 +366,21 @@ class InMemoryMetricsCollector:
         # Validate registry exists
         if self.registry is None:
             return MetricRecordingFailed(
-                reason="No metrics registered - call register_metrics() first"
+                metric_name=metric_name,
+                reason="collector_error",
+                message="No metrics registered - call register_metrics() first",
             )
 
         # Validate metric is registered
         histogram_names = tuple(h.name for h in self.registry.histograms)
         if metric_name not in histogram_names:
             return MetricRecordingFailed(
-                reason=f"Histogram '{metric_name}' not registered. "
-                f"Registered histograms: {histogram_names}"
+                metric_name=metric_name,
+                reason="metric_not_registered",
+                message=(
+                    f"Histogram '{metric_name}' not registered. "
+                    f"Registered histograms: {histogram_names}"
+                ),
             )
 
         # Get histogram definition
@@ -324,8 +389,12 @@ class InMemoryMetricsCollector:
         # Validate labels match definition
         if set(labels.keys()) != set(histogram_def.label_names):
             return MetricRecordingFailed(
-                reason=f"Labels {set(labels.keys())} don't match "
-                f"registered label_names {set(histogram_def.label_names)}"
+                metric_name=metric_name,
+                reason="invalid_labels",
+                message=(
+                    f"Labels {set(labels.keys())} don't match "
+                    f"registered label_names {set(histogram_def.label_names)}"
+                ),
             )
 
         # Record observation using native dicts/lists
@@ -342,7 +411,13 @@ class InMemoryMetricsCollector:
         # Append observation to list
         self._histograms[metric_name][label_key].append(value)
 
-        return MetricRecorded(timestamp=time.time())
+        return MetricRecorded(
+            metric_name=metric_name,
+            metric_type="histogram",
+            labels=labels,
+            value=value,
+            timestamp=time.time(),
+        )
 
     async def record_summary(
         self,
@@ -364,15 +439,21 @@ class InMemoryMetricsCollector:
         # Validate registry exists
         if self.registry is None:
             return MetricRecordingFailed(
-                reason="No metrics registered - call register_metrics() first"
+                metric_name=metric_name,
+                reason="collector_error",
+                message="No metrics registered - call register_metrics() first",
             )
 
         # Validate metric is registered
         summary_names = tuple(s.name for s in self.registry.summaries)
         if metric_name not in summary_names:
             return MetricRecordingFailed(
-                reason=f"Summary '{metric_name}' not registered. "
-                f"Registered summaries: {summary_names}"
+                metric_name=metric_name,
+                reason="metric_not_registered",
+                message=(
+                    f"Summary '{metric_name}' not registered. "
+                    f"Registered summaries: {summary_names}"
+                ),
             )
 
         # Get summary definition
@@ -381,8 +462,12 @@ class InMemoryMetricsCollector:
         # Validate labels match definition
         if set(labels.keys()) != set(summary_def.label_names):
             return MetricRecordingFailed(
-                reason=f"Labels {set(labels.keys())} don't match "
-                f"registered label_names {set(summary_def.label_names)}"
+                metric_name=metric_name,
+                reason="invalid_labels",
+                message=(
+                    f"Labels {set(labels.keys())} don't match "
+                    f"registered label_names {set(summary_def.label_names)}"
+                ),
             )
 
         # Record observation using native dicts/lists
@@ -399,7 +484,13 @@ class InMemoryMetricsCollector:
         # Append observation to list
         self._summaries[metric_name][label_key].append(value)
 
-        return MetricRecorded(timestamp=time.time())
+        return MetricRecorded(
+            metric_name=metric_name,
+            metric_type="summary",
+            labels=labels,
+            value=value,
+            timestamp=time.time(),
+        )
 
     async def query_metrics(
         self,
@@ -530,7 +621,13 @@ class InMemoryMetricsCollector:
         self._gauges.clear()
         self._histograms.clear()
         self._summaries.clear()
-        return MetricRecorded(timestamp=time.time())
+        return MetricRecorded(
+            metric_name="reset_metrics",
+            metric_type="gauge",
+            labels={},
+            value=0.0,
+            timestamp=time.time(),
+        )
 
     @property
     def counters(self) -> dict[str, dict[str, float]]:

@@ -10,7 +10,7 @@ Run this example:
     docker compose -f docker/docker-compose.yml exec effectful poetry run python examples/08_histogram_metrics.py
 
 SSoT References:
-    - documents/core/monitoring_standards.md - Histogram bucket guidelines
+    - documents/engineering/monitoring_and_alerting.md - Histogram bucket guidelines
     - documents/tutorials/12_metric_types_guide.md - Metric type selection
 """
 

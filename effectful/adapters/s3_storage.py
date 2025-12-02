@@ -22,12 +22,7 @@ from datetime import UTC, datetime
 import boto3
 from botocore.exceptions import ClientError
 
-from effectful.domain.s3_object import (
-    PutFailure,
-    PutResult,
-    PutSuccess,
-    S3Object,
-)
+from effectful.domain.s3_object import ObjectNotFound, PutFailure, PutResult, PutSuccess, S3Object
 from effectful.infrastructure.storage import ObjectStorage
 
 
@@ -71,7 +66,7 @@ class S3ObjectStorage(ObjectStorage):
         """
         self._s3_client = s3_client
 
-    async def get_object(self, bucket: str, key: str) -> S3Object | None:
+    async def get_object(self, bucket: str, key: str) -> S3Object | ObjectNotFound:
         """Retrieve object from S3.
 
         Args:
@@ -80,7 +75,7 @@ class S3ObjectStorage(ObjectStorage):
 
         Returns:
             S3Object with content and metadata if object exists.
-            None if object does not exist (404 - not an error).
+            ObjectNotFound if object does not exist (404 - not an error).
 
         Raises:
             Exception: For infrastructure failures (network, permissions, etc.)
@@ -125,8 +120,8 @@ class S3ObjectStorage(ObjectStorage):
             error_code = e.response.get("Error", {}).get("Code", "")
 
             if error_code == "NoSuchKey":
-                # Object not found - not an error, return None
-                return None
+                # Object not found - not an error, return explicit ADT
+                return ObjectNotFound(bucket=bucket, key=key)
 
             # Other client errors (permission denied, etc.) - raise
             raise

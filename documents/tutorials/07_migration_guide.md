@@ -4,7 +4,7 @@ This tutorial guides you through migrating from imperative WebSocket code to eff
 
 > **Core Doctrine**: For architecture patterns and type safety requirements, see:
 > - [architecture.md](../engineering/architecture.md) - 5-layer architecture
-> - [Type Safety Enforcement](../engineering/type_safety_enforcement.md) - Result types and ADTs
+> - [Code Quality](../engineering/code_quality.md) - Result types and ADTs
 
 ## Prerequisites
 

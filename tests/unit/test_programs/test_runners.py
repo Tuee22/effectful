@@ -159,13 +159,12 @@ class TestRunWSProgramSuccess:
 
         # Program that uses effect results
         def result_using_program() -> Generator[AllEffects, EffectResult, bool]:
-            # GetUserById returns UserFound | UserNotFound (ADT)
-            # Interpreter unwraps to User | None for EffectResult
+            # GetUserById returns User | UserNotFound (ADT)
             user_result = yield GetUserById(user_id=user_id)
 
             # Pattern match on user_result
             match user_result:
-                case None:
+                case UserNotFound():
                     yield SendText(text="User not found")
                     return False
                 case User(name=name):

@@ -1,5 +1,5 @@
 # Prometheus alert rules for Effectful framework metrics
-# SSoT: documents/core/alerting_policy.md
+# SSoT: documents/engineering/monitoring_and_alerting.md
 
 groups:
   - name: effectful_framework_alerts

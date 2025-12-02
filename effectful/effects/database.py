@@ -52,6 +52,16 @@ class ListMessagesForUser:
 
 
 @dataclass(frozen=True)
+class GetChatMessages:
+    """Alias effect: List all chat messages for a user (documented name).
+
+    This mirrors ListMessagesForUser for compatibility with documentation examples.
+    """
+
+    user_id: UUID
+
+
+@dataclass(frozen=True)
 class ListUsers:
     """Effect: List all users with optional pagination.
 
@@ -110,6 +120,7 @@ type DatabaseEffect = (
     GetUserById
     | SaveChatMessage
     | ListMessagesForUser
+    | GetChatMessages
     | ListUsers
     | CreateUser
     | UpdateUser

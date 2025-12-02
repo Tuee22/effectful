@@ -28,8 +28,8 @@ from effectful.domain.metrics_result import (
     QuerySuccess,
 )
 from effectful.domain.profile import ProfileData
-from effectful.domain.s3_object import PutSuccess, S3Object
-from effectful.domain.token_result import TokenValidationResult
+from effectful.domain.s3_object import ObjectNotFound, PutSuccess, S3Object
+from effectful.domain.token_result import TokenRefreshResult, TokenValidationResult
 from effectful.domain.user import User, UserNotFound
 from effectful.effects.auth import AuthEffect
 from effectful.effects.cache import CacheEffect
@@ -57,7 +57,7 @@ type AllEffects = (
 # ADT types are used instead of None for explicit domain semantics
 type EffectResult = (
     None  # Most effects return None (SendText, Close, PutCachedProfile, DeleteObject, RevokeToken)
-    | str  # ReceiveText, PublishMessage, GenerateToken, RefreshToken, HashPassword return str
+    | str  # ReceiveText, PublishMessage, GenerateToken, HashPassword return str
     | bool  # ValidatePassword, InvalidateCache, PutCachedValue return bool
     | bytes  # GetCachedValue returns bytes on cache hit
     | UUID  # CreateUser, GenerateUUID return UUID
@@ -78,12 +78,14 @@ type EffectResult = (
     | AcknowledgeResult  # AcknowledgeMessage returns AcknowledgeResult ADT (AcknowledgeSuccess | AcknowledgeFailure)
     | NackResult  # NegativeAcknowledge returns NackResult ADT (NackSuccess | NackFailure)
     # Storage types
-    | S3Object  # GetObject returns S3Object on success (None for not found)
+    | S3Object  # GetObject returns S3Object on success
+    | ObjectNotFound  # GetObject returns ObjectNotFound when the key is missing
     | PutSuccess  # PutObject returns PutSuccess on success
     # Token ADTs
     | TokenValidationResult  # ValidateToken returns TokenValidationResult ADT (TokenValid | TokenExpired | TokenInvalid)
+    | TokenRefreshResult  # RefreshToken returns TokenRefreshResult ADT (TokenRefreshed | TokenRefreshRejected)
     # Metrics ADTs
-    | MetricRecorded  # IncrementCounter, RecordGauge, ObserveHistogram, RecordSummary return MetricRecorded on success
+    | MetricRecorded  # IncrementCounter, SetGauge, ObserveHistogram, RecordSummary return MetricRecorded on success
     | MetricRecordingFailed  # Metrics recording operations return MetricRecordingFailed on validation/collector error
     | QuerySuccess  # QueryMetrics returns QuerySuccess with metrics dict
     | QueryFailure  # QueryMetrics returns QueryFailure when metric not found or collector unavailable
