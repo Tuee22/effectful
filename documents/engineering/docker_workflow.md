@@ -2,6 +2,33 @@
 
 > **Single Source of Truth (SSoT)** for all Docker development workflow and environment setup in effectful.
 
+## SSoT Link Map
+
+```mermaid
+flowchart TB
+  Docker[Docker Workflow SSoT]
+  Commands[Command Reference]
+  DevWorkflow[Development Workflow]
+  Config[Configuration SSoT]
+  Testing[Testing SSoT]
+  Docs[Documentation Standards]
+
+  Docker --> Commands
+  Docker --> DevWorkflow
+  Docker --> Config
+  Docker --> Testing
+  Docker --> Docs
+  Testing --> Docs
+```
+
+| Need | Link |
+|------|------|
+| Exact command syntax | [Command Reference](command_reference.md) |
+| Daily loop | [Development Workflow](development_workflow.md) |
+| Environment variables | [Configuration](configuration.md) |
+| How to test | [Testing](testing.md#running-tests) |
+| Documentation requirements | [Documentation Standards](documentation_standards.md) |
+
 ## Core Principle
 
 **ALL development commands MUST run inside the Docker container. NEVER run commands directly on the host machine.**
@@ -433,5 +460,5 @@ docker compose -f docker/docker-compose.yml ps
 
 ---
 
-**Last Updated**: 2025-11-30
-**Referenced by**: CLAUDE.md, command_reference.md, testing.md, development_workflow.md, forbidden_patterns.md
+**Last Updated**: 2025-12-01
+**Referenced by**: CLAUDE.md, command_reference.md, testing.md, development_workflow.md, forbidden_patterns.md, README.md

@@ -9,6 +9,7 @@ from uuid import uuid4
 import jwt
 import pytest
 from pytest_mock import MockerFixture
+from redis.asyncio import Redis
 
 from effectful.adapters.redis_auth import RedisAuthService
 from effectful.domain.token_result import TokenExpired, TokenInvalid, TokenValid
@@ -31,8 +32,12 @@ class TestRedisAuthServiceValidateToken:
             algorithm="HS256",
         )
 
-        mock_redis = mocker.AsyncMock()
-        mock_redis.exists.return_value = 0  # Not blacklisted
+        mock_redis = mocker.AsyncMock(spec=Redis)
+        mock_redis.setex = mocker.AsyncMock()
+        mock_redis.setex = mocker.AsyncMock()
+        mock_redis.set = mocker.AsyncMock()
+        mock_redis.setex = mocker.AsyncMock()
+        mock_redis.exists = mocker.AsyncMock(return_value=0)  # Not blacklisted
 
         auth_service = RedisAuthService(mock_redis, secret)
 
@@ -63,8 +68,12 @@ class TestRedisAuthServiceValidateToken:
             algorithm="HS256",
         )
 
-        mock_redis = mocker.AsyncMock()
-        mock_redis.exists.return_value = 1  # Blacklisted
+        mock_redis = mocker.AsyncMock(spec=Redis)
+        mock_redis.setex = mocker.AsyncMock()
+        mock_redis.setex = mocker.AsyncMock()
+        mock_redis.set = mocker.AsyncMock()
+        mock_redis.setex = mocker.AsyncMock()
+        mock_redis.exists = mocker.AsyncMock(return_value=1)  # Blacklisted
 
         auth_service = RedisAuthService(mock_redis, secret)
 
@@ -92,7 +101,8 @@ class TestRedisAuthServiceValidateToken:
             algorithm="HS256",
         )
 
-        mock_redis = mocker.AsyncMock()
+        mock_redis = mocker.AsyncMock(spec=Redis)
+        mock_redis.setex = mocker.AsyncMock()
         auth_service = RedisAuthService(mock_redis, secret)
 
         # Execute
@@ -122,7 +132,8 @@ class TestRedisAuthServiceValidateToken:
             algorithm="HS256",
         )
 
-        mock_redis = mocker.AsyncMock()
+        mock_redis = mocker.AsyncMock(spec=Redis)
+        mock_redis.setex = mocker.AsyncMock()
         auth_service = RedisAuthService(mock_redis, secret)
 
         # Execute
@@ -139,7 +150,7 @@ class TestRedisAuthServiceValidateToken:
     ) -> None:
         """Test malformed token returns TokenInvalid."""
         # Setup
-        mock_redis = mocker.AsyncMock()
+        mock_redis = mocker.AsyncMock(spec=Redis)
         auth_service = RedisAuthService(mock_redis, "test-secret")
 
         # Execute
@@ -162,7 +173,8 @@ class TestRedisAuthServiceGenerateToken:
         claims = {"role": "user", "permission": "read"}
         ttl_seconds = 3600
 
-        mock_redis = mocker.AsyncMock()
+        mock_redis = mocker.AsyncMock(spec=Redis)
+        mock_redis.setex = mocker.AsyncMock()
         auth_service = RedisAuthService(mock_redis, secret)
 
         # Execute
@@ -182,7 +194,8 @@ class TestRedisAuthServiceGenerateToken:
         user_id = uuid4()
         ttl_seconds = 3600
 
-        mock_redis = mocker.AsyncMock()
+        mock_redis = mocker.AsyncMock(spec=Redis)
+        mock_redis.setex = mocker.AsyncMock()
         auth_service = RedisAuthService(mock_redis, "test-secret")
 
         # Execute
@@ -203,7 +216,8 @@ class TestRedisAuthServiceGenerateToken:
         secret = "test-secret"
         ttl_seconds = 7200  # 2 hours
 
-        mock_redis = mocker.AsyncMock()
+        mock_redis = mocker.AsyncMock(spec=Redis)
+        mock_redis.setex = mocker.AsyncMock()
         auth_service = RedisAuthService(mock_redis, secret)
 
         before_time = datetime.now(UTC)
@@ -245,8 +259,9 @@ class TestRedisAuthServiceRefreshToken:
             algorithm="HS256",
         )
 
-        mock_redis = mocker.AsyncMock()
-        mock_redis.exists.return_value = 0  # Not blacklisted
+        mock_redis = mocker.AsyncMock(spec=Redis)
+        mock_redis.exists = mocker.AsyncMock(return_value=0)  # Not blacklisted
+        mock_redis.setex = mocker.AsyncMock()
 
         auth_service = RedisAuthService(mock_redis, secret)
 
@@ -281,7 +296,7 @@ class TestRedisAuthServiceRefreshToken:
             algorithm="HS256",
         )
 
-        mock_redis = mocker.AsyncMock()
+        mock_redis = mocker.AsyncMock(spec=Redis)
         auth_service = RedisAuthService(mock_redis, secret)
 
         # Execute
@@ -296,7 +311,7 @@ class TestRedisAuthServiceRefreshToken:
     ) -> None:
         """Test refreshing invalid token returns None."""
         # Setup
-        mock_redis = mocker.AsyncMock()
+        mock_redis = mocker.AsyncMock(spec=Redis)
         auth_service = RedisAuthService(mock_redis, "test-secret")
 
         # Execute
@@ -323,7 +338,8 @@ class TestRedisAuthServiceRevokeToken:
             algorithm="HS256",
         )
 
-        mock_redis = mocker.AsyncMock()
+        mock_redis = mocker.AsyncMock(spec=Redis)
+        mock_redis.setex = mocker.AsyncMock()
         auth_service = RedisAuthService(mock_redis, secret)
 
         # Execute
@@ -343,7 +359,8 @@ class TestRedisAuthServiceRevokeToken:
     ) -> None:
         """Test revoking invalid token uses 24 hour fallback TTL."""
         # Setup
-        mock_redis = mocker.AsyncMock()
+        mock_redis = mocker.AsyncMock(spec=Redis)
+        mock_redis.setex = mocker.AsyncMock()
         auth_service = RedisAuthService(mock_redis, "test-secret")
 
         # Execute

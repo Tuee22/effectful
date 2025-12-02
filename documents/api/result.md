@@ -2,7 +2,7 @@
 
 This document provides a comprehensive reference for the `Result[T, E]` type and related utilities.
 
-> **Core Doctrine**: For the Result type patterns and error handling diagrams, see [type_safety_doctrine.md](../engineering/type-safety-enforcement.md#3-result-type-for-error-handling).
+> **Core Doctrine**: For the Result type patterns and error handling diagrams, see [Type Safety Enforcement](../engineering/type_safety_enforcement.md#doctrine-3-result-for-errors).
 
 ## Overview
 
@@ -76,7 +76,7 @@ result = Ok(42)
 assert result.is_err() is False
 ```
 
-#### `map[U](f: Callable[[T], U]) -> Ok[U]`
+#### `map[U] (f: Callable[[T], U]) -> Ok[U]`
 
 Transform the success value.
 
@@ -86,7 +86,7 @@ doubled = result.map(lambda x: x * 2)
 assert doubled == Ok(84)
 ```
 
-#### `flat_map[U, E](f: Callable[[T], Result[U, E]]) -> Result[U, E]`
+#### `flat_map[U, E] (f: Callable[[T], Result[U, E]]) -> Result[U, E]`
 
 Chain another Result-producing computation (monadic bind).
 
@@ -105,7 +105,7 @@ chained_err = result_zero.flat_map(divide)
 assert chained_err == Err("division by zero")
 ```
 
-#### `map_err[F](f: Callable[[E], F]) -> Ok[T]`
+#### `map_err[F] (f: Callable[[E], F]) -> Ok[T]`
 
 Transform the error value (no-op for Ok).
 
@@ -125,7 +125,7 @@ value = result.unwrap()
 assert value == 42
 ```
 
-#### `unwrap_or[U](default: U) -> T`
+#### `unwrap_or[U] (default: U) -> T`
 
 Extract the value or return default (returns value for Ok).
 
@@ -176,7 +176,7 @@ result = Err("failed")
 assert result.is_err() is True
 ```
 
-#### `map[T, U](f: Callable[[T], U]) -> Err[E]`
+#### `map[T, U] (f: Callable[[T], U]) -> Err[E]`
 
 Transform the success value (no-op for Err).
 
@@ -186,7 +186,7 @@ doubled = result.map(lambda x: x * 2)
 assert doubled == Err("failed")  # Unchanged
 ```
 
-#### `flat_map[T, U](f: Callable[[T], Result[U, E]]) -> Err[E]`
+#### `flat_map[T, U] (f: Callable[[T], Result[U, E]]) -> Err[E]`
 
 Chain another Result-producing computation (no-op for Err).
 
@@ -199,7 +199,7 @@ chained = result.flat_map(process)
 assert chained == Err("failed")  # Short-circuits
 ```
 
-#### `map_err[F](f: Callable[[E], F]) -> Err[F]`
+#### `map_err[F] (f: Callable[[E], F]) -> Err[F]`
 
 Transform the error value.
 
@@ -218,7 +218,7 @@ result = Err("failed")
 # result.unwrap()  # Raises ValueError
 ```
 
-#### `unwrap_or[U](default: U) -> U`
+#### `unwrap_or[U] (default: U) -> U`
 
 Extract the value or return default (returns default for Err).
 
@@ -322,7 +322,7 @@ def program() -> Generator[AllEffects, EffectResult, None]:
 
 ### Methods
 
-#### `map[U](f: Callable[[T], U]) -> EffectReturn[U]`
+#### `map[U] (f: Callable[[T], U]) -> EffectReturn[U]`
 
 Transform the wrapped value while preserving effect_name:
 
@@ -356,7 +356,7 @@ assert process_value(Err("failed")) == 0
 
 **Type Signature**:
 ```python
-def fold_result[T, E, R](
+def fold_result[T, E, R] (
     result: Result[T, E],
     on_ok: Callable[[T], R],
     on_err: Callable[[E], R],
@@ -512,7 +512,7 @@ def process(user_id: int) -> str:
 Result types preserve generic information:
 
 ```python
-def map_twice[T](result: Result[T, str]) -> Result[T, str]:
+def map_twice[T] (result: Result[T, str]) -> Result[T, str]:
     return result.map(lambda x: x).map(lambda x: x)
 
 # Type checker infers:
@@ -527,4 +527,4 @@ int_result = map_twice(Ok(42))
 - [Effects API](./effects.md) - Effect types that return Results
 - [Interpreters API](./interpreters.md) - How interpreters return Results
 - [Programs API](./programs.md) - Program execution with Result types
-- [Testing API](./testing.md) - Testing Result values
+- [Testing Standards](../engineering/testing.md) - Testing Result values

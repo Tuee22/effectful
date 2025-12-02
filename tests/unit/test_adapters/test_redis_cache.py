@@ -8,6 +8,7 @@ from uuid import uuid4
 
 import pytest
 from pytest_mock import MockerFixture
+from redis.asyncio import Redis
 
 from effectful.adapters.redis_cache import RedisProfileCache
 from effectful.domain.cache_result import CacheHit, CacheMiss
@@ -25,9 +26,10 @@ class TestRedisProfileCache:
         profile_data = {"id": str(user_id), "name": "Test User"}
         cached_json = json.dumps(profile_data)
 
-        mock_redis = mocker.AsyncMock()
-        mock_redis.get.return_value = cached_json
-        mock_redis.ttl.return_value = 300  # 5 minutes remaining
+        mock_redis = mocker.AsyncMock(spec=Redis)
+        mock_redis.setex = mocker.AsyncMock()
+        mock_redis.get = mocker.AsyncMock(return_value=cached_json)
+        mock_redis.ttl = mocker.AsyncMock(return_value=300)  # 5 minutes remaining
 
         cache = RedisProfileCache(mock_redis)
 
@@ -52,8 +54,8 @@ class TestRedisProfileCache:
         """Test cache lookup returns CacheMiss when key doesn't exist."""
         # Setup
         user_id = uuid4()
-        mock_redis = mocker.AsyncMock()
-        mock_redis.get.return_value = None
+        mock_redis = mocker.AsyncMock(spec=Redis)
+        mock_redis.get = mocker.AsyncMock(return_value=None)
 
         cache = RedisProfileCache(mock_redis)
 
@@ -73,9 +75,9 @@ class TestRedisProfileCache:
         profile_data = {"id": str(user_id), "name": "Test User"}
         cached_json = json.dumps(profile_data)
 
-        mock_redis = mocker.AsyncMock()
-        mock_redis.get.return_value = cached_json
-        mock_redis.ttl.return_value = -2  # Key doesn't exist (race condition)
+        mock_redis = mocker.AsyncMock(spec=Redis)
+        mock_redis.get = mocker.AsyncMock(return_value=cached_json)
+        mock_redis.ttl = mocker.AsyncMock(return_value=-2)  # Key doesn't exist (race condition)
 
         cache = RedisProfileCache(mock_redis)
 
@@ -95,9 +97,9 @@ class TestRedisProfileCache:
         profile_data = {"id": str(user_id), "name": "Test User"}
         cached_json = json.dumps(profile_data)
 
-        mock_redis = mocker.AsyncMock()
-        mock_redis.get.return_value = cached_json
-        mock_redis.ttl.return_value = -1  # No expiration
+        mock_redis = mocker.AsyncMock(spec=Redis)
+        mock_redis.get = mocker.AsyncMock(return_value=cached_json)
+        mock_redis.ttl = mocker.AsyncMock(return_value=-1)  # No expiration
 
         cache = RedisProfileCache(mock_redis)
 
@@ -116,7 +118,8 @@ class TestRedisProfileCache:
         profile = ProfileData(id=str(user_id), name="Test User")
         ttl_seconds = 600
 
-        mock_redis = mocker.AsyncMock()
+        mock_redis = mocker.AsyncMock(spec=Redis)
+        mock_redis.setex = mocker.AsyncMock()
         cache = RedisProfileCache(mock_redis)
 
         # Execute
@@ -140,7 +143,8 @@ class TestRedisProfileCache:
         user_id = uuid4()
         profile = ProfileData(id="custom-id-123", name="Alice Smith")
 
-        mock_redis = mocker.AsyncMock()
+        mock_redis = mocker.AsyncMock(spec=Redis)
+        mock_redis.setex = mocker.AsyncMock()
         cache = RedisProfileCache(mock_redis)
 
         # Execute

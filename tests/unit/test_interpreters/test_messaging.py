@@ -20,9 +20,12 @@ from pytest_mock import MockerFixture
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok
 from effectful.domain.message_envelope import (
+    AcknowledgeFailure,
     AcknowledgeSuccess,
     ConsumeTimeout,
+    ConsumeFailure,
     MessageEnvelope,
+    NackFailure,
     NackSuccess,
     PublishFailure,
     PublishSuccess,
@@ -239,6 +242,31 @@ class TestConsumeMessage:
         mock_consumer.receive.assert_called_once_with("my-sub", 1000)
 
     @pytest.mark.asyncio()
+    async def test_consume_message_failure(self, mocker: MockerFixture) -> None:
+        """Interpreter should return ConsumeFailure ADT when consumer reports failure."""
+        mock_producer = mocker.AsyncMock(spec=MessageProducer)
+        mock_consumer = mocker.AsyncMock(spec=MessageConsumer)
+        mock_consumer.receive.return_value = ConsumeFailure(
+            subscription="my-sub", reason="auth_failed"
+        )
+
+        interpreter = MessagingInterpreter(producer=mock_producer, consumer=mock_consumer)
+
+        effect = ConsumeMessage(subscription="my-sub", timeout_ms=500)
+        result = await interpreter.interpret(effect)
+
+        match result:
+            case Ok(
+                EffectReturn(
+                    value=ConsumeFailure(subscription="my-sub", reason="auth_failed"),
+                    effect_name="ConsumeMessage",
+                )
+            ):
+                pass
+            case _:
+                pytest.fail(f"Expected Ok with ConsumeFailure, got {result}")
+
+    @pytest.mark.asyncio()
     async def test_consume_message_infrastructure_error(self, mocker: MockerFixture) -> None:
         """Interpreter should return MessagingError on infrastructure failure."""
         # Setup
@@ -291,6 +319,31 @@ class TestAcknowledgeMessage:
 
         # Verify mock was called correctly
         mock_consumer.acknowledge.assert_called_once_with("msg-123")
+
+    @pytest.mark.asyncio()
+    async def test_acknowledge_message_failure(self, mocker: MockerFixture) -> None:
+        """Interpreter should return AcknowledgeFailure ADT on domain failure."""
+        mock_producer = mocker.AsyncMock(spec=MessageProducer)
+        mock_consumer = mocker.AsyncMock(spec=MessageConsumer)
+        mock_consumer.acknowledge.return_value = AcknowledgeFailure(
+            message_id="msg-123", reason="already_acknowledged"
+        )
+
+        interpreter = MessagingInterpreter(producer=mock_producer, consumer=mock_consumer)
+
+        effect = AcknowledgeMessage(message_id="msg-123")
+        result = await interpreter.interpret(effect)
+
+        match result:
+            case Ok(
+                EffectReturn(
+                    value=AcknowledgeFailure(message_id="msg-123", reason="already_acknowledged"),
+                    effect_name="AcknowledgeMessage",
+                )
+            ):
+                pass
+            case _:
+                pytest.fail(f"Expected Ok with AcknowledgeFailure, got {result}")
 
     @pytest.mark.asyncio()
     async def test_acknowledge_message_infrastructure_error(self, mocker: MockerFixture) -> None:
@@ -373,6 +426,31 @@ class TestNegativeAcknowledge:
 
         # Verify mock was called with zero delay
         mock_consumer.negative_acknowledge.assert_called_once_with("msg-789", 0)
+
+    @pytest.mark.asyncio()
+    async def test_negative_acknowledge_failure(self, mocker: MockerFixture) -> None:
+        """Interpreter should return NackFailure ADT on domain failure."""
+        mock_producer = mocker.AsyncMock(spec=MessageProducer)
+        mock_consumer = mocker.AsyncMock(spec=MessageConsumer)
+        mock_consumer.negative_acknowledge.return_value = NackFailure(
+            message_id="msg-123", reason="message_not_found"
+        )
+
+        interpreter = MessagingInterpreter(producer=mock_producer, consumer=mock_consumer)
+
+        effect = NegativeAcknowledge(message_id="msg-123", delay_ms=0)
+        result = await interpreter.interpret(effect)
+
+        match result:
+            case Ok(
+                EffectReturn(
+                    value=NackFailure(message_id="msg-123", reason="message_not_found"),
+                    effect_name="NegativeAcknowledge",
+                )
+            ):
+                pass
+            case _:
+                pytest.fail(f"Expected Ok with NackFailure, got {result}")
 
     @pytest.mark.asyncio()
     async def test_negative_acknowledge_infrastructure_error(self, mocker: MockerFixture) -> None:

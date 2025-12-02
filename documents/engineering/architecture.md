@@ -4,6 +4,37 @@
 
 This is the Single Source of Truth (SSoT) for the Effectful architecture.
 
+## SSoT Link Map
+
+```mermaid
+flowchart TB
+  Arch[Architecture SSoT]
+  TypeSafety[Type Safety SSoT]
+  Purity[Purity SSoT]
+  Testing[Testing SSoT]
+  Observability[Observability SSoT]
+  Docker[Docker Workflow SSoT]
+  Effects[Effect Patterns]
+
+  Arch --> TypeSafety
+  Arch --> Purity
+  Arch --> Testing
+  Arch --> Observability
+  Arch --> Docker
+  Arch --> Effects
+  Testing --> Docker
+  Purity --> Effects
+```
+
+| Need | Link |
+|------|------|
+| Doctrine for types | [Type Safety Enforcement](type_safety_enforcement.md) |
+| Purity boundaries | [Purity](purity.md) |
+| Test shape by layer | [Testing](testing.md#part-4-four-layer-testing-architecture) |
+| Observability guidance | [Observability](observability.md) |
+| Container contract | [Docker Workflow](docker_workflow.md) |
+| Effect composition examples | [Effect Patterns](effect_patterns.md) |
+
 ## Design Philosophy
 
 ### Make Invalid States Unrepresentable
@@ -566,5 +597,5 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, None]:
 
 **Philosophy**: Correctness first, performance second. Make invalid states unrepresentable.
 
-**Last Updated:** 2025-11-30
-**Referenced by**: CLAUDE.md, type_safety_enforcement.md, purity.md, testing.md, forbidden_patterns.md, documentation_standards.md
+**Last Updated:** 2025-12-01
+**Referenced by**: README.md, CLAUDE.md, type_safety_enforcement.md, purity.md, testing.md, forbidden_patterns.md, documentation_standards.md

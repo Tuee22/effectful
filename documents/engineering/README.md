@@ -1,24 +1,52 @@
 # Effectful Engineering Standards
 
-> Authoritative source of truth for all engineering practices, coding standards, and development workflows.
+> **Single Source of Truth (SSoT)** for navigating engineering practices, coding standards, and development workflows.
 
 ## Purpose
 
 The **engineering/** directory contains **effectful-specific engineering standards** for building pure functional effect programs in Python. These documents define **HOW to implement** features following type safety, purity, and testing doctrines.
 
-## Quick Navigation
+## SSoT Link Map
 
-| What do you need? | Document to read |
-|-------------------|------------------|
+```mermaid
+flowchart TB
+  Hub[Engineering Hub SSoT]
+  Arch[Architecture SSoT]
+  TypeSafety[Type Safety SSoT]
+  Purity[Purity SSoT]
+  Testing[Testing SSoT]
+  Docker[Docker Workflow SSoT]
+  Docs[Documentation Standards SSoT]
+  Forbidden[Forbidden Patterns SSoT]
+  Observability[Observability SSoT]
+
+  Hub --> Arch
+  Hub --> TypeSafety
+  Hub --> Purity
+  Hub --> Testing
+  Hub --> Docker
+  Hub --> Docs
+  Hub --> Forbidden
+  Hub --> Observability
+  Observability --> Arch
+  Forbidden --> Testing
+  Forbidden --> TypeSafety
+  CommandRef[Command Reference]
+  Docker --> CommandRef
+  Docs --> Forbidden
+```
+
+| What do you need? | SSoT Document |
+|-------------------|---------------|
 | Understand system design | [Architecture](architecture.md) |
-| Write type-safe code | [Type Safety](type_safety_enforcement.md) |
+| Write type-safe code | [Type Safety Enforcement](type_safety_enforcement.md) |
 | Pure functional patterns | [Purity](purity.md) |
 | Test programs correctly | [Testing](testing.md) |
 | Set up development environment | [Docker Workflow](docker_workflow.md) |
-| Run quality checks | [Code Quality](type_safety_enforcement.md) |
+| Run quality checks | [Type Safety Enforcement](type_safety_enforcement.md#anti-pattern-detection) |
 | Add metrics/observability | [Observability](observability.md) |
 | Avoid common mistakes | [Forbidden Patterns](forbidden_patterns.md) |
-| Write documentation | [Documentation Guidelines](documentation-standards.md) |
+| Write documentation | [Documentation Standards](documentation_standards.md) |
 
 ## Core Standards
 
@@ -35,14 +63,12 @@ The **engineering/** directory contains **effectful-specific engineering standar
 - Zero escape hatches (Any/cast/type:ignore forbidden)
 - PEP 695 type aliases
 
-**[Purity](purity.md)** (692 lines)
+**[Purity](purity.md)** (~1400 lines, includes all purity doctrines and functional patterns)
 - Six purity doctrines
 - Expressions over statements
 - Effects as data (not execution)
 - Yield don't call pattern
 - Immutability by default
-
-**[Purity](purity.md)** (~1400 lines, includes all purity doctrines and functional patterns)
 - Trampoline pattern for recursion
 - Comprehensions over loops
 - Functional composition
@@ -63,7 +89,7 @@ The **engineering/** directory contains **effectful-specific engineering standar
 
 ## Development Guides
 
-**[Documentation Guidelines](documentation-standards.md)** (500+ lines)
+**[Documentation Guidelines](documentation_standards.md)** (500+ lines)
 - SSoT (Single Source of Truth) enforcement
 - DRY (Don't Repeat Yourself) principles
 - Mermaid diagram best practices (GitHub + VSCode compatibility)
@@ -78,7 +104,7 @@ The **engineering/** directory contains **effectful-specific engineering standar
 - Output capture techniques
 
 **[Code Quality](type_safety_enforcement.md)** (200 lines)
-- check-code workflow (Black → MyPy)
+- check-code workflow (Black → MyPy → doc link verification)
 - Universal success criteria
 - MyPy strict mode enforcement
 - Exit code requirements
@@ -172,14 +198,14 @@ All engineering documents marked with "**SSoT**" are authoritative. When conflic
 ## Meta-Documentation
 
 **How to update these standards:**
-1. Read [Documentation Guidelines](documentation-standards.md) for standards
+1. Read [Documentation Guidelines](documentation_standards.md) for standards
 2. Make changes to appropriate SSoT document
 3. Update "Last Updated" timestamp
 4. Update "Referenced by" list if adding new cross-references
 5. Run link verification: `python tools/verify_links.py`
 6. Create pull request (see [Contributing](../CONTRIBUTING.md))
 
-**Naming convention**: All files lowercase with hyphens, descriptive names (e.g., `type-safety.md` not `types.md`)
+**Naming convention**: All files lowercase with underscores, descriptive names (e.g., `type_safety_enforcement.md` not `types.md`)
 
 ## See Also
 
@@ -189,6 +215,6 @@ All engineering documents marked with "**SSoT**" are authoritative. When conflic
 
 ---
 
-**Last Updated**: 2025-11-29
+**Last Updated**: 2025-12-01
 **Document Count**: 18 engineering standards
 **Status**: Authoritative engineering reference for effectful library

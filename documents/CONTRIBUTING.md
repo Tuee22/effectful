@@ -27,7 +27,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
 |----------|---------|
 | [Engineering Standards](engineering/README.md) | Master index of all standards |
 | [Architecture](engineering/architecture.md) | 5-layer architecture design |
-| [Type Safety](engineering/type-safety-enforcement.md) | Eight type safety doctrines |
+| [Type Safety](engineering/type_safety_enforcement.md) | Eight type safety doctrines |
 | [Purity](engineering/purity.md) | Six purity doctrines |
 | [Testing](engineering/testing.md) | Testing standards and 22 anti-patterns |
 | [Docker Workflow](engineering/docker_workflow.md) | All development in Docker |
@@ -61,7 +61,7 @@ All contributions must meet the **Universal Success Criteria**:
 - [ ] Unit tests use pytest-mock only
 - [ ] Changes left uncommitted (see Git Workflow below)
 
-See [Code Quality](engineering/type-safety-enforcement.md) for complete standards.
+See [Code Quality](engineering/type_safety_enforcement.md) for complete standards.
 
 ## Development Workflow
 
@@ -142,7 +142,7 @@ All new features require documentation updates:
 - **Tutorials**: Add step-by-step guides to `documents/tutorials/` if complex
 - **Engineering Standards**: Update `documents/engineering/` if new patterns introduced
 
-Follow [Documentation Guidelines](engineering/documentation-standards.md) for SSoT, DRY, and mermaid best practices.
+Follow [Documentation Guidelines](engineering/documentation_standards.md) for SSoT, DRY, and mermaid best practices.
 
 ## Code Quality Standards
 
@@ -161,7 +161,7 @@ Follow [Documentation Guidelines](engineering/documentation-standards.md) for SS
 - Immutability by default (frozen dataclasses)
 
 **See**:
-- [Type Safety](engineering/type-safety-enforcement.md) - Eight type safety doctrines
+- [Type Safety](engineering/type_safety_enforcement.md) - Eight type safety doctrines
 - [Purity](engineering/purity.md) - Six purity doctrines
 - [Forbidden Patterns](engineering/forbidden_patterns.md) - Anti-patterns to avoid
 
@@ -184,6 +184,6 @@ Thank you for contributing to effectful!
 **See Also**:
 - [Engineering Standards](engineering/README.md) - Master index
 - [Architecture](engineering/architecture.md) - System design
-- [Type Safety](engineering/type-safety-enforcement.md) - Type safety doctrines
+- [Type Safety](engineering/type_safety_enforcement.md) - Type safety doctrines
 - [Testing](engineering/testing.md) - Testing standards
 - [Documentation Hub](README.md) - Complete documentation index

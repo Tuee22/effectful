@@ -813,10 +813,10 @@ async def test_upload_quota_exceeded(mocker):
 
 ## Next Steps
 
-- [Example 06: Storage Workflow](../../examples/06_storage_workflow.py) - Complete working example
+- [Examples README](/examples/README.md) - Complete working examples index
 - [Tutorial 04: Testing Guide](04_testing_guide.md) - Comprehensive testing patterns
 - [API Reference: Storage](../api/storage.md) - Complete storage API documentation
 
 ---
 
-**Previous**: [Tutorial 08: Messaging Effects](08_messaging_effects.md) | **Next**: [Example 06: Storage Workflow](../../examples/06_storage_workflow.py)
+**Previous**: [Tutorial 08: Messaging Effects](08_messaging_effects.md) | **Next**: [Examples README](/examples/README.md)

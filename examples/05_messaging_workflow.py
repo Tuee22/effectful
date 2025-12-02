@@ -9,19 +9,27 @@ Run:
 import asyncio
 from collections.abc import Generator
 from datetime import UTC, datetime
+from uuid import uuid4
+from unittest.mock import AsyncMock
 
 from effectful.algebraic.result import Err, Ok
-from effectful.domain.message_envelope import ConsumeTimeout, MessageEnvelope
+from effectful.domain.message_envelope import (
+    AcknowledgeSuccess,
+    ConsumeTimeout,
+    MessageEnvelope,
+    NackSuccess,
+    PublishSuccess,
+)
 from effectful.effects.messaging import (
     AcknowledgeMessage,
     ConsumeMessage,
     NegativeAcknowledge,
     PublishMessage,
 )
+from effectful.infrastructure.messaging import MessageConsumer, MessageProducer
 from effectful.interpreters.messaging import MessagingInterpreter
 from effectful.programs.program_types import AllEffects, EffectResult
 from effectful.programs.runners import run_ws_program
-from effectful.testing.fakes import FakeMessageConsumer, FakeMessageProducer
 
 
 def publish_events(events: list[str]) -> Generator[AllEffects, EffectResult, int]:
@@ -161,9 +169,41 @@ def pubsub_workflow(messages: list[str]) -> Generator[AllEffects, EffectResult, 
 
 async def main() -> None:
     """Run the messaging workflow program."""
-    # Setup fake messaging infrastructure
-    fake_producer = FakeMessageProducer()
-    fake_consumer = FakeMessageConsumer()
+    # Setup typed AsyncMocks for messaging with simple in-memory behavior
+    published: list[tuple[str, bytes, dict[str, str] | None]] = []
+    queue: list[MessageEnvelope] = []
+    acknowledged: list[str] = []
+    nacked: list[str] = []
+
+    producer = AsyncMock(spec=MessageProducer)
+
+    async def publish(topic: str, payload: bytes, properties: dict[str, str] | None) -> PublishSuccess:
+        msg_id = f"msg-{uuid4()}"
+        published.append((topic, payload, properties))
+        return PublishSuccess(message_id=msg_id, topic=topic)
+
+    producer.publish.side_effect = publish
+
+    consumer = AsyncMock(spec=MessageConsumer)
+
+    async def receive(subscription: str, timeout_ms: int):
+        _ = (subscription, timeout_ms)
+        if queue:
+            return queue.pop(0)
+        return ConsumeTimeout()
+
+    async def acknowledge(message_id: str) -> AcknowledgeSuccess:
+        acknowledged.append(message_id)
+        return AcknowledgeSuccess(message_id=message_id)
+
+    async def negative_acknowledge(message_id: str, delay_ms: int = 0) -> NackSuccess:
+        _ = delay_ms
+        nacked.append(message_id)
+        return NackSuccess(message_id=message_id, delay_ms=delay_ms)
+
+    consumer.receive.side_effect = receive
+    consumer.acknowledge.side_effect = acknowledge
+    consumer.negative_acknowledge.side_effect = negative_acknowledge
 
     # Pre-populate consumer queue with messages for demonstration
     messages = [
@@ -173,10 +213,9 @@ async def main() -> None:
         "Invalid event",  # This will be nacked
     ]
 
-    # Create message envelopes in consumer queue
     envelopes = [
         MessageEnvelope(
-            message_id=f"msg-{i+1}",
+            message_id=f"seed-{i+1}",
             payload=msg.encode("utf-8"),
             properties={"type": "event", "index": str(i)},
             publish_time=datetime.now(UTC),
@@ -184,10 +223,10 @@ async def main() -> None:
         )
         for i, msg in enumerate(messages)
     ]
-    fake_consumer._messages.extend(envelopes)
+    queue.extend(envelopes)
 
     # Create interpreter
-    interpreter = MessagingInterpreter(producer=fake_producer, consumer=fake_consumer)
+    interpreter = MessagingInterpreter(producer=producer, consumer=consumer)
 
     print("Running messaging workflow...\n")
 
@@ -204,22 +243,22 @@ async def main() -> None:
 
     # Show producer state
     print(f"\n=== Producer State ===")
-    print(f"Published messages: {len(fake_producer._published)}")
+    print(f"Published messages: {len(published)}")
     _ = [
         (
             print(f"  - Topic: {topic}"),
             print(f"    Payload: {payload.decode('utf-8')}"),
             print(f"    Properties: {props}"),
         )
-        for topic, payload, props in fake_producer._published
+        for topic, payload, props in published
     ]
 
     # Run consume and process workflow
     print(f"\n=== Consuming and Processing Messages ===")
-    print(f"Messages in queue: {len(fake_consumer._messages)}\n")
+    print(f"Messages in queue: {len(queue)}\n")
 
     result2 = await run_ws_program(
-        pubsub_workflow(messages), MessagingInterpreter(fake_producer, fake_consumer)
+        pubsub_workflow(messages), MessagingInterpreter(producer, consumer)
     )
 
     match result2:
@@ -233,13 +272,13 @@ async def main() -> None:
 
     # Show consumer state
     print(f"\n=== Consumer State ===")
-    print(f"Messages acknowledged: {len(fake_consumer._acknowledged)}")
-    _ = [print(f"  ✓ {msg_id}") for msg_id in fake_consumer._acknowledged]
+    print(f"Messages acknowledged: {len(acknowledged)}")
+    _ = [print(f"  ✓ {msg_id}") for msg_id in acknowledged]
 
-    print(f"\nMessages negative acknowledged: {len(fake_consumer._nacked)}")
-    _ = [print(f"  ✗ {msg_id}") for msg_id in fake_consumer._nacked]
+    print(f"\nMessages negative acknowledged: {len(nacked)}")
+    _ = [print(f"  ✗ {msg_id}") for msg_id in nacked]
 
-    print(f"\nMessages remaining in queue: {len(fake_consumer._messages)}")
+    print(f"\nMessages remaining in queue: {len(queue)}")
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ Welcome to **effectful**! This guide will get you writing effect programs in 10 
 
 > **Core Doctrines**: For comprehensive patterns, see:
 > - [Architecture](../engineering/architecture.md) - 5-layer architecture and design decisions
-> - [Type Safety](../engineering/type-safety-enforcement.md) - Eight type safety rules
+> - [Type Safety](../engineering/type_safety_enforcement.md) - Eight type safety rules
 > - [Testing](../engineering/testing.md) - Coverage requirements and test patterns
 > - [Docker Workflow](../engineering/docker_workflow.md) - All development happens in Docker
 

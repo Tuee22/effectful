@@ -4,7 +4,7 @@ This tutorial guides you through migrating from imperative WebSocket code to eff
 
 > **Core Doctrine**: For architecture patterns and type safety requirements, see:
 > - [architecture.md](../engineering/architecture.md) - 5-layer architecture
-> - [type_safety_doctrine.md](../engineering/type-safety-enforcement.md) - Result types and ADTs
+> - [Type Safety Enforcement](../engineering/type_safety_enforcement.md) - Result types and ADTs
 
 ## Prerequisites
 
@@ -824,8 +824,8 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 ## Next Steps
 
 - Review [API Reference](../api/) for complete effectful API
-- Study [examples/](../../examples/) for real-world migration examples
-- Read [architecture.md](../../architecture.md) for design principles
+- Study [examples/](/examples/) for real-world migration examples
+- Read [architecture.md](../engineering/architecture.md) for design principles
 
 ## Summary
 

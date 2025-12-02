@@ -276,7 +276,7 @@ import asyncio
 from typing import Callable
 
 
-async def retry_with_backoff[T](
+async def retry_with_backoff[T] (
     program_factory: Callable[[], Generator[AllEffects, EffectResult, T]],
     interpreter: EffectInterpreter,
     max_retries: int = 3,

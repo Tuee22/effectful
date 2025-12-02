@@ -2,6 +2,50 @@
 
 > **SSoT** for all environment variables and service configuration in effectful.
 
+## SSoT Link Map
+
+```mermaid
+flowchart TB
+  Config[Configuration SSoT]
+  Docker[Docker Workflow SSoT]
+  Commands[Command Reference]
+  DevWorkflow[Development Workflow]
+  Observability[Observability SSoT]
+
+  Config --> Docker
+  Config --> Commands
+  Config --> DevWorkflow
+  Config --> Observability
+  Docker --> Commands
+```
+
+| Need | Link |
+|------|------|
+| Container topology | [Docker Workflow](docker_workflow.md) |
+| Command prefixes | [Command Reference](command_reference.md) |
+| Database lifecycle | [Development Workflow](development_workflow.md#database-management) |
+| Observability endpoints | [Observability](observability.md#metrics-publishing) |
+
+## Configuration Topology
+
+```mermaid
+flowchart TB
+  DevShell[Developer Shell]
+  Compose[compose exec effectful]
+  EnvVars[.env / exported env vars]
+  App[Effectful App]
+  Postgres[(PostgreSQL)]
+  Redis[(Redis)]
+  MinIO[(MinIO S3)]
+  Pulsar[(Pulsar)]
+
+  DevShell --> EnvVars --> Compose --> App
+  App --> Postgres
+  App --> Redis
+  App --> MinIO
+  App --> Pulsar
+```
+
 ## Environment Variables
 
 **All configuration via environment variables** - no config files.
@@ -120,5 +164,5 @@ pool = redis.ConnectionPool(
 
 ---
 
-**Last Updated**: 2025-11-29
+**Last Updated**: 2025-12-01
 **Referenced by**: CLAUDE.md, docker_workflow.md, development_workflow.md

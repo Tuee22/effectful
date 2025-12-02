@@ -9,14 +9,12 @@ Run:
 import asyncio
 from collections.abc import Generator
 
-from effectful import (
-    AllEffects,
-    EffectResult,
-    SendText,
-    run_ws_program,
-)
+from unittest.mock import AsyncMock
+
+from effectful import AllEffects, EffectResult, SendText, run_ws_program
 from effectful.algebraic.result import Err, Ok
-from effectful.testing import create_test_interpreter
+from effectful.infrastructure.websocket import WebSocketConnection
+from effectful.interpreters.websocket import WebSocketInterpreter
 
 
 def hello_world() -> Generator[AllEffects, EffectResult, str]:
@@ -34,8 +32,10 @@ def hello_world() -> Generator[AllEffects, EffectResult, str]:
 
 async def main() -> None:
     """Run the hello world program."""
-    # Create test interpreter (uses fake WebSocket)
-    interpreter = create_test_interpreter()
+    # Create a typed AsyncMock for the WebSocket connection (matches doctrine: spec'ed mocks)
+    ws = AsyncMock(spec=WebSocketConnection)
+    ws.is_open.return_value = True
+    interpreter = WebSocketInterpreter(connection=ws)
 
     print("Running hello_world program...")
 

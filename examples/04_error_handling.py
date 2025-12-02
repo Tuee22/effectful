@@ -9,6 +9,7 @@ Run:
 import asyncio
 from collections.abc import Generator
 from uuid import UUID, uuid4
+from unittest.mock import AsyncMock
 
 from effectful import (
     AllEffects,
@@ -20,12 +21,11 @@ from effectful import (
     run_ws_program,
 )
 from effectful.algebraic.result import Err, Ok
+from effectful.infrastructure.cache import ProfileCache
+from effectful.infrastructure.repositories import ChatMessageRepository, UserRepository
+from effectful.infrastructure.websocket import WebSocketConnection
+from effectful.interpreters.composite import create_composite_interpreter
 from effectful.interpreters.errors import DatabaseError
-from effectful.testing import (
-    FailingUserRepository,
-    FakeUserRepository,
-    create_test_interpreter,
-)
 
 
 def safe_user_lookup(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
@@ -64,16 +64,26 @@ async def demo_user_not_found() -> None:
     """Demonstrate handling user not found case."""
     print("=== Demo 1: User Not Found ===")
 
-    # Empty repository
-    interpreter = create_test_interpreter()
+    # Empty repository (returns UserNotFound)
+    ws = AsyncMock(spec=WebSocketConnection)
+    ws.is_open.return_value = True
+
+    user_repo = AsyncMock(spec=UserRepository)
+    user_repo.get_by_id.return_value = UserNotFound(user_id=uuid4(), reason="does_not_exist")
+
+    interpreter = create_composite_interpreter(
+        websocket_connection=ws,
+        user_repo=user_repo,
+        message_repo=AsyncMock(spec=ChatMessageRepository),
+        cache=AsyncMock(spec=ProfileCache),
+    )
 
     result = await run_ws_program(safe_user_lookup(uuid4()), interpreter)
 
     match result:
         case Ok(value):
             print(f"✓ Program completed: {value}")
-            websocket = interpreter._websocket._connection
-            _ = [print(f"  → {msg}") for msg in websocket._sent_messages]
+            _ = [print(f"  → {call.args[0]}") for call in ws.send_text.call_args_list]
         case Err(error):
             print(f"✗ Unexpected error: {error}")
 
@@ -83,8 +93,22 @@ async def demo_database_failure() -> None:
     print("\n=== Demo 2: Database Failure ===")
 
     # Failing repository (simulates database timeout)
-    failing_repo = FailingUserRepository(error_message="Connection timeout")
-    interpreter = create_test_interpreter(user_repo=failing_repo)
+    ws = AsyncMock(spec=WebSocketConnection)
+    ws.is_open.return_value = True
+
+    user_repo = AsyncMock(spec=UserRepository)
+
+    async def fail_lookup(_: UUID) -> User:
+        raise TimeoutError("Connection timeout")
+
+    user_repo.get_by_id.side_effect = fail_lookup
+
+    interpreter = create_composite_interpreter(
+        websocket_connection=ws,
+        user_repo=user_repo,
+        message_repo=AsyncMock(spec=ChatMessageRepository),
+        cache=AsyncMock(spec=ProfileCache),
+    )
 
     result = await run_ws_program(safe_user_lookup(uuid4()), interpreter)
 
@@ -107,19 +131,26 @@ async def demo_success_case() -> None:
     print("\n=== Demo 3: Success Case ===")
 
     # Repository with test user
-    fake_repo = FakeUserRepository()
-    user_id = uuid4()
-    fake_repo._users[user_id] = User(id=user_id, email="charlie@example.com", name="Charlie")
+    ws = AsyncMock(spec=WebSocketConnection)
+    ws.is_open.return_value = True
 
-    interpreter = create_test_interpreter(user_repo=fake_repo)
+    user_id = uuid4()
+    user_repo = AsyncMock(spec=UserRepository)
+    user_repo.get_by_id.return_value = User(id=user_id, email="charlie@example.com", name="Charlie")
+
+    interpreter = create_composite_interpreter(
+        websocket_connection=ws,
+        user_repo=user_repo,
+        message_repo=AsyncMock(spec=ChatMessageRepository),
+        cache=AsyncMock(spec=ProfileCache),
+    )
 
     result = await run_ws_program(safe_user_lookup(user_id), interpreter)
 
     match result:
         case Ok(value):
             print(f"✓ Program completed: {value}")
-            websocket = interpreter._websocket._connection
-            _ = [print(f"  → {msg}") for msg in websocket._sent_messages]
+            _ = [print(f"  → {call.args[0]}") for call in ws.send_text.call_args_list]
 
         case Err(error):
             print(f"✗ Unexpected error: {error}")
@@ -174,26 +205,36 @@ async def demo_batch_processing() -> None:
     """Demonstrate batch processing with mixed results."""
     print("\n=== Demo 4: Batch Processing ===")
 
-    # Repository with some users
-    fake_repo = FakeUserRepository()
+    ws = AsyncMock(spec=WebSocketConnection)
+    ws.is_open.return_value = True
 
     user_ids = [uuid4() for _ in range(5)]
+    existing_users = {
+        user_ids[0]: User(id=user_ids[0], email="user1@example.com", name="User 1"),
+        user_ids[2]: User(id=user_ids[2], email="user3@example.com", name="User 3"),
+        user_ids[4]: User(id=user_ids[4], email="user5@example.com", name="User 5"),
+    }
 
-    # Add 3 users, leave 2 missing
-    fake_repo._users[user_ids[0]] = User(id=user_ids[0], email="user1@example.com", name="User 1")
-    fake_repo._users[user_ids[2]] = User(id=user_ids[2], email="user3@example.com", name="User 3")
-    fake_repo._users[user_ids[4]] = User(id=user_ids[4], email="user5@example.com", name="User 5")
+    async def lookup(uid: UUID):
+        return existing_users.get(uid, UserNotFound(user_id=uid, reason="does_not_exist"))
 
-    interpreter = create_test_interpreter(user_repo=fake_repo)
+    user_repo = AsyncMock(spec=UserRepository)
+    user_repo.get_by_id.side_effect = lookup
+
+    interpreter = create_composite_interpreter(
+        websocket_connection=ws,
+        user_repo=user_repo,
+        message_repo=AsyncMock(spec=ChatMessageRepository),
+        cache=AsyncMock(spec=ProfileCache),
+    )
 
     result = await run_ws_program(multi_user_lookup(user_ids), interpreter)
 
     match result:
         case Ok(stats):
             print(f"✓ Batch complete: {stats}")
-            websocket = interpreter._websocket._connection
             print("  Messages sent:")
-            _ = [print(f"    → {msg}") for msg in websocket._sent_messages]
+            _ = [print(f"    → {call.args[0]}") for call in ws.send_text.call_args_list]
 
         case Err(error):
             print(f"✗ Batch failed: {error}")

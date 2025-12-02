@@ -2,6 +2,33 @@
 
 > **Single Source of Truth (SSoT)** for all type safety policy and code quality enforcement in Effectful.
 
+## SSoT Link Map
+
+```mermaid
+flowchart TB
+  TypeSafety[Type Safety SSoT]
+  Purity[Purity SSoT]
+  Architecture[Architecture SSoT]
+  Testing[Testing SSoT]
+  Docs[Documentation Standards]
+  Forbidden[Forbidden Patterns]
+
+  TypeSafety --> Purity
+  TypeSafety --> Architecture
+  TypeSafety --> Testing
+  TypeSafety --> Docs
+  TypeSafety --> Forbidden
+  Forbidden --> Testing
+```
+
+| Need | Link |
+|------|------|
+| Purity doctrine backing type safety | [Purity](purity.md) |
+| Where type boundaries live | [Architecture](architecture.md#core-abstractions) |
+| How to test types | [Testing](testing.md#part-5-testing-patterns) |
+| Writing/linking rules | [Documentation Standards](documentation_standards.md) |
+| Anti-pattern catalog | [Forbidden Patterns](forbidden_patterns.md) |
+
 ## Core Principle
 
 **Make invalid states unrepresentable through the type system.**
@@ -40,6 +67,7 @@ flowchart TB
     CheckCode[check-code Command]
     Black[Black Formatter]
     MyPy[MyPy Strict Check]
+    Links[Docs Link Verify]
     Errors{Type Error?}
     Fix[Fix Code]
     Pytest[Run Tests]
@@ -48,8 +76,10 @@ flowchart TB
     Code --> CheckCode
     CheckCode --> Black
     Black -->|Auto-format| MyPy
-    MyPy -->|Pass| Pytest
+    MyPy -->|Pass| Links
+    Links -->|Pass| Pytest
     MyPy -->|Fail| Errors
+    Links -->|Fail| Errors
     Errors -->|Any/cast/type:ignore?| Fix
     Errors -->|Other type error?| Fix
     Fix --> CheckCode
@@ -58,7 +88,7 @@ flowchart TB
 ```
 
 **Enforcement:**
-- `poetry run check-code` runs Black → MyPy with fail-fast behavior
+- `poetry run check-code` runs Black → MyPy → documentation link verification with fail-fast behavior
 - `mypy --strict` with `disallow_any_explicit = true`
 - Zero tolerance for escape hatches
 - All errors must be fixed before tests run
@@ -72,14 +102,15 @@ flowchart TB
 
 See [Command Reference](command_reference.md) for complete command table.
 
-### Black + MyPy Workflow
+### Black + MyPy + Docs Workflow
 
-Runs Black (formatter) → MyPy (strict type checker) with fail-fast behavior.
+Runs Black (formatter) → MyPy (strict type checker) → documentation link verification (`tools/verify_links.py`) with fail-fast behavior.
 
 **Behavior**:
 1. **Black**: Auto-formats Python code (line-length=100)
 2. **MyPy**: Strict type checking with 30+ strict settings, disallow_any_explicit=true
-3. **Fail-fast**: Exits on first failure
+3. **Link verification**: Fails on any broken doc link
+4. **Fail-fast**: Exits on first failure
 
 Must meet Universal Success Criteria (exit code 0, Black formatting applied, zero MyPy errors).
 
@@ -700,5 +731,5 @@ Black automatically fixes these, but check-code will fail if code isn't formatte
 
 ---
 
-**Last Updated:** 2025-11-30
-**Referenced by:** CLAUDE.md, development_workflow.md, CONTRIBUTING.md, testing.md, architecture.md, forbidden_patterns.md, docker_workflow.md
+**Last Updated:** 2025-12-01
+**Referenced by:** CLAUDE.md, development_workflow.md, CONTRIBUTING.md, testing.md, architecture.md, forbidden_patterns.md, docker_workflow.md, README.md

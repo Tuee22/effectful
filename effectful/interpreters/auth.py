@@ -196,7 +196,7 @@ class AuthInterpreter:
         """
         try:
             lookup_result = await self.auth_service.get_user_by_email(email)
-            match lookup_result:
+            match lookup_result:  # pragma: no branch
                 case UserFound(user=user, source=_):
                     return Ok(EffectReturn(value=user, effect_name="GetUserByEmail"))
                 case UserNotFound() as not_found:

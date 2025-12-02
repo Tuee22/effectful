@@ -442,7 +442,7 @@ Now that you understand basic metrics, explore advanced topics:
 ### Pattern 1: Automatic Duration Tracking
 
 ```python
-def with_duration_tracking[T](
+def with_duration_tracking[T] (
     metric_name: str,
     labels: dict[str, str],
     program: Generator[AllEffects, EffectResult, T],

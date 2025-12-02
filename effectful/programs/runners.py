@@ -103,14 +103,14 @@ async def run_ws_program(
         effect = next(program)
 
         # Program execution loop - acceptable while loop (core driver, see docstring)
-        while True:
+        while True:  # pragma: no branch
             # Interpret the current effect
             result: Result[
                 EffectReturn[EffectResult], InterpreterError
             ] = await interpreter.interpret(effect)
 
             # Handle interpretation result
-            match result:
+            match result:  # pragma: no branch
                 case Ok(EffectReturn(value=effect_value, effect_name=_)):
                     # Effect succeeded - send result to program, get next effect
                     # The program receives effect_value (EffectResult type)

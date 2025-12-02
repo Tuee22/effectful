@@ -4,6 +4,34 @@
 
 This is the Single Source of Truth (SSoT) for the Effectful observability architecture, metrics philosophy, and Prometheus/Grafana integration.
 
+## SSoT Link Map
+
+```mermaid
+flowchart TB
+  Observability[Observability SSoT]
+  Monitoring[Monitoring Standards SSoT]
+  Alerting[Alerting SSoT]
+  Architecture[Architecture SSoT]
+  Docker[Docker Workflow SSoT]
+  Testing[Testing SSoT]
+
+  Observability --> Monitoring
+  Observability --> Alerting
+  Observability --> Architecture
+  Observability --> Docker
+  Observability --> Testing
+  Monitoring --> Docker
+  Alerting --> Testing
+```
+
+| Need | Link |
+|------|------|
+| Naming + label policy | [Monitoring Standards](monitoring_standards.md) |
+| Alert rules + runbooks | [Alerting](alerting.md) |
+| Where observability fits in architecture | [Architecture](architecture.md#5-layer-architecture) |
+| Container and tooling setup | [Docker Workflow](docker_workflow.md) |
+| Testing metrics flows | [Testing](testing.md#part-5-testing-patterns) |
+
 ## Overview
 
 Observability in effectful follows the same pure functional principles as all effect handling: metrics are **immutable data structures** that describe observations, not imperative side effects. This approach ensures type safety, testability, and composition.
@@ -707,4 +735,5 @@ async def test_metrics_workflow() -> None:
 ---
 
 **Status**: Single Source of Truth (SSoT) for observability architecture
-**Last Updated**: 2025-11-30
+**Last Updated**: 2025-12-01
+**Referenced by**: monitoring_standards.md, alerting.md, README.md

@@ -4,6 +4,31 @@
 
 This is the Single Source of Truth (SSoT) for effectful alerting policy, ensuring actionable, maintainable alerts across all applications.
 
+## SSoT Link Map
+
+```mermaid
+flowchart TB
+  Alerting[Alerting SSoT]
+  Observability[Observability SSoT]
+  Monitoring[Monitoring Standards SSoT]
+  Testing[Testing SSoT]
+  Docs[Documentation Standards]
+
+  Alerting --> Observability
+  Alerting --> Monitoring
+  Alerting --> Testing
+  Alerting --> Docs
+  Monitoring --> Observability
+  Testing --> Docs
+```
+
+| Need | Link |
+|------|------|
+| Metric pipeline architecture | [Observability](observability.md) |
+| Naming + label rules | [Monitoring Standards](monitoring_standards.md) |
+| Test alerts and runbooks | [Testing](testing.md#part-5-testing-patterns) |
+| Documentation expectations | [Documentation Standards](documentation_standards.md) |
+
 ## Overview
 
 Alerts are your production safety net. Too few alerts and you miss critical issues. Too many and they become noise. This doctrine establishes clear standards for when, why, and how to alert.
@@ -611,4 +636,5 @@ Follow consistent naming for discoverability:
 ---
 
 **Status**: Single Source of Truth (SSoT) for alerting policy
-**Last Updated**: 2025-01-28
+**Last Updated**: 2025-12-01
+**Referenced by**: observability.md, monitoring_standards.md, README.md

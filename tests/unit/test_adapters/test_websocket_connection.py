@@ -5,6 +5,7 @@ Tests RealWebSocketConnection using pytest-mock with AsyncMock.
 
 import pytest
 from pytest_mock import MockerFixture
+from websockets.legacy.client import WebSocketClientProtocol
 
 from effectful.adapters.websocket_connection import RealWebSocketConnection
 
@@ -16,7 +17,7 @@ class TestRealWebSocketConnection:
     async def test_send_text_calls_ws_send(self, mocker: MockerFixture) -> None:
         """Test send_text delegates to underlying WebSocket."""
         # Setup
-        mock_ws = mocker.AsyncMock()
+        mock_ws = mocker.AsyncMock(spec=WebSocketClientProtocol)
         connection = RealWebSocketConnection(mock_ws)
 
         # Execute
@@ -29,7 +30,7 @@ class TestRealWebSocketConnection:
     async def test_receive_text_returns_string(self, mocker: MockerFixture) -> None:
         """Test receive_text returns string from underlying WebSocket."""
         # Setup
-        mock_ws = mocker.AsyncMock()
+        mock_ws = mocker.AsyncMock(spec=WebSocketClientProtocol)
         mock_ws.recv.return_value = "Received message"
 
         connection = RealWebSocketConnection(mock_ws)
@@ -45,7 +46,7 @@ class TestRealWebSocketConnection:
     async def test_receive_text_converts_to_string(self, mocker: MockerFixture) -> None:
         """Test receive_text converts non-string messages to string."""
         # Setup
-        mock_ws = mocker.AsyncMock()
+        mock_ws = mocker.AsyncMock(spec=WebSocketClientProtocol)
         mock_ws.recv.return_value = b"Binary message"  # bytes
 
         connection = RealWebSocketConnection(mock_ws)
@@ -61,7 +62,7 @@ class TestRealWebSocketConnection:
     async def test_close_calls_ws_close_with_normal_code(self, mocker: MockerFixture) -> None:
         """Test close calls underlying WebSocket with code 1000."""
         # Setup
-        mock_ws = mocker.AsyncMock()
+        mock_ws = mocker.AsyncMock(spec=WebSocketClientProtocol)
         connection = RealWebSocketConnection(mock_ws)
 
         # Execute
@@ -74,7 +75,7 @@ class TestRealWebSocketConnection:
     async def test_is_open_returns_true_when_open(self, mocker: MockerFixture) -> None:
         """Test is_open returns True when WebSocket is open."""
         # Setup
-        mock_ws = mocker.AsyncMock()
+        mock_ws = mocker.AsyncMock(spec=WebSocketClientProtocol)
         mock_ws.open = True
 
         connection = RealWebSocketConnection(mock_ws)
@@ -89,7 +90,7 @@ class TestRealWebSocketConnection:
     async def test_is_open_returns_false_when_closed(self, mocker: MockerFixture) -> None:
         """Test is_open returns False when WebSocket is closed."""
         # Setup
-        mock_ws = mocker.AsyncMock()
+        mock_ws = mocker.AsyncMock(spec=WebSocketClientProtocol)
         mock_ws.open = False
 
         connection = RealWebSocketConnection(mock_ws)
@@ -104,7 +105,7 @@ class TestRealWebSocketConnection:
     async def test_multiple_send_operations(self, mocker: MockerFixture) -> None:
         """Test multiple send operations work correctly."""
         # Setup
-        mock_ws = mocker.AsyncMock()
+        mock_ws = mocker.AsyncMock(spec=WebSocketClientProtocol)
         connection = RealWebSocketConnection(mock_ws)
 
         # Execute
@@ -122,7 +123,7 @@ class TestRealWebSocketConnection:
     async def test_multiple_receive_operations(self, mocker: MockerFixture) -> None:
         """Test multiple receive operations return correct values."""
         # Setup
-        mock_ws = mocker.AsyncMock()
+        mock_ws = mocker.AsyncMock(spec=WebSocketClientProtocol)
         mock_ws.recv.side_effect = ["First", "Second", "Third"]
 
         connection = RealWebSocketConnection(mock_ws)

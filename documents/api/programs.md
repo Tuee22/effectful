@@ -16,7 +16,7 @@ Execute an effect program to completion with fail-fast error handling.
 
 **Type Signature**:
 ```python
-async def run_ws_program[T](
+async def run_ws_program[T] (
     program: Generator[AllEffects, EffectResult, T],
     interpreter: EffectInterpreter,
 ) -> Result[T, InterpreterError]
@@ -435,7 +435,7 @@ def workflow_with_caching(
 ### Recursive Programs
 
 ```python
-def retry_with_backoff[T](
+def retry_with_backoff[T] (
     program_factory: Callable[[], Generator[AllEffects, EffectResult, T]],
     max_retries: int = 3,
     delay_seconds: float = 1.0,
@@ -659,4 +659,4 @@ Access effect names for tracing:
 - [Effects API](./effects.md) - Effect types used in programs
 - [Result Type API](./result.md) - Return types from run_ws_program
 - [Interpreters API](./interpreters.md) - Executing programs
-- [Testing API](./testing.md) - Testing programs
+- [Testing Standards](../engineering/testing.md) - Testing programs

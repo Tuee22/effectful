@@ -1029,9 +1029,9 @@ async def test_interpreter_records_automatic_metrics() -> None:
 ## Next Steps
 
 - Explore the demo application in `/demo` for complete working examples
-- Read [demo/README.md](../../demo/README.md) for comprehensive documentation
+- Read [HealthHub demo docs](/demo/healthhub/documents/README.md) for comprehensive documentation
 - Study real tests in `tests/test_demo/` (35 tests with 100% pass rate)
-- Review [architecture.md](../../architecture.md) for system design
+- Review [architecture.md](../engineering/architecture.md) for system design
 
 ## Summary
 

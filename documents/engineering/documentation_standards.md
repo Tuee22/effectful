@@ -2,6 +2,34 @@
 
 > **Single Source of Truth (SSoT)** for all documentation practices in the Effectful project.
 
+## SSoT Link Map
+
+```mermaid
+flowchart TB
+  Docs[Documentation Standards SSoT]
+  EngineeringHub[Engineering README]
+  Forbidden[Forbidden Patterns SSoT]
+  Architecture[Architecture SSoT]
+  Testing[Testing SSoT]
+  TypeSafety[Type Safety SSoT]
+
+  Docs --> EngineeringHub
+  Docs --> Forbidden
+  Docs --> Architecture
+  Docs --> Testing
+  Docs --> TypeSafety
+  Forbidden --> Testing
+  Architecture --> TypeSafety
+```
+
+| Need | Link |
+|------|------|
+| Navigation entry point | [Engineering README](README.md) |
+| Anti-pattern hub | [Forbidden Patterns](forbidden_patterns.md) |
+| Architecture canonical doc | [Architecture](architecture.md) |
+| Test documentation rules | [Testing](testing.md) |
+| Type safety doctrine | [Type Safety Enforcement](type_safety_enforcement.md) |
+
 ## Documentation Philosophy
 
 ### Single Source of Truth (SSoT)
@@ -113,7 +141,7 @@ Use tables for:
 ```markdown
 | Command | Purpose | Exit Code |
 |---------|---------|-----------|
-| check-code | Run Black + MyPy | 0 = pass |
+| check-code | Run Black + MyPy + doc link verification | 0 = pass |
 | test-all | Run all tests | 0 = pass |
 ```
 
@@ -435,7 +463,7 @@ If your diagram requires features not in the safe subset:
 1. Create diagram in Mermaid Live Editor: https://mermaid.live/
 2. Export as SVG or PNG
 3. Commit image to repo
-4. Reference in markdown: `![Architecture](./diagrams/architecture.svg)`
+4. Reference in markdown: `![Architecture](architecture.md)`  <!-- Example uses existing doc to keep links valid -->
 
 #### Alternative 3: PlantUML
 
@@ -463,13 +491,13 @@ If your diagram requires features not in the safe subset:
 See [Type Safety Enforcement](../engineering/type_safety_enforcement.md)
 
 # From documents/engineering/purity.md
-See [Purity Patterns](purity-patterns.md)
+See [Effect Patterns](effect_patterns.md)
 ```
 
 **Absolute paths from root:**
 ```markdown
 # From anywhere
-See [Architecture](documents/engineering/architecture.md)
+See [Architecture](architecture.md)
 ```
 
 ### Link Verification
@@ -607,8 +635,8 @@ Add explicit SSoT marker at the top:
 
 ## See Also
 
-- [Related Standard](./related-standard.md)
-- [Tutorial](../tutorials/example.md)
+- [Related Standard](purity.md)
+- [Tutorial](../tutorials/01_quickstart.md)
 
 ---
 
@@ -648,12 +676,12 @@ Add explicit SSoT marker at the top:
 
 ## Next Steps
 
-- [Tutorial 2](./02_next_topic.md)
-- [Related Standard](../engineering/standard.md)
+- [Tutorial 2](../tutorials/02_effect_types.md)
+- [Related Standard](../engineering/type_safety_enforcement.md)
 
 ---
 
-**Previous**: [Tutorial 1](./01_previous.md) | **Next**: [Tutorial 3](./03_next.md)
+**Previous**: [Tutorial 1](../tutorials/01_quickstart.md) | **Next**: [Tutorial 3](../tutorials/03_adts_and_results.md)
 ```
 
 ### API Reference Template
@@ -696,9 +724,9 @@ Add explicit SSoT marker at the top:
 
 ## See Also
 
-- [Related API](./related.md)
-- [Tutorial](../tutorials/example.md)
-- [Standard](../engineering/standard.md)
+- [Related API](../api/effects.md)
+- [Tutorial](../tutorials/01_quickstart.md)
+- [Standard](../engineering/architecture.md)
 ```
 
 ---
@@ -783,5 +811,5 @@ docs: add documentation standards
 
 ---
 
-**Last Updated**: 2025-11-30
+**Last Updated**: 2025-12-01
 **Referenced by**: README.md, CONTRIBUTING.md, type_safety_enforcement.md, purity.md, testing.md, docker_workflow.md, forbidden_patterns.md

@@ -2,11 +2,39 @@
 
 > **SSoT** for daily development procedures, adding features, and database management in effectful.
 
+## SSoT Link Map
+
+```mermaid
+flowchart TB
+  DevWorkflow[Development Workflow SSoT]
+  Docker[Docker Workflow SSoT]
+  Commands[Command Reference]
+  Config[Configuration SSoT]
+  Docs[Documentation Standards]
+  Testing[Testing SSoT]
+
+  DevWorkflow --> Docker
+  DevWorkflow --> Commands
+  DevWorkflow --> Config
+  DevWorkflow --> Docs
+  DevWorkflow --> Testing
+  Docker --> Commands
+  Testing --> Docs
+```
+
+| Need | Link |
+|------|------|
+| Container policy | [Docker Workflow](docker_workflow.md) |
+| Exact command syntax | [Command Reference](command_reference.md) |
+| Environment variables | [Configuration](configuration.md) |
+| Documentation rules | [Documentation Standards](documentation_standards.md) |
+| Test sequencing | [Testing](testing.md#running-tests) |
+
 ## Daily Development Loop
 
 1. `docker compose -f docker/docker-compose.yml up -d`
 2. Make code changes
-3. `poetry run check-code` (see [Code Quality](type_safety_enforcement.md))
+3. `poetry run check-code` (Black → MyPy → doc link verification; see [Code Quality](type_safety_enforcement.md))
 4. `poetry run pytest` (see [Command Reference](command_reference.md))
 5. Leave changes uncommitted (see Git Workflow Policy below)
 
@@ -221,5 +249,5 @@ docker compose -f docker/docker-compose.yml exec effectful poetry add --group de
 
 ---
 
-**Last Updated**: 2025-11-29
+**Last Updated**: 2025-12-01
 **Referenced by**: CLAUDE.md, README.md, contributing.md

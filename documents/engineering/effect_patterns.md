@@ -2,6 +2,30 @@
 
 > **SSoT** for effect program composition, error handling, and real-world code examples in effectful.
 
+## SSoT Link Map
+
+```mermaid
+flowchart TB
+  Effects[Effect Patterns SSoT]
+  Purity[Purity SSoT]
+  TypeSafety[Type Safety SSoT]
+  Testing[Testing SSoT]
+  Architecture[Architecture SSoT]
+
+  Effects --> Purity
+  Effects --> TypeSafety
+  Effects --> Testing
+  Effects --> Architecture
+  Purity --> Architecture
+```
+
+| Need | Link |
+|------|------|
+| Purity doctrine backing patterns | [Purity](purity.md) |
+| Type signatures and unions | [Type Safety Enforcement](type_safety_enforcement.md) |
+| How to test programs | [Testing](testing.md#generator-testing-flow-layer-3) |
+| Where patterns sit in layers | [Architecture](architecture.md#core-abstractions) |
+
 ## Overview
 
 This document provides **real-world patterns** for writing effect programs using effectful's generator-based DSL.
@@ -320,5 +344,5 @@ def save_message(user_id: UUID, text: str) -> Generator[AllEffects, EffectResult
 
 ---
 
-**Last Updated**: 2025-11-29
-**Referenced by**: CLAUDE.md, purity.md, type_safety_enforcement.md
+**Last Updated**: 2025-12-01
+**Referenced by**: CLAUDE.md, purity.md, type_safety_enforcement.md, README.md

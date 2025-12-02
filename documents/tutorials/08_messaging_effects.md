@@ -736,10 +736,10 @@ async def test_consume_timeout(mocker):
 
 ## Next Steps
 
-- [Example 05: Messaging Workflow](../../examples/05_messaging_workflow.py) - Complete working example
+- [Example 05: Messaging Workflow](/examples/05_messaging_workflow.py) - Complete working example
 - [Tutorial 04: Testing Guide](04_testing_guide.md) - Comprehensive testing patterns
 - [API Reference: Messaging](../api/messaging.md) - Complete messaging API documentation
 
 ---
 
-**Previous**: [Tutorial 07: Migration Guide](07_migration_guide.md) | **Next**: [Example 05: Messaging Workflow](../../examples/05_messaging_workflow.py)
+**Previous**: [Tutorial 07: Migration Guide](07_migration_guide.md) | **Next**: [Example 05: Messaging Workflow](/examples/05_messaging_workflow.py)

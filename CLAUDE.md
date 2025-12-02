@@ -18,12 +18,12 @@ Quick links to key standards:
 |----------|---------|
 | [Engineering Standards](documents/engineering/README.md) | Master index of all standards |
 | [Architecture](documents/engineering/architecture.md) | 5-layer architecture design |
-| [Type Safety](documents/engineering/type-safety-enforcement.md) | Eight type safety doctrines |
+| [Type Safety](documents/engineering/type_safety_enforcement.md) | Eight type safety doctrines |
 | [Purity](documents/engineering/purity.md) | Six purity doctrines |
 | [Testing](documents/engineering/testing.md) | 22 test anti-patterns |
 | [Docker Workflow](documents/engineering/docker_workflow.md) | All development in Docker |
 | [Command Reference](documents/engineering/command_reference.md) | Docker commands and test execution |
-| [Code Quality](documents/engineering/type-safety-enforcement.md) | check-code workflow |
+| [Code Quality](documents/engineering/type_safety_enforcement.md) | check-code workflow |
 | [Development Workflow](documents/engineering/development_workflow.md) | Daily development loop |
 | [Forbidden Patterns](documents/engineering/forbidden_patterns.md) | Anti-patterns to avoid |
 | [Effect Patterns](documents/engineering/effect_patterns.md) | Real-world effect program patterns |
@@ -58,7 +58,7 @@ All code changes must meet these requirements:
 - ✅ **Zero `Any`, `cast()`, or `# type: ignore`** (escape hatches forbidden)
 - ✅ **Integration tests cover all features** (conceptual coverage)
 
-**See**: [Code Quality](documents/engineering/type-safety-enforcement.md) for complete standards.
+**See**: [Code Quality](documents/engineering/type_safety_enforcement.md) for complete standards.
 
 ## Claude Code-Specific Patterns
 
@@ -136,7 +136,7 @@ See [documents/CONTRIBUTING.md](documents/CONTRIBUTING.md) for complete contribu
 
 **Core standards**:
 - [Architecture](documents/engineering/architecture.md) - 5-layer design
-- [Type Safety](documents/engineering/type-safety-enforcement.md) - Eight doctrines
+- [Type Safety](documents/engineering/type_safety_enforcement.md) - Eight doctrines
 - [Purity](documents/engineering/purity.md) - Six doctrines
 - [Testing](documents/engineering/testing.md) - 22 anti-patterns
 - [Docker Workflow](documents/engineering/docker_workflow.md) - All development in Docker

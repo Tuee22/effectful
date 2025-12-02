@@ -4,6 +4,31 @@
 
 This is the Single Source of Truth (SSoT) for effectful monitoring standards, ensuring consistent, maintainable metrics across all applications.
 
+## SSoT Link Map
+
+```mermaid
+flowchart TB
+  Monitoring[Monitoring Standards SSoT]
+  Observability[Observability SSoT]
+  Alerting[Alerting SSoT]
+  Testing[Testing SSoT]
+  Docs[Documentation Standards]
+
+  Monitoring --> Observability
+  Monitoring --> Alerting
+  Monitoring --> Testing
+  Monitoring --> Docs
+  Observability --> Alerting
+  Testing --> Docs
+```
+
+| Need | Link |
+|------|------|
+| Metric pipeline design | [Observability](observability.md) |
+| Alert thresholds | [Alerting](alerting.md) |
+| How to test metrics | [Testing](testing.md#part-5-testing-patterns) |
+| Formatting and linking rules | [Documentation Standards](documentation_standards.md) |
+
 ## Overview
 
 Good metrics require discipline. Poor naming leads to confusion, inconsistent labels cause cardinality explosion, and undocumented metrics become technical debt. This doctrine establishes clear standards for all effectful metrics.
@@ -645,4 +670,5 @@ buckets=(1024, 10240, 102400, 1048576, 10485760, 104857600)
 ---
 
 **Status**: Single Source of Truth (SSoT) for monitoring standards
-**Last Updated**: 2025-11-30
+**Last Updated**: 2025-12-01
+**Referenced by**: observability.md, alerting.md, README.md

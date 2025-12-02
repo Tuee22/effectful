@@ -42,6 +42,11 @@ from effectful.interpreters.composite import (
     CompositeInterpreter,
     create_composite_interpreter,
 )
+from effectful.interpreters.cache import CacheInterpreter
+from effectful.interpreters.database import DatabaseInterpreter
+from effectful.interpreters.metrics import MetricsInterpreter
+from effectful.interpreters.system import SystemInterpreter
+from effectful.interpreters.websocket import WebSocketInterpreter
 from effectful.interpreters.errors import UnhandledEffectError
 
 
@@ -78,6 +83,52 @@ class TestCompositeInterpreter:
         # Verify WebSocket was used
         mock_ws.is_open.assert_called_once()
         mock_ws.send_text.assert_called_once_with("hello")
+
+    @pytest.mark.asyncio()
+    async def test_metrics_interpreter_unhandled_passes_through(
+        self, mocker: MockerFixture
+    ) -> None:
+        """Composite should fall through when metrics interpreter cannot handle effect."""
+        mock_ws = mocker.AsyncMock(spec=WebSocketInterpreter)
+        mock_db = mocker.AsyncMock(spec=DatabaseInterpreter)
+        mock_cache = mocker.AsyncMock(spec=CacheInterpreter)
+        mock_system = mocker.AsyncMock(spec=SystemInterpreter)
+        mock_metrics = mocker.AsyncMock(spec=MetricsInterpreter)
+        dummy_effect = SendText(text="no interpreter")
+        unhandled = Err(UnhandledEffectError(effect=dummy_effect, available_interpreters=["Test"]))
+        mock_ws.interpret.return_value = unhandled
+        mock_db.interpret.return_value = unhandled
+        mock_cache.interpret.return_value = unhandled
+        mock_system.interpret.return_value = unhandled
+        mock_metrics.interpret.return_value = Err(
+            UnhandledEffectError(effect=dummy_effect, available_interpreters=["MetricsInterpreter"])
+        )
+
+        interpreter = CompositeInterpreter(
+            websocket=mock_ws,
+            database=mock_db,
+            cache=mock_cache,
+            messaging=None,
+            storage=None,
+            auth=None,
+            metrics=mock_metrics,
+            system=mock_system,
+        )
+
+        result = await interpreter.interpret(dummy_effect)
+
+        match result:
+            case Err(UnhandledEffectError(effect=e, available_interpreters=available)):
+                assert e == dummy_effect
+                assert available == [
+                    "WebSocketInterpreter",
+                    "DatabaseInterpreter",
+                    "CacheInterpreter",
+                    "SystemInterpreter",
+                    "MetricsInterpreter",
+                ]
+            case _:
+                pytest.fail(f"Expected UnhandledEffectError, got {result}")
 
     @pytest.mark.asyncio()
     async def test_interpret_database_effect(self, mocker: MockerFixture) -> None:

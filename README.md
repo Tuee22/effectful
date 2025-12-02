@@ -161,13 +161,21 @@ interpreter = create_composite_interpreter(
     cache=RedisProfileCache(...),
 )
 
-# Testing: pytest-mock infrastructure
-from pytest_mock import MockerFixture
+# Testing: pytest-mock infrastructure (typed mocks, spec=Protocol)
+from unittest.mock import AsyncMock
 
-def create_test_interpreter(mocker: MockerFixture) -> CompositeInterpreter:
-    mock_repo = mocker.AsyncMock(spec=UserRepository)
-    db_interp = DatabaseInterpreter(user_repo=mock_repo)
-    return CompositeInterpreter(interpreters=[db_interp])
+mock_ws = AsyncMock(spec=WebSocketConnection)
+mock_ws.is_open.return_value = True
+mock_user_repo = AsyncMock(spec=UserRepository)
+mock_msg_repo = AsyncMock(spec=ChatMessageRepository)
+mock_cache = AsyncMock(spec=ProfileCache)
+
+test_interpreter = create_composite_interpreter(
+    websocket_connection=mock_ws,
+    user_repo=mock_user_repo,
+    message_repo=mock_msg_repo,
+    cache=mock_cache,
+)
 ```
 
 ### Result Type for Errors
@@ -336,7 +344,7 @@ async def test_example(mocker: MockerFixture):
 ### Core Doctrines
 
 - **[Testing](documents/engineering/testing.md)** - SSoT for all testing policy (22 anti-patterns)
-- **[Type Safety](documents/engineering/type-safety-enforcement.md)** - Zero-tolerance type safety
+- **[Type Safety](documents/engineering/type_safety_enforcement.md)** - Zero-tolerance type safety
 - **[Purity](documents/engineering/purity.md)** - Functional programming rules
 
 ### Architecture and Development
@@ -344,7 +352,7 @@ async def test_example(mocker: MockerFixture):
 - **[Architecture](documents/engineering/architecture.md)** - Design rationale and patterns
 - **[Docker Workflow](documents/engineering/docker_workflow.md)** - Development workflow (SSoT)
 - **[CLAUDE.md](CLAUDE.md)** - Complete development reference
-- **[Type Safety](documents/engineering/type-safety-enforcement.md)** - Eight type safety rules
+- **[Type Safety](documents/engineering/type_safety_enforcement.md)** - Eight type safety rules
 
 ## Examples
 
@@ -369,7 +377,7 @@ docker compose -f docker/docker-compose.yml up -d
 # Run tests
 docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
 
-# Type check
+# Code quality (Black + MyPy + doc link verification)
 docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
 ```
 
@@ -397,7 +405,7 @@ See [Testing](documents/engineering/testing.md) for comprehensive guide.
 All quality checks run inside Docker:
 
 ```bash
-# Type check + format (mypy --strict + black)
+# Code quality (Black + MyPy + doc link verification)
 docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
 
 # Format code
@@ -419,7 +427,7 @@ effectful/
 ├── infrastructure/     # Repository/Cache protocols
 ├── interpreters/       # WebSocket, Database, Cache interpreters
 ├── programs/           # run_ws_program runner
-└── testing/            # Fakes, fixtures, matchers
+└── testing/            # Result matchers (assert_ok, unwrap_ok, etc.)
 
 tests/
 ├── test_algebraic/     # Result, EffectReturn tests
@@ -468,7 +476,7 @@ We welcome contributions! See [CLAUDE.md](CLAUDE.md) for:
 **Key Doctrines**:
 - [Docker Workflow](documents/engineering/docker_workflow.md) - All development in Docker
 - [Testing](documents/engineering/testing.md) - Coverage and test patterns
-- [Type Safety](documents/engineering/type-safety-enforcement.md) - Eight type safety rules
+- [Type Safety](documents/engineering/type_safety_enforcement.md) - Eight type safety rules
 - [Purity](documents/engineering/purity.md) - Functional programming patterns
 
 ## License

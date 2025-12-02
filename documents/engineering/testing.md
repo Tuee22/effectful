@@ -2,6 +2,36 @@
 
 This is the Single Source of Truth (SSoT) for all testing policy in the Effectful project.
 
+## SSoT Link Map
+
+```mermaid
+flowchart TB
+  Testing[Testing SSoT]
+  TypeSafety[Type Safety SSoT]
+  Purity[Purity SSoT]
+  Docker[Docker Workflow SSoT]
+  Commands[Command Reference]
+  Docs[Documentation Standards]
+  Forbidden[Forbidden Patterns]
+
+  Testing --> TypeSafety
+  Testing --> Purity
+  Testing --> Docker
+  Testing --> Commands
+  Testing --> Docs
+  Testing --> Forbidden
+  Forbidden --> TypeSafety
+```
+
+| Need | Link |
+|------|------|
+| Type system doctrine behind matchers | [Type Safety Enforcement](type_safety_enforcement.md) |
+| Purity rules that drive test shape | [Purity](purity.md) |
+| Container + infra contract | [Docker Workflow](docker_workflow.md#development-contract) |
+| Command prefixes for pytest | [Command Reference](command_reference.md#command-table) |
+| Documentation format | [Documentation Standards](documentation_standards.md) |
+| Anti-pattern catalog | [Forbidden Patterns](forbidden_patterns.md) |
+
 ---
 
 ## Part 1: Minimal API Philosophy
@@ -3653,4 +3683,5 @@ All code changes must meet these requirements:
 
 ---
 
-**Last Updated:** 2025-11-29
+**Last Updated:** 2025-12-01
+**Referenced by:** README.md, command_reference.md, forbidden_patterns.md, documentation_standards.md

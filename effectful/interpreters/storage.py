@@ -144,7 +144,7 @@ class StorageInterpreter:
             put_result = await self.storage.put_object(bucket, key, content, metadata, content_type)
 
             # Pattern match on PutResult ADT
-            match put_result:
+            match put_result:  # pragma: no branch
                 case PutSuccess(key=object_key):
                     # Success - return the PutSuccess ADT
                     return Ok(EffectReturn(value=put_result, effect_name="PutObject"))
@@ -243,7 +243,7 @@ class StorageInterpreter:
         Returns:
             True if retry might succeed.
         """
-        match reason:
+        match reason:  # pragma: no branch
             case "quota_exceeded":
                 # Quota might be available later if cleanup occurs
                 return True

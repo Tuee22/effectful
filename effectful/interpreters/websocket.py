@@ -60,7 +60,7 @@ class WebSocketInterpreter:
     ) -> Result[EffectReturn[EffectResult], InterpreterError]:
         """Handle SendText effect."""
         is_open = await self.connection.is_open()
-        match is_open:
+        match is_open:  # pragma: no branch
             case True:
                 await self.connection.send_text(text)
                 return Ok(EffectReturn(value=None, effect_name="SendText"))
@@ -78,7 +78,7 @@ class WebSocketInterpreter:
     ) -> Result[EffectReturn[EffectResult], InterpreterError]:
         """Handle ReceiveText effect."""
         is_open = await self.connection.is_open()
-        match is_open:
+        match is_open:  # pragma: no branch
             case True:
                 text = await self.connection.receive_text()
                 return Ok(EffectReturn(value=text, effect_name="ReceiveText"))

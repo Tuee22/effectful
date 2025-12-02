@@ -11,8 +11,9 @@
 - Lint + type check: `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code`
 - Tests: `... poetry run test-unit`, `... poetry run test-integration`, or `... poetry run test-all`
 - Packaging: `... poetry build`
-- Run ad-hoc code: `... poetry run python`
-Poetry virtualenvs are disabled; always run commands through Docker with the `compose exec effectful` prefix.
+- Run ad-hoc code: `docker compose -f docker/docker-compose.yml exec effectful poetry run python`
+
+**Only Python entrypoint**: Always run Python via `docker compose ... exec effectful poetry run <cmd>`. Never call `python` or `python3` on the host; Poetry virtualenvs are disabled and host interpreters are unsupported.
 
 ## Coding Style & Naming Conventions
 - Black (line length 100) + MyPy `--strict`; zero tolerance for `Any`, `cast()`, or `# type: ignore`.

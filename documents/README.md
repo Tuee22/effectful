@@ -35,17 +35,17 @@ Project engineering practices and standards:
 
 - **[Docker Workflow](engineering/docker_workflow.md)** - All development in Docker (SSoT)
 - **[Testing](engineering/testing.md)** - Coverage requirements, 22 test anti-patterns (SSoT)
-- **[Type Safety](engineering/type-safety-enforcement.md)** - Eight type safety doctrines (SSoT)
+- **[Type Safety](engineering/type_safety_enforcement.md)** - Eight type safety doctrines (SSoT)
 - **[Architecture](engineering/architecture.md)** - 5-layer architecture, design decisions (SSoT)
 - **[Purity](engineering/purity.md)** - Pure functional programming rules (SSoT)
-- **[Purity Patterns](engineering/purity_patterns.md)** - Functional composition patterns (SSoT)
-- **[Code Quality](engineering/type-safety-enforcement.md)** - MyPy strict, Black formatting, coverage
+- **[Effect Patterns](engineering/effect_patterns.md)** - Functional composition patterns (SSoT)
+- **[Code Quality](engineering/type_safety_enforcement.md)** - MyPy strict, Black formatting, coverage
 - **[Command Reference](engineering/command_reference.md)** - All Docker commands and test execution
 - **[Development Workflow](engineering/development_workflow.md)** - Daily development loop
 - **[Configuration](engineering/configuration.md)** - Environment variables for all services
 - **[Forbidden Patterns](engineering/forbidden_patterns.md)** - Anti-patterns to avoid
 - **[Effect Patterns](engineering/effect_patterns.md)** - Real-world effect program patterns
-- **[Documentation Guidelines](engineering/documentation-standards.md)** - SSoT/DRY principles, mermaid best practices (SSoT)
+- **[Documentation Guidelines](engineering/documentation_standards.md)** - SSoT/DRY principles, mermaid best practices (SSoT)
 
 **Observability**:
 - **[Observability](engineering/observability.md)** - Metrics philosophy and cardinality management (SSoT)
@@ -140,9 +140,18 @@ interpreter = create_composite_interpreter(
     cache=real_redis_cache,
 )
 
-# Test interpreter (fakes)
-from effectful.testing import create_test_interpreter
-test_interpreter = create_test_interpreter()
+# Test interpreter (typed mocks)
+from unittest.mock import AsyncMock
+from effectful.infrastructure.websocket import WebSocketConnection
+from effectful.infrastructure.repositories import UserRepository, ChatMessageRepository
+from effectful.infrastructure.cache import ProfileCache
+
+test_interpreter = create_composite_interpreter(
+    websocket_connection=AsyncMock(spec=WebSocketConnection),
+    user_repo=AsyncMock(spec=UserRepository),
+    message_repo=AsyncMock(spec=ChatMessageRepository),
+    cache=AsyncMock(spec=ProfileCache),
+)
 
 # Run program
 result = await run_ws_program(my_program(), interpreter)
@@ -177,7 +186,7 @@ match divide(10, 2):
 - [Docker Workflow](engineering/docker_workflow.md)
 - [Architecture](engineering/architecture.md)
 - [Testing](engineering/testing.md)
-- [Type Safety](engineering/type-safety-enforcement.md)
+- [Type Safety](engineering/type_safety_enforcement.md)
 - [Purity](engineering/purity.md)
 
 ## Examples
@@ -199,33 +208,37 @@ effectful enforces **strict type safety**:
 - Zero `# type: ignore` comments
 - 100% `mypy --strict` compliance
 
-See [Type Safety](engineering/type-safety-enforcement.md) for type safety guidelines.
+See [Type Safety](engineering/type_safety_enforcement.md) for type safety guidelines.
 
 ## Testing
 
 All programs can be tested without real infrastructure:
 
 ```python
-from effectful.testing import (
-    create_test_interpreter,
-    FakeUserRepository,
-    assert_ok,
-    unwrap_ok,
-)
+from unittest.mock import AsyncMock
+from effectful.infrastructure.cache import ProfileCache
+from effectful.infrastructure.repositories import UserRepository, ChatMessageRepository
+from effectful.infrastructure.websocket import WebSocketConnection
+from effectful.interpreters.composite import create_composite_interpreter
+from effectful.testing import assert_ok, unwrap_ok
 
 @pytest.mark.asyncio
 async def test_my_program():
-    # Setup fakes
-    fake_repo = FakeUserRepository()
-    fake_repo._users[user_id] = User(...)
+    mock_ws = AsyncMock(spec=WebSocketConnection)
+    mock_ws.is_open.return_value = True
+    mock_user_repo = AsyncMock(spec=UserRepository)
+    mock_msg_repo = AsyncMock(spec=ChatMessageRepository)
+    mock_cache = AsyncMock(spec=ProfileCache)
 
-    # Create test interpreter
-    interpreter = create_test_interpreter(user_repo=fake_repo)
+    interpreter = create_composite_interpreter(
+        websocket_connection=mock_ws,
+        user_repo=mock_user_repo,
+        message_repo=mock_msg_repo,
+        cache=mock_cache,
+    )
 
-    # Run program
     result = await run_ws_program(my_program(), interpreter)
 
-    # Assert
     value = unwrap_ok(result)
     assert value == "expected"
 ```

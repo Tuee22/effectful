@@ -8,7 +8,9 @@ Run:
 
 import asyncio
 from collections.abc import Generator
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
+from unittest.mock import AsyncMock
 
 from effectful import (
     AllEffects,
@@ -22,85 +24,75 @@ from effectful import (
     run_ws_program,
 )
 from effectful.algebraic.result import Err, Ok
-from effectful.testing import FakeUserRepository, create_test_interpreter
+from effectful.infrastructure.cache import ProfileCache
+from effectful.infrastructure.repositories import ChatMessageRepository, UserRepository
+from effectful.infrastructure.websocket import WebSocketConnection
+from effectful.interpreters.composite import create_composite_interpreter
 
 
 def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
-    """Look up user and send personalized greeting.
-
-    Args:
-        user_id: User to greet
-
-    Yields:
-        GetUserById, SendText, SaveChatMessage effects
-
-    Returns:
-        Status message ("success" | "not_found")
-    """
-    # Look up user
+    """Look up user and send personalized greeting."""
     user_result = yield GetUserById(user_id=user_id)
 
-    # Pattern match on result
     match user_result:
         case UserNotFound():
-            # User not found
             yield SendText(text="Error: User not found")
             return "not_found"
 
         case User(name=name):
-            # User found - send greeting
             greeting = f"Hello {name}!"
             yield SendText(text=greeting)
 
-            # Save greeting as chat message
             message = yield SaveChatMessage(user_id=user_id, text=greeting)
-
-            # Type narrowing
             assert isinstance(message, ChatMessage)
 
-            # Confirm save
             yield SendText(text=f"Message saved with ID: {message.id}")
-
             return "success"
 
         case _:
-            # All expected cases handled above - this is defensive
             return "error"
 
 
 async def main() -> None:
     """Run the user greeting program."""
-    # Setup test data
-    fake_repo = FakeUserRepository()
     user_id = uuid4()
-    fake_repo._users[user_id] = User(id=user_id, email="alice@example.com", name="Alice")
 
-    # Create interpreter with fake repository
-    interpreter = create_test_interpreter(user_repo=fake_repo)
+    # Typed AsyncMocks for infrastructure (spec=Protocol per testing doctrine)
+    ws = AsyncMock(spec=WebSocketConnection)
+    ws.is_open.return_value = True
+
+    user_repo = AsyncMock(spec=UserRepository)
+    user_repo.get_by_id.return_value = User(id=user_id, email="alice@example.com", name="Alice")
+
+    message_repo = AsyncMock(spec=ChatMessageRepository)
+    message_repo.save_message.return_value = ChatMessage(
+        id=uuid4(),
+        user_id=user_id,
+        text="Hello Alice!",
+        created_at=datetime.now(UTC),
+    )
+
+    cache = AsyncMock(spec=ProfileCache)
+
+    interpreter = create_composite_interpreter(
+        websocket_connection=ws,
+        user_repo=user_repo,
+        message_repo=message_repo,
+        cache=cache,
+    )
 
     print(f"Running greet_user program for user {user_id}...")
-
-    # Run program
     result = await run_ws_program(greet_user(user_id), interpreter)
 
-    # Handle result
     match result:
         case Ok(value):
             print(f"✓ Success: {value}")
-
-            # Show sent messages
-            websocket = interpreter._websocket._connection
-            print("\nMessages sent:")
-            _ = [
-                print(f"  {i}. {msg}")
-                for i, msg in enumerate(websocket._sent_messages, 1)
-            ]
-
-            # Show saved messages
-            message_repo = interpreter._database._message_repo
-            print(f"\nMessages saved: {len(message_repo._messages)}")
-            _ = [print(f"  - {msg.text} (ID: {msg.id})") for msg in message_repo._messages]
-
+            print(f"WebSocket send_text calls: {ws.send_text.call_count}")
+            print("Messages sent:")
+            for i, call in enumerate(ws.send_text.call_args_list, 1):
+                print(f"  {i}. {call.args[0]}")
+            print("Database get_by_id called with:", user_repo.get_by_id.call_args)
+            print("Saved message ID:", message_repo.save_message.return_value.id)
         case Err(error):
             print(f"✗ Error: {error}")
 

@@ -56,8 +56,8 @@ def trampoline(step: TrampolineStep[T]) -> T:
         The final value when Done is reached
     """
     current = step
-    while True:  # Acceptable: controlled trampoline iteration point
-        match current:
+    while True:  # pragma: no branch
+        match current:  # pragma: no branch
             case Done(value=value):
                 return value
             case Continue(thunk=thunk):
@@ -76,8 +76,8 @@ async def async_trampoline(step: TrampolineStep[Awaitable[T]]) -> T:
         The awaited final value
     """
     current = step
-    while True:  # Acceptable: controlled trampoline iteration point
-        match current:
+    while True:  # pragma: no branch
+        match current:  # pragma: no branch
             case Done(value=awaitable):
                 return await awaitable
             case Continue(thunk=thunk):

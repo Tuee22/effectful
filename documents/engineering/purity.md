@@ -2,6 +2,34 @@
 
 > **Single Source of Truth (SSoT)** for all purity practices in Effectful.
 
+## SSoT Link Map
+
+```mermaid
+flowchart TB
+  Purity[Purity SSoT]
+  TypeSafety[Type Safety SSoT]
+  Architecture[Architecture SSoT]
+  Testing[Testing SSoT]
+  Effects[Effect Patterns]
+  Forbidden[Forbidden Patterns]
+
+  Purity --> TypeSafety
+  Purity --> Architecture
+  Purity --> Testing
+  Purity --> Effects
+  Purity --> Forbidden
+  Effects --> Architecture
+  Forbidden --> Testing
+```
+
+| Need | Link |
+|------|------|
+| Type doctrine backing purity | [Type Safety Enforcement](type_safety_enforcement.md) |
+| Where purity sits in layers | [Architecture](architecture.md#5-layer-architecture) |
+| How to validate purity | [Testing](testing.md#part-4-four-layer-testing-architecture) |
+| Canonical program patterns | [Effect Patterns](effect_patterns.md) |
+| Anti-patterns index | [Forbidden Patterns](forbidden_patterns.md) |
+
 ## Overview
 
 **Programs are pure descriptions; interpreters are impure executors.**
@@ -79,17 +107,16 @@ result = trampoline(step(1024, ()))
 
 **Why**: Loops encourage mutation. Expressions and trampolines enforce immutability and make control flow explicit.
 
-#### Critical Policy - Single Exception
+#### Critical Policy - Narrow Exceptions
 
-The ONLY acceptable while-loop in the entire codebase is the `while True` in the trampoline driver (`effectful/algebraic/trampoline.py`). This exception exists because:
+While-loops are banned except for **two** tightly-controlled drivers:
 
-1. Python lacks tail-call optimization
-2. The trampoline pattern requires a controlled iteration point
-3. The while-loop is isolated to a single function with well-defined semantics
+1. `effectful/algebraic/trampoline.py` – Trampoline driver required because Python lacks TCO.
+2. `effectful/programs/runners.py` – Program runner loop required to drive async effect interpretation; the loop is the execution engine and mirrors the trampoline rationale.
 
 **Zero tolerance for all other loops**:
 - ❌ No for-loops anywhere (use comprehensions)
-- ❌ No while-loops anywhere except trampoline driver
+- ❌ No while-loops anywhere outside the two drivers above
 - ✅ List/dict/set comprehensions are ACCEPTABLE and preferred
 - ✅ Trampoline pattern for recursive algorithms
 
@@ -1287,19 +1314,36 @@ Purity is enforced by architecture: programs in `effects/` and `domain/` cannot 
 
 Some controlled impurity is acceptable at specific boundaries:
 
-### 1. Trampoline While-Loop
+### 1. Program Execution Drivers (while-loops)
 
-**The ONLY acceptable while-loop in the entire codebase.** Located in `effectful/algebraic/trampoline.py`.
+**The ONLY acceptable while-loops in the entire codebase.**
+
+- `effectful/algebraic/trampoline.py` — Trampoline driver; required because Python lacks tail-call optimization.
+- `effectful/programs/runners.py` — Program runner; required to drive async effect interpretation with fail-fast semantics.
 
 ```python
 def trampoline(step: TrampolineStep[T]) -> T:
     current = step
-    while True:  # The ONLY acceptable while-loop
+    while True:  # Controlled driver loop (trampoline)
         match current:
             case Done(value):
                 return value
             case Continue(thunk):
                 current = thunk()
+
+# Program runner loop (effect execution engine)
+async def run_ws_program(
+    program: Generator[AllEffects, EffectResult, T],
+    interpreter: EffectInterpreter,
+) -> Result[T, InterpreterError]:
+    effect = next(program)
+    while True:  # Controlled driver loop (program runner)
+        result = await interpreter.interpret(effect)
+        match result:
+            case Ok(EffectReturn(value=value, effect_name=_)):
+                effect = program.send(value)
+            case Err(error):
+                return Err(error)
 ```
 
 This exception exists because:
@@ -1399,7 +1443,7 @@ When refactoring existing code to pure patterns:
 
 ---
 
-**Last Updated**: 2025-11-30
+**Last Updated**: 2025-12-01
 **Referenced by**:
   - CLAUDE.md
   - README.md

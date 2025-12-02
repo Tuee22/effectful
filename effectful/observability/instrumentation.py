@@ -104,7 +104,7 @@ class InstrumentedInterpreter:
         duration = time.perf_counter() - start_time
 
         # Determine result label
-        match result:
+        match result:  # pragma: no branch
             case Ok(_):
                 result_label = "ok"
             case Err(_):

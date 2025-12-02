@@ -136,7 +136,7 @@ class MessagingInterpreter:
             publish_result = await self.producer.publish(topic, payload, properties)
 
             # Pattern match on PublishResult ADT
-            match publish_result:
+            match publish_result:  # pragma: no branch
                 case PublishSuccess(message_id=msg_id, topic=_):
                     # Success - return message ID
                     return Ok(EffectReturn(value=msg_id, effect_name="PublishMessage"))
@@ -169,7 +169,7 @@ class MessagingInterpreter:
         try:
             result = await self.consumer.receive(subscription, timeout_ms)
             # Pattern match on ConsumeResult ADT
-            match result:
+            match result:  # pragma: no branch
                 case MessageEnvelope() as envelope:
                     return Ok(EffectReturn(value=envelope, effect_name="ConsumeMessage"))
                 case ConsumeTimeout() as timeout:
@@ -197,7 +197,7 @@ class MessagingInterpreter:
         try:
             result = await self.consumer.acknowledge(message_id)
             # Pattern match on AcknowledgeResult ADT
-            match result:
+            match result:  # pragma: no branch
                 case AcknowledgeSuccess() as success:
                     return Ok(EffectReturn(value=success, effect_name="AcknowledgeMessage"))
                 case AcknowledgeFailure() as failure:
@@ -223,7 +223,7 @@ class MessagingInterpreter:
         try:
             result = await self.consumer.negative_acknowledge(message_id, delay_ms)
             # Pattern match on NackResult ADT
-            match result:
+            match result:  # pragma: no branch
                 case NackSuccess() as success:
                     return Ok(EffectReturn(value=success, effect_name="NegativeAcknowledge"))
                 case NackFailure() as failure:

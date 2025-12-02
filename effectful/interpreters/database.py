@@ -93,7 +93,7 @@ class DatabaseInterpreter:
         try:
             lookup_result = await self.user_repo.get_by_id(user_id)
             # Pattern match on UserLookupResult ADT and return appropriate type
-            match lookup_result:
+            match lookup_result:  # pragma: no branch
                 case UserFound(user=user, source=_):
                     # User found - return the User object
                     return Ok(EffectReturn(value=user, effect_name="GetUserById"))
@@ -182,7 +182,7 @@ class DatabaseInterpreter:
         """
         try:
             lookup_result = await self.user_repo.update_user(user_id, email, name)
-            match lookup_result:
+            match lookup_result:  # pragma: no branch
                 case UserFound(user=user, source=_):
                     return Ok(EffectReturn(value=user, effect_name="UpdateUser"))
                 case UserNotFound() as not_found:

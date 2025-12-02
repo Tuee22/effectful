@@ -178,6 +178,12 @@ def test_validate_metric_name_valid_histogram() -> None:
     assert result == Ok(None)
 
 
+def test_validate_metric_name_histogram_without_unit_returns_ok() -> None:
+    """Histogram without unit suffix still returns Ok (warning path)."""
+    result = validate_metric_name("custom_histogram", "histogram")
+    assert result == Ok(None)
+
+
 def test_validate_metric_name_invalid_pattern() -> None:
     """Invalid characters in metric name fail validation."""
     # Uppercase not allowed

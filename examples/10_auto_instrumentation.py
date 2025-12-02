@@ -18,12 +18,15 @@ SSoT References:
 import asyncio
 from collections.abc import Generator
 from uuid import UUID, uuid4
+from unittest.mock import AsyncMock
 
 from effectful.adapters.in_memory_metrics import InMemoryMetricsCollector
 from effectful.domain.user import User
 from effectful.effects.database import GetUserById
 from effectful.effects.system import GetCurrentTime
 from effectful.effects.websocket import SendText
+from effectful.infrastructure.repositories import UserRepository
+from effectful.infrastructure.websocket import WebSocketConnection
 from effectful.interpreters.composite import CompositeInterpreter
 from effectful.interpreters.database import DatabaseInterpreter
 from effectful.interpreters.system import SystemInterpreter
@@ -33,8 +36,6 @@ from effectful.observability.instrumentation import create_instrumented_interpre
 from effectful.programs.program_types import AllEffects, EffectResult
 from effectful.programs.runners import run_program
 from effectful.testing import unwrap_ok
-from effectful.testing.fake_db import FakeUserRepository
-from effectful.testing.fake_websocket import FakeWebSocketConnection
 
 
 # === Effect Programs ===
@@ -75,14 +76,16 @@ async def main() -> None:
     # Setup test data
     test_user_id = uuid4()
     test_user = User(id=test_user_id, email="alice@example.com", name="Alice")
-    fake_repo = FakeUserRepository()
-    fake_repo.add_user(test_user)
-    fake_ws = FakeWebSocketConnection()
+    user_repo = AsyncMock(spec=UserRepository)
+    user_repo.get_by_id.return_value = test_user
+
+    ws = AsyncMock(spec=WebSocketConnection)
+    ws.is_open.return_value = True
 
     # Create base interpreters
-    db_interp = DatabaseInterpreter(user_repo=fake_repo)
+    db_interp = DatabaseInterpreter(user_repo=user_repo)
     system_interp = SystemInterpreter()
-    ws_interp = WebSocketInterpreter(websocket=fake_ws)
+    ws_interp = WebSocketInterpreter(websocket=ws)
 
     # === Part 1: WITHOUT Instrumentation ===
     print("=" * 60)

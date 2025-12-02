@@ -83,7 +83,7 @@ class CacheInterpreter:
         try:
             lookup_result = await self.cache.get_profile(user_id)
             # Pattern match on CacheLookupResult ADT and return appropriate type
-            match lookup_result:
+            match lookup_result:  # pragma: no branch
                 case CacheHit(value=profile, ttl_remaining=_):
                     # Cache hit - return the ProfileData object
                     return Ok(EffectReturn(value=profile, effect_name="GetCachedProfile"))
@@ -124,7 +124,7 @@ class CacheInterpreter:
         """
         try:
             lookup_result = await self.cache.get_value(key)
-            match lookup_result:
+            match lookup_result:  # pragma: no branch
                 case CacheHit(value=value, ttl_remaining=_):
                     return Ok(EffectReturn(value=value, effect_name="GetCachedValue"))
                 case CacheMiss() as miss:

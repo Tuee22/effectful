@@ -9,6 +9,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from pytest_mock import MockerFixture
+import asyncpg
 
 from effectful.adapters.postgres import (
     PostgresChatMessageRepository,
@@ -26,7 +27,7 @@ class TestPostgresUserRepository:
         """Test successful user lookup returns UserFound."""
         # Setup
         user_id = uuid4()
-        mock_conn = mocker.AsyncMock()
+        mock_conn = mocker.AsyncMock(spec=asyncpg.Connection)
         mock_row = {
             "id": user_id,
             "email": "test@example.com",
@@ -59,7 +60,7 @@ class TestPostgresUserRepository:
         """Test user lookup returns UserNotFound when user doesn't exist."""
         # Setup
         user_id = uuid4()
-        mock_conn = mocker.AsyncMock()
+        mock_conn = mocker.AsyncMock(spec=asyncpg.Connection)
         mock_conn.fetchrow.return_value = None
 
         repo = PostgresUserRepository(mock_conn)
@@ -77,7 +78,7 @@ class TestPostgresUserRepository:
         """Test that invalid row types raise RuntimeError."""
         # Setup
         user_id = uuid4()
-        mock_conn = mocker.AsyncMock()
+        mock_conn = mocker.AsyncMock(spec=asyncpg.Connection)
         mock_row = {
             "id": "not-a-uuid",  # Invalid type
             "email": "test@example.com",
@@ -96,7 +97,7 @@ class TestPostgresUserRepository:
         """Test that invalid email type raises RuntimeError."""
         # Setup
         user_id = uuid4()
-        mock_conn = mocker.AsyncMock()
+        mock_conn = mocker.AsyncMock(spec=asyncpg.Connection)
         mock_row = {
             "id": user_id,
             "email": 123,  # Invalid type
@@ -115,7 +116,7 @@ class TestPostgresUserRepository:
         """Test that invalid name type raises RuntimeError."""
         # Setup
         user_id = uuid4()
-        mock_conn = mocker.AsyncMock()
+        mock_conn = mocker.AsyncMock(spec=asyncpg.Connection)
         mock_row = {
             "id": user_id,
             "email": "test@example.com",
@@ -142,7 +143,7 @@ class TestPostgresChatMessageRepository:
         created_at = datetime.now(UTC)
         text = "Hello, World!"
 
-        mock_conn = mocker.AsyncMock()
+        mock_conn = mocker.AsyncMock(spec=asyncpg.Connection)
         mock_row = {
             "id": message_id,
             "user_id": user_id,
@@ -174,7 +175,7 @@ class TestPostgresChatMessageRepository:
         """Test that missing RETURNING row raises RuntimeError."""
         # Setup
         user_id = uuid4()
-        mock_conn = mocker.AsyncMock()
+        mock_conn = mocker.AsyncMock(spec=asyncpg.Connection)
         mock_conn.fetchrow.return_value = None
 
         repo = PostgresChatMessageRepository(mock_conn)
@@ -188,7 +189,7 @@ class TestPostgresChatMessageRepository:
         """Test that invalid id type in result raises RuntimeError."""
         # Setup
         user_id = uuid4()
-        mock_conn = mocker.AsyncMock()
+        mock_conn = mocker.AsyncMock(spec=asyncpg.Connection)
         mock_row = {
             "id": "not-uuid",
             "user_id": user_id,
@@ -213,7 +214,7 @@ class TestPostgresChatMessageRepository:
         created_at1 = datetime.now(UTC)
         created_at2 = datetime.now(UTC)
 
-        mock_conn = mocker.AsyncMock()
+        mock_conn = mocker.AsyncMock(spec=asyncpg.Connection)
         mock_rows = [
             {
                 "id": msg1_id,
@@ -255,7 +256,7 @@ class TestPostgresChatMessageRepository:
         """Test listing messages for user with no messages returns empty list."""
         # Setup
         user_id = uuid4()
-        mock_conn = mocker.AsyncMock()
+        mock_conn = mocker.AsyncMock(spec=asyncpg.Connection)
         mock_conn.fetch.return_value = []
 
         repo = PostgresChatMessageRepository(mock_conn)
@@ -274,7 +275,7 @@ class TestPostgresChatMessageRepository:
         msg_id = uuid4()
         created_at = datetime.now(UTC)
 
-        mock_conn = mocker.AsyncMock()
+        mock_conn = mocker.AsyncMock(spec=asyncpg.Connection)
         mock_rows = [
             {
                 "id": "invalid",  # Invalid UUID

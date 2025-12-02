@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Code quality checker: Black (formatter) → MyPy (strict type checker).
+"""Code quality checker: Black (formatter) → MyPy (strict type checker) → link verification.
 
-This script runs formatting and type checking in sequence with fail-fast behavior.
-All checks must pass (exit code 0) for the script to succeed.
+This script runs formatting, type checking, and documentation link verification in sequence
+with fail-fast behavior. All checks must pass (exit code 0) for the script to succeed.
 
 Execution order:
 1. Black: Code formatting (auto-formats)
 2. MyPy --strict: Type checking with zero tolerance for type safety violations
+3. Link verification: `tools/verify_links.py` over all markdown content
 
 Usage:
     poetry run check-code
@@ -15,16 +16,21 @@ Usage:
 
 import subprocess
 import sys
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parent.parent
+TOOLS_DIR = ROOT / "tools"
 
 
 def main() -> int:
-    """Run Black formatting and MyPy strict type checking.
+    """Run Black formatting, MyPy strict type checking, and link verification.
 
     Returns:
         int: Exit code (0 for success, non-zero for failure)
     """
     print("=" * 80)
-    print("STEP 1/2: Black code formatting")
+    print("STEP 1/3: Black code formatting")
     print("=" * 80)
 
     black_result = subprocess.run(
@@ -39,7 +45,7 @@ def main() -> int:
 
     print("\n✅ Black passed!")
     print("\n" + "=" * 80)
-    print("STEP 2/2: MyPy strict type checking")
+    print("STEP 2/3: MyPy strict type checking")
     print("=" * 80)
 
     mypy_result = subprocess.run(
@@ -54,7 +60,21 @@ def main() -> int:
 
     print("\n✅ MyPy passed!")
     print("\n" + "=" * 80)
-    print("✅ ALL CHECKS PASSED!")
+    print("STEP 3/3: Documentation link verification")
+    print("=" * 80)
+
+    verify_script = TOOLS_DIR / "verify_links.py"
+    verify_result = subprocess.run(
+        [sys.executable, str(verify_script)],
+        check=False,
+    )
+
+    if verify_result.returncode != 0:
+        print("\n❌ Link verification failed! Fix documentation links before proceeding.")
+        print("=" * 80)
+        return verify_result.returncode
+
+    print("\n✅ ALL CHECKS PASSED!")
     print("=" * 80)
 
     return 0

@@ -21,11 +21,12 @@ from effectful.domain.message import ChatMessage
 from effectful.domain.user import User, UserFound, UserNotFound
 from effectful.effects.database import GetUserById, SaveChatMessage
 from effectful.effects.websocket import Close, CloseNormal, SendText
+from effectful.interpreters.base import EffectInterpreter
 from effectful.infrastructure.cache import ProfileCache
 from effectful.infrastructure.repositories import ChatMessageRepository, UserRepository
 from effectful.infrastructure.websocket import WebSocketConnection
 from effectful.interpreters.composite import create_composite_interpreter
-from effectful.interpreters.errors import DatabaseError, WebSocketClosedError
+from effectful.interpreters.errors import DatabaseError, UnhandledEffectError, WebSocketClosedError
 from effectful.programs.program_types import AllEffects, EffectResult
 from effectful.programs.runners import run_ws_program
 
@@ -113,6 +114,27 @@ class TestRunWSProgramSuccess:
                 mock_ws.close.assert_called_once()
             case Err(error):
                 pytest.fail(f"Expected Ok('completed'), got Err({error})")
+
+    @pytest.mark.asyncio()
+    async def test_program_stops_on_interpreter_error(self, mocker: MockerFixture) -> None:
+        """run_ws_program should return Err immediately when interpreter fails."""
+        mock_interpreter = mocker.AsyncMock(spec=EffectInterpreter)
+        effect = SendText(text="fails immediately")
+        mock_interpreter.interpret.return_value = Err(
+            UnhandledEffectError(effect=effect, available_interpreters=["TestInterpreter"])
+        )
+
+        def failing_program() -> Generator[AllEffects, EffectResult, None]:
+            yield effect
+            return None
+
+        result = await run_ws_program(failing_program(), mock_interpreter)
+
+        match result:
+            case Err(UnhandledEffectError(effect=e, available_interpreters=["TestInterpreter"])):
+                assert e == effect
+            case _:
+                pytest.fail(f"Expected Err(UnhandledEffectError), got {result}")
 
     @pytest.mark.asyncio()
     async def test_program_receives_effect_results(self, mocker: MockerFixture) -> None:

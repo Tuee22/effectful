@@ -2,6 +2,53 @@
 
 > **SSoT** for all Docker commands, test execution patterns, and output management in effectful.
 
+## SSoT Link Map
+
+```mermaid
+flowchart TB
+  Commands[Command Reference SSoT]
+  Docker[Docker Workflow SSoT]
+  Testing[Testing SSoT]
+  Docs[Documentation Standards]
+  DevWorkflow[Development Workflow]
+
+  Commands --> Docker
+  Commands --> Testing
+  Commands --> DevWorkflow
+  Commands --> Docs
+  Testing --> Docs
+```
+
+| Need | Link |
+|------|------|
+| Docker contract | [Docker Workflow](docker_workflow.md#development-contract) |
+| Which tests to run | [Testing](testing.md#running-tests) |
+| Daily development loop | [Development Workflow](development_workflow.md) |
+| Formatting + linking rules | [Documentation Standards](documentation_standards.md) |
+
+## Command Map (Mermaid)
+
+```mermaid
+flowchart TB
+  Start[Developer CLI]
+  Compose[compose exec effectful]
+  Poetry[poetry run task]
+  Check[check-code]
+  TestAll[test-all]
+  TestUnit[test-unit]
+  TestIntegration[test-integration]
+  PythonShell[python]
+  Build[poetry build]
+
+  Start --> Compose --> Poetry
+  Poetry --> Check
+  Poetry --> TestAll
+  Poetry --> TestUnit
+  Poetry --> TestIntegration
+  Poetry --> PythonShell
+  Poetry --> Build
+```
+
 ## Docker Command Prefix
 
 **All commands run inside Docker**: `docker compose -f docker/docker-compose.yml exec effectful poetry run <command>`
@@ -27,7 +74,7 @@ See [Docker Workflow](docker_workflow.md) for complete policy.
 
 **Defined in pyproject.toml `[tool.poetry.scripts]`**:
 
-- `check-code` - Black formatter + MyPy strict type checking
+- `check-code` - Black formatter + MyPy strict type checking + documentation link verification (`tools/verify_links.py`)
 - `test-unit` - Unit tests only (pytest-mock, no I/O)
 - `test-integration` - Integration tests (real PostgreSQL, Redis, MinIO, Pulsar)
 - `test-all` - Complete test suite
@@ -96,5 +143,5 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest > /
 
 ---
 
-**Last Updated**: 2025-11-29
+**Last Updated**: 2025-12-01
 **Referenced by**: CLAUDE.md, development_workflow.md

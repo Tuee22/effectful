@@ -9,6 +9,7 @@ Run:
 import asyncio
 from collections.abc import Generator
 from uuid import UUID, uuid4
+from unittest.mock import AsyncMock
 
 from effectful import (
     AllEffects,
@@ -24,11 +25,11 @@ from effectful import (
     run_ws_program,
 )
 from effectful.algebraic.result import Err, Ok
-from effectful.testing import (
-    FakeProfileCache,
-    FakeUserRepository,
-    create_test_interpreter,
-)
+from effectful.domain.cache_result import CacheHit
+from effectful.infrastructure.cache import ProfileCache
+from effectful.infrastructure.repositories import ChatMessageRepository, UserRepository
+from effectful.infrastructure.websocket import WebSocketConnection
+from effectful.interpreters.composite import create_composite_interpreter
 
 
 def get_profile_with_caching(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
@@ -92,15 +93,39 @@ def get_profile_with_caching(user_id: UUID) -> Generator[AllEffects, EffectResul
 
 async def main() -> None:
     """Run the caching workflow program."""
-    # Setup test data
-    fake_repo = FakeUserRepository()
-    fake_cache = FakeProfileCache()
     user_id = uuid4()
 
-    fake_repo._users[user_id] = User(id=user_id, email="bob@example.com", name="Bob")
+    # Typed AsyncMocks for infrastructure with simple in-memory behavior
+    ws = AsyncMock(spec=WebSocketConnection)
+    ws.is_open.return_value = True
 
-    # Create interpreter
-    interpreter = create_test_interpreter(user_repo=fake_repo, cache=fake_cache)
+    cache_store: dict[UUID, ProfileData] = {}
+
+    async def get_profile(uid: UUID) -> CacheHit | CacheMiss:
+        if uid in cache_store:
+            return CacheHit(value=cache_store[uid], ttl_remaining=300)
+        return CacheMiss(key=f"profile:{uid}", reason="not_found")
+
+    async def put_profile(uid: UUID, profile: ProfileData, ttl_seconds: int) -> None:
+        _ = ttl_seconds  # not used for demo
+        cache_store[uid] = profile
+
+    cache = AsyncMock(spec=ProfileCache)
+    cache.get_profile.side_effect = get_profile
+    cache.put_profile.side_effect = put_profile
+
+    user_repo = AsyncMock(spec=UserRepository)
+    user_repo.get_by_id.return_value = User(id=user_id, email="bob@example.com", name="Bob")
+
+    message_repo = AsyncMock(spec=ChatMessageRepository)
+    message_repo.save_message.return_value = None
+
+    interpreter = create_composite_interpreter(
+        websocket_connection=ws,
+        user_repo=user_repo,
+        message_repo=message_repo,
+        cache=cache,
+    )
 
     print(f"Running caching workflow for user {user_id}...\n")
 
@@ -111,13 +136,16 @@ async def main() -> None:
     match result1:
         case Ok(value):
             print(f"✓ Result: {value}")
-            websocket = interpreter._websocket._connection
-            _ = [print(f"  → {msg}") for msg in websocket._sent_messages]
+            print("  WebSocket send_text calls:")
+            _ = [
+                print(f"    → {call.args[0]}")
+                for call in ws.send_text.call_args_list
+            ]
         case Err(error):
             print(f"✗ Error: {error}")
 
     # Clear WebSocket messages for next request
-    interpreter._websocket._connection._sent_messages.clear()
+    ws.send_text.reset_mock()
 
     # Second request (cache hit)
     print("\n=== Second Request (expect cache hit) ===")
@@ -126,18 +154,18 @@ async def main() -> None:
     match result2:
         case Ok(value):
             print(f"✓ Result: {value}")
-            websocket = interpreter._websocket._connection
-            _ = [print(f"  → {msg}") for msg in websocket._sent_messages]
+            print("  WebSocket send_text calls:")
+            _ = [
+                print(f"    → {call.args[0]}")
+                for call in ws.send_text.call_args_list
+            ]
         case Err(error):
             print(f"✗ Error: {error}")
 
     # Show cache state
     print("\n=== Cache State ===")
-    print(f"Cached profiles: {len(fake_cache._cache)}")
-    _ = [
-        print(f"  - {uid}: {profile.name} ({profile.email})")
-        for uid, profile in fake_cache._cache.items()
-    ]
+    print(f"Cached profiles: {len(cache_store)}")
+    _ = [print(f"  - {uid}: {profile.name} ({profile.email})") for uid, profile in cache_store.items()]
 
 
 if __name__ == "__main__":
