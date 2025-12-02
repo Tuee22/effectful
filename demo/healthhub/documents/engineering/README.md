@@ -155,6 +155,17 @@ All overlays in this folder inherit the base engineering SSoTs by filename; each
 - Extends base [documentation_standards.md](../../../../documents/documentation_standards.md) — base rules apply; this doc adds accessibility/alt-text reminders and PHI-free diagrams.
 - Use this when documenting HealthHub and needing demo-specific reminders on top of the base standards.
 
+**Build Artifact Management** (base SSoT)
+- Read [../../../../documents/engineering/build_artifact_management.md](../../../../documents/engineering/build_artifact_management.md) for artifact/versioning rules (lockfiles treated as artifacts, container-only `/opt/**` outputs).
+- HealthHub follows the same doctrine: lockfiles are ignored, and build outputs stay inside containers.
+
+### Authentication State Machine Overlay
+
+- Access token lives **only in memory**; refresh token is **HttpOnly cookie** managed by the backend.
+- Missing or expired access tokens trigger a refresh attempt; only a confirmed refresh denial clears tokens and returns to the unauthenticated state.
+- Refresh calls must include `credentials: include`; access tokens are short-lived (15 minutes) and renewed on refresh.
+- Frontend states include `Hydrating → (Authenticated | Unauthenticated)`, with a `Refreshing` hop for refresh attempts and `RefreshDenied` prior to returning to `Unauthenticated`.
+
 ---
 
 ## Relationship to Other Tiers

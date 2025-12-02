@@ -4,6 +4,7 @@ Effect programs for lab result processing and notifications.
 """
 
 from collections.abc import Generator
+from dataclasses import dataclass
 from uuid import UUID
 
 from app.domain.doctor import Doctor
@@ -23,6 +24,49 @@ from app.effects.notification import (
 from app.interpreters.composite_interpreter import AllEffects
 
 
+@dataclass(frozen=True)
+class LabResultProcessed:
+    """Lab result stored successfully."""
+
+    lab_result: LabResult
+
+
+@dataclass(frozen=True)
+class LabResultPatientMissing:
+    """Patient not found for lab result."""
+
+    patient_id: UUID
+
+
+@dataclass(frozen=True)
+class LabResultDoctorMissing:
+    """Doctor not found for lab result."""
+
+    doctor_id: UUID
+
+
+type ProcessLabResultResult = (
+    LabResultProcessed | LabResultPatientMissing | LabResultDoctorMissing
+)
+
+
+@dataclass(frozen=True)
+class LabResultViewed:
+    """Lab result fetched successfully."""
+
+    lab_result: LabResult
+
+
+@dataclass(frozen=True)
+class LabResultMissing:
+    """Lab result not found."""
+
+    result_id: UUID
+
+
+type ViewLabResultResult = LabResultViewed | LabResultMissing
+
+
 def process_lab_result_program(
     result_id: UUID,
     patient_id: UUID,
@@ -31,7 +75,7 @@ def process_lab_result_program(
     result_data: dict[str, str],
     critical: bool,
     actor_id: UUID,
-) -> Generator[AllEffects, object, LabResult | str]:
+) -> Generator[AllEffects, object, ProcessLabResultResult]:
     """Process lab result with notifications.
 
     Steps:
@@ -57,12 +101,12 @@ def process_lab_result_program(
     # Step 1: Verify patient exists
     patient = yield GetPatientById(patient_id=patient_id)
     if not isinstance(patient, Patient):
-        return f"Patient {patient_id} not found"
+        return LabResultPatientMissing(patient_id=patient_id)
 
     # Step 2: Verify doctor exists
     doctor = yield GetDoctorById(doctor_id=doctor_id)
     if not isinstance(doctor, Doctor):
-        return f"Doctor {doctor_id} not found"
+        return LabResultDoctorMissing(doctor_id=doctor_id)
 
     # Step 3: Store lab result
     lab_result = yield CreateLabResult(
@@ -80,9 +124,7 @@ def process_lab_result_program(
     patient_message: dict[str, NotificationValue] = {
         "type": "lab_result_available",
         "result_id": str(result_id),
-        "test_type": test_type,
         "critical": critical,
-        "doctor_name": f"{doctor.first_name} {doctor.last_name}",
     }
 
     patient_channel = f"patient:{patient_id}:notifications"
@@ -97,8 +139,6 @@ def process_lab_result_program(
         doctor_message: dict[str, NotificationValue] = {
             "type": "critical_lab_result",
             "result_id": str(result_id),
-            "patient_name": f"{patient.first_name} {patient.last_name}",
-            "test_type": test_type,
             "urgency": "immediate_attention_required",
         }
 
@@ -120,17 +160,16 @@ def process_lab_result_program(
         metadata={
             "patient_id": str(patient_id),
             "doctor_id": str(doctor_id),
-            "test_type": test_type,
             "critical": str(critical),
         },
     )
 
-    return lab_result
+    return LabResultProcessed(lab_result=lab_result)
 
 
 def view_lab_result_program(
     result_id: UUID, actor_id: UUID
-) -> Generator[AllEffects, object, LabResult | None]:
+) -> Generator[AllEffects, object, ViewLabResultResult]:
     """View lab result with audit logging.
 
     Steps:
@@ -158,8 +197,8 @@ def view_lab_result_program(
             user_agent=None,
             metadata={
                 "patient_id": str(lab_result.patient_id),
-                "test_type": lab_result.test_type,
             },
         )
+        return LabResultViewed(lab_result=lab_result)
 
-    return lab_result if isinstance(lab_result, LabResult) else None
+    return LabResultMissing(result_id=result_id)

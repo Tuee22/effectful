@@ -38,13 +38,18 @@ const deriveProtectionState = (
   if (
     authState.type === 'Unauthenticated' ||
     authState.type === 'SessionExpired' ||
-    authState.type === 'AuthenticationFailed'
+    authState.type === 'AuthenticationFailed' ||
+    authState.type === 'RefreshDenied'
   ) {
     return { type: 'Redirecting', reason: 'Authentication required' }
   }
 
   // Authenticating in progress
   if (authState.type === 'Authenticating') {
+    return { type: 'CheckingAuth' }
+  }
+
+  if (authState.type === 'Refreshing') {
     return { type: 'CheckingAuth' }
   }
 

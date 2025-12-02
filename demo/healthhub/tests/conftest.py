@@ -14,6 +14,7 @@ import redis.asyncio as redis
 from pytest_mock import MockerFixture
 from typing import NoReturn
 
+
 # Override pytest.skip to enforce "zero skipped tests" policy
 def _forbid_skip(*args: object, **kwargs: object) -> NoReturn:
     pytest.fail("Test skipping is forbidden")

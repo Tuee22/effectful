@@ -37,10 +37,17 @@ from app.domain.patient import Patient
 from app.effects.healthcare import TransitionAppointmentStatus
 from app.interpreters.composite_interpreter import CompositeInterpreter
 from app.programs.appointment_programs import (
+    AppointmentScheduled,
+    ScheduleAppointmentResult,
     schedule_appointment_program,
     transition_appointment_program,
 )
 from app.programs.runner import run_program
+
+
+def expect_scheduled(result: ScheduleAppointmentResult) -> Appointment:
+    assert isinstance(result, AppointmentScheduled)
+    return result.appointment
 
 
 class TestAppointmentScheduling:
@@ -131,18 +138,18 @@ class TestAppointmentScheduling:
         )
 
         # Execute
-        appointment = await run_program(
-            schedule_appointment_program(
-                patient_id=seed_test_patient,
-                doctor_id=seed_test_doctor,
-                requested_time=None,
-                reason="Follow-up visit",
-                actor_id=sample_user_id,
-            ),
-            interpreter,
+        appointment = expect_scheduled(
+            await run_program(
+                schedule_appointment_program(
+                    patient_id=seed_test_patient,
+                    doctor_id=seed_test_doctor,
+                    requested_time=None,
+                    reason="Follow-up visit",
+                    actor_id=sample_user_id,
+                ),
+                interpreter,
+            )
         )
-
-        assert appointment is not None
 
         # CRITICAL: Verify audit log created (antipattern #13)
         async with db_pool.acquire() as conn:
@@ -188,15 +195,17 @@ class TestAppointmentStateTransitions:
         )
 
         # Create appointment in Requested status
-        appointment = await run_program(
-            schedule_appointment_program(
-                patient_id=seed_test_patient,
-                doctor_id=seed_test_doctor,
-                requested_time=None,
-                reason="Consultation",
-                actor_id=sample_user_id,
-            ),
-            interpreter,
+        appointment = expect_scheduled(
+            await run_program(
+                schedule_appointment_program(
+                    patient_id=seed_test_patient,
+                    doctor_id=seed_test_doctor,
+                    requested_time=None,
+                    reason="Consultation",
+                    actor_id=sample_user_id,
+                ),
+                interpreter,
+            )
         )
 
         assert appointment is not None
@@ -264,18 +273,18 @@ class TestAppointmentStateTransitions:
         )
 
         # Create appointment and manually set to Completed (bypass validation)
-        appointment = await run_program(
-            schedule_appointment_program(
-                patient_id=seed_test_patient,
-                doctor_id=seed_test_doctor,
-                requested_time=None,
-                reason="Emergency visit",
-                actor_id=sample_user_id,
-            ),
-            interpreter,
+        appointment = expect_scheduled(
+            await run_program(
+                schedule_appointment_program(
+                    patient_id=seed_test_patient,
+                    doctor_id=seed_test_doctor,
+                    requested_time=None,
+                    reason="Emergency visit",
+                    actor_id=sample_user_id,
+                ),
+                interpreter,
+            )
         )
-
-        assert appointment is not None
 
         # Manually update to Completed status in DB
         completed_status = Completed(
@@ -350,18 +359,18 @@ class TestAppointmentStateTransitions:
         )
 
         # Create appointment (Requested)
-        appointment = await run_program(
-            schedule_appointment_program(
-                patient_id=seed_test_patient,
-                doctor_id=seed_test_doctor,
-                requested_time=None,
-                reason="Full workflow test",
-                actor_id=sample_user_id,
-            ),
-            interpreter,
+        appointment = expect_scheduled(
+            await run_program(
+                schedule_appointment_program(
+                    patient_id=seed_test_patient,
+                    doctor_id=seed_test_doctor,
+                    requested_time=None,
+                    reason="Full workflow test",
+                    actor_id=sample_user_id,
+                ),
+                interpreter,
+            )
         )
-
-        assert appointment is not None
         assert isinstance(appointment.status, Requested)
 
         # Transition 1: Requested → Confirmed
@@ -454,18 +463,18 @@ class TestAppointmentStateTransitions:
         )
 
         # Test cancellation from Requested
-        appointment = await run_program(
-            schedule_appointment_program(
-                patient_id=seed_test_patient,
-                doctor_id=seed_test_doctor,
-                requested_time=None,
-                reason="Cancellation test",
-                actor_id=sample_user_id,
-            ),
-            interpreter,
+        appointment = expect_scheduled(
+            await run_program(
+                schedule_appointment_program(
+                    patient_id=seed_test_patient,
+                    doctor_id=seed_test_doctor,
+                    requested_time=None,
+                    reason="Cancellation test",
+                    actor_id=sample_user_id,
+                ),
+                interpreter,
+            )
         )
-
-        assert appointment is not None
 
         result = await run_program(
             transition_appointment_program(
@@ -536,18 +545,18 @@ class TestAppointmentNotifications:
         await pubsub.subscribe(doctor_channel)
 
         # Execute appointment scheduling
-        appointment = await run_program(
-            schedule_appointment_program(
-                patient_id=seed_test_patient,
-                doctor_id=seed_test_doctor,
-                requested_time=None,
-                reason="Notification test",
-                actor_id=sample_user_id,
-            ),
-            interpreter,
+        appointment = expect_scheduled(
+            await run_program(
+                schedule_appointment_program(
+                    patient_id=seed_test_patient,
+                    doctor_id=seed_test_doctor,
+                    requested_time=None,
+                    reason="Notification test",
+                    actor_id=sample_user_id,
+                ),
+                interpreter,
+            )
         )
-
-        assert appointment is not None
 
         # CRITICAL: Verify Redis pub/sub message received (antipattern #13)
         # Note: get_message() with timeout to avoid blocking

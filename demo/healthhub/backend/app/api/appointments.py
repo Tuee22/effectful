@@ -24,9 +24,13 @@ from app.domain.appointment import (
 )
 from app.effects.notification import LogAuditEvent
 from app.infrastructure import get_database_manager, rate_limit
+from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
 from app.interpreters.composite_interpreter import CompositeInterpreter
-from app.interpreters.healthcare_interpreter import HealthcareInterpreter
 from app.programs.appointment_programs import (
+    AppointmentDoctorMissing,
+    AppointmentPatientMissing,
+    AppointmentScheduled,
+    ScheduleAppointmentResult,
     schedule_appointment_program,
     transition_appointment_program,
 )
@@ -132,9 +136,6 @@ async def list_appointments(
         decode_responses=False,
     )
 
-    # Create composite interpreter
-    interpreter = CompositeInterpreter(pool, redis_client)
-
     # Extract actor ID from auth state
     actor_id: UUID
     match auth:
@@ -154,6 +155,13 @@ async def list_appointments(
     # Extract IP and user agent from request
     ip_address = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
+
+    # Create composite interpreter with audit wrapper
+    base_interpreter = CompositeInterpreter(pool, redis_client)
+    interpreter: AuditedCompositeInterpreter = AuditedCompositeInterpreter(
+        base_interpreter,
+        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
+    )
 
     # Create effect program with audit logging
     def list_program() -> Generator[AllEffects, object, list[Appointment]]:
@@ -205,7 +213,7 @@ async def create_appointment(
     """
     # Authorization check - patient can only create for themselves
     match auth:
-        case PatientAuthorized(patient_id=auth_patient_id):
+        case PatientAuthorized(user_id=user_id, patient_id=auth_patient_id):
             if str(auth_patient_id) != request.patient_id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -217,6 +225,13 @@ async def create_appointment(
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
 
+    actor_id: UUID
+    match auth:
+        case PatientAuthorized(user_id=uid):
+            actor_id = uid
+        case AdminAuthorized(user_id=uid):
+            actor_id = uid
+
     # Create Redis client
     redis_client: redis.Redis[bytes] = redis.Redis(
         host="redis",
@@ -225,7 +240,11 @@ async def create_appointment(
     )
 
     # Create composite interpreter
-    interpreter = CompositeInterpreter(pool, redis_client)
+    base_interpreter = CompositeInterpreter(pool, redis_client)
+    interpreter: AuditedCompositeInterpreter = AuditedCompositeInterpreter(
+        base_interpreter,
+        AuditContext(user_id=actor_id, ip_address=None, user_agent=None),
+    )
 
     # Run effect program
     program = schedule_appointment_program(
@@ -233,20 +252,31 @@ async def create_appointment(
         doctor_id=UUID(request.doctor_id),
         requested_time=request.requested_time,
         reason=request.reason,
-        actor_id=UUID(request.patient_id),  # TODO: Get from JWT
+        actor_id=actor_id,
     )
 
-    appointment = await run_program(program, interpreter)
+    result: ScheduleAppointmentResult = await run_program(program, interpreter)
 
     await redis_client.aclose()
 
-    if appointment is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to create appointment - patient or doctor not found",
-        )
-
-    return appointment_to_response(appointment)
+    match result:
+        case AppointmentScheduled(appointment=appointment):
+            return appointment_to_response(appointment)
+        case AppointmentPatientMissing(patient_id=missing_patient_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Patient {missing_patient_id} not found",
+            )
+        case AppointmentDoctorMissing(doctor_id=missing_doctor_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Doctor {missing_doctor_id} not found",
+            )
+        case _:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to create appointment",
+            )
 
 
 @router.get("/{appointment_id}", response_model=AppointmentResponse)
@@ -279,9 +309,6 @@ async def get_appointment(
         decode_responses=False,
     )
 
-    # Create composite interpreter
-    interpreter = CompositeInterpreter(pool, redis_client)
-
     # Extract actor ID from auth state
     actor_id: UUID
     match auth:
@@ -295,6 +322,13 @@ async def get_appointment(
     # Extract IP and user agent from request
     ip_address = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
+
+    # Create composite interpreter
+    base_interpreter = CompositeInterpreter(pool, redis_client)
+    interpreter: AuditedCompositeInterpreter = AuditedCompositeInterpreter(
+        base_interpreter,
+        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
+    )
 
     # Create effect program with audit logging
     def get_program() -> Generator[AllEffects, object, Appointment]:
@@ -421,13 +455,17 @@ async def transition_status(
             )
 
     # Create composite interpreter
-    interpreter = CompositeInterpreter(pool, redis_client)
+    base_interpreter = CompositeInterpreter(pool, redis_client)
+    interpreter = AuditedCompositeInterpreter(
+        base_interpreter,
+        AuditContext(user_id=auth.user_id, ip_address=None, user_agent=None),
+    )
 
     # Run effect program
     program = transition_appointment_program(
         appointment_id=UUID(appointment_id),
         new_status=new_status,
-        actor_id=UUID(request.actor_id),
+        actor_id=auth.user_id,
     )
 
     result = await run_program(program, interpreter)

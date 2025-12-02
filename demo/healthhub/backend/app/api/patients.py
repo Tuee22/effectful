@@ -20,6 +20,7 @@ from app.effects.healthcare import (
 )
 from app.effects.notification import LogAuditEvent
 from app.infrastructure import get_database_manager, rate_limit
+from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
 from app.programs.runner import run_program
 from app.repositories.patient_repository import PatientRepository
@@ -123,9 +124,6 @@ async def list_patients(
         decode_responses=False,
     )
 
-    # Create composite interpreter
-    interpreter = CompositeInterpreter(pool, redis_client)
-
     # Extract actor ID from auth state
     actor_id: UUID
     match auth:
@@ -137,6 +135,13 @@ async def list_patients(
     # Extract IP and user agent from request
     ip_address = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
+
+    # Create composite interpreter
+    base_interpreter = CompositeInterpreter(pool, redis_client)
+    interpreter = AuditedCompositeInterpreter(
+        base_interpreter,
+        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
+    )
 
     # Create effect program with audit logging
     def list_program() -> Generator[AllEffects, object, list[Patient]]:
@@ -188,7 +193,11 @@ async def create_patient(
     )
 
     # Create composite interpreter
-    interpreter = CompositeInterpreter(pool, redis_client)
+    base_interpreter = CompositeInterpreter(pool, redis_client)
+    interpreter = AuditedCompositeInterpreter(
+        base_interpreter,
+        AuditContext(user_id=auth.user_id, ip_address=None, user_agent=None),
+    )
 
     # Create effect program
     def create_program() -> Generator[AllEffects, object, Patient]:
@@ -241,9 +250,6 @@ async def get_patient(
         decode_responses=False,
     )
 
-    # Create composite interpreter
-    interpreter = CompositeInterpreter(pool, redis_client)
-
     # Extract actor ID from auth state
     actor_id: UUID
     match auth:
@@ -257,6 +263,13 @@ async def get_patient(
     # Extract IP and user agent from request
     ip_address = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
+
+    # Create composite interpreter
+    base_interpreter = CompositeInterpreter(pool, redis_client)
+    interpreter = AuditedCompositeInterpreter(
+        base_interpreter,
+        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
+    )
 
     # Create effect program with audit logging
     def get_program() -> Generator[AllEffects, object, Patient]:
@@ -311,14 +324,6 @@ async def get_patient_by_user(
     pool = db_manager.get_pool()
     patient_repo = PatientRepository(pool)
 
-    # Create Redis client for audit logging
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
-    interpreter = CompositeInterpreter(pool, redis_client)
-
     # Extract actor ID from auth state
     actor_id: UUID
     match auth:
@@ -332,6 +337,18 @@ async def get_patient_by_user(
     # Extract IP and user agent from request
     ip_address = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
+
+    # Create Redis client for audit logging
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
+    )
+    base_interpreter = CompositeInterpreter(pool, redis_client)
+    interpreter: AuditedCompositeInterpreter = AuditedCompositeInterpreter(
+        base_interpreter,
+        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
+    )
 
     patient = await patient_repo.get_by_user_id(UUID(user_id))
 
@@ -400,6 +417,18 @@ async def update_patient(
         case AdminAuthorized():
             pass  # Admins can update any patient
 
+    # Create Redis client and interpreter for auditing
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
+    )
+    base_interpreter = CompositeInterpreter(pool, redis_client)
+    interpreter: AuditedCompositeInterpreter = AuditedCompositeInterpreter(
+        base_interpreter,
+        AuditContext(user_id=auth.user_id, ip_address=None, user_agent=None),
+    )
+
     # Update patient (simplified - in production, use UPDATE query)
     updated_patient = await patient_repo.create(
         user_id=patient.user_id,
@@ -415,6 +444,20 @@ async def update_patient(
         phone=request.phone if request.phone is not None else patient.phone,
         address=request.address if request.address is not None else patient.address,
     )
+
+    # Audit mutation
+    await interpreter.handle(
+        LogAuditEvent(
+            user_id=auth.user_id,
+            action="update_patient",
+            resource_type="patient",
+            resource_id=UUID(patient_id),
+            ip_address=None,
+            user_agent=None,
+            metadata=None,
+        )
+    )
+    await redis_client.aclose()
 
     return patient_to_response(updated_patient)
 
@@ -434,12 +477,35 @@ async def delete_patient(
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
+    )
+    base_interpreter = CompositeInterpreter(pool, redis_client)
+    interpreter = AuditedCompositeInterpreter(
+        base_interpreter,
+        AuditContext(user_id=auth.user_id, ip_address=None, user_agent=None),
+    )
 
     # Execute delete query (simplified)
     await pool.execute(
         "DELETE FROM patients WHERE id = $1",
         UUID(patient_id),
     )
+
+    await interpreter.handle(
+        LogAuditEvent(
+            user_id=auth.user_id,
+            action="delete_patient",
+            resource_type="patient",
+            resource_id=UUID(patient_id),
+            ip_address=None,
+            user_agent=None,
+            metadata=None,
+        )
+    )
+    await redis_client.aclose()
 
     # No content response
     return None

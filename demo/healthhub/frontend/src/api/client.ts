@@ -33,6 +33,7 @@ export const apiGet = async <T>(
     const response = await fetch(`${BASE_URL}${path}`, {
       method: 'GET',
       headers,
+      credentials: 'include',
     })
 
     if (!response.ok) {
@@ -73,6 +74,7 @@ export const apiPost = async <T, B>(
       method: 'POST',
       headers,
       body: JSON.stringify(body),
+      credentials: 'include',
     })
 
     if (!response.ok) {
@@ -113,6 +115,7 @@ export const apiPut = async <T, B>(
       method: 'PUT',
       headers,
       body: JSON.stringify(body),
+      credentials: 'include',
     })
 
     if (!response.ok) {
@@ -153,6 +156,7 @@ export const apiPatch = async <T, B>(
       method: 'PATCH',
       headers,
       body: JSON.stringify(body),
+      credentials: 'include',
     })
 
     if (!response.ok) {
@@ -189,6 +193,7 @@ export const apiDelete = async (
     const response = await fetch(`${BASE_URL}${path}`, {
       method: 'DELETE',
       headers,
+      credentials: 'include',
     })
 
     if (!response.ok) {

@@ -3,6 +3,8 @@
 venv/
 *.egg-info/
 poetry.lock
+# npm lockfile (treated as build artifact; see documents/engineering/build_artifact_management.md)
+package-lock.json
 
 # Python
 __pycache__/

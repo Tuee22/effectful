@@ -33,6 +33,14 @@ export interface RegisterResponse {
   readonly message: string
 }
 
+export interface RefreshResponse {
+  readonly access_token: string
+  readonly token_type: string
+  readonly user_id: string
+  readonly email: string
+  readonly role: 'patient' | 'doctor' | 'admin'
+}
+
 // API functions
 export const login = (
   email: string,
@@ -50,3 +58,6 @@ export const register = (
     password,
     role,
   })
+
+export const refresh = (): Promise<Result<RefreshResponse, ApiError>> =>
+  apiPost<RefreshResponse, Record<string, never>>('/auth/refresh', {})

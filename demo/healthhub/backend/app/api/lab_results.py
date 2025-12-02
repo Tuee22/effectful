@@ -27,6 +27,7 @@ from app.effects.healthcare import (
 )
 from app.effects.notification import LogAuditEvent
 from app.infrastructure import get_database_manager, rate_limit
+from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
 from app.programs.runner import run_program
 from app.api.dependencies import (
@@ -136,9 +137,6 @@ async def list_lab_results(
     )
 
     try:
-        # Create composite interpreter
-        interpreter = CompositeInterpreter(pool, redis_client)
-
         # Extract actor ID and determine filters based on role
         actor_id: UUID
         patient_id: UUID | None = None
@@ -157,6 +155,13 @@ async def list_lab_results(
         # Extract IP and user agent from request
         ip_address = request.client.host if request.client else None
         user_agent = request.headers.get("user-agent")
+
+        # Create composite interpreter
+        base_interpreter = CompositeInterpreter(pool, redis_client)
+        interpreter = AuditedCompositeInterpreter(
+            base_interpreter,
+            AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
+        )
 
         # Create effect program with audit logging
         def list_program() -> Generator[AllEffects, object, list[LabResult]]:
@@ -206,6 +211,18 @@ async def create_lab_result(
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
 
+    # Extract actor ID from auth state
+    actor_id: UUID
+    match auth:
+        case DoctorAuthorized(user_id=uid):
+            actor_id = uid
+        case AdminAuthorized(user_id=uid):
+            actor_id = uid
+
+    # Extract IP and user agent from request
+    ip_address = http_request.client.host if http_request.client else None
+    user_agent = http_request.headers.get("user-agent")
+
     # Create Redis client with resource management
     redis_client: redis.Redis[bytes] = redis.Redis(
         host="redis",
@@ -215,19 +232,11 @@ async def create_lab_result(
 
     try:
         # Create composite interpreter
-        interpreter = CompositeInterpreter(pool, redis_client)
-
-        # Extract actor ID from auth state
-        actor_id: UUID
-        match auth:
-            case DoctorAuthorized(user_id=uid):
-                actor_id = uid
-            case AdminAuthorized(user_id=uid):
-                actor_id = uid
-
-        # Extract IP and user agent from request
-        ip_address = http_request.client.host if http_request.client else None
-        user_agent = http_request.headers.get("user-agent")
+        base_interpreter = CompositeInterpreter(pool, redis_client)
+        interpreter: AuditedCompositeInterpreter = AuditedCompositeInterpreter(
+            base_interpreter,
+            AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
+        )
 
         # Create effect program with audit logging
         def create_program() -> Generator[AllEffects, object, LabResult]:
@@ -293,9 +302,6 @@ async def get_lab_result(
         decode_responses=False,
     )
 
-    # Create composite interpreter
-    interpreter = CompositeInterpreter(pool, redis_client)
-
     # Extract actor ID from auth state
     actor_id: UUID
     match auth:
@@ -309,6 +315,13 @@ async def get_lab_result(
     # Extract IP and user agent from request
     ip_address = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
+
+    # Create composite interpreter
+    base_interpreter = CompositeInterpreter(pool, redis_client)
+    interpreter = AuditedCompositeInterpreter(
+        base_interpreter,
+        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
+    )
 
     # Create effect program with audit logging
     def get_program() -> Generator[AllEffects, object, LabResult]:
@@ -378,7 +391,11 @@ async def review_lab_result(
     )
 
     # Create composite interpreter
-    interpreter = CompositeInterpreter(pool, redis_client)
+    base_interpreter = CompositeInterpreter(pool, redis_client)
+    interpreter = AuditedCompositeInterpreter(
+        base_interpreter,
+        AuditContext(user_id=auth.user_id, ip_address=None, user_agent=None),
+    )
 
     # Create effect program
     def review_program() -> Generator[AllEffects, object, LabResult]:
@@ -439,9 +456,6 @@ async def get_patient_lab_results(
         decode_responses=False,
     )
 
-    # Create composite interpreter
-    interpreter = CompositeInterpreter(pool, redis_client)
-
     # Extract actor ID from auth state
     actor_id: UUID
     match auth:
@@ -455,6 +469,13 @@ async def get_patient_lab_results(
     # Extract IP and user agent from request
     ip_address = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
+
+    # Create composite interpreter
+    base_interpreter = CompositeInterpreter(pool, redis_client)
+    interpreter = AuditedCompositeInterpreter(
+        base_interpreter,
+        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
+    )
 
     # Create effect program with audit logging
     def list_program() -> Generator[AllEffects, object, list[LabResult]]:

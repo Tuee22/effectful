@@ -17,8 +17,16 @@ from app.domain.prescription import (
 )
 from app.effects.notification import LogAuditEvent
 from app.infrastructure import get_database_manager, rate_limit
+from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
 from app.interpreters.composite_interpreter import CompositeInterpreter
-from app.programs.prescription_programs import create_prescription_program
+from app.programs.prescription_programs import (
+    PrescriptionBlocked,
+    PrescriptionCreated,
+    PrescriptionDoctorMissing,
+    PrescriptionDoctorUnauthorized,
+    PrescriptionPatientMissing,
+    create_prescription_program,
+)
 from app.programs.runner import run_program
 from app.api.dependencies import (
     AdminAuthorized,
@@ -110,9 +118,6 @@ async def list_prescriptions(
         decode_responses=False,
     )
 
-    # Create composite interpreter
-    interpreter = CompositeInterpreter(pool, redis_client)
-
     # Extract actor ID and determine filters based on role
     actor_id: UUID
     patient_id: UUID | None = None
@@ -131,6 +136,13 @@ async def list_prescriptions(
     # Extract IP and user agent from request
     ip_address = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
+
+    # Create composite interpreter
+    base_interpreter = CompositeInterpreter(pool, redis_client)
+    interpreter = AuditedCompositeInterpreter(
+        base_interpreter,
+        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
+    )
 
     # Create effect program with audit logging
     def list_program() -> Generator[AllEffects, object, list[Prescription]]:
@@ -189,7 +201,9 @@ async def create_prescription(
     """
     # Capability check - doctor must have can_prescribe=True
     match auth:
-        case DoctorAuthorized(doctor_id=auth_doctor_id, can_prescribe=can_prescribe):
+        case DoctorAuthorized(
+            user_id=user_id, doctor_id=auth_doctor_id, can_prescribe=can_prescribe
+        ):
             if not can_prescribe:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -204,6 +218,13 @@ async def create_prescription(
         case AdminAuthorized():
             pass  # Admins can create any prescription
 
+    actor_id: UUID
+    match auth:
+        case DoctorAuthorized(user_id=uid):
+            actor_id = uid
+        case AdminAuthorized(user_id=uid):
+            actor_id = uid
+
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
 
@@ -214,10 +235,6 @@ async def create_prescription(
         decode_responses=False,
     )
 
-    # Create composite interpreter
-    interpreter = CompositeInterpreter(pool, redis_client)
-
-    # Run effect program
     program = create_prescription_program(
         patient_id=UUID(request.patient_id),
         doctor_id=UUID(request.doctor_id),
@@ -227,8 +244,15 @@ async def create_prescription(
         duration_days=request.duration_days,
         refills_remaining=request.refills_remaining,
         notes=request.notes,
-        actor_id=UUID(request.doctor_id),  # TODO: Get from JWT
+        actor_id=actor_id,
         existing_medications=request.existing_medications,
+    )
+
+    # Create composite interpreter
+    base_interpreter = CompositeInterpreter(pool, redis_client)
+    interpreter: AuditedCompositeInterpreter = AuditedCompositeInterpreter(
+        base_interpreter,
+        AuditContext(user_id=actor_id, ip_address=None, user_agent=None),
     )
 
     result = await run_program(program, interpreter)
@@ -237,28 +261,33 @@ async def create_prescription(
 
     # Handle result
     match result:
-        case Prescription():
-            return prescription_to_response(result)
-
-        case MedicationInteractionWarning():
-            # Severe interaction blocked creation
+        case PrescriptionCreated(prescription=prescription):
+            return prescription_to_response(prescription)
+        case PrescriptionBlocked(warning=warning):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={
                     "error": "severe_medication_interaction",
-                    "medications": result.medications,
-                    "severity": result.severity,
-                    "description": result.description,
+                    "medications": warning.medications,
+                    "severity": warning.severity,
+                    "description": warning.description,
                 },
             )
-
-        case str():
-            # Validation error
+        case PrescriptionPatientMissing(patient_id=missing_patient_id):
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=result,
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Patient {missing_patient_id} not found",
             )
-
+        case PrescriptionDoctorMissing(doctor_id=missing_doctor_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Doctor {missing_doctor_id} not found",
+            )
+        case PrescriptionDoctorUnauthorized(doctor_id=unauthorized_doctor_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Doctor {unauthorized_doctor_id} is not authorized to prescribe",
+            )
         case _:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -296,9 +325,6 @@ async def get_prescription(
         decode_responses=False,
     )
 
-    # Create composite interpreter
-    interpreter = CompositeInterpreter(pool, redis_client)
-
     # Extract actor ID from auth state
     actor_id: UUID
     match auth:
@@ -312,6 +338,13 @@ async def get_prescription(
     # Extract IP and user agent from request
     ip_address = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
+
+    # Create composite interpreter
+    base_interpreter = CompositeInterpreter(pool, redis_client)
+    interpreter = AuditedCompositeInterpreter(
+        base_interpreter,
+        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
+    )
 
     # Create effect program with audit logging
     def get_program() -> Generator[AllEffects, object, Prescription]:
@@ -374,9 +407,6 @@ async def get_patient_prescriptions(
         decode_responses=False,
     )
 
-    # Create composite interpreter
-    interpreter = CompositeInterpreter(pool, redis_client)
-
     # Extract actor ID from auth state
     actor_id: UUID
     match auth:
@@ -390,6 +420,13 @@ async def get_patient_prescriptions(
     # Extract IP and user agent from request
     ip_address = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
+
+    # Create composite interpreter
+    base_interpreter = CompositeInterpreter(pool, redis_client)
+    interpreter = AuditedCompositeInterpreter(
+        base_interpreter,
+        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
+    )
 
     # Create effect program with audit logging
     def list_program() -> Generator[AllEffects, object, list[Prescription]]:

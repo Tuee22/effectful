@@ -4,6 +4,7 @@ Effect programs for prescription management.
 """
 
 from collections.abc import Generator
+from dataclasses import dataclass
 from uuid import UUID
 
 from app.domain.doctor import Doctor
@@ -28,7 +29,48 @@ from app.effects.notification import (
 from app.interpreters.composite_interpreter import AllEffects
 
 
-type PrescriptionCreationResult = Prescription | MedicationInteractionWarning | str
+@dataclass(frozen=True)
+class PrescriptionCreated:
+    """Prescription created successfully."""
+
+    prescription: Prescription
+
+
+@dataclass(frozen=True)
+class PrescriptionPatientMissing:
+    """Patient not found."""
+
+    patient_id: UUID
+
+
+@dataclass(frozen=True)
+class PrescriptionDoctorMissing:
+    """Doctor not found."""
+
+    doctor_id: UUID
+
+
+@dataclass(frozen=True)
+class PrescriptionDoctorUnauthorized:
+    """Doctor cannot prescribe."""
+
+    doctor_id: UUID
+
+
+@dataclass(frozen=True)
+class PrescriptionBlocked:
+    """Prescription blocked due to severe interaction."""
+
+    warning: MedicationInteractionWarning
+
+
+type PrescriptionCreationResult = (
+    PrescriptionCreated
+    | PrescriptionPatientMissing
+    | PrescriptionDoctorMissing
+    | PrescriptionDoctorUnauthorized
+    | PrescriptionBlocked
+)
 
 
 def create_prescription_program(
@@ -74,15 +116,15 @@ def create_prescription_program(
     # Step 1: Verify patient exists
     patient = yield GetPatientById(patient_id=patient_id)
     if not isinstance(patient, Patient):
-        return f"Patient {patient_id} not found"
+        return PrescriptionPatientMissing(patient_id=patient_id)
 
     # Step 2: Verify doctor exists and can prescribe
     doctor = yield GetDoctorById(doctor_id=doctor_id)
     if not isinstance(doctor, Doctor):
-        return f"Doctor {doctor_id} not found"
+        return PrescriptionDoctorMissing(doctor_id=doctor_id)
 
     if not doctor.can_prescribe:
-        return f"Doctor {doctor.first_name} {doctor.last_name} is not authorized to prescribe"
+        return PrescriptionDoctorUnauthorized(doctor_id=doctor_id)
 
     # Step 3: Check medication interactions
     all_medications = [*existing_medications, medication]
@@ -101,12 +143,10 @@ def create_prescription_program(
                 ip_address=None,
                 user_agent=None,
                 metadata={
-                    "medication": medication,
                     "severity": "severe",
-                    "description": interaction_result.description,
                 },
             )
-            return interaction_result
+            return PrescriptionBlocked(warning=interaction_result)
 
     # Step 5: Create prescription
     prescription = yield CreatePrescription(
@@ -125,8 +165,6 @@ def create_prescription_program(
     notification_message: dict[str, NotificationValue] = {
         "type": "prescription_created",
         "prescription_id": str(prescription.id),
-        "medication": medication,
-        "doctor_name": f"{doctor.first_name} {doctor.last_name}",
     }
 
     # Add interaction warning to notification if moderate/minor
@@ -155,9 +193,8 @@ def create_prescription_program(
         metadata={
             "patient_id": str(patient_id),
             "doctor_id": str(doctor_id),
-            "medication": medication,
             "has_interaction_warning": str(has_warning),
         },
     )
 
-    return prescription
+    return PrescriptionCreated(prescription=prescription)

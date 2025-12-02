@@ -4,6 +4,7 @@ Effect programs for appointment scheduling and management.
 """
 
 from collections.abc import Generator
+from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
@@ -31,13 +32,39 @@ from app.effects.notification import (
 from app.interpreters.composite_interpreter import AllEffects
 
 
+@dataclass(frozen=True)
+class AppointmentScheduled:
+    """Appointment created successfully."""
+
+    appointment: Appointment
+
+
+@dataclass(frozen=True)
+class AppointmentPatientMissing:
+    """Patient not found when scheduling."""
+
+    patient_id: UUID
+
+
+@dataclass(frozen=True)
+class AppointmentDoctorMissing:
+    """Doctor not found when scheduling."""
+
+    doctor_id: UUID
+
+
+type ScheduleAppointmentResult = (
+    AppointmentScheduled | AppointmentPatientMissing | AppointmentDoctorMissing
+)
+
+
 def schedule_appointment_program(
     patient_id: UUID,
     doctor_id: UUID,
     requested_time: datetime | None,
     reason: str,
     actor_id: UUID,
-) -> Generator[AllEffects, object, Appointment | None]:
+) -> Generator[AllEffects, object, ScheduleAppointmentResult]:
     """Schedule appointment workflow with notifications.
 
     Steps:
@@ -60,12 +87,12 @@ def schedule_appointment_program(
     # Step 1: Verify patient exists
     patient = yield GetPatientById(patient_id=patient_id)
     if not isinstance(patient, Patient):
-        return None
+        return AppointmentPatientMissing(patient_id=patient_id)
 
     # Step 2: Verify doctor exists
     doctor = yield GetDoctorById(doctor_id=doctor_id)
     if not isinstance(doctor, Doctor):
-        return None
+        return AppointmentDoctorMissing(doctor_id=doctor_id)
 
     # Step 3: Create appointment
     appointment = yield CreateAppointment(
@@ -81,9 +108,6 @@ def schedule_appointment_program(
     notification_message: dict[str, NotificationValue] = {
         "type": "appointment_requested",
         "appointment_id": str(appointment.id),
-        "patient_name": f"{patient.first_name} {patient.last_name}",
-        "reason": reason,
-        "requested_time": requested_time.isoformat() if requested_time else "",
     }
 
     yield PublishWebSocketNotification(
@@ -103,11 +127,10 @@ def schedule_appointment_program(
         metadata={
             "patient_id": str(patient_id),
             "doctor_id": str(doctor_id),
-            "reason": reason,
         },
     )
 
-    return appointment
+    return AppointmentScheduled(appointment=appointment)
 
 
 def transition_appointment_program(

@@ -1,11 +1,12 @@
 /**
- * Authentication Store using Zustand + Immer + Persist
+ * Authentication Store using Zustand + Immer (no persistence).
  *
- * Manages authentication state with type-safe algebraic data types.
+ * Access token lives only in memory. Refresh token is HttpOnly cookie
+ * managed by the backend. Missing/expired access tokens always trigger
+ * a refresh attempt before returning to Unauthenticated.
  */
 
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import {
   AuthState,
@@ -18,12 +19,15 @@ import {
   invalidCredentials,
   networkError,
   unknownAuthError,
+  refreshing,
+  refreshDenied,
   isAuthenticated,
-  isHydrating,
 } from '../models/Auth'
 import { Result, isOk } from '../algebraic/Result'
-import { login as apiLogin, LoginResponse } from '../api/authApi'
+import { login as apiLogin, refresh as apiRefresh, LoginResponse, RefreshResponse } from '../api/authApi'
 import { ApiError } from '../api/client'
+
+const ACCESS_TOKEN_TTL_MS = 15 * 60 * 1000
 
 export interface AuthStore {
   // State
@@ -34,6 +38,8 @@ export interface AuthStore {
   login: (email: string, password: string) => Promise<Result<LoginResponse, ApiError>>
   logout: () => void
   clearError: () => void
+  refreshSession: (reason: 'missing_access' | 'expired') => Promise<boolean>
+  bootstrap: () => Promise<void>
 
   // Selectors
   isLoggedIn: () => boolean
@@ -41,151 +47,152 @@ export interface AuthStore {
   getUserId: () => string | null
   getRole: () => UserRole | null
   hasHydrated: () => boolean
+  getValidAccessToken: () => Promise<string | null>
 }
 
 export const useAuthStore = create<AuthStore>()(
-  persist(
-    immer((set, get) => ({
-      // Initial state - Hydrating while loading from localStorage
-      authState: hydrating(),
-      _hasHydrated: false,
+  immer((set, get) => ({
+    // Initial state - Hydrating while probing refresh cookie
+    authState: hydrating(),
+    _hasHydrated: false,
 
-      // Actions
-      login: async (email: string, password: string): Promise<Result<LoginResponse, ApiError>> => {
-        // Transition to Authenticating
+    // Actions
+    login: async (email: string, password: string): Promise<Result<LoginResponse, ApiError>> => {
+      set((draft) => {
+        draft.authState = authenticating(email)
+      })
+
+      const result = await apiLogin(email, password)
+
+      if (isOk(result)) {
+        const response = result.value
+        const expiresAt = new Date(Date.now() + ACCESS_TOKEN_TTL_MS)
+
         set((draft) => {
-          draft.authState = authenticating(email)
+          draft.authState = authenticated(
+            response.access_token,
+            response.user_id,
+            response.email,
+            response.role,
+            expiresAt
+          )
+          draft._hasHydrated = true
         })
 
-        // Call API
-        const result = await apiLogin(email, password)
+        return result
+      }
 
-        if (isOk(result)) {
-          const response = result.value
-          // Calculate expiry (default 15 min if not provided)
-          const expiresAt = new Date(Date.now() + 15 * 60 * 1000)
+      const error =
+        result.error.status === 401
+          ? invalidCredentials('Invalid email or password')
+          : result.error.status === 0
+          ? networkError(result.error.message)
+          : unknownAuthError(result.error.message)
 
-          // Transition to Authenticated
-          set((draft) => {
-            draft.authState = authenticated(
-              response.access_token,
-              response.user_id,
-              response.email,
-              response.role,
-              expiresAt
-            )
-          })
+      set((draft) => {
+        draft.authState = authenticationFailed(email, error, new Date())
+        draft._hasHydrated = true
+      })
 
-          return result
-        } else {
-          // Determine error type
-          const error = result.error.status === 401
-            ? invalidCredentials('Invalid email or password')
-            : result.error.status === 0
-            ? networkError(result.error.message)
-            : unknownAuthError(result.error.message)
+      return result
+    },
 
-          // Transition to AuthenticationFailed
-          set((draft) => {
-            draft.authState = authenticationFailed(email, error, new Date())
-          })
+    refreshSession: async (reason: 'missing_access' | 'expired'): Promise<boolean> => {
+      set((draft) => {
+        draft.authState = refreshing(reason)
+      })
 
-          return result
-        }
-      },
+      const result: Result<RefreshResponse, ApiError> = await apiRefresh()
+      if (isOk(result)) {
+        const accessToken = result.value.access_token
+        const expiresAt = new Date(Date.now() + ACCESS_TOKEN_TTL_MS)
+        const userId = result.value.user_id
+        const email = result.value.email
+        const role = result.value.role
 
-      logout: () => {
+        set((draft) => {
+          draft.authState = authenticated(accessToken, userId, email, role, expiresAt)
+          draft._hasHydrated = true
+        })
+        return true
+      }
+
+      set((draft) => {
+        draft.authState = refreshDenied(result.error.message, new Date())
+        draft._hasHydrated = true
+      })
+      set((draft) => {
+        draft.authState = unauthenticated()
+        draft._hasHydrated = true
+      })
+      return false
+    },
+
+    bootstrap: async () => {
+      const refreshed = await get().refreshSession('missing_access')
+      if (!refreshed) {
         set((draft) => {
           draft.authState = unauthenticated()
+          draft._hasHydrated = true
         })
-      },
+      }
+    },
 
-      clearError: () => {
-        const { authState } = get()
-        if (authState.type === 'AuthenticationFailed') {
-          set((draft) => {
-            draft.authState = unauthenticated()
-          })
-        }
-      },
+    logout: () => {
+      set((draft) => {
+        draft.authState = unauthenticated()
+        draft._hasHydrated = true
+      })
+    },
 
-      // Selectors
-      isLoggedIn: () => {
-        const state = get()
-        return isAuthenticated(state.authState)
-      },
+    clearError: () => {
+      const { authState } = get()
+      if (authState.type === 'AuthenticationFailed') {
+        set((draft) => {
+          draft.authState = unauthenticated()
+          draft._hasHydrated = true
+        })
+      }
+    },
 
-      getToken: () => {
-        const { authState } = get()
-        return isAuthenticated(authState) ? authState.accessToken : null
-      },
+    // Selectors
+    isLoggedIn: () => {
+      const state = get()
+      return isAuthenticated(state.authState)
+    },
 
-      getUserId: () => {
-        const { authState } = get()
-        return isAuthenticated(authState) ? authState.userId : null
-      },
+    getToken: () => {
+      const { authState } = get()
+      return isAuthenticated(authState) ? authState.accessToken : null
+    },
 
-      getRole: () => {
-        const { authState } = get()
-        return isAuthenticated(authState) ? authState.role : null
-      },
+    getUserId: () => {
+      const { authState } = get()
+      return isAuthenticated(authState) ? authState.userId : null
+    },
 
-      hasHydrated: () => {
-        return get()._hasHydrated
-      },
-    })),
-    {
-      name: 'healthhub-auth',
+    getRole: () => {
+      const { authState } = get()
+      return isAuthenticated(authState) ? authState.role : null
+    },
 
-      // Persist full auth state including token for demo app
-      // Note: In production, consider using httpOnly cookies or refresh tokens
-      partialize: (state) => ({
-        authState: state.authState,
-      }),
+    hasHydrated: () => {
+      return get()._hasHydrated
+    },
 
-      // Custom serialization for Date objects
-      storage: {
-        getItem: (name) => {
-          const str = localStorage.getItem(name)
-          if (!str) return null
-          return JSON.parse(str, (_key, value) => {
-            if (value && typeof value === 'object' && value.__date) {
-              return new Date(value.__date as string)
-            }
-            return value
-          })
-        },
-        setItem: (name, value) => {
-          const str = JSON.stringify(value, (_key, val) => {
-            if (val instanceof Date) {
-              return { __date: val.toISOString() }
-            }
-            return val
-          })
-          localStorage.setItem(name, str)
-        },
-        removeItem: (name) => localStorage.removeItem(name),
-      },
+    getValidAccessToken: async (): Promise<string | null> => {
+      const state = get().authState
+      if (isAuthenticated(state) && state.expiresAt.getTime() > Date.now()) {
+        return state.accessToken
+      }
 
-      // Handle hydration complete
-      onRehydrateStorage: () => {
-        return (state, error) => {
-          if (error) {
-            console.error('[AuthStore] Hydration error:', error)
-            if (state) {
-              state.authState = unauthenticated()
-              state._hasHydrated = true
-            }
-          } else if (state) {
-            // If still Hydrating, no stored auth → Unauthenticated
-            if (isHydrating(state.authState)) {
-              state.authState = unauthenticated()
-            }
-            // Mark hydration complete
-            state._hasHydrated = true
-          }
-        }
-      },
-    }
-  )
+      const refreshed = await get().refreshSession('missing_access')
+      if (!refreshed) {
+        return null
+      }
+
+      const updated = get().authState
+      return isAuthenticated(updated) ? updated.accessToken : null
+    },
+  }))
 )

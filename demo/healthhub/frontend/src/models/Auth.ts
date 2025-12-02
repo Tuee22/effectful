@@ -13,8 +13,10 @@ export type AuthState =
   | Unauthenticated
   | Authenticating
   | SessionRestorable
+  | Refreshing
   | Authenticated
   | SessionExpired
+  | RefreshDenied
   | AuthenticationFailed
 
 export interface Hydrating {
@@ -28,6 +30,11 @@ export interface Unauthenticated {
 export interface Authenticating {
   readonly type: 'Authenticating'
   readonly email: string
+}
+
+export interface Refreshing {
+  readonly type: 'Refreshing'
+  readonly reason: 'missing_access' | 'expired'
 }
 
 export interface SessionRestorable {
@@ -58,6 +65,12 @@ export interface AuthenticationFailed {
   readonly type: 'AuthenticationFailed'
   readonly email: string
   readonly error: AuthError
+  readonly attemptedAt: Date
+}
+
+export interface RefreshDenied {
+  readonly type: 'RefreshDenied'
+  readonly reason: string
   readonly attemptedAt: Date
 }
 
@@ -96,6 +109,11 @@ export const unauthenticated = (): AuthState => ({ type: 'Unauthenticated' })
 export const authenticating = (email: string): AuthState => ({
   type: 'Authenticating',
   email,
+})
+
+export const refreshing = (reason: Refreshing['reason']): AuthState => ({
+  type: 'Refreshing',
+  reason,
 })
 
 export const sessionRestorable = (
@@ -148,6 +166,12 @@ export const authenticationFailed = (
   attemptedAt,
 })
 
+export const refreshDenied = (reason: string, attemptedAt: Date): AuthState => ({
+  type: 'RefreshDenied',
+  reason,
+  attemptedAt,
+})
+
 // Error constructors
 export const invalidCredentials = (message: string): AuthError => ({
   type: 'InvalidCredentials',
@@ -182,6 +206,9 @@ export const isAuthenticating = (state: AuthState): state is Authenticating =>
 export const isSessionRestorable = (state: AuthState): state is SessionRestorable =>
   state.type === 'SessionRestorable'
 
+export const isRefreshing = (state: AuthState): state is Refreshing =>
+  state.type === 'Refreshing'
+
 export const isAuthenticated = (state: AuthState): state is Authenticated =>
   state.type === 'Authenticated'
 
@@ -191,6 +218,9 @@ export const isSessionExpired = (state: AuthState): state is SessionExpired =>
 export const isAuthenticationFailed = (state: AuthState): state is AuthenticationFailed =>
   state.type === 'AuthenticationFailed'
 
+export const isRefreshDenied = (state: AuthState): state is RefreshDenied =>
+  state.type === 'RefreshDenied'
+
 // Utility functions
 export const isLoggedIn = (state: AuthState): boolean =>
   state.type === 'Authenticated'
@@ -198,7 +228,8 @@ export const isLoggedIn = (state: AuthState): boolean =>
 export const shouldRedirectToLogin = (state: AuthState): boolean =>
   state.type === 'Unauthenticated' ||
   state.type === 'SessionExpired' ||
-  state.type === 'AuthenticationFailed'
+  state.type === 'AuthenticationFailed' ||
+  state.type === 'RefreshDenied'
 
 export const getErrorMessage = (error: AuthError): string => {
   switch (error.type) {

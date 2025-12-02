@@ -67,6 +67,9 @@ class RefreshResponse(BaseModel):
 
     access_token: str
     token_type: str
+    user_id: str
+    email: str
+    role: str
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -253,6 +256,9 @@ async def refresh(
             return RefreshResponse(
                 access_token=new_access_token,
                 token_type="Bearer",
+                user_id=str(token_data.user_id),
+                email=token_data.email,
+                role=token_data.role,
             )
         case _:
             # Unreachable - all cases covered above

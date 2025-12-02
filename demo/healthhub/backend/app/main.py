@@ -96,6 +96,7 @@ if frontend_build_path.exists():
             return FileResponse(str(index_file))
 
         return JSONResponse({"error": "Frontend not built"}, status_code=503)
+
 else:
     # Fallback if frontend not built (development scenario)
     @app.get("/")

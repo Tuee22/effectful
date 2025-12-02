@@ -4,6 +4,7 @@
 
 import { useAuthStore } from '../stores/authStore'
 import { isAuthenticated, isHydrating, shouldRedirectToLogin } from '../models/Auth'
+import { useEffect } from 'react'
 
 export const useAuth = () => {
   const authState = useAuthStore((state) => state.authState)
@@ -14,6 +15,13 @@ export const useAuth = () => {
   const getToken = useAuthStore((state) => state.getToken)
   const getUserId = useAuthStore((state) => state.getUserId)
   const getRole = useAuthStore((state) => state.getRole)
+  const bootstrap = useAuthStore((state) => state.bootstrap)
+
+  useEffect(() => {
+    if (!hasHydrated || isHydrating(authState)) {
+      void bootstrap()
+    }
+  }, [authState, bootstrap, hasHydrated])
 
   return {
     // State

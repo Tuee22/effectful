@@ -7,12 +7,17 @@ from collections.abc import Generator
 from typing import TypeVar
 
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
+from typing import Protocol
 
 T = TypeVar("T")
 
 
+class InterpreterProtocol(Protocol):
+    async def handle(self, effect: AllEffects) -> object: ...
+
+
 async def run_program(
-    program: Generator[AllEffects, object, T], interpreter: CompositeInterpreter
+    program: Generator[AllEffects, object, T], interpreter: InterpreterProtocol
 ) -> T:
     """Execute an effect program to completion.
 

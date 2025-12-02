@@ -80,6 +80,13 @@ core.[0-9]*
 .env
 .env.local
 .env.*.local
+.venv
+venv/
+ENV/
+env/
+
+# Lockfiles are build artifacts (see documents/engineering/build_artifact_management.md)
+poetry.lock
 
 # OS generated files
 .DS_Store

@@ -6,8 +6,8 @@
  */
 
 // Auth types and utilities
-export type { AuthState, Hydrating, Unauthenticated, Authenticating, SessionRestorable, Authenticated, SessionExpired, AuthenticationFailed, UserRole, AuthError, InvalidCredentials, AccountLocked, NetworkError, UnknownAuthError } from './Auth'
-export { hydrating, unauthenticated, authenticating, sessionRestorable, authenticated, sessionExpired, authenticationFailed, invalidCredentials, accountLocked, networkError, unknownAuthError, isHydrating, isUnauthenticated, isAuthenticating, isSessionRestorable, isAuthenticated, isSessionExpired, isAuthenticationFailed, isLoggedIn, shouldRedirectToLogin, getErrorMessage } from './Auth'
+export type { AuthState, Hydrating, Unauthenticated, Authenticating, SessionRestorable, Refreshing, Authenticated, SessionExpired, RefreshDenied, AuthenticationFailed, UserRole, AuthError, InvalidCredentials, AccountLocked, NetworkError, UnknownAuthError } from './Auth'
+export { hydrating, unauthenticated, authenticating, sessionRestorable, refreshing, authenticated, sessionExpired, refreshDenied, authenticationFailed, invalidCredentials, accountLocked, networkError, unknownAuthError, isHydrating, isUnauthenticated, isAuthenticating, isSessionRestorable, isRefreshing, isAuthenticated, isSessionExpired, isRefreshDenied, isAuthenticationFailed, isLoggedIn, shouldRedirectToLogin, getErrorMessage } from './Auth'
 
 // Patient types and utilities
 export type { Patient, PatientApiResponse } from './Patient'

@@ -62,8 +62,8 @@ RUN poetry config virtualenvs.create false
 # Step 1: Install effectful (parent library)
 # ============================================
 
-# Copy effectful library from root
-COPY pyproject.toml poetry.lock /app/effectful-root/
+# Copy effectful library from root (resolve deps from pyproject only; lockfile is a build artifact)
+COPY pyproject.toml /app/effectful-root/
 COPY effectful/ /app/effectful-root/effectful/
 
 # Install effectful
@@ -102,17 +102,17 @@ RUN python -m playwright install --with-deps chromium firefox webkit
 # Step 3: Build Frontend
 # ============================================
 
-# Copy frontend source
-COPY demo/healthhub/frontend/package.json demo/healthhub/frontend/package-lock.json /opt/healthhub/frontend-build/
+# Copy frontend source (lockfile is regenerated in-container)
+COPY demo/healthhub/frontend/package.json /opt/healthhub/frontend-build/
 COPY demo/healthhub/frontend/src /opt/healthhub/frontend-build/src
 COPY demo/healthhub/frontend/index.html /opt/healthhub/frontend-build/
 COPY demo/healthhub/frontend/vite.config.ts /opt/healthhub/frontend-build/
 COPY demo/healthhub/frontend/tsconfig.json /opt/healthhub/frontend-build/
 COPY demo/healthhub/frontend/tsconfig.node.json /opt/healthhub/frontend-build/
 
-# Install frontend dependencies and build
+# Install frontend dependencies and build (no host lockfile)
 WORKDIR /opt/healthhub/frontend-build
-RUN npm ci --quiet && \
+RUN npm install --quiet && \
     BUILD_PATH=build npm run build && \
     ls -la build/index.html
 

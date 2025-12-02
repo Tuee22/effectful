@@ -79,6 +79,11 @@ flowchart TB
 - Document templates (engineering, tutorial, API)
 - Writing style guidelines
 
+**[Build Artifact Management](build_artifact_management.md)** (new)
+- SSoT for what is versioned vs regenerated
+- Treats lockfiles (`poetry.lock`, `package-lock.json`) as build artifacts (not versioned)
+- Artifacts remain inside containers under `/opt/**`; never copied back to host/images
+
 **[Command Reference](command_reference.md)** (120 lines)
 - All Docker compose commands
 - Test execution patterns
