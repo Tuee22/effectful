@@ -498,7 +498,7 @@ Use pytest-mock to test error handling:
 
 ```python
 @pytest.mark.asyncio
-async def test_publish_failure(mocker):
+async def test_publish_failure(mocker) -> None:
     # Setup failing producer with pytest-mock
     mock_producer = mocker.AsyncMock(spec=MessageProducer)
     mock_producer.publish.side_effect = Exception("timeout")
@@ -646,7 +646,7 @@ def handle_message() -> Generator[AllEffects, EffectResult, str]:
 Test programs by stepping through the generator:
 
 ```python
-def test_publish_message():
+def test_publish_message() -> None:
     # Create generator
     def publish_program() -> Generator[AllEffects, EffectResult, str]:
         yield PublishMessage(
@@ -679,7 +679,7 @@ Use pytest-mock for interpreter-level testing:
 
 ```python
 @pytest.mark.asyncio
-async def test_consume_with_mock(mocker):
+async def test_consume_with_mock(mocker) -> None:
     # Setup mocks
     mock_consumer = mocker.AsyncMock(spec=MessageConsumer)
     envelope = MessageEnvelope(
@@ -712,7 +712,7 @@ Test error handling with side_effect:
 
 ```python
 @pytest.mark.asyncio
-async def test_consume_timeout(mocker):
+async def test_consume_timeout(mocker) -> None:
     # Setup timeout
     mock_consumer = mocker.AsyncMock(spec=MessageConsumer)
     mock_consumer.consume.return_value = None  # Timeout

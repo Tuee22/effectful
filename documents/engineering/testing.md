@@ -143,7 +143,7 @@ from pytest_mock import MockerFixture
 from effectful.infrastructure.repositories import UserRepository
 
 @pytest.mark.asyncio
-async def test_get_user(mocker: MockerFixture):
+async def test_get_user(mocker: MockerFixture) -> None:
     # Create type-safe mock
     mock_repo = mocker.AsyncMock(spec=UserRepository)
     mock_repo.get_by_id.return_value = User(...)
@@ -305,7 +305,7 @@ await pulsar_admin_client.delete_subscription(sub)  # Can fail if consumers exis
 ```python
 from uuid import uuid4
 
-def test_publish_workflow(clean_pulsar):
+def test_publish_workflow(clean_pulsar) -> None:
     """Each test uses unique topic names."""
     topic = f"test-topic-{uuid4()}"  # Unique topic name
     subscription = f"{topic}/test-sub-{uuid4()}"  # Unique subscription
@@ -442,7 +442,7 @@ assert len(messages) == 0  # CASCADE DELETE removed child records
 
 **Pattern**: Test ROLLBACK behavior for failed operations:
 ```python
-async def test_transaction_rollback():
+async def test_transaction_rollback() -> None:
     """Test that failed operations don't corrupt database state."""
     # Start with clean state
     user_count_before = await clean_db.fetchval("SELECT COUNT(*) FROM users")
@@ -492,7 +492,7 @@ rows = await clean_db.fetch(query)  # 1 query
 
 **Testing pattern**: Count database queries:
 ```python
-async def test_no_n_plus_1_queries(clean_db):
+async def test_no_n_plus_1_queries(clean_db) -> None:
     """Test that listing users doesn't cause N+1 queries."""
     # Seed 10 users with messages
     for i in range(10):
@@ -523,7 +523,7 @@ async def test_no_n_plus_1_queries(clean_db):
 
 **Pattern**: Add column with default value:
 ```python
-async def test_add_column_migration(clean_db):
+async def test_add_column_migration(clean_db) -> None:
     """Test adding password_hash column to users table."""
     # Verify column doesn't exist initially (if testing migration)
     # Or verify it exists with default value
@@ -621,7 +621,7 @@ for key in keys:
 
 **Pattern**: Verify TTL is set correctly:
 ```python
-async def test_cached_profile_has_ttl(clean_redis):
+async def test_cached_profile_has_ttl(clean_redis) -> None:
     """Test that cached profiles expire after TTL."""
     user_id = uuid4()
     profile = ProfileData(id=str(user_id), name="Alice")
@@ -655,7 +655,7 @@ assert ttl <= 300
 
 **Pattern**: Test cache miss first, then cache hit:
 ```python
-async def test_cache_miss_then_hit(clean_redis):
+async def test_cache_miss_then_hit(clean_redis) -> None:
     """Test cache miss followed by cache hit after put."""
     user_id = uuid4()  # No profile cached
 
@@ -706,7 +706,7 @@ match cached:
 
 **Pattern**: Multi-step workflow with fallback:
 ```python
-async def test_cache_aside_pattern(clean_db, clean_redis):
+async def test_cache_aside_pattern(clean_db, clean_redis) -> None:
     """Test cache-aside pattern: cache miss → DB lookup → cache population."""
     # Seed user in database (not in cache)
     user_id = uuid4()
@@ -772,7 +772,7 @@ match cached:
 
 **Pattern**: Put → Verify → Invalidate → Verify gone:
 ```python
-async def test_cache_invalidation(clean_redis):
+async def test_cache_invalidation(clean_redis) -> None:
     """Test that InvalidateCache removes keys."""
     user_id = uuid4()
     profile = ProfileData(id=str(user_id), name="To Invalidate")
@@ -1073,7 +1073,7 @@ async def test_delete_object_workflow(
 **Why it's wrong:**
 ```python
 # ❌ Only test Put and Get, assume Delete works
-def test_storage_workflow(clean_minio: str):
+def test_storage_workflow(clean_minio: str) -> None:
     key = f"test/{uuid4()}/data.txt"
 
     # Put object
@@ -1091,7 +1091,7 @@ def test_storage_workflow(clean_minio: str):
 **How to fix:**
 ```python
 # ✅ Test complete lifecycle: Put → Get → Delete → Verify deletion
-def test_storage_lifecycle(clean_minio: str):
+def test_storage_lifecycle(clean_minio: str) -> None:
     key = f"test/{uuid4()}/data.txt"
 
     # Put object
@@ -1214,7 +1214,7 @@ flowchart TB
 ```python
 from effectful.effects.database import GetUserById
 
-def test_get_user_by_id_structure():
+def test_get_user_by_id_structure() -> None:
     """Effect should be immutable with correct fields."""
     effect = GetUserById(user_id=uuid4())
 
@@ -1516,7 +1516,7 @@ Use `mocker.AsyncMock(spec=Protocol)` for type-safe mocks:
 
 ```python
 @pytest.mark.asyncio
-async def test_user_not_found_error(mocker: MockerFixture):
+async def test_user_not_found_error(mocker: MockerFixture) -> None:
     # Arrange - Mock returns None (user not found)
     mock_repo = mocker.AsyncMock(spec=UserRepository)
     mock_repo.get_by_id.return_value = None
@@ -1546,7 +1546,7 @@ async def test_user_not_found_error(mocker: MockerFixture):
 from uuid import uuid4
 
 @pytest.mark.asyncio
-async def test_publish_message_workflow(clean_pulsar):
+async def test_publish_message_workflow(clean_pulsar) -> None:
     """UUID-based topic names ensure isolation."""
     pulsar_producer, pulsar_consumer = clean_pulsar
 
@@ -1570,7 +1570,7 @@ async def test_publish_message_workflow(clean_pulsar):
 
 ```python
 @pytest.mark.asyncio
-async def test_publish_returns_message_id(clean_pulsar):
+async def test_publish_returns_message_id(clean_pulsar) -> None:
     """Test successful publish returns message ID."""
     pulsar_producer, _ = clean_pulsar
     topic = f"test-topic-{uuid4()}"
@@ -1598,7 +1598,7 @@ async def test_publish_returns_message_id(clean_pulsar):
 
 ```python
 @pytest.mark.asyncio
-async def test_publish_and_consume_workflow(clean_pulsar):
+async def test_publish_and_consume_workflow(clean_pulsar) -> None:
     """Test message roundtrip through Pulsar."""
     pulsar_producer, pulsar_consumer = clean_pulsar
     topic = f"test-topic-{uuid4()}"
@@ -1639,7 +1639,7 @@ async def test_publish_and_consume_workflow(clean_pulsar):
 
 ```python
 @pytest.mark.asyncio
-async def test_consume_timeout_workflow(clean_pulsar):
+async def test_consume_timeout_workflow(clean_pulsar) -> None:
     """Test consume returns timeout when no message available."""
     _, pulsar_consumer = clean_pulsar
     subscription = f"test-topic-{uuid4()}/test-sub-{uuid4()}"
@@ -1670,7 +1670,7 @@ async def test_consume_timeout_workflow(clean_pulsar):
 @pytest.mark.asyncio
 async def test_negative_acknowledge_workflow(
     clean_pulsar: tuple[PulsarMessageProducer, PulsarMessageConsumer],
-):
+) -> None:
     """Fixture ensures clean state before AND after test."""
     pulsar_producer, pulsar_consumer = clean_pulsar
     topic = f"test-topic-{uuid4()}"
@@ -1748,7 +1748,7 @@ async def clean_db(
 @pytest.mark.asyncio
 async def test_delete_user_cascades_to_messages(
     clean_db: asyncpg.Connection,
-):
+) -> None:
     """Deleting user should cascade to delete their messages."""
     user_id = uuid4()
 
@@ -1794,7 +1794,7 @@ async def test_delete_user_cascades_to_messages(
 
 ```python
 @pytest.mark.asyncio
-async def test_transaction_rollback_on_error(clean_db: asyncpg.Connection):
+async def test_transaction_rollback_on_error(clean_db: asyncpg.Connection) -> None:
     """Failed operations in transaction should rollback all changes."""
     user_id = uuid4()
 
@@ -1841,7 +1841,7 @@ async def test_transaction_rollback_on_error(clean_db: asyncpg.Connection):
 @pytest.mark.asyncio
 async def test_list_users_with_message_counts_avoids_n_plus_1(
     clean_db: asyncpg.Connection,
-):
+) -> None:
     """Listing users with message counts should use JOIN, not N+1 queries."""
     # Seed 10 users, each with 5 messages
     user_ids = [uuid4() for _ in range(10)]
@@ -1896,7 +1896,7 @@ async def test_list_users_with_message_counts_avoids_n_plus_1(
 
 ```python
 @pytest.mark.asyncio
-async def test_chat_workflow_integration(clean_db: asyncpg.Connection):
+async def test_chat_workflow_integration(clean_db: asyncpg.Connection) -> None:
     """Test chat workflow with pre-seeded users."""
     user_id = uuid4()
 
@@ -1986,7 +1986,7 @@ async def clean_redis(redis_client: Redis) -> AsyncGenerator[Redis, None]:
 @pytest.mark.asyncio
 async def test_cached_profile_expires_after_ttl(
     clean_redis: Redis,
-):
+) -> None:
     """Cached profiles should expire after TTL seconds."""
     user_id = uuid4()
     profile = ProfileData(id=str(user_id), name="Alice", email="alice@example.com")
@@ -2027,7 +2027,7 @@ async def test_cached_profile_expires_after_ttl(
 @pytest.mark.asyncio
 async def test_cache_hit_and_miss_semantics(
     clean_redis: Redis,
-):
+) -> None:
     """Test both CacheHit and CacheMiss ADT variants."""
     user_id = uuid4()
     profile = ProfileData(id=str(user_id), name="Bob")
@@ -2064,7 +2064,7 @@ async def test_cache_aside_pattern_with_database_fallback(
     clean_redis: Redis,
     clean_db: asyncpg.Connection,
     mocker: MockerFixture,
-):
+) -> None:
     """Cache miss should fetch from DB and populate cache."""
     user_id = uuid4()
 
@@ -2136,7 +2136,7 @@ async def test_cache_aside_pattern_with_database_fallback(
 @pytest.mark.asyncio
 async def test_cache_invalidation_on_user_update(
     clean_redis: Redis,
-):
+) -> None:
     """Updating user should invalidate cached profile."""
     user_id = uuid4()
     profile_v1 = ProfileData(id=str(user_id), name="Dave v1")
@@ -2226,7 +2226,7 @@ def clean_minio(s3_bucket: str) -> str:
 async def test_put_and_get_object_workflow(
     clean_minio: str,
     object_storage: S3ObjectStorage,
-):
+) -> None:
     """UUID keys ensure no conflicts between tests."""
     # Generate unique key with UUID
     key = f"test/{uuid4()}/data.txt"
@@ -2266,7 +2266,7 @@ async def test_put_and_get_object_workflow(
 async def test_object_lifecycle(
     clean_minio: str,
     object_storage: S3ObjectStorage,
-):
+) -> None:
     """Test complete lifecycle: upload → download → delete → verify."""
     key = f"test/{uuid4()}/lifecycle.txt"
     content = b"Test data"
@@ -2305,7 +2305,7 @@ async def test_object_lifecycle(
 async def test_metadata_and_content_type_survival(
     clean_minio: str,
     object_storage: S3ObjectStorage,
-):
+) -> None:
     """Metadata and content-type should survive upload/download."""
     user_id = uuid4()
     key = f"uploads/{user_id}/document.pdf"
@@ -2351,7 +2351,7 @@ async def test_metadata_and_content_type_survival(
 async def test_list_objects_with_prefix(
     clean_minio: str,
     object_storage: S3ObjectStorage,
-):
+) -> None:
     """Prefix-based listing should return only matching objects."""
     # Create unique prefix with UUID
     prefix = f"list-test/{uuid4()}"
@@ -2401,7 +2401,7 @@ async def test_list_objects_with_prefix(
 
 **Step 1: Effect Test** (`tests/test_effects/test_database_effects.py`)
 ```python
-def test_delete_user_effect():
+def test_delete_user_effect() -> None:
     """DeleteUser effect should be immutable."""
     user_id = uuid4()
     effect = DeleteUser(user_id=user_id)
@@ -2433,7 +2433,7 @@ async def test_delete_user_success(mocker: MockerFixture) -> None:
 
 **Step 3: Program Test** (`tests/test_demo/test_user_programs.py`)
 ```python
-def test_delete_user_program():
+def test_delete_user_program() -> None:
     """Program should verify user exists before deleting."""
     user_id = uuid4()
     user = User(id=user_id, email="alice@example.com", name="Alice")
@@ -3258,13 +3258,13 @@ def clean_minio(s3_bucket: str) -> str:
 ```python
 # WRONG - Unit tests depend on PostgreSQL, Redis, etc.
 @pytest.mark.asyncio
-async def test_user_lookup():
+async def test_user_lookup() -> None:
     async with asyncpg.connect(DATABASE_URL) as conn:  # Real DB!
         user = await UserRepository(conn).get_by_id(user_id)
         assert user is not None
 
 # RIGHT - Use generator-based testing (no infrastructure)
-def test_user_lookup():
+def test_user_lookup() -> None:
     user_id = uuid4()
     user = User(id=user_id, email="test@example.com", name="Alice")
 
@@ -3291,13 +3291,13 @@ def test_user_lookup():
 
 ```python
 # WRONG - Only testing happy path
-def test_user_lookup():
+def test_user_lookup() -> None:
     gen = get_user_program(user_id=user_id)
     effect1 = next(gen)
     # Only test success - what about None?
 
 # RIGHT - Test error cases explicitly
-def test_user_lookup_not_found():
+def test_user_lookup_not_found() -> None:
     user_id = uuid4()
 
     # Create generator
@@ -3438,7 +3438,7 @@ interpreter = create_test_interpreter(user_repo=fake_repo)  # Deleted
 from pytest_mock import MockerFixture
 from effectful.interpreters.composite import CompositeInterpreter
 
-def test_workflow(mocker: MockerFixture):
+def test_workflow(mocker: MockerFixture) -> None:
     mock_repo = mocker.AsyncMock(spec=UserRepository)
     mock_repo.get_by_id.return_value = user
 
@@ -3469,7 +3469,7 @@ def test_workflow(mocker: MockerFixture):
 ```python
 # ❌ WRONG - Tests conflict at broker level
 @pytest.mark.asyncio
-async def test_publish_message(clean_pulsar):
+async def test_publish_message(clean_pulsar) -> None:
     topic = "test-topic"  # Same topic for all tests!
     # If previous test failed, topic may have leaked state
 ```
@@ -3481,7 +3481,7 @@ async def test_publish_message(clean_pulsar):
 from uuid import uuid4
 
 @pytest.mark.asyncio
-async def test_publish_message(clean_pulsar):
+async def test_publish_message(clean_pulsar) -> None:
     topic = f"test-topic-{uuid4()}"  # Guaranteed unique
     # No conflicts even if cleanup fails
 ```
@@ -3624,7 +3624,7 @@ producer = client.create_producer(
 ```python
 # ❌ WRONG - No cleanup between tests
 @pytest.mark.asyncio
-async def test_publish(pulsar_producer: PulsarMessageProducer):
+async def test_publish(pulsar_producer: PulsarMessageProducer) -> None:
     # No pre-cleanup! May inherit leaked state from previous test
     topic = f"test-topic-{uuid4()}"
     result = await pulsar_producer.publish(topic, b"data")
@@ -3638,7 +3638,7 @@ async def test_publish(pulsar_producer: PulsarMessageProducer):
 @pytest.mark.asyncio
 async def test_publish(
     clean_pulsar: tuple[PulsarMessageProducer, PulsarMessageConsumer],
-):
+) -> None:
     pulsar_producer, _ = clean_pulsar
     # Pre-cleanup already done by fixture
     topic = f"test-topic-{uuid4()}"

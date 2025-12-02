@@ -217,7 +217,7 @@ from effectful.interpreters.composite import create_composite_interpreter
 from effectful.testing import assert_ok, unwrap_ok
 
 @pytest.mark.asyncio
-async def test_my_program():
+async def test_my_program() -> None:
     mock_ws = AsyncMock(spec=WebSocketConnection)
     mock_ws.is_open.return_value = True
     mock_user_repo = AsyncMock(spec=UserRepository)

@@ -565,7 +565,7 @@ Use failing fakes to test error handling:
 from effectful.testing.failing import FailingStorageAdapter
 
 @pytest.mark.asyncio
-async def test_upload_failure():
+async def test_upload_failure() -> None:
     # Setup failing storage
     failing_storage = FailingStorageAdapter(reason="quota_exceeded")
     interpreter = StorageInterpreter(storage=failing_storage)
@@ -727,7 +727,7 @@ def handle_storage_result() -> Generator[AllEffects, EffectResult, str]:
 Test programs by stepping through the generator:
 
 ```python
-def test_upload_program():
+def test_upload_program() -> None:
     # Create generator
     def upload_program() -> Generator[AllEffects, EffectResult, str]:
         yield PutObject(
@@ -762,7 +762,7 @@ Use pytest-mock for interpreter-level testing:
 
 ```python
 @pytest.mark.asyncio
-async def test_download_object(mocker):
+async def test_download_object(mocker) -> None:
     # Setup mock storage
     mock_storage = mocker.AsyncMock(spec=StorageAdapter)
     s3_object = S3Object(
@@ -793,7 +793,7 @@ Test error handling with side_effect:
 
 ```python
 @pytest.mark.asyncio
-async def test_upload_quota_exceeded(mocker):
+async def test_upload_quota_exceeded(mocker) -> None:
     # Setup failing storage
     mock_storage = mocker.AsyncMock(spec=StorageAdapter)
     mock_storage.put_object.side_effect = Exception("Storage quota exceeded")

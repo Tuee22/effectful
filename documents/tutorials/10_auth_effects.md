@@ -275,7 +275,7 @@ from effectful import run_ws_program
 from effectful.testing import unwrap_ok
 
 @pytest.mark.asyncio
-async def test_authentication(mocker: MockerFixture):
+async def test_authentication(mocker: MockerFixture) -> None:
     # Create mock auth infrastructure
     mock_auth = mocker.AsyncMock(spec=AuthProtocol)
     mock_auth.validate_token.return_value = TokenValid(

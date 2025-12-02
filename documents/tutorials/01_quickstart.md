@@ -70,7 +70,7 @@ def hello_program() -> Generator[AllEffects, EffectResult, str]:
 Test programs by manually stepping through the generator:
 
 ```python
-def test_hello_program():
+def test_hello_program() -> None:
     # Create generator
     gen = hello_program()
 
@@ -129,7 +129,7 @@ For more complex programs, step through the generator and verify each effect:
 from uuid import uuid4
 from effectful import GetUserById, SendText, User
 
-def test_greet_user():
+def test_greet_user() -> None:
     user_id = uuid4()
     user = User(id=user_id, email="alice@example.com", name="Alice")
 

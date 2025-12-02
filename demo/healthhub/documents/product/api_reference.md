@@ -1,6 +1,6 @@
 # API Reference
 
-> Extends base [Documentation Standards](../../../../documents/documentation_standards.md); base rules apply. HealthHub-specific API reference only.
+> Extends base [API Reference](../../../../documents/api/README.md) and [Documentation Standards](../../../../documents/documentation_standards.md); base rules apply. This file documents only HealthHub-specific endpoints and deltas—see base API docs for canonical definitions and shared behaviors.
 
 ---
 

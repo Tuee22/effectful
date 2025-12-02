@@ -276,10 +276,12 @@ cat poetry.toml
 
 The effectful Docker Compose stack includes multiple services that work together to provide a complete development environment.
 
+**Sidecar isolation (SSoT rule)**: All infrastructure containers are sidecars to the main `effectful` container. Following the sidecar pattern, do not expose sidecar ports to the host. Keep traffic inside the Docker Compose bridge network (`effectful-network`) and access services via their container DNS names from inside the stack. If you temporarily need a UI on the host, use `docker compose port <service> <port>` instead of adding `ports:` blocks.
+
 ### Service Overview
 
-| Service | Purpose | Ports | Data Persistence |
-|---------|---------|-------|------------------|
+| Service | Purpose | Internal Ports | Data Persistence |
+|---------|---------|----------------|------------------|
 | `effectful` | Main Python container | - | Code bind-mounted from host |
 | `postgres` | PostgreSQL 15+ | 5432 | Named volume `pgdata` |
 | `redis` | Redis 7+ cache | 6379 | Named volume `redisdata` |
@@ -332,8 +334,8 @@ PROMETHEUS_URL=http://prometheus:9090
 **Version**: MinIO latest
 
 **Access**:
-- API: http://localhost:9000
-- Console: http://localhost:9001
+- API: http://minio:9000 (inside Compose network only)
+- Console: http://minio:9001 (port-forward temporarily if you need the UI on host)
 - Credentials: `minioadmin` / `minioadmin`
 
 **Data Persistence**: Named volume `miniodata`.
@@ -345,8 +347,8 @@ PROMETHEUS_URL=http://prometheus:9090
 **Version**: Pulsar latest
 
 **Access**:
-- Broker: pulsar://localhost:6650
-- HTTP: http://localhost:8080
+- Broker: pulsar://pulsar:6650 (inside Compose network only)
+- HTTP: http://pulsar:8080 (port-forward temporarily if you need Pulsar admin from host)
 
 **Data Persistence**: Named volume `pulsardata`.
 
@@ -361,7 +363,7 @@ PROMETHEUS_URL=http://prometheus:9090
 - Alert rules: `docker/prometheus/alerts.yml`
 - Scrape interval: 15 seconds (default)
 
-**Access**: http://localhost:9090
+**Access**: http://prometheus:9090 (internal-only; port-forward if you need the UI on host)
 
 **Key Features**:
 - Scrapes `/metrics` endpoint from effectful applications
@@ -379,7 +381,7 @@ PROMETHEUS_URL=http://prometheus:9090
 
 **Version**: Grafana latest
 
-**Access**: http://localhost:3000
+**Access**: http://grafana:3000 (internal-only; port-forward if you need the UI on host)
 
 **Default Credentials**: `admin` / `admin` (change on first login)
 

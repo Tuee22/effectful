@@ -203,7 +203,7 @@ def test_appointment_sends_notification() -> None:
 ### Integration Test
 
 ```python
-async def test_notification_delivered(redis_client):
+async def test_notification_delivered(redis_client) -> None:
     # Subscribe to channel
     pubsub = redis_client.pubsub()
     await pubsub.subscribe("doctor:test:notifications")

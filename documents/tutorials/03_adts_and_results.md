@@ -447,7 +447,7 @@ def get_profile_with_fallback(user_id: UUID) -> Generator[AllEffects, EffectResu
 Test programs by stepping through the generator:
 
 ```python
-def test_user_found():
+def test_user_found() -> None:
     user_id = uuid4()
     user = User(id=user_id, email="test@example.com", name="Alice")
 
@@ -479,7 +479,7 @@ def test_user_found():
 ### Testing Failure Cases
 
 ```python
-def test_user_not_found():
+def test_user_not_found() -> None:
     # Create generator
     def program() -> Generator[AllEffects, EffectResult, str]:
         user_result = yield GetUserById(user_id=uuid4())
@@ -508,7 +508,7 @@ def test_user_not_found():
 
 ```python
 @pytest.mark.asyncio
-async def test_database_error(mocker):
+async def test_database_error(mocker) -> None:
     # Setup failing repository with pytest-mock
     mock_repo = mocker.AsyncMock(spec=UserRepository)
     mock_repo.get_by_id.side_effect = Exception("Connection timeout")

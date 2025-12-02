@@ -208,8 +208,8 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
     user_result = yield GetUserById(user_id=user_id)
 
     match user_result:
-        case None:
-            yield SendText(text="User not found")
+        case UserNotFound(reason=reason):
+            yield SendText(text=f"User not found: {reason}")
             return "error"
         case User(name=name):
             yield SendText(text=f"Hello {name}!")

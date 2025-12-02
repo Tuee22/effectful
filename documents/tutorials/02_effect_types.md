@@ -750,7 +750,7 @@ Use failing fakes to test error handling:
 from pytest_mock import MockerFixture
 
 @pytest.mark.asyncio
-async def test_database_failure(mocker: MockerFixture):
+async def test_database_failure(mocker: MockerFixture) -> None:
     # Setup failing infrastructure with pytest-mock
     mock_repo = mocker.AsyncMock(spec=UserRepository)
     mock_repo.get_by_id.side_effect = Exception("Connection timeout")

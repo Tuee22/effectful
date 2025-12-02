@@ -93,14 +93,6 @@ demo/<project>/documents/
 └── engineering/      # Demo overlays (deltas only; always reference base standards)
 ```
 
-### Document Size Guidelines
-- Target: 300-800 lines per document
-- Minimum: 100 lines (otherwise merge with related doc)
-- No hard maximum; split when readability suffers or navigation becomes unclear
-- Exception: Comprehensive standards like `testing.md` (~3600 lines) due to 22 anti-patterns
-
----
-
 ## Writing Style Guidelines
 
 ### Imperative Mood for Standards
