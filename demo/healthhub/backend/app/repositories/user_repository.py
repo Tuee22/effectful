@@ -8,6 +8,7 @@ from uuid import UUID
 import asyncpg
 
 from app.database import safe_datetime, safe_optional_datetime, safe_str, safe_uuid
+from app.domain.optional_value import to_optional_value
 from app.domain.user import User, UserRole, UserStatus
 
 
@@ -142,7 +143,9 @@ class UserRepository:
             password_hash=safe_str(row["password_hash"]),
             role=UserRole(safe_str(row["role"])),
             status=UserStatus(safe_str(row["status"])),
-            last_login=safe_optional_datetime(row["last_login"]),
+            last_login=to_optional_value(
+                safe_optional_datetime(row["last_login"]), reason="never_logged_in"
+            ),
             created_at=safe_datetime(row["created_at"]),
             updated_at=safe_datetime(row["updated_at"]),
         )

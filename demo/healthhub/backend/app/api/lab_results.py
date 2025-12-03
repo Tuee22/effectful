@@ -19,13 +19,13 @@ from app.database.converters import (
     safe_uuid,
 )
 from app.domain.lab_result import LabResult
+from app.domain.optional_value import from_optional_value, to_optional_value
 from app.effects.healthcare import (
     CreateLabResult,
     GetLabResultById,
     ListLabResults,
     ReviewLabResult,
 )
-from app.effects.notification import LogAuditEvent
 from app.infrastructure import get_database_manager, rate_limit
 from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
@@ -88,7 +88,9 @@ def _row_to_lab_result(row: dict[str, object]) -> LabResult:
         result_data=result_data,
         critical=safe_bool(row["critical"]),
         reviewed_by_doctor=safe_bool(row["reviewed_by_doctor"]),
-        doctor_notes=safe_optional_str(row["doctor_notes"]),
+        doctor_notes=to_optional_value(
+            safe_optional_str(row["doctor_notes"]), reason="not_recorded"
+        ),
         created_at=safe_datetime(row["created_at"]),
     )
 
@@ -103,7 +105,7 @@ def lab_result_to_response(lab_result: LabResult) -> LabResultResponse:
         result_data=lab_result.result_data,
         critical=lab_result.critical,
         reviewed_by_doctor=lab_result.reviewed_by_doctor,
-        doctor_notes=lab_result.doctor_notes,
+        doctor_notes=from_optional_value(lab_result.doctor_notes),
         created_at=lab_result.created_at,
     )
 
@@ -123,7 +125,6 @@ async def list_lab_results(
     - Doctor: sees lab results they ordered
     - Admin: sees all lab results
 
-    Logs all PHI access for HIPAA compliance.
     Rate limit: 100 requests per 60 seconds per IP address.
     """
     db_manager = get_database_manager()
@@ -163,24 +164,9 @@ async def list_lab_results(
             AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
         )
 
-        # Create effect program with audit logging
         def list_program() -> Generator[AllEffects, object, list[LabResult]]:
             lab_results = yield ListLabResults(patient_id=patient_id, doctor_id=doctor_id)
             assert isinstance(lab_results, list)
-
-            # HIPAA-required audit logging (log all PHI list access)
-            resource_id = (
-                lab_results[0].id if lab_results else UUID("00000000-0000-0000-0000-000000000000")
-            )
-            yield LogAuditEvent(
-                user_id=actor_id,
-                action="list_lab_results",
-                resource_type="lab_result",
-                resource_id=resource_id,
-                ip_address=ip_address,
-                user_agent=user_agent,
-                metadata={"count": str(len(lab_results))},
-            )
 
             return lab_results
 
@@ -249,22 +235,7 @@ async def create_lab_result(
                 critical=request_data.critical,
                 doctor_notes=request_data.doctor_notes,
             )
-
-            # HIPAA-required audit logging
             assert isinstance(lab_result, LabResult)
-            yield LogAuditEvent(
-                user_id=actor_id,
-                action="create_lab_result",
-                resource_type="lab_result",
-                resource_id=lab_result.id,
-                ip_address=ip_address,
-                user_agent=user_agent,
-                metadata={
-                    "patient_id": str(request_data.patient_id),
-                    "critical": str(request_data.critical),
-                },
-            )
-
             return lab_result
 
         # Run effect program
@@ -326,17 +297,6 @@ async def get_lab_result(
     # Create effect program with audit logging
     def get_program() -> Generator[AllEffects, object, LabResult]:
         lab_result = yield GetLabResultById(result_id=UUID(lab_result_id))
-
-        # HIPAA-required audit logging (log all access attempts)
-        yield LogAuditEvent(
-            user_id=actor_id,
-            action="view_lab_result",
-            resource_type="lab_result",
-            resource_id=UUID(lab_result_id),
-            ip_address=ip_address,
-            user_agent=user_agent,
-            metadata={"status": "found" if lab_result else "not_found"},
-        )
 
         if lab_result is None:
             raise HTTPException(
@@ -477,24 +437,9 @@ async def get_patient_lab_results(
         AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
     )
 
-    # Create effect program with audit logging
     def list_program() -> Generator[AllEffects, object, list[LabResult]]:
         lab_results = yield ListLabResults(patient_id=UUID(patient_id), doctor_id=None)
         assert isinstance(lab_results, list)
-
-        # HIPAA-required audit logging (log all PHI list access)
-        resource_id = (
-            lab_results[0].id if lab_results else UUID("00000000-0000-0000-0000-000000000000")
-        )
-        yield LogAuditEvent(
-            user_id=actor_id,
-            action="list_patient_lab_results",
-            resource_type="lab_result",
-            resource_id=resource_id,
-            ip_address=ip_address,
-            user_agent=user_agent,
-            metadata={"count": str(len(lab_results)), "patient_id": patient_id},
-        )
 
         return lab_results
 

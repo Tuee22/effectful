@@ -9,12 +9,12 @@ import { isSuccess, isLoading, isFailure } from '../algebraic/RemoteData'
 export const useAppointments = () => {
   const currentAppointment = useAppointmentStore((state) => state.currentAppointment)
   const appointmentList = useAppointmentStore((state) => state.appointmentList)
-  const fetchAppointment = useAppointmentStore((state) => state.fetchAppointment)
-  const createAppointment = useAppointmentStore((state) => state.createAppointment)
-  const transitionStatus = useAppointmentStore((state) => state.transitionStatus)
+  const fetchAppointmentAction = useAppointmentStore((state) => state.fetchAppointment)
+  const createAppointmentAction = useAppointmentStore((state) => state.createAppointment)
+  const transitionStatusAction = useAppointmentStore((state) => state.transitionStatus)
   const clearCurrentAppointment = useAppointmentStore((state) => state.clearCurrentAppointment)
 
-  const { token, userId } = useAuth()
+  const { userId, getValidAccessToken } = useAuth()
 
   return {
     // State
@@ -28,20 +28,23 @@ export const useAppointments = () => {
     error: isFailure(currentAppointment) ? currentAppointment.error : null,
 
     // Actions (with token injection)
-    fetchAppointment: (appointmentId: string) => {
+    fetchAppointment: async (appointmentId: string) => {
+      const token = await getValidAccessToken()
       if (token) {
-        fetchAppointment(appointmentId, token)
+        await fetchAppointmentAction(appointmentId, token)
       }
     },
-    createAppointment: (data: Parameters<typeof createAppointment>[0]) => {
-      if (token) {
-        return createAppointment(data, token)
+    createAppointment: async (data: Parameters<typeof createAppointmentAction>[0]) => {
+      const token = await getValidAccessToken()
+      if (!token) {
+        return false
       }
-      return Promise.resolve(false)
+      return createAppointmentAction(data, token)
     },
-    transitionStatus: (appointmentId: string, newStatus: string) => {
+    transitionStatus: async (appointmentId: string, newStatus: string) => {
+      const token = await getValidAccessToken()
       if (token && userId) {
-        return transitionStatus(appointmentId, newStatus, userId, token)
+        return transitionStatusAction(appointmentId, newStatus, userId, token)
       }
       return Promise.resolve(false)
     },

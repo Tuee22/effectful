@@ -11,11 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 import redis.asyncio as redis
 
-from app.domain.prescription import (
-    MedicationInteractionWarning,
-    Prescription,
-)
-from app.effects.notification import LogAuditEvent
+from app.domain.optional_value import from_optional_value
+from app.domain.prescription import MedicationInteractionWarning, Prescription
 from app.infrastructure import get_database_manager, rate_limit
 from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
 from app.interpreters.composite_interpreter import CompositeInterpreter
@@ -80,7 +77,7 @@ def prescription_to_response(prescription: Prescription) -> PrescriptionResponse
         frequency=prescription.frequency,
         duration_days=prescription.duration_days,
         refills_remaining=prescription.refills_remaining,
-        notes=prescription.notes,
+        notes=from_optional_value(prescription.notes),
         created_at=prescription.created_at,
         expires_at=prescription.expires_at,
     )
@@ -144,24 +141,9 @@ async def list_prescriptions(
         AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
     )
 
-    # Create effect program with audit logging
     def list_program() -> Generator[AllEffects, object, list[Prescription]]:
         prescriptions = yield ListPrescriptions(patient_id=patient_id, doctor_id=doctor_id)
         assert isinstance(prescriptions, list)
-
-        # HIPAA-required audit logging (log all PHI list access)
-        resource_id = (
-            prescriptions[0].id if prescriptions else UUID("00000000-0000-0000-0000-000000000000")
-        )
-        yield LogAuditEvent(
-            user_id=actor_id,
-            action="list_prescriptions",
-            resource_type="prescription",
-            resource_id=resource_id,
-            ip_address=ip_address,
-            user_agent=user_agent,
-            metadata={"count": str(len(prescriptions))},
-        )
 
         return prescriptions
 
@@ -346,20 +328,8 @@ async def get_prescription(
         AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
     )
 
-    # Create effect program with audit logging
     def get_program() -> Generator[AllEffects, object, Prescription]:
         prescription = yield GetPrescriptionById(prescription_id=UUID(prescription_id))
-
-        # HIPAA-required audit logging (log all access attempts)
-        yield LogAuditEvent(
-            user_id=actor_id,
-            action="view_prescription",
-            resource_type="prescription",
-            resource_id=UUID(prescription_id),
-            ip_address=ip_address,
-            user_agent=user_agent,
-            metadata={"status": "found" if prescription else "not_found"},
-        )
 
         if prescription is None:
             raise HTTPException(
@@ -428,24 +398,9 @@ async def get_patient_prescriptions(
         AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
     )
 
-    # Create effect program with audit logging
     def list_program() -> Generator[AllEffects, object, list[Prescription]]:
         prescriptions = yield ListPrescriptions(patient_id=UUID(patient_id), doctor_id=None)
         assert isinstance(prescriptions, list)
-
-        # HIPAA-required audit logging (log all PHI list access)
-        resource_id = (
-            prescriptions[0].id if prescriptions else UUID("00000000-0000-0000-0000-000000000000")
-        )
-        yield LogAuditEvent(
-            user_id=actor_id,
-            action="list_patient_prescriptions",
-            resource_type="prescription",
-            resource_id=resource_id,
-            ip_address=ip_address,
-            user_agent=user_agent,
-            metadata={"count": str(len(prescriptions)), "patient_id": patient_id},
-        )
 
         return prescriptions
 

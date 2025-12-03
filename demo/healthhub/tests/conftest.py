@@ -102,6 +102,25 @@ async def clean_db(db_pool: asyncpg.Pool[asyncpg.Record]) -> None:
         await conn.execute("TRUNCATE TABLE patients CASCADE")
         await conn.execute("TRUNCATE TABLE users CASCADE")
 
+        # Seed a default user to satisfy audit_log foreign key constraints in tests
+        from app.auth.password import hash_password
+
+        default_user_id = UUID("10000000-0000-0000-0000-000000000001")
+        now = datetime.now(timezone.utc)
+        await conn.execute(
+            """
+            INSERT INTO users (id, email, password_hash, role, status, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            """,
+            default_user_id,
+            "default_audit_user@example.com",
+            hash_password("password123"),
+            "patient",
+            "active",
+            now,
+            now,
+        )
+
 
 @pytest.fixture
 async def redis_client() -> AsyncIterator[redis.Redis[bytes]]:
@@ -175,19 +194,24 @@ async def seed_test_user(
     from app.auth.password import hash_password
 
     async with db_pool.acquire() as conn:
-        await conn.execute(
-            """
-            INSERT INTO users (id, email, password_hash, role, status, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            """,
+        existing = await conn.fetchval(
+            "SELECT 1 FROM users WHERE id = $1",
             sample_user_id,
-            "test@example.com",
-            hash_password("password123"),
-            "patient",
-            "active",
-            datetime.now(timezone.utc),
-            datetime.now(timezone.utc),
         )
+        if existing is None:
+            await conn.execute(
+                """
+                INSERT INTO users (id, email, password_hash, role, status, created_at, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                """,
+                sample_user_id,
+                "test@example.com",
+                hash_password("password123"),
+                "patient",
+                "active",
+                datetime.now(timezone.utc),
+                datetime.now(timezone.utc),
+            )
 
     return sample_user_id
 

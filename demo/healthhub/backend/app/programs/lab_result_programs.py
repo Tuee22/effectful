@@ -16,11 +16,7 @@ from app.effects.healthcare import (
     GetLabResultById,
     GetPatientById,
 )
-from app.effects.notification import (
-    LogAuditEvent,
-    NotificationValue,
-    PublishWebSocketNotification,
-)
+from app.effects.notification import LogAuditEvent, NotificationValue, PublishWebSocketNotification
 from app.interpreters.composite_interpreter import AllEffects
 
 
@@ -149,7 +145,6 @@ def process_lab_result_program(
             recipient_id=doctor_id,
         )
 
-    # Step 6: Log audit event
     yield LogAuditEvent(
         user_id=actor_id,
         action="create_lab_result",
@@ -157,11 +152,7 @@ def process_lab_result_program(
         resource_id=result_id,
         ip_address=None,
         user_agent=None,
-        metadata={
-            "patient_id": str(patient_id),
-            "doctor_id": str(doctor_id),
-            "critical": str(critical),
-        },
+        metadata={"critical": str(critical)},
     )
 
     return LabResultProcessed(lab_result=lab_result)
@@ -187,18 +178,6 @@ def view_lab_result_program(
     lab_result = yield GetLabResultById(result_id=result_id)
 
     if isinstance(lab_result, LabResult):
-        # Step 2: Log audit event (HIPAA requirement)
-        yield LogAuditEvent(
-            user_id=actor_id,
-            action="view_lab_result",
-            resource_type="lab_result",
-            resource_id=result_id,
-            ip_address=None,
-            user_agent=None,
-            metadata={
-                "patient_id": str(lab_result.patient_id),
-            },
-        )
         return LabResultViewed(lab_result=lab_result)
 
     return LabResultMissing(result_id=result_id)

@@ -10,18 +10,21 @@ import { isSuccess, isLoading, isFailure, isNotAsked } from '../algebraic/Remote
 export const useInvoices = () => {
   const currentInvoice = useInvoiceStore((state) => state.currentInvoice)
   const invoiceList = useInvoiceStore((state) => state.invoiceList)
-  const fetchInvoices = useInvoiceStore((state) => state.fetchInvoices)
-  const fetchInvoice = useInvoiceStore((state) => state.fetchInvoice)
+  const fetchInvoicesAction = useInvoiceStore((state) => state.fetchInvoices)
+  const fetchInvoiceAction = useInvoiceStore((state) => state.fetchInvoice)
   const clearCurrentInvoice = useInvoiceStore((state) => state.clearCurrentInvoice)
 
-  const { token } = useAuth()
+  const { getValidAccessToken } = useAuth()
 
   // Auto-fetch invoices on mount when not yet loaded
   useEffect(() => {
-    if (token && isNotAsked(invoiceList)) {
-      fetchInvoices(token)
-    }
-  }, [token, invoiceList, fetchInvoices])
+    void (async () => {
+      const token = await getValidAccessToken()
+      if (token && isNotAsked(invoiceList)) {
+        await fetchInvoicesAction(token)
+      }
+    })()
+  }, [invoiceList, fetchInvoicesAction, getValidAccessToken])
 
   return {
     // State
@@ -36,14 +39,16 @@ export const useInvoices = () => {
     listError: isFailure(invoiceList) ? invoiceList.error : null,
 
     // Actions (with token injection)
-    fetchInvoices: () => {
+    fetchInvoices: async () => {
+      const token = await getValidAccessToken()
       if (token) {
-        fetchInvoices(token)
+        await fetchInvoicesAction(token)
       }
     },
-    fetchInvoice: (invoiceId: string) => {
+    fetchInvoice: async (invoiceId: string) => {
+      const token = await getValidAccessToken()
       if (token) {
-        fetchInvoice(invoiceId, token)
+        await fetchInvoiceAction(invoiceId, token)
       }
     },
     clearCurrentInvoice,

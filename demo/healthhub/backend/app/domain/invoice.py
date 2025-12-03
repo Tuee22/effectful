@@ -6,6 +6,8 @@ from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
+from app.domain.optional_value import OptionalValue
+
 
 @dataclass(frozen=True)
 class LineItem:
@@ -32,13 +34,13 @@ class Invoice:
 
     id: UUID
     patient_id: UUID
-    appointment_id: UUID | None
+    appointment_id: OptionalValue[UUID]
     status: Literal["draft", "sent", "paid", "overdue"]
     subtotal: Decimal
     tax_amount: Decimal
     total_amount: Decimal
-    due_date: date | None
-    paid_at: datetime | None
+    due_date: OptionalValue[date]
+    paid_at: OptionalValue[datetime]
     created_at: datetime
     updated_at: datetime
 
@@ -49,4 +51,7 @@ class InvoiceWithLineItems:
     """Invoice aggregate with its line items."""
 
     invoice: Invoice
-    line_items: list[LineItem]
+    line_items: tuple[LineItem, ...]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "line_items", tuple(self.line_items))

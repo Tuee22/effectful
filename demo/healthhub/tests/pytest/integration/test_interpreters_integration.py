@@ -27,6 +27,7 @@ from app.domain.appointment import (
 )
 from app.domain.invoice import Invoice, LineItem
 from app.domain.lab_result import LabResult
+from app.domain.doctor import Doctor
 from app.domain.patient import Patient
 from app.domain.prescription import (
     MedicationInteractionWarning,
@@ -86,7 +87,7 @@ class TestHealthcareInterpreterIntegration:
         interpreter = HealthcareInterpreter(db_pool)
 
         result = await interpreter.handle(GetDoctorById(doctor_id=seed_test_doctor))
-        assert result is not None
+        assert isinstance(result, Doctor)
         assert result.id == seed_test_doctor
 
         missing = await interpreter.handle(GetDoctorById(doctor_id=uuid4()))
@@ -192,7 +193,9 @@ class TestHealthcareInterpreterIntegration:
         assert isinstance(invalid_result, TransitionInvalid)
 
         async with db_pool.acquire() as conn:
-            row = await conn.fetchrow("SELECT status FROM appointments WHERE id = $1", appointment.id)
+            row = await conn.fetchrow(
+                "SELECT status FROM appointments WHERE id = $1", appointment.id
+            )
             assert row is not None
             assert row["status"] == "completed"
 
@@ -367,7 +370,7 @@ class TestNotificationInterpreterIntegration:
         assert parsed["content"] == "hello"
 
         await pubsub.unsubscribe(channel)
-        await pubsub.aclose()
+        await pubsub.close()
 
     async def test_log_audit_event_persists_to_db(
         self,

@@ -21,11 +21,7 @@ from app.effects.healthcare import (
     GetDoctorById,
     GetPatientById,
 )
-from app.effects.notification import (
-    LogAuditEvent,
-    NotificationValue,
-    PublishWebSocketNotification,
-)
+from app.effects.notification import LogAuditEvent, NotificationValue, PublishWebSocketNotification
 from app.interpreters.composite_interpreter import AllEffects
 
 
@@ -143,7 +139,8 @@ def create_prescription_program(
                 ip_address=None,
                 user_agent=None,
                 metadata={
-                    "severity": "severe",
+                    "medications": ",".join(interaction_result.medications),
+                    "severity": interaction_result.severity,
                 },
             )
             return PrescriptionBlocked(warning=interaction_result)
@@ -181,8 +178,6 @@ def create_prescription_program(
         recipient_id=patient_id,
     )
 
-    # Step 7: Log audit event
-    has_warning = isinstance(interaction_result, MedicationInteractionWarning)
     yield LogAuditEvent(
         user_id=actor_id,
         action="create_prescription",
@@ -190,11 +185,7 @@ def create_prescription_program(
         resource_id=prescription.id,
         ip_address=None,
         user_agent=None,
-        metadata={
-            "patient_id": str(patient_id),
-            "doctor_id": str(doctor_id),
-            "has_interaction_warning": str(has_warning),
-        },
+        metadata=None,
     )
 
     return PrescriptionCreated(prescription=prescription)

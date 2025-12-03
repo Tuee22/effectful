@@ -10,21 +10,24 @@ import { isSuccess, isLoading, isFailure, isNotAsked } from '../algebraic/Remote
 export const usePatients = () => {
   const currentPatient = usePatientStore((state) => state.currentPatient)
   const patientList = usePatientStore((state) => state.patientList)
-  const fetchPatients = usePatientStore((state) => state.fetchPatients)
-  const fetchPatient = usePatientStore((state) => state.fetchPatient)
-  const fetchPatientByUserId = usePatientStore((state) => state.fetchPatientByUserId)
-  const createPatient = usePatientStore((state) => state.createPatient)
-  const updatePatient = usePatientStore((state) => state.updatePatient)
+  const fetchPatientsAction = usePatientStore((state) => state.fetchPatients)
+  const fetchPatientAction = usePatientStore((state) => state.fetchPatient)
+  const fetchPatientByUserIdAction = usePatientStore((state) => state.fetchPatientByUserId)
+  const createPatientAction = usePatientStore((state) => state.createPatient)
+  const updatePatientAction = usePatientStore((state) => state.updatePatient)
   const clearCurrentPatient = usePatientStore((state) => state.clearCurrentPatient)
 
-  const { token } = useAuth()
+  const { getValidAccessToken } = useAuth()
 
   // Auto-fetch patients on mount when not yet loaded
   useEffect(() => {
-    if (token && isNotAsked(patientList)) {
-      fetchPatients(token)
-    }
-  }, [token, patientList, fetchPatients])
+    void (async () => {
+      const token = await getValidAccessToken()
+      if (token && isNotAsked(patientList)) {
+        await fetchPatientsAction(token)
+      }
+    })()
+  }, [patientList, fetchPatientsAction, getValidAccessToken])
 
   return {
     // State
@@ -39,32 +42,37 @@ export const usePatients = () => {
     listError: isFailure(patientList) ? patientList.error : null,
 
     // Actions (with token injection)
-    fetchPatients: () => {
+    fetchPatients: async () => {
+      const token = await getValidAccessToken()
       if (token) {
-        fetchPatients(token)
+        await fetchPatientsAction(token)
       }
     },
-    fetchPatient: (patientId: string) => {
+    fetchPatient: async (patientId: string) => {
+      const token = await getValidAccessToken()
       if (token) {
-        fetchPatient(patientId, token)
+        await fetchPatientAction(patientId, token)
       }
     },
-    fetchPatientByUserId: (userId: string) => {
+    fetchPatientByUserId: async (userId: string) => {
+      const token = await getValidAccessToken()
       if (token) {
-        fetchPatientByUserId(userId, token)
+        await fetchPatientByUserIdAction(userId, token)
       }
     },
-    createPatient: (data: Parameters<typeof createPatient>[0]) => {
-      if (token) {
-        return createPatient(data, token)
+    createPatient: async (data: Parameters<typeof createPatientAction>[0]) => {
+      const token = await getValidAccessToken()
+      if (!token) {
+        return false
       }
-      return Promise.resolve(false)
+      return createPatientAction(data, token)
     },
-    updatePatient: (patientId: string, data: Parameters<typeof updatePatient>[1]) => {
-      if (token) {
-        return updatePatient(patientId, data, token)
+    updatePatient: async (patientId: string, data: Parameters<typeof updatePatientAction>[1]) => {
+      const token = await getValidAccessToken()
+      if (!token) {
+        return false
       }
-      return Promise.resolve(false)
+      return updatePatientAction(patientId, data, token)
     },
     clearCurrentPatient,
   }
@@ -72,15 +80,20 @@ export const usePatients = () => {
 
 // Hook that fetches patient by user ID on mount
 export const useCurrentPatient = () => {
-  const { userId, token, isAuthenticated } = useAuth()
+  const { userId, isAuthenticated, getValidAccessToken } = useAuth()
   const { currentPatient } = usePatients()
 
   useEffect(() => {
-    if (isAuthenticated && userId && token) {
-      const fetchPatient = usePatientStore.getState().fetchPatientByUserId
-      fetchPatient(userId, token)
-    }
-  }, [isAuthenticated, userId, token])
+    void (async () => {
+      if (isAuthenticated && userId) {
+        const token = await getValidAccessToken()
+        if (token) {
+          const fetchPatient = usePatientStore.getState().fetchPatientByUserId
+          fetchPatient(userId, token)
+        }
+      }
+    })()
+  }, [isAuthenticated, userId, getValidAccessToken])
 
   return currentPatient
 }

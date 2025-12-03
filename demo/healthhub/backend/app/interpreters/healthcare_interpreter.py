@@ -8,9 +8,11 @@ from __future__ import annotations
 import json
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
+from typing import Literal
 from uuid import UUID, uuid4
 
 import asyncpg
+from typing_extensions import assert_never
 
 from app.database.converters import (
     safe_bool,
@@ -50,6 +52,7 @@ from app.domain.prescription import (
     NoInteractions,
     Prescription,
 )
+from app.domain.optional_value import from_optional_value, to_optional_value
 from app.domain.user import User, UserRole
 from app.effects.healthcare import (
     AddInvoiceLineItem,
@@ -106,28 +109,7 @@ class HealthcareInterpreter:
         self.doctor_repo = DoctorRepository(pool)
         self.user_repo = UserRepository(pool)
 
-    async def handle(
-        self, effect: HealthcareEffect
-    ) -> (
-        Patient
-        | None
-        | Doctor
-        | Appointment
-        | TransitionResult
-        | Prescription
-        | MedicationCheckResult
-        | LabResult
-        | Invoice
-        | LineItem
-        | User
-        | bool
-        | list[Patient]
-        | list[Appointment]
-        | list[Prescription]
-        | list[LabResult]
-        | list[Invoice]
-        | list[LineItem]
-    ):
+    async def handle(self, effect: HealthcareEffect) -> object | None:
         """Handle a healthcare effect.
 
         Args:
@@ -150,7 +132,8 @@ class HealthcareInterpreter:
                 return await self._create_user(email, password_hash, role)
 
             case UpdateUserLastLogin(user_id=user_id):
-                return await self._update_user_last_login(user_id)
+                await self._update_user_last_login(user_id)
+                return True
 
             case ListPatients():
                 return await self._list_patients()
@@ -323,6 +306,7 @@ class HealthcareInterpreter:
 
             case CheckDatabaseHealth():
                 return await self._check_database_health()
+        raise RuntimeError(f"Unhandled healthcare effect: {effect}")
 
     # Patient operations
     async def _get_patient_by_id(self, patient_id: UUID) -> Patient | None:
@@ -431,6 +415,10 @@ class HealthcareInterpreter:
         new_allergies = allergies if allergies is not None else existing.allergies
         allergies_json = json.dumps(new_allergies)
         now = datetime.now(timezone.utc)
+        current_blood_type = from_optional_value(existing.blood_type)
+        current_insurance_id = from_optional_value(existing.insurance_id)
+        current_phone = from_optional_value(existing.phone)
+        current_address = from_optional_value(existing.address)
 
         row = await self.pool.fetchrow(
             """
@@ -452,12 +440,12 @@ class HealthcareInterpreter:
             patient_id,
             first_name if first_name is not None else existing.first_name,
             last_name if last_name is not None else existing.last_name,
-            blood_type if blood_type is not None else existing.blood_type,
+            blood_type if blood_type is not None else current_blood_type,
             allergies_json,
-            insurance_id if insurance_id is not None else existing.insurance_id,
+            insurance_id if insurance_id is not None else current_insurance_id,
             emergency_contact if emergency_contact is not None else existing.emergency_contact,
-            phone if phone is not None else existing.phone,
-            address if address is not None else existing.address,
+            phone if phone is not None else current_phone,
+            address if address is not None else current_address,
             now,
         )
 
@@ -478,9 +466,9 @@ class HealthcareInterpreter:
     def _row_to_patient(self, row: asyncpg.Record) -> Patient:
         """Convert database row to Patient domain model."""
         allergies_obj = row["allergies"]
-        allergies: list[str] = []
+        allergies: tuple[str, ...] = ()
         if isinstance(allergies_obj, list):
-            allergies = [str(item) for item in allergies_obj]
+            allergies = tuple(str(item) for item in allergies_obj)
 
         return Patient(
             id=safe_uuid(row["id"]),
@@ -488,12 +476,16 @@ class HealthcareInterpreter:
             first_name=safe_str(row["first_name"]),
             last_name=safe_str(row["last_name"]),
             date_of_birth=safe_date(row["date_of_birth"]),
-            blood_type=safe_optional_str(row["blood_type"]),
+            blood_type=to_optional_value(
+                safe_optional_str(row["blood_type"]), reason="not_recorded"
+            ),
             allergies=allergies,
-            insurance_id=safe_optional_str(row["insurance_id"]),
+            insurance_id=to_optional_value(
+                safe_optional_str(row["insurance_id"]), reason="not_recorded"
+            ),
             emergency_contact=safe_str(row["emergency_contact"]),
-            phone=safe_optional_str(row["phone"]),
-            address=safe_optional_str(row["address"]),
+            phone=to_optional_value(safe_optional_str(row["phone"]), reason="not_recorded"),
+            address=to_optional_value(safe_optional_str(row["address"]), reason="not_recorded"),
             created_at=safe_datetime(row["created_at"]),
             updated_at=safe_datetime(row["updated_at"]),
         )
@@ -513,7 +505,9 @@ class HealthcareInterpreter:
 
     async def _create_user(self, email: str, password_hash: str, role: str) -> User:
         """Create a new user."""
-        return await self.user_repo.create(email=email, password_hash=password_hash, role=UserRole(role))
+        return await self.user_repo.create(
+            email=email, password_hash=password_hash, role=UserRole(role)
+        )
 
     async def _update_user_last_login(self, user_id: UUID) -> None:
         """Update user's last login timestamp."""
@@ -577,7 +571,10 @@ class HealthcareInterpreter:
         return self._row_to_appointment(row)
 
     async def _list_appointments(
-        self, patient_id: UUID | None, doctor_id: UUID | None, status: str | None
+        self,
+        patient_id: UUID | None,
+        doctor_id: UUID | None,
+        status: Literal["requested", "confirmed", "in_progress", "completed", "cancelled"] | None,
     ) -> list[Appointment]:
         """List appointments with optional filtering."""
         query = """
@@ -788,12 +785,12 @@ class HealthcareInterpreter:
         for pair, severity, description in dangerous_pairs:
             if pair.issubset(med_set):
                 return MedicationInteractionWarning(
-                    medications=list(pair),
+                    medications=tuple(pair),
                     severity=severity,
                     description=description,
                 )
 
-        return NoInteractions(medications_checked=medications)
+        return NoInteractions(medications_checked=tuple(medications))
 
     # Lab result operations
     async def _create_lab_result(
@@ -1081,7 +1078,9 @@ class HealthcareInterpreter:
             created_at=safe_datetime(row["created_at"]),
         )
 
-    async def _update_invoice_status(self, invoice_id: UUID, status: str) -> Invoice:
+    async def _update_invoice_status(
+        self, invoice_id: UUID, status: Literal["draft", "sent", "paid", "overdue"]
+    ) -> Invoice:
         """Update invoice payment status."""
         now = datetime.now(timezone.utc)
         paid_at = now if status == "paid" else None
@@ -1205,7 +1204,7 @@ class HealthcareInterpreter:
             frequency=safe_str(row["frequency"]),
             duration_days=safe_int(row["duration_days"]),
             refills_remaining=safe_int(row["refills_remaining"]),
-            notes=safe_optional_str(row["notes"]),
+            notes=to_optional_value(safe_optional_str(row["notes"]), reason="not_recorded"),
             created_at=safe_datetime(row["created_at"]),
             expires_at=safe_datetime(row["expires_at"]),
         )
@@ -1230,7 +1229,9 @@ class HealthcareInterpreter:
             result_data=result_data,
             critical=safe_bool(row["critical"]),
             reviewed_by_doctor=safe_bool(row["reviewed_by_doctor"]),
-            doctor_notes=safe_optional_str(row["doctor_notes"]),
+            doctor_notes=to_optional_value(
+                safe_optional_str(row["doctor_notes"]), reason="not_recorded"
+            ),
             created_at=safe_datetime(row["created_at"]),
         )
 
@@ -1239,13 +1240,15 @@ class HealthcareInterpreter:
         return Invoice(
             id=safe_uuid(row["id"]),
             patient_id=safe_uuid(row["patient_id"]),
-            appointment_id=safe_optional_uuid(row["appointment_id"]),
+            appointment_id=to_optional_value(
+                safe_optional_uuid(row["appointment_id"]), reason="no_associated_appointment"
+            ),
             status=safe_invoice_status(row["status"]),
             subtotal=safe_decimal(row["subtotal"]),
             tax_amount=safe_decimal(row["tax_amount"]),
             total_amount=safe_decimal(row["total_amount"]),
-            due_date=safe_optional_date(row["due_date"]),
-            paid_at=safe_optional_datetime(row["paid_at"]),
+            due_date=to_optional_value(safe_optional_date(row["due_date"]), reason="not_set"),
+            paid_at=to_optional_value(safe_optional_datetime(row["paid_at"]), reason="not_paid"),
             created_at=safe_datetime(row["created_at"]),
             updated_at=safe_datetime(row["updated_at"]),
         )

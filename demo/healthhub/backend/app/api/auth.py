@@ -6,9 +6,10 @@ Implements JWT dual-token authentication pattern:
 """
 
 from collections.abc import Generator
+from dataclasses import dataclass
 from typing import Annotated
 
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 import redis.asyncio as redis
 from pydantic import BaseModel, EmailStr
 
@@ -25,7 +26,7 @@ from app.auth import (
 from app.infrastructure import get_database_manager, rate_limit
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
 from app.programs.runner import run_program
-from app.domain.user import UserRole
+from app.effects.notification import LogAuditEvent
 from app.effects.healthcare import (
     CreateUser,
     GetDoctorByUserId,
@@ -33,6 +34,9 @@ from app.effects.healthcare import (
     GetUserByEmail,
     UpdateUserLastLogin,
 )
+from app.domain.user import User, UserRole
+from app.domain.patient import Patient
+from app.domain.doctor import Doctor
 
 
 router = APIRouter()
@@ -82,9 +86,43 @@ class RefreshResponse(BaseModel):
     role: str
 
 
+@dataclass(frozen=True)
+class LoginSuccess:
+    user: User
+    patient: Patient | None
+    doctor: Doctor | None
+
+
+@dataclass(frozen=True)
+class LoginInvalidCredentials:
+    reason: str
+
+
+@dataclass(frozen=True)
+class LoginInactiveAccount:
+    status: str
+
+
+type LoginResult = LoginSuccess | LoginInvalidCredentials | LoginInactiveAccount
+
+
+@dataclass(frozen=True)
+class RegisterSuccess:
+    user: User
+
+
+@dataclass(frozen=True)
+class RegisterEmailExists:
+    email: str
+
+
+type RegisterResult = RegisterSuccess | RegisterEmailExists
+
+
 @router.post("/login", response_model=LoginResponse)
 async def login(
     request: LoginRequest,
+    http_request: Request,
     response: Response,
     _rate_limit: Annotated[None, Depends(rate_limit(5, 60))],
 ) -> LoginResponse:
@@ -105,80 +143,107 @@ async def login(
     )
     interpreter = CompositeInterpreter(pool, redis_client)
 
-    def login_program() -> Generator[AllEffects, object, tuple[object, object | None, object | None]]:
+    def login_program() -> Generator[AllEffects, object, LoginResult]:
         user = yield GetUserByEmail(email=request.email)
         if user is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid email or password",
-            )
+            return LoginInvalidCredentials(reason="Invalid email or password")
+
+        assert isinstance(user, User)
 
         if not verify_password(request.password, user.password_hash):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid email or password",
-            )
+            return LoginInvalidCredentials(reason="Invalid email or password")
 
         if user.status.value != "active":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Account is {user.status.value}",
-            )
+            return LoginInactiveAccount(status=user.status.value)
 
         yield UpdateUserLastLogin(user_id=user.id)
 
-        patient = None
-        doctor = None
+        patient: Patient | None = None
+        doctor: Doctor | None = None
 
         if user.role.value == "patient":
-            patient = yield GetPatientByUserId(user_id=user.id)
+            found_patient = yield GetPatientByUserId(user_id=user.id)
+            patient = found_patient if isinstance(found_patient, Patient) else None
         elif user.role.value == "doctor":
-            doctor = yield GetDoctorByUserId(user_id=user.id)
+            found_doctor = yield GetDoctorByUserId(user_id=user.id)
+            doctor = found_doctor if isinstance(found_doctor, Doctor) else None
 
-        return user, patient, doctor
+        return LoginSuccess(user=user, patient=patient, doctor=doctor)
 
     try:
-        user, patient, doctor = await run_program(login_program(), interpreter)
+        login_result = await run_program(login_program(), interpreter)
+
+        match login_result:
+            case LoginInvalidCredentials(reason=reason):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=reason,
+                )
+            case LoginInactiveAccount(status=acct_status):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"Account is {acct_status}",
+                )
+            case LoginSuccess(user=user, patient=patient, doctor=doctor):
+                pass
+            case _:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Unexpected login result",
+                )
+
+        # Set refresh token in HttpOnly cookie (7 days)
+        refresh_token = create_refresh_token(
+            user.id,
+            user.email,
+            user.role.value,
+            patient_id=patient.id if patient else None,
+            doctor_id=doctor.id if doctor else None,
+        )
+        response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            httponly=True,
+            secure=True,
+            samesite="strict",
+            max_age=7 * 24 * 60 * 60,
+        )
+
+        access_token = create_access_token(
+            user.id,
+            user.email,
+            user.role.value,
+            patient_id=patient.id if patient else None,
+            doctor_id=doctor.id if doctor else None,
+        )
+
+        await interpreter.notification_interpreter.handle(
+            LogAuditEvent(
+                user_id=user.id,
+                action="login_success",
+                resource_type="auth",
+                resource_id=user.id,
+                ip_address=http_request.client.host if http_request.client else None,
+                user_agent=http_request.headers.get("user-agent"),
+                metadata=None,
+            )
+        )
+
+        return LoginResponse(
+            access_token=access_token,
+            token_type="Bearer",
+            user_id=str(user.id),
+            email=user.email,
+            role=user.role.value,
+        )
     finally:
         await redis_client.aclose()
-
-    # Set refresh token in HttpOnly cookie (7 days)
-    refresh_token = create_refresh_token(
-        user.id,
-        user.email,
-        user.role.value,
-        patient_id=patient.id if patient else None,
-        doctor_id=doctor.id if doctor else None,
-    )
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        secure=True,
-        samesite="strict",
-        max_age=7 * 24 * 60 * 60,
-    )
-
-    access_token = create_access_token(
-        user.id,
-        user.email,
-        user.role.value,
-        patient_id=patient.id if patient else None,
-        doctor_id=doctor.id if doctor else None,
-    )
-
-    return LoginResponse(
-        access_token=access_token,
-        token_type="Bearer",
-        user_id=str(user.id),
-        email=user.email,
-        role=user.role.value,
-    )
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
 async def register(
     request: RegisterRequest,
+    http_request: Request,
     _rate_limit: Annotated[None, Depends(rate_limit(3, 300))],
 ) -> RegisterResponse:
     """Register a new user account.
@@ -196,33 +261,58 @@ async def register(
     )
     interpreter = CompositeInterpreter(pool, redis_client)
 
-    def register_program() -> Generator[AllEffects, object, object]:
+    def register_program() -> Generator[AllEffects, object, RegisterResult]:
         existing_user = yield GetUserByEmail(email=request.email)
         if existing_user is not None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered",
-            )
+            return RegisterEmailExists(email=request.email)
 
         password_hash = hash_password(request.password)
-        user = yield CreateUser(
+        created_user = yield CreateUser(
             email=request.email,
             password_hash=password_hash,
             role=request.role.value,
         )
-        return user
+        assert isinstance(created_user, User)
+        return RegisterSuccess(user=created_user)
 
     try:
-        user = await run_program(register_program(), interpreter)
+        register_result = await run_program(register_program(), interpreter)
+
+        match register_result:
+            case RegisterEmailExists(email=email):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Email already registered",
+                    headers={"X-Existing-Email": email},
+                )
+            case RegisterSuccess(user=user):
+                pass
+            case _:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Unexpected register result",
+                )
+
+        await interpreter.notification_interpreter.handle(
+            LogAuditEvent(
+                user_id=user.id,
+                action="register_user",
+                resource_type="auth",
+                resource_id=user.id,
+                ip_address=http_request.client.host if http_request.client else None,
+                user_agent=http_request.headers.get("user-agent"),
+                metadata=None,
+            )
+        )
+
+        return RegisterResponse(
+            user_id=str(user.id),
+            email=user.email,
+            role=user.role.value,
+            message="User registered successfully. Complete profile setup in the next step.",
+        )
     finally:
         await redis_client.aclose()
-
-    return RegisterResponse(
-        user_id=str(user.id),
-        email=user.email,
-        role=user.role.value,
-        message="User registered successfully. Complete profile setup in the next step.",
-    )
 
 
 @router.post("/refresh", response_model=RefreshResponse)

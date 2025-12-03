@@ -16,6 +16,7 @@ from app.database import (
     safe_uuid,
 )
 from app.domain.patient import Patient
+from app.domain.optional_value import to_optional_value
 
 
 class PatientRepository:
@@ -157,12 +158,16 @@ class PatientRepository:
             first_name=safe_str(row["first_name"]),
             last_name=safe_str(row["last_name"]),
             date_of_birth=safe_date(row["date_of_birth"]),
-            blood_type=safe_optional_str(row["blood_type"]),
-            allergies=safe_list_str(row["allergies"]),
-            insurance_id=safe_optional_str(row["insurance_id"]),
+            blood_type=to_optional_value(
+                safe_optional_str(row["blood_type"]), reason="not_recorded"
+            ),
+            allergies=tuple(safe_list_str(row["allergies"])),
+            insurance_id=to_optional_value(
+                safe_optional_str(row["insurance_id"]), reason="not_recorded"
+            ),
             emergency_contact=safe_str(row["emergency_contact"]),
-            phone=safe_optional_str(row["phone"]),
-            address=safe_optional_str(row["address"]),
+            phone=to_optional_value(safe_optional_str(row["phone"]), reason="not_recorded"),
+            address=to_optional_value(safe_optional_str(row["address"]), reason="not_recorded"),
             created_at=safe_datetime(row["created_at"]),
             updated_at=safe_datetime(row["updated_at"]),
         )

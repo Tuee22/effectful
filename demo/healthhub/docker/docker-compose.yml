@@ -100,6 +100,7 @@ services:
       # Redis
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      REDIS_DB: 0
 
       # Pulsar
       PULSAR_URL: pulsar://pulsar:6650
@@ -110,6 +111,7 @@ services:
       MINIO_ACCESS_KEY: healthhub_minio
       MINIO_SECRET_KEY: healthhub_minio_secret
       MINIO_BUCKET: healthhub-medical-docs
+      MINIO_SECURE: "false"
 
       # Application
       APP_ENV: development

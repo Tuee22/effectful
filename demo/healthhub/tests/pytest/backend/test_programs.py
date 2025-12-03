@@ -22,6 +22,7 @@ from app.domain.appointment import (
 from app.domain.doctor import Doctor
 from app.domain.patient import Patient
 from app.domain.prescription import MedicationInteractionWarning, NoInteractions, Prescription
+from app.domain.optional_value import to_optional_value
 from app.effects.healthcare import (
     CheckMedicationInteractions,
     CreateAppointment,
@@ -67,12 +68,12 @@ class TestScheduleAppointmentProgram:
             first_name="John",
             last_name="Doe",
             date_of_birth=date(1985, 5, 15),
-            blood_type="O+",
-            allergies=[],
-            insurance_id="INS-123",
+            blood_type=to_optional_value("O+"),
+            allergies=(),
+            insurance_id=to_optional_value("INS-123"),
             emergency_contact="Jane: 555-0100",
-            phone="555-0123",
-            address="123 Main St",
+            phone=to_optional_value("555-0123"),
+            address=to_optional_value("123 Main St"),
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -85,7 +86,7 @@ class TestScheduleAppointmentProgram:
             specialization="Cardiology",
             license_number="MD-123",
             can_prescribe=True,
-            phone="555-1234",
+            phone=to_optional_value("555-1234"),
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -186,12 +187,12 @@ class TestScheduleAppointmentProgram:
             first_name="John",
             last_name="Doe",
             date_of_birth=date(1985, 5, 15),
-            blood_type="O+",
-            allergies=[],
-            insurance_id="INS-123",
+            blood_type=to_optional_value("O+"),
+            allergies=(),
+            insurance_id=to_optional_value("INS-123"),
             emergency_contact="Jane: 555-0100",
-            phone="555-0123",
-            address="123 Main St",
+            phone=to_optional_value("555-0123"),
+            address=to_optional_value("123 Main St"),
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -332,7 +333,8 @@ class TestTransitionAppointmentProgram:
             patient_id=patient_id,
             doctor_id=doctor_id,
             status=Completed(
-                completed_at=datetime.now(timezone.utc), notes="Appointment completed"
+                completed_at=datetime.now(timezone.utc),
+                notes="Appointment completed",
             ),
             reason="Checkup",
             created_at=datetime.now(timezone.utc),
@@ -385,12 +387,12 @@ class TestCreatePrescriptionProgram:
             first_name="John",
             last_name="Doe",
             date_of_birth=date(1985, 5, 15),
-            blood_type="O+",
-            allergies=[],
-            insurance_id="INS-123",
+            blood_type=to_optional_value("O+"),
+            allergies=(),
+            insurance_id=to_optional_value("INS-123"),
             emergency_contact="Jane: 555-0100",
-            phone="555-0123",
-            address="123 Main St",
+            phone=to_optional_value("555-0123"),
+            address=to_optional_value("123 Main St"),
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -403,12 +405,12 @@ class TestCreatePrescriptionProgram:
             specialization="Cardiology",
             license_number="MD-123",
             can_prescribe=True,
-            phone="555-1234",
+            phone=to_optional_value("555-1234"),
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
 
-        mock_interaction_result = NoInteractions(medications_checked=["Metformin", "Lisinopril"])
+        mock_interaction_result = NoInteractions(medications_checked=("Metformin", "Lisinopril"))
 
         mock_prescription = Prescription(
             id=uuid4(),
@@ -419,7 +421,7 @@ class TestCreatePrescriptionProgram:
             frequency="once daily",
             duration_days=30,
             refills_remaining=3,
-            notes="Monitor BP",
+            notes=to_optional_value("Monitor BP"),
             created_at=datetime.now(timezone.utc),
             expires_at=datetime.now(timezone.utc),
         )
@@ -520,12 +522,12 @@ class TestCreatePrescriptionProgram:
             first_name="John",
             last_name="Doe",
             date_of_birth=date(1985, 5, 15),
-            blood_type="O+",
-            allergies=[],
-            insurance_id="INS-123",
+            blood_type=to_optional_value("O+"),
+            allergies=(),
+            insurance_id=to_optional_value("INS-123"),
             emergency_contact="Jane: 555-0100",
-            phone="555-0123",
-            address="123 Main St",
+            phone=to_optional_value("555-0123"),
+            address=to_optional_value("123 Main St"),
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -572,12 +574,12 @@ class TestCreatePrescriptionProgram:
             first_name="John",
             last_name="Doe",
             date_of_birth=date(1985, 5, 15),
-            blood_type="O+",
-            allergies=[],
-            insurance_id="INS-123",
+            blood_type=to_optional_value("O+"),
+            allergies=(),
+            insurance_id=to_optional_value("INS-123"),
             emergency_contact="Jane: 555-0100",
-            phone="555-0123",
-            address="123 Main St",
+            phone=to_optional_value("555-0123"),
+            address=to_optional_value("123 Main St"),
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -591,7 +593,7 @@ class TestCreatePrescriptionProgram:
             specialization="Physical Therapy",
             license_number="PT-123",
             can_prescribe=False,
-            phone="555-5678",
+            phone=to_optional_value("555-5678"),
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -638,12 +640,12 @@ class TestCreatePrescriptionProgram:
             first_name="John",
             last_name="Doe",
             date_of_birth=date(1985, 5, 15),
-            blood_type="O+",
-            allergies=[],
-            insurance_id="INS-123",
+            blood_type=to_optional_value("O+"),
+            allergies=(),
+            insurance_id=to_optional_value("INS-123"),
             emergency_contact="Jane: 555-0100",
-            phone="555-0123",
-            address="123 Main St",
+            phone=to_optional_value("555-0123"),
+            address=to_optional_value("123 Main St"),
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -656,13 +658,13 @@ class TestCreatePrescriptionProgram:
             specialization="Cardiology",
             license_number="MD-123",
             can_prescribe=True,
-            phone="555-1234",
+            phone=to_optional_value("555-1234"),
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
 
         mock_interaction_warning = MedicationInteractionWarning(
-            medications=["Warfarin", "Aspirin"],
+            medications=("Warfarin", "Aspirin"),
             severity="severe",
             description="Increased bleeding risk",
         )
@@ -718,12 +720,12 @@ class TestCreatePrescriptionProgram:
             first_name="John",
             last_name="Doe",
             date_of_birth=date(1985, 5, 15),
-            blood_type="O+",
-            allergies=[],
-            insurance_id="INS-123",
+            blood_type=to_optional_value("O+"),
+            allergies=(),
+            insurance_id=to_optional_value("INS-123"),
             emergency_contact="Jane: 555-0100",
-            phone="555-0123",
-            address="123 Main St",
+            phone=to_optional_value("555-0123"),
+            address=to_optional_value("123 Main St"),
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
@@ -736,13 +738,13 @@ class TestCreatePrescriptionProgram:
             specialization="Cardiology",
             license_number="MD-123",
             can_prescribe=True,
-            phone="555-1234",
+            phone=to_optional_value("555-1234"),
             created_at=datetime.now(timezone.utc),
             updated_at=datetime.now(timezone.utc),
         )
 
         mock_interaction_warning = MedicationInteractionWarning(
-            medications=["Lisinopril", "Potassium"],
+            medications=("Lisinopril", "Potassium"),
             severity="moderate",
             description="Hyperkalemia risk",
         )
@@ -756,7 +758,7 @@ class TestCreatePrescriptionProgram:
             frequency="once daily",
             duration_days=30,
             refills_remaining=3,
-            notes="Monitor potassium",
+            notes=to_optional_value("Monitor potassium"),
             created_at=datetime.now(timezone.utc),
             expires_at=datetime.now(timezone.utc),
         )

@@ -140,9 +140,15 @@ def run_e2e() -> int:
     print("HEALTHHUB E2E BROWSER TESTS")
     print("=" * 80)
     print("Infrastructure: Playwright (Chromium, Firefox, WebKit)")
-    print("Target: Frontend at http://frontend:5173")
+    frontend_url = "http://localhost:8851"
+    backend_url = "http://localhost:8851"
+    print(f"Target: Frontend at {frontend_url}")
     print("Expected duration: 5-15 minutes (53 tests × 3 browsers)")
     print("=" * 80)
+
+    env = os.environ.copy()
+    env["E2E_FRONTEND_URL"] = frontend_url
+    env["E2E_BACKEND_URL"] = backend_url
 
     result = subprocess.run(
         [
@@ -152,8 +158,8 @@ def run_e2e() -> int:
             "tests/pytest/e2e",
             "-v",
             "--tb=short",
-            "-x",  # Stop on first failure for faster feedback
         ],
+        env=env,
         check=False,
     )
 

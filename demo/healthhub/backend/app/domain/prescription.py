@@ -5,6 +5,8 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
+from app.domain.optional_value import OptionalValue
+
 
 @dataclass(frozen=True)
 class Prescription:
@@ -21,7 +23,7 @@ class Prescription:
     frequency: str
     duration_days: int
     refills_remaining: int
-    notes: str | None
+    notes: OptionalValue[str]
     created_at: datetime
     expires_at: datetime
 
@@ -31,7 +33,10 @@ class Prescription:
 class NoInteractions:
     """No medication interactions detected."""
 
-    medications_checked: list[str]
+    medications_checked: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "medications_checked", tuple(self.medications_checked))
 
 
 @dataclass(frozen=True)
@@ -44,9 +49,12 @@ class MedicationInteractionWarning:
     - severe: Contraindicated, should not be prescribed together
     """
 
-    medications: list[str]
+    medications: tuple[str, ...]
     severity: Literal["minor", "moderate", "severe"]
     description: str
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "medications", tuple(self.medications))
 
 
 type MedicationCheckResult = NoInteractions | MedicationInteractionWarning

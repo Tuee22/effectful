@@ -578,4 +578,4 @@ class TestAppointmentNotifications:
         assert payload.get("reason") is None
 
         await pubsub.unsubscribe(doctor_channel)
-        await pubsub.aclose()
+        await pubsub.close()

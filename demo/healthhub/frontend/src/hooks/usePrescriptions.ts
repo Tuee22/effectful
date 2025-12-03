@@ -10,19 +10,22 @@ import { isSuccess, isLoading, isFailure, isNotAsked } from '../algebraic/Remote
 export const usePrescriptions = () => {
   const currentPrescription = usePrescriptionStore((state) => state.currentPrescription)
   const prescriptionList = usePrescriptionStore((state) => state.prescriptionList)
-  const fetchPrescriptions = usePrescriptionStore((state) => state.fetchPrescriptions)
-  const fetchPrescription = usePrescriptionStore((state) => state.fetchPrescription)
-  const createPrescription = usePrescriptionStore((state) => state.createPrescription)
+  const fetchPrescriptionsAction = usePrescriptionStore((state) => state.fetchPrescriptions)
+  const fetchPrescriptionAction = usePrescriptionStore((state) => state.fetchPrescription)
+  const createPrescriptionAction = usePrescriptionStore((state) => state.createPrescription)
   const clearCurrentPrescription = usePrescriptionStore((state) => state.clearCurrentPrescription)
 
-  const { token } = useAuth()
+  const { getValidAccessToken } = useAuth()
 
   // Auto-fetch prescriptions on mount when not yet loaded
   useEffect(() => {
-    if (token && isNotAsked(prescriptionList)) {
-      fetchPrescriptions(token)
-    }
-  }, [token, prescriptionList, fetchPrescriptions])
+    void (async () => {
+      const token = await getValidAccessToken()
+      if (token && isNotAsked(prescriptionList)) {
+        await fetchPrescriptionsAction(token)
+      }
+    })()
+  }, [prescriptionList, fetchPrescriptionsAction, getValidAccessToken])
 
   return {
     // State
@@ -37,21 +40,24 @@ export const usePrescriptions = () => {
     listError: isFailure(prescriptionList) ? prescriptionList.error : null,
 
     // Actions (with token injection)
-    fetchPrescriptions: () => {
+    fetchPrescriptions: async () => {
+      const token = await getValidAccessToken()
       if (token) {
-        fetchPrescriptions(token)
+        await fetchPrescriptionsAction(token)
       }
     },
-    fetchPrescription: (prescriptionId: string) => {
+    fetchPrescription: async (prescriptionId: string) => {
+      const token = await getValidAccessToken()
       if (token) {
-        fetchPrescription(prescriptionId, token)
+        await fetchPrescriptionAction(prescriptionId, token)
       }
     },
-    createPrescription: (data: Parameters<typeof createPrescription>[0]) => {
-      if (token) {
-        return createPrescription(data, token)
+    createPrescription: async (data: Parameters<typeof createPrescriptionAction>[0]) => {
+      const token = await getValidAccessToken()
+      if (!token) {
+        return false
       }
-      return Promise.resolve(false)
+      return createPrescriptionAction(data, token)
     },
     clearCurrentPrescription,
   }

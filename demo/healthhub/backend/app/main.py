@@ -74,40 +74,48 @@ app.include_router(
 app.include_router(invoices_router, prefix=f"{settings.api_prefix}/invoices", tags=["invoices"])
 
 
-# Serve frontend static files
+# Serve frontend static files (FastAPI StaticFiles + catch-all)
 frontend_build_path = Path("/opt/healthhub/frontend-build/build")
-if frontend_build_path.exists():
+static_path = frontend_build_path / "static"
+assets_path = frontend_build_path / "assets"
+if static_path.exists():
+    app.mount(
+        "/static",
+        StaticFiles(directory=str(static_path)),
+        name="static",
+    )
+
+if assets_path.exists():
     app.mount(
         "/assets",
-        StaticFiles(directory=str(frontend_build_path / "assets")),
+        StaticFiles(directory=str(assets_path)),
         name="assets",
     )
 
-    @app.get("/{full_path:path}", response_model=None)
-    async def serve_react_app(request: Request, full_path: str) -> FileResponse | JSONResponse:
-        """Serve React app for all non-API routes."""
-        # API routes are already registered - shouldn't reach here
-        if full_path.startswith("api/") or full_path.startswith("health"):
-            return JSONResponse({"error": "Not found"}, status_code=404)
+favicon_path = frontend_build_path / "favicon.ico"
 
-        # For React Router, serve index.html for all other routes
-        index_file = frontend_build_path / "index.html"
-        if index_file.exists():
-            return FileResponse(str(index_file))
 
-        return JSONResponse({"error": "Frontend not built"}, status_code=503)
+@app.get("/favicon.ico", include_in_schema=False, response_model=None)
+async def favicon() -> FileResponse | JSONResponse:
+    if favicon_path.exists():
+        return FileResponse(str(favicon_path))
+    return JSONResponse({"error": "favicon not available"}, status_code=404)
 
-else:
-    # Fallback if frontend not built (development scenario)
-    @app.get("/")
-    async def root() -> JSONResponse:
-        """Root endpoint with application info."""
-        return JSONResponse(
-            {
-                "name": settings.app_name,
-                "version": "1.0.0",
-                "status": "operational",
-                "environment": settings.app_env,
-                "warning": "Frontend not built - access API at /api",
-            }
-        )
+
+@app.get("/{full_path:path}", response_model=None)
+async def serve_react_app(request: Request, full_path: str) -> FileResponse | JSONResponse:
+    """Serve React app for all non-API routes."""
+    if full_path.startswith("api/") or full_path.startswith("health"):
+        return JSONResponse({"error": "Not found"}, status_code=404)
+
+    index_file = frontend_build_path / "index.html"
+    if index_file.exists():
+        return FileResponse(str(index_file))
+
+    return JSONResponse(
+        {
+            "error": "Frontend not built",
+            "hint": "Build frontend into /opt/healthhub/frontend-build/build",
+        },
+        status_code=503,
+    )

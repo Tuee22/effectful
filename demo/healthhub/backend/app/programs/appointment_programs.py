@@ -24,11 +24,7 @@ from app.effects.healthcare import (
     GetPatientById,
     TransitionAppointmentStatus,
 )
-from app.effects.notification import (
-    LogAuditEvent,
-    NotificationValue,
-    PublishWebSocketNotification,
-)
+from app.effects.notification import LogAuditEvent, NotificationValue, PublishWebSocketNotification
 from app.interpreters.composite_interpreter import AllEffects
 
 
@@ -116,7 +112,6 @@ def schedule_appointment_program(
         recipient_id=doctor_id,
     )
 
-    # Step 5: Log audit event
     yield LogAuditEvent(
         user_id=actor_id,
         action="create_appointment",
@@ -124,10 +119,7 @@ def schedule_appointment_program(
         resource_id=appointment.id,
         ip_address=None,
         user_agent=None,
-        metadata={
-            "patient_id": str(patient_id),
-            "doctor_id": str(doctor_id),
-        },
+        metadata={"reason": reason},
     )
 
     return AppointmentScheduled(appointment=appointment)
@@ -201,7 +193,6 @@ def transition_appointment_program(
             recipient_id=appointment.doctor_id,
         )
 
-        # Step 4: Log audit event
         yield LogAuditEvent(
             user_id=actor_id,
             action="transition_appointment_status",
@@ -209,10 +200,7 @@ def transition_appointment_program(
             resource_id=appointment_id,
             ip_address=None,
             user_agent=None,
-            metadata={
-                "old_status": type(appointment.status).__name__,
-                "new_status": type(new_status).__name__,
-            },
+            metadata={"new_status": type(new_status).__name__},
         )
 
     return result

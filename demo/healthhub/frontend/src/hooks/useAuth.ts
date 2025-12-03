@@ -15,6 +15,7 @@ export const useAuth = () => {
   const getToken = useAuthStore((state) => state.getToken)
   const getUserId = useAuthStore((state) => state.getUserId)
   const getRole = useAuthStore((state) => state.getRole)
+  const getValidAccessToken = useAuthStore((state) => state.getValidAccessToken)
   const bootstrap = useAuthStore((state) => state.bootstrap)
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export const useAuth = () => {
     token: getToken(),
     userId: getUserId(),
     role: getRole(),
+    getValidAccessToken,
 
     // Actions
     login,

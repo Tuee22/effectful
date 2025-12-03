@@ -21,6 +21,7 @@ import pytest
 import redis.asyncio as redis
 
 from app.domain.invoice import Invoice, LineItem
+from app.domain.optional_value import from_optional_value
 from app.effects.healthcare import (
     AddInvoiceLineItem,
     CreateInvoice,
@@ -364,7 +365,7 @@ class TestInvoiceStatusManagement:
         # Verify updated invoice
         assert isinstance(updated_invoice_result, Invoice)
         assert updated_invoice_result.status == "paid"
-        assert updated_invoice_result.paid_at is not None
+        assert from_optional_value(updated_invoice_result.paid_at) is not None
 
         # Verify database persistence
         async with db_pool.acquire() as conn:

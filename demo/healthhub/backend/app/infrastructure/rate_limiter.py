@@ -8,10 +8,31 @@ from fastapi import Depends, HTTPException, Request, status
 import redis.asyncio as redis
 
 
+class RedisWrapper:
+    """Minimal wrapper to provide typed Redis commands used by the rate limiter."""
+
+    def __init__(self, client: object) -> None:
+        self._client = client
+
+    async def zremrangebyscore(self, *args: object, **kwargs: object) -> int:
+        return int(await getattr(self._client, "zremrangebyscore")(*args, **kwargs))
+
+    async def zcard(self, *args: object, **kwargs: object) -> int:
+        return int(await getattr(self._client, "zcard")(*args, **kwargs))
+
+    async def zadd(self, *args: object, **kwargs: object) -> int:
+        result = await getattr(self._client, "zadd")(*args, **kwargs)
+        return int(result) if isinstance(result, (int, float)) else 0
+
+    async def expire(self, *args: object, **kwargs: object) -> bool:
+        result = await getattr(self._client, "expire")(*args, **kwargs)
+        return bool(result)
+
+
 class RateLimiter:
     """Redis-based rate limiter with sliding window algorithm."""
 
-    def __init__(self, redis_client: redis.Redis) -> None:
+    def __init__(self, redis_client: RedisWrapper) -> None:
         self.redis_client = redis_client
 
     async def check_rate_limit(self, key: str, max_requests: int, window_seconds: int) -> bool:
@@ -29,35 +50,23 @@ class RateLimiter:
         window_start = now - timedelta(seconds=window_seconds)
 
         # Use sorted set to store timestamps
-        pipe = self.redis_client.pipeline()  # type: ignore[attr-defined]
+        # Sequential ops keep the logic simple and avoid missing pipeline typing in redis stubs
+        await self.redis_client.zremrangebyscore(key, 0, window_start.timestamp())
+        current_count = await self.redis_client.zcard(key)
+        await self.redis_client.zadd(key, {str(now.timestamp()): now.timestamp()})
+        await self.redis_client.expire(key, window_seconds)
 
-        # Remove old entries outside the window
-        pipe.zremrangebyscore(key, 0, window_start.timestamp())
-
-        # Count current requests in window
-        pipe.zcard(key)
-
-        # Add current request timestamp
-        pipe.zadd(key, {str(now.timestamp()): now.timestamp()})
-
-        # Set expiration on key
-        pipe.expire(key, window_seconds)
-
-        results = await pipe.execute()
-        current_count = results[1]  # zcard result
-        assert isinstance(current_count, int)
-
-        return current_count < max_requests
+        return int(current_count) < max_requests
 
 
 def get_rate_limiter() -> RateLimiter:
     """Dependency to get rate limiter instance."""
-    redis_client: redis.Redis = redis.Redis(
+    redis_client: object = redis.Redis(
         host="redis",
         port=6379,
         decode_responses=False,
     )
-    return RateLimiter(redis_client)
+    return RateLimiter(RedisWrapper(redis_client))
 
 
 def rate_limit(

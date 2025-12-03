@@ -32,15 +32,15 @@ if TYPE_CHECKING:
 def base_url() -> str:
     """Get the frontend base URL for E2E tests.
 
-    Uses E2E_FRONTEND_URL environment variable or defaults to Docker internal URL.
+    Single-source: FastAPI serves the built frontend on port 8851.
     """
-    return os.environ.get("E2E_FRONTEND_URL", "http://localhost:8851")
+    return "http://localhost:8851"
 
 
 @pytest.fixture(scope="session")
 def backend_url() -> str:
     """Get the backend base URL for E2E tests."""
-    return os.environ.get("E2E_BACKEND_URL", "http://localhost:8851")
+    return "http://localhost:8851"
 
 
 # =============================================================================

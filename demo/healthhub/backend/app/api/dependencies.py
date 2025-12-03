@@ -9,7 +9,7 @@ from typing import Annotated
 from collections.abc import Generator
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import redis.asyncio as redis
 
@@ -19,6 +19,7 @@ from app.infrastructure import get_database_manager
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
 from app.programs.runner import run_program
 from app.effects.healthcare import GetDoctorById
+from app.effects.notification import LogAuditEvent
 
 
 # Security scheme for JWT Bearer authentication
@@ -104,6 +105,7 @@ def get_token_data(
 
 
 async def get_current_user(
+    request: Request,
     token_data: Annotated[TokenData, Depends(get_token_data)],
 ) -> AuthorizationState:
     """Get current user authorization state from JWT token.
@@ -126,64 +128,79 @@ async def get_current_user(
     )
     interpreter = CompositeInterpreter(pool, redis_client)
 
-    match token_data.role:
-        case "patient":
-            # Use patient_id from JWT (no DB query)
-            if token_data.patient_id is None:
-                await redis_client.aclose()
-                return Unauthorized(
-                    reason="no_profile",
-                    detail="Patient profile not found. Complete profile setup first.",
+    try:
+        match token_data.role:
+            case "patient":
+                # Use patient_id from JWT (no DB query)
+                if token_data.patient_id is None:
+                    return Unauthorized(
+                        reason="no_profile",
+                        detail="Patient profile not found. Complete profile setup first.",
+                    )
+
+                auth_state: AuthorizationState = PatientAuthorized(
+                    user_id=token_data.user_id,
+                    patient_id=token_data.patient_id,
+                    email=token_data.email,
                 )
 
-            await redis_client.aclose()
-            return PatientAuthorized(
-                user_id=token_data.user_id,
-                patient_id=token_data.patient_id,
-                email=token_data.email,
-            )
+            case "doctor":
+                # Use doctor_id from JWT, but query for can_prescribe capability
+                if token_data.doctor_id is None:
+                    return Unauthorized(
+                        reason="no_profile",
+                        detail="Doctor profile not found. Complete profile setup first.",
+                    )
 
-        case "doctor":
-            # Use doctor_id from JWT, but query for can_prescribe capability
-            if token_data.doctor_id is None:
-                await redis_client.aclose()
-                return Unauthorized(
-                    reason="no_profile",
-                    detail="Doctor profile not found. Complete profile setup first.",
+                doctor_id = token_data.doctor_id
+
+                # Query only for can_prescribe and specialization (capabilities can change)
+                def doctor_program() -> Generator[AllEffects, object, object | None]:
+                    return (yield GetDoctorById(doctor_id=doctor_id))
+
+                doctor = await run_program(doctor_program(), interpreter)
+
+                if doctor is None:
+                    return Unauthorized(
+                        reason="no_profile",
+                        detail="Doctor profile not found or was deleted.",
+                    )
+
+                assert hasattr(doctor, "specialization") and hasattr(doctor, "can_prescribe")
+                auth_state = DoctorAuthorized(
+                    user_id=token_data.user_id,
+                    doctor_id=token_data.doctor_id,
+                    email=token_data.email,
+                    specialization=doctor.specialization,
+                    can_prescribe=doctor.can_prescribe,
                 )
 
-            # Query only for can_prescribe and specialization (capabilities can change)
-            def doctor_program() -> Generator[AllEffects, object, object | None]:
-                return (yield GetDoctorById(doctor_id=token_data.doctor_id))
-
-            doctor = await run_program(doctor_program(), interpreter)
-
-            if doctor is None:
-                await redis_client.aclose()
-                return Unauthorized(
-                    reason="no_profile",
-                    detail="Doctor profile not found or was deleted.",
+            case "admin":
+                auth_state = AdminAuthorized(
+                    user_id=token_data.user_id,
+                    email=token_data.email,
                 )
 
-            await redis_client.aclose()
-            return DoctorAuthorized(
-                user_id=token_data.user_id,
-                doctor_id=token_data.doctor_id,
-                email=token_data.email,
-                specialization=doctor.specialization,
-                can_prescribe=doctor.can_prescribe,
-            )
+            case _:
+                return Unauthorized(
+                    reason="invalid_role", detail=f"Unknown role: {token_data.role}"
+                )
 
-        case "admin":
-            await redis_client.aclose()
-            return AdminAuthorized(
+        await interpreter.notification_interpreter.handle(
+            LogAuditEvent(
                 user_id=token_data.user_id,
-                email=token_data.email,
+                action="authorize_user",
+                resource_type="auth",
+                resource_id=token_data.user_id,
+                ip_address=request.client.host if request.client else None,
+                user_agent=request.headers.get("user-agent"),
+                metadata={"role": token_data.role},
             )
+        )
 
-        case _:
-            await redis_client.aclose()
-            return Unauthorized(reason="invalid_role", detail=f"Unknown role: {token_data.role}")
+        return auth_state
+    finally:
+        await redis_client.aclose()
 
 
 # ============================================================================

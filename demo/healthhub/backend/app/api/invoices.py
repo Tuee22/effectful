@@ -33,7 +33,7 @@ from app.effects.healthcare import (
     ListInvoices,
     UpdateInvoiceStatus,
 )
-from app.effects.notification import LogAuditEvent
+from app.domain.optional_value import from_optional_value, to_optional_value
 from app.infrastructure import get_database_manager, rate_limit
 from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
@@ -111,13 +111,15 @@ def _row_to_invoice(row: dict[str, object]) -> Invoice:
     return Invoice(
         id=safe_uuid(row["id"]),
         patient_id=safe_uuid(row["patient_id"]),
-        appointment_id=safe_optional_uuid(row.get("appointment_id")),
+        appointment_id=to_optional_value(
+            safe_optional_uuid(row.get("appointment_id")), reason="no_associated_appointment"
+        ),
         status=safe_invoice_status(row["status"]),
         subtotal=safe_decimal(row["subtotal"]),
         tax_amount=safe_decimal(row["tax_amount"]),
         total_amount=safe_decimal(row["total_amount"]),
-        due_date=safe_optional_date(row.get("due_date")),
-        paid_at=safe_optional_datetime(row.get("paid_at")),
+        due_date=to_optional_value(safe_optional_date(row.get("due_date")), reason="not_set"),
+        paid_at=to_optional_value(safe_optional_datetime(row.get("paid_at")), reason="not_paid"),
         created_at=safe_datetime(row["created_at"]),
         updated_at=safe_datetime(row["updated_at"]),
     )
@@ -141,13 +143,17 @@ def invoice_to_response(invoice: Invoice) -> InvoiceResponse:
     return InvoiceResponse(
         id=str(invoice.id),
         patient_id=str(invoice.patient_id),
-        appointment_id=str(invoice.appointment_id) if invoice.appointment_id else None,
+        appointment_id=(
+            str(from_optional_value(invoice.appointment_id))
+            if from_optional_value(invoice.appointment_id)
+            else None
+        ),
         status=invoice.status,
         subtotal=float(invoice.subtotal),
         tax_amount=float(invoice.tax_amount),
         total_amount=float(invoice.total_amount),
-        due_date=invoice.due_date,
-        paid_at=invoice.paid_at,
+        due_date=from_optional_value(invoice.due_date),
+        paid_at=from_optional_value(invoice.paid_at),
         created_at=invoice.created_at,
         updated_at=invoice.updated_at,
     )
@@ -218,24 +224,9 @@ async def list_invoices(
             AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
         )
 
-        # Create effect program with audit logging
         def list_program() -> Generator[AllEffects, object, list[Invoice]]:
             invoices = yield ListInvoices(patient_id=patient_id)
             assert isinstance(invoices, list)
-
-            # HIPAA-required audit logging (log all PHI list access)
-            resource_id = (
-                invoices[0].id if invoices else UUID("00000000-0000-0000-0000-000000000000")
-            )
-            yield LogAuditEvent(
-                user_id=actor_id,
-                action="list_invoices",
-                resource_type="invoice",
-                resource_id=resource_id,
-                ip_address=ip_address,
-                user_agent=user_agent,
-                metadata={"count": str(len(invoices))},
-            )
 
             return invoices
 
@@ -293,7 +284,6 @@ async def create_invoice(
             AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
         )
 
-        # Create effect program with audit logging
         def create_program() -> Generator[AllEffects, object, Invoice]:
             invoice = yield CreateInvoice(
                 patient_id=UUID(request_data.patient_id),
@@ -304,18 +294,7 @@ async def create_invoice(
                 due_date=request_data.due_date,
             )
 
-            # HIPAA-required audit logging
             assert isinstance(invoice, Invoice)
-            yield LogAuditEvent(
-                user_id=actor_id,
-                action="create_invoice",
-                resource_type="invoice",
-                resource_id=invoice.id,
-                ip_address=ip_address,
-                user_agent=user_agent,
-                metadata={"patient_id": str(request_data.patient_id)},
-            )
-
             return invoice
 
         # Run effect program
@@ -375,21 +354,8 @@ async def get_invoice(
             AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
         )
 
-        # Create effect program to get invoice with audit logging
         def get_program() -> Generator[AllEffects, object, tuple[Invoice, list[LineItem]]]:
             invoice = yield GetInvoiceById(invoice_id=UUID(invoice_id))
-
-            # HIPAA-required audit logging (log all access attempts)
-            yield LogAuditEvent(
-                user_id=actor_id,
-                action="view_invoice",
-                resource_type="invoice",
-                resource_id=UUID(invoice_id),
-                ip_address=ip_address,
-                user_agent=user_agent,
-                metadata={"status": "found" if invoice else "not_found"},
-            )
-
             if invoice is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -472,7 +438,6 @@ async def add_line_item(
             AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
         )
 
-        # Create effect program with audit logging
         def add_line_item_program() -> Generator[AllEffects, object, LineItem]:
             line_item = yield AddInvoiceLineItem(
                 invoice_id=UUID(invoice_id),
@@ -481,21 +446,7 @@ async def add_line_item(
                 unit_price=Decimal(str(request_data.unit_price)),
             )
 
-            # HIPAA-required audit logging
             assert isinstance(line_item, LineItem)
-            yield LogAuditEvent(
-                user_id=actor_id,
-                action="add_invoice_line_item",
-                resource_type="invoice",
-                resource_id=UUID(invoice_id),
-                ip_address=ip_address,
-                user_agent=user_agent,
-                metadata={
-                    "line_item_id": str(line_item.id),
-                    "label": "line_item_added",
-                },
-            )
-
             return line_item
 
         # Run effect program
@@ -551,14 +502,12 @@ async def update_invoice_status(
             AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
         )
 
-        # Create effect program with audit logging
         def update_status_program() -> Generator[AllEffects, object, Invoice]:
             invoice = yield UpdateInvoiceStatus(
                 invoice_id=UUID(invoice_id),
                 status=request_data.status,
             )
 
-            # HIPAA-required audit logging
             if invoice is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -566,18 +515,6 @@ async def update_invoice_status(
                 )
 
             assert isinstance(invoice, Invoice)
-            yield LogAuditEvent(
-                user_id=actor_id,
-                action="update_invoice_status",
-                resource_type="invoice",
-                resource_id=UUID(invoice_id),
-                ip_address=ip_address,
-                user_agent=user_agent,
-                metadata={
-                    "old_status": "unknown",  # Could retrieve from DB if needed
-                    "new_status": request_data.status,
-                },
-            )
 
             return invoice
 
@@ -649,24 +586,9 @@ async def get_patient_invoices(
             AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
         )
 
-        # Create effect program with audit logging
         def list_program() -> Generator[AllEffects, object, list[Invoice]]:
             invoices = yield ListInvoices(patient_id=UUID(patient_id))
             assert isinstance(invoices, list)
-
-            # HIPAA-required audit logging (log all PHI list access)
-            resource_id = (
-                invoices[0].id if invoices else UUID("00000000-0000-0000-0000-000000000000")
-            )
-            yield LogAuditEvent(
-                user_id=actor_id,
-                action="list_patient_invoices",
-                resource_type="invoice",
-                resource_id=resource_id,
-                ip_address=ip_address,
-                user_agent=user_agent,
-                metadata={"count": str(len(invoices)), "patient_id": patient_id},
-            )
 
             return invoices
 

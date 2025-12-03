@@ -30,7 +30,9 @@ async def health_check() -> JSONResponse:
     interpreter = CompositeInterpreter(pool, redis_client)
 
     def health_program() -> Generator[AllEffects, object, bool]:
-        return (yield CheckDatabaseHealth())
+        result = yield CheckDatabaseHealth()
+        assert isinstance(result, bool)
+        return result
 
     try:
         is_healthy = await run_program(health_program(), interpreter)

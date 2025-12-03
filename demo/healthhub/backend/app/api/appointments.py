@@ -5,7 +5,7 @@ Provides appointment scheduling and state management.
 
 from collections.abc import Generator
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal, cast
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -23,7 +23,7 @@ from app.domain.appointment import (
     TransitionInvalid,
     TransitionSuccess,
 )
-from app.effects.notification import LogAuditEvent
+from app.effects.healthcare import GetAppointmentById
 from app.infrastructure import get_database_manager, rate_limit
 from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
@@ -44,6 +44,7 @@ from app.api.dependencies import (
 )
 
 router = APIRouter()
+StatusFilter = Literal["requested", "confirmed", "in_progress", "completed", "cancelled"]
 
 
 class AppointmentResponse(BaseModel):
@@ -156,6 +157,22 @@ async def list_appointments(
     ip_address = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
 
+    allowed_status_filters: set[StatusFilter] = {
+        "requested",
+        "confirmed",
+        "in_progress",
+        "completed",
+        "cancelled",
+    }
+    status_value: StatusFilter | None = None
+    if status_filter is not None:
+        if status_filter not in allowed_status_filters:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid status filter: {status_filter}",
+            )
+        status_value = cast(StatusFilter, status_filter)
+
     # Create composite interpreter with audit wrapper
     base_interpreter = CompositeInterpreter(pool, redis_client)
     interpreter: AuditedCompositeInterpreter = AuditedCompositeInterpreter(
@@ -166,23 +183,9 @@ async def list_appointments(
     # Create effect program with audit logging
     def list_program() -> Generator[AllEffects, object, list[Appointment]]:
         appointments = yield ListAppointments(
-            patient_id=patient_id, doctor_id=doctor_id, status=status_filter
+            patient_id=patient_id, doctor_id=doctor_id, status=status_value
         )
         assert isinstance(appointments, list)
-
-        # HIPAA-required audit logging (log all PHI list access)
-        resource_id = (
-            appointments[0].id if appointments else UUID("00000000-0000-0000-0000-000000000000")
-        )
-        yield LogAuditEvent(
-            user_id=actor_id,
-            action="list_appointments",
-            resource_type="appointment",
-            resource_id=resource_id,
-            ip_address=ip_address,
-            user_agent=user_agent,
-            metadata={"count": str(len(appointments))},
-        )
 
         return appointments
 
@@ -334,17 +337,6 @@ async def get_appointment(
     def get_program() -> Generator[AllEffects, object, Appointment]:
         appointment = yield GetAppointmentById(appointment_id=UUID(appointment_id))
 
-        # HIPAA-required audit logging (log all access attempts)
-        yield LogAuditEvent(
-            user_id=actor_id,
-            action="view_appointment",
-            resource_type="appointment",
-            resource_id=UUID(appointment_id),
-            ip_address=ip_address,
-            user_agent=user_agent,
-            metadata={"status": "found" if appointment else "not_found"},
-        )
-
         if appointment is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -401,7 +393,7 @@ async def transition_status(
 
     def get_program() -> Generator[AllEffects, object, Appointment | None]:
         appointment = yield GetAppointmentById(appointment_id=UUID(appointment_id))
-        return appointment
+        return appointment if isinstance(appointment, Appointment) else None
 
     appointment = await run_program(get_program(), interpreter)
 

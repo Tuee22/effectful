@@ -315,7 +315,7 @@ class TestMedicationInteractionChecking:
         assert payload["interaction_warning"]["severity"] == "moderate"
 
         await pubsub.unsubscribe(patient_channel)
-        await pubsub.aclose()
+        await pubsub.close()
 
     @pytest.mark.asyncio
     async def test_minor_interaction_creates_with_warning(
@@ -589,4 +589,4 @@ class TestPrescriptionNotifications:
         # Notification payload is PHI-lite; medication name may be omitted intentionally.
 
         await pubsub.unsubscribe(patient_channel)
-        await pubsub.aclose()
+        await pubsub.close()

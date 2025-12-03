@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
+from app.domain.optional_value import OptionalValue
+
 
 @dataclass(frozen=True)
 class Doctor:
@@ -19,6 +21,6 @@ class Doctor:
     specialization: str
     license_number: str
     can_prescribe: bool
-    phone: str | None
+    phone: OptionalValue[str]
     created_at: datetime
     updated_at: datetime

@@ -119,7 +119,7 @@ class TestDomainModelImmutability:
     def test_medication_warning_immutable(self) -> None:
         """MedicationInteractionWarning should be immutable."""
         warning = MedicationInteractionWarning(
-            medications=["Aspirin", "Warfarin"],
+            medications=("Aspirin", "Warfarin"),
             severity="severe",
             description="Increased bleeding risk",
         )
@@ -127,6 +127,6 @@ class TestDomainModelImmutability:
 
     def test_no_interactions_immutable(self) -> None:
         """NoInteractions should be immutable."""
-        result = NoInteractions(medications_checked=["Lisinopril"])
+        result = NoInteractions(medications_checked=("Lisinopril",))
 
         assert_frozen(result, "medications_checked", [])

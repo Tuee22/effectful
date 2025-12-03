@@ -5,6 +5,8 @@ from datetime import datetime
 from enum import Enum
 from uuid import UUID
 
+from app.domain.optional_value import OptionalValue
+
 
 class UserRole(str, Enum):
     """User role enumeration."""
@@ -34,6 +36,6 @@ class User:
     password_hash: str
     role: UserRole
     status: UserStatus
-    last_login: datetime | None
+    last_login: OptionalValue[datetime]
     created_at: datetime
     updated_at: datetime

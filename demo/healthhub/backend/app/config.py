@@ -15,33 +15,33 @@ class Settings(BaseSettings):
     api_prefix: str = "/api"
 
     # Database
-    postgres_host: str = "localhost"
-    postgres_port: int = 5432
-    postgres_db: str = "healthhub_db"
-    postgres_user: str = "healthhub"
-    postgres_password: str = "healthhub_secure_pass"
+    postgres_host: str
+    postgres_port: int
+    postgres_db: str
+    postgres_user: str
+    postgres_password: str
 
     # Redis
-    redis_host: str = "localhost"
-    redis_port: int = 6379
+    redis_host: str
+    redis_port: int
     redis_db: int = 0
 
     # Pulsar
-    pulsar_url: str = "pulsar://localhost:6650"
-    pulsar_admin_url: str = "http://localhost:8080"
+    pulsar_url: str
+    pulsar_admin_url: str
 
     # MinIO S3
-    minio_endpoint: str = "localhost:9000"
-    minio_access_key: str = "healthhub_minio"
-    minio_secret_key: str = "healthhub_minio_secret"
-    minio_bucket: str = "healthhub-medical-docs"
+    minio_endpoint: str
+    minio_access_key: str
+    minio_secret_key: str
+    minio_bucket: str
     minio_secure: bool = False
 
     # JWT Authentication
-    jwt_secret_key: str = "change_this_secret_key_in_production"
-    jwt_algorithm: str = "HS256"
-    jwt_access_token_expire_minutes: int = 15
-    jwt_refresh_token_expire_days: int = 7
+    jwt_secret_key: str
+    jwt_algorithm: str
+    jwt_access_token_expire_minutes: int
+    jwt_refresh_token_expire_days: int
 
     # CORS
     cors_origins: list[str] = ["http://localhost:8851"]

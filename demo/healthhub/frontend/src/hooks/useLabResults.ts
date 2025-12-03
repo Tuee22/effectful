@@ -10,18 +10,21 @@ import { isSuccess, isLoading, isFailure, isNotAsked } from '../algebraic/Remote
 export const useLabResults = () => {
   const currentLabResult = useLabResultStore((state) => state.currentLabResult)
   const labResultList = useLabResultStore((state) => state.labResultList)
-  const fetchLabResults = useLabResultStore((state) => state.fetchLabResults)
-  const fetchLabResult = useLabResultStore((state) => state.fetchLabResult)
+  const fetchLabResultsAction = useLabResultStore((state) => state.fetchLabResults)
+  const fetchLabResultAction = useLabResultStore((state) => state.fetchLabResult)
   const clearCurrentLabResult = useLabResultStore((state) => state.clearCurrentLabResult)
 
-  const { token } = useAuth()
+  const { getValidAccessToken } = useAuth()
 
   // Auto-fetch lab results on mount when not yet loaded
   useEffect(() => {
-    if (token && isNotAsked(labResultList)) {
-      fetchLabResults(token)
-    }
-  }, [token, labResultList, fetchLabResults])
+    void (async () => {
+      const token = await getValidAccessToken()
+      if (token && isNotAsked(labResultList)) {
+        await fetchLabResultsAction(token)
+      }
+    })()
+  }, [labResultList, fetchLabResultsAction, getValidAccessToken])
 
   return {
     // State
@@ -36,14 +39,16 @@ export const useLabResults = () => {
     listError: isFailure(labResultList) ? labResultList.error : null,
 
     // Actions (with token injection)
-    fetchLabResults: () => {
+    fetchLabResults: async () => {
+      const token = await getValidAccessToken()
       if (token) {
-        fetchLabResults(token)
+        await fetchLabResultsAction(token)
       }
     },
-    fetchLabResult: (labResultId: string) => {
+    fetchLabResult: async (labResultId: string) => {
+      const token = await getValidAccessToken()
       if (token) {
-        fetchLabResult(labResultId, token)
+        await fetchLabResultAction(labResultId, token)
       }
     },
     clearCurrentLabResult,

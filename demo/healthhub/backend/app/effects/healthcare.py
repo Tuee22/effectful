@@ -7,6 +7,7 @@ Effects are descriptions of operations, not execution.
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Literal
 from uuid import UUID
 
 from app.domain.appointment import AppointmentStatus
@@ -214,7 +215,7 @@ class UpdateInvoiceStatus:
     """
 
     invoice_id: UUID
-    status: str  # "draft" | "sent" | "paid" | "overdue"
+    status: Literal["draft", "sent", "paid", "overdue"]
 
 
 @dataclass(frozen=True)
@@ -226,7 +227,7 @@ class ListAppointments:
 
     patient_id: UUID | None = None
     doctor_id: UUID | None = None
-    status: str | None = None
+    status: Literal["requested", "confirmed", "in_progress", "completed", "cancelled"] | None = None
 
 
 @dataclass(frozen=True)

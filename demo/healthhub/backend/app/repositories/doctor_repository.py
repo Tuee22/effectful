@@ -9,6 +9,7 @@ import asyncpg
 
 from app.database import safe_bool, safe_datetime, safe_optional_str, safe_str, safe_uuid
 from app.domain.doctor import Doctor
+from app.domain.optional_value import to_optional_value
 
 
 class DoctorRepository:
@@ -139,7 +140,7 @@ class DoctorRepository:
             specialization=safe_str(row["specialization"]),
             license_number=safe_str(row["license_number"]),
             can_prescribe=safe_bool(row["can_prescribe"]),
-            phone=safe_optional_str(row["phone"]),
+            phone=to_optional_value(safe_optional_str(row["phone"]), reason="not_recorded"),
             created_at=safe_datetime(row["created_at"]),
             updated_at=safe_datetime(row["updated_at"]),
         )

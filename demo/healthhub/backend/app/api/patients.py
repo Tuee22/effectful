@@ -4,6 +4,7 @@ Provides CRUD operations for patient records with medical history tracking.
 """
 
 from collections.abc import Generator
+from dataclasses import dataclass
 from datetime import date
 from typing import Annotated
 from uuid import UUID
@@ -13,6 +14,7 @@ from pydantic import BaseModel, Field
 import redis.asyncio as redis
 
 from app.domain.patient import Patient
+from app.domain.optional_value import from_optional_value
 from app.effects.healthcare import (
     CreatePatient as CreatePatientEffect,
     DeletePatient,
@@ -21,7 +23,6 @@ from app.effects.healthcare import (
     ListPatients,
     UpdatePatient,
 )
-from app.effects.notification import LogAuditEvent
 from app.infrastructure import get_database_manager, rate_limit
 from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
@@ -36,6 +37,45 @@ from app.api.dependencies import (
 )
 
 router = APIRouter()
+
+
+@dataclass(frozen=True)
+class PatientFound:
+    patient: Patient
+
+
+@dataclass(frozen=True)
+class PatientMissing:
+    patient_id: UUID
+
+
+type PatientLookupResult = PatientFound | PatientMissing
+
+
+@dataclass(frozen=True)
+class PatientUpdated:
+    patient: Patient
+
+
+@dataclass(frozen=True)
+class PatientUpdateMissing:
+    patient_id: UUID
+
+
+type PatientUpdateResult = PatientUpdated | PatientUpdateMissing
+
+
+@dataclass(frozen=True)
+class PatientDeleted:
+    patient_id: UUID
+
+
+@dataclass(frozen=True)
+class PatientDeleteMissing:
+    patient_id: UUID
+
+
+type PatientDeleteResult = PatientDeleted | PatientDeleteMissing
 
 
 class PatientResponse(BaseModel):
@@ -90,12 +130,12 @@ def patient_to_response(patient: Patient) -> PatientResponse:
         first_name=patient.first_name,
         last_name=patient.last_name,
         date_of_birth=patient.date_of_birth,
-        blood_type=patient.blood_type,
+        blood_type=from_optional_value(patient.blood_type),
         allergies=patient.allergies,
-        insurance_id=patient.insurance_id,
+        insurance_id=from_optional_value(patient.insurance_id),
         emergency_contact=patient.emergency_contact,
-        phone=patient.phone,
-        address=patient.address,
+        phone=from_optional_value(patient.phone),
+        address=from_optional_value(patient.address),
     )
 
 
@@ -148,19 +188,6 @@ async def list_patients(
     def list_program() -> Generator[AllEffects, object, list[Patient]]:
         patients = yield ListPatients()
         assert isinstance(patients, list)
-
-        # HIPAA-required audit logging (log all PHI list access)
-        # Use UUID of first patient as resource_id (or nil UUID if empty list)
-        resource_id = patients[0].id if patients else UUID("00000000-0000-0000-0000-000000000000")
-        yield LogAuditEvent(
-            user_id=actor_id,
-            action="list_patients",
-            resource_type="patient",
-            resource_id=resource_id,
-            ip_address=ip_address,
-            user_agent=user_agent,
-            metadata={"count": str(len(patients))},
-        )
 
         return patients
 
@@ -273,34 +300,32 @@ async def get_patient(
     )
 
     # Create effect program with audit logging
-    def get_program() -> Generator[AllEffects, object, Patient]:
+    def get_program() -> Generator[AllEffects, object, PatientLookupResult]:
         patient = yield GetPatientById(patient_id=UUID(patient_id))
 
-        # HIPAA-required audit logging (log all access attempts)
-        yield LogAuditEvent(
-            user_id=actor_id,
-            action="view_patient",
-            resource_type="patient",
-            resource_id=UUID(patient_id),
-            ip_address=ip_address,
-            user_agent=user_agent,
-            metadata={"status": "found" if patient else "not_found"},
-        )
-
         if patient is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Patient {patient_id} not found",
-            )
+            return PatientMissing(patient_id=UUID(patient_id))
         assert isinstance(patient, Patient)
-        return patient
+        return PatientFound(patient=patient)
 
     # Run effect program
-    patient = await run_program(get_program(), interpreter)
+    lookup_result = await run_program(get_program(), interpreter)
 
     await redis_client.aclose()
 
-    return patient_to_response(patient)
+    match lookup_result:
+        case PatientFound(patient=patient):
+            return patient_to_response(patient)
+        case PatientMissing(patient_id=missing_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Patient {missing_id} not found",
+            )
+        case _:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Unexpected patient lookup result",
+            )
 
 
 @router.get("/by-user/{user_id}", response_model=PatientResponse)
@@ -351,41 +376,11 @@ async def get_patient_by_user(
     )
 
     def get_by_user_program() -> Generator[AllEffects, object, Patient | None]:
-        return (yield GetPatientByUserId(user_id=UUID(user_id)))
-
-    # HIPAA-required audit logging (log all PHI access attempts)
-    def audit_program() -> Generator[AllEffects, object, None]:
-        yield LogAuditEvent(
-            user_id=actor_id,
-            action="view_patient_by_user",
-            resource_type="patient",
-            resource_id=UUID("00000000-0000-0000-0000-000000000000"),
-            ip_address=ip_address,
-            user_agent=user_agent,
-            metadata={
-                "status": "pending",
-                "lookup_user_id": user_id,
-            },
-        )
+        result = yield GetPatientByUserId(user_id=UUID(user_id))
+        return result if isinstance(result, Patient) else None
 
     patient = await run_program(get_by_user_program(), interpreter)
 
-    # Update audit metadata with result
-    def audit_result_program() -> Generator[AllEffects, object, None]:
-        yield LogAuditEvent(
-            user_id=actor_id,
-            action="view_patient_by_user",
-            resource_type="patient",
-            resource_id=patient.id if patient else UUID("00000000-0000-0000-0000-000000000000"),
-            ip_address=ip_address,
-            user_agent=user_agent,
-            metadata={
-                "status": "found" if patient else "not_found",
-                "lookup_user_id": user_id,
-            },
-        )
-
-    await run_program(audit_result_program(), interpreter)
     await redis_client.aclose()
 
     if patient is None:
@@ -439,7 +434,8 @@ async def update_patient(
     )
 
     def fetch_program() -> Generator[AllEffects, object, Patient | None]:
-        return (yield GetPatientById(patient_id=UUID(patient_id)))
+        result = yield GetPatientById(patient_id=UUID(patient_id))
+        return result if isinstance(result, Patient) else None
 
     patient = await run_program(fetch_program(), interpreter)
     if patient is None:
@@ -449,7 +445,7 @@ async def update_patient(
             detail=f"Patient {patient_id} not found",
         )
 
-    def update_program() -> Generator[AllEffects, object, Patient]:
+    def update_program() -> Generator[AllEffects, object, PatientUpdateResult]:
         updated = yield UpdatePatient(
             patient_id=UUID(patient_id),
             first_name=request.first_name,
@@ -462,28 +458,28 @@ async def update_patient(
             address=request.address,
         )
         if updated is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Patient {patient_id} not found",
-            )
+            return PatientUpdateMissing(patient_id=UUID(patient_id))
 
-        yield LogAuditEvent(
-            user_id=auth.user_id,
-            action="update_patient",
-            resource_type="patient",
-            resource_id=UUID(patient_id),
-            ip_address=None,
-            user_agent=None,
-            metadata=None,
-        )
+        assert isinstance(updated, Patient)
+        return PatientUpdated(patient=updated)
 
-        return updated
-
-    updated_patient = await run_program(update_program(), interpreter)
+    update_result = await run_program(update_program(), interpreter)
 
     await redis_client.aclose()
 
-    return patient_to_response(updated_patient)
+    match update_result:
+        case PatientUpdated(patient=patient):
+            return patient_to_response(patient)
+        case PatientUpdateMissing(patient_id=missing_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Patient {missing_id} not found",
+            )
+        case _:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Unexpected patient update result",
+            )
 
 
 @router.delete("/{patient_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -512,26 +508,26 @@ async def delete_patient(
         AuditContext(user_id=auth.user_id, ip_address=None, user_agent=None),
     )
 
-    def delete_program() -> Generator[AllEffects, object, None]:
+    def delete_program() -> Generator[AllEffects, object, PatientDeleteResult]:
         deleted = yield DeletePatient(patient_id=UUID(patient_id))
         if not deleted:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Patient {patient_id} not found",
-            )
+            return PatientDeleteMissing(patient_id=UUID(patient_id))
 
-        yield LogAuditEvent(
-            user_id=auth.user_id,
-            action="delete_patient",
-            resource_type="patient",
-            resource_id=UUID(patient_id),
-            ip_address=None,
-            user_agent=None,
-            metadata=None,
-        )
+        return PatientDeleted(patient_id=UUID(patient_id))
 
-    await run_program(delete_program(), interpreter)
+    delete_result = await run_program(delete_program(), interpreter)
     await redis_client.aclose()
 
-    # No content response
-    return None
+    match delete_result:
+        case PatientDeleted():
+            return None
+        case PatientDeleteMissing(patient_id=missing_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Patient {missing_id} not found",
+            )
+        case _:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Unexpected patient delete result",
+            )
