@@ -50,22 +50,30 @@ from app.domain.prescription import (
     NoInteractions,
     Prescription,
 )
+from app.domain.user import User, UserRole
 from app.effects.healthcare import (
     AddInvoiceLineItem,
     CheckMedicationInteractions,
+    CheckDatabaseHealth,
     CreateAppointment,
     CreateInvoice,
     CreateLabResult,
     CreatePatient,
     CreatePrescription,
+    CreateUser,
+    DeletePatient,
     GetAppointmentById,
     GetDoctorById,
+    GetDoctorByUserId,
     GetInvoiceById,
     GetLabResultById,
     GetPatientById,
+    GetPatientByUserId,
+    GetUserByEmail,
     GetPrescriptionById,
     HealthcareEffect,
     ListAppointments,
+    ListInvoiceLineItems,
     ListInvoices,
     ListLabResults,
     ListPatients,
@@ -73,9 +81,12 @@ from app.effects.healthcare import (
     ReviewLabResult,
     TransitionAppointmentStatus,
     UpdateInvoiceStatus,
+    UpdatePatient,
+    UpdateUserLastLogin,
 )
 from app.repositories.doctor_repository import DoctorRepository
 from app.repositories.patient_repository import PatientRepository
+from app.repositories.user_repository import UserRepository
 
 
 class HealthcareInterpreter:
@@ -93,6 +104,7 @@ class HealthcareInterpreter:
         self.pool = pool
         self.patient_repo = PatientRepository(pool)
         self.doctor_repo = DoctorRepository(pool)
+        self.user_repo = UserRepository(pool)
 
     async def handle(
         self, effect: HealthcareEffect
@@ -107,11 +119,14 @@ class HealthcareInterpreter:
         | LabResult
         | Invoice
         | LineItem
+        | User
+        | bool
         | list[Patient]
         | list[Appointment]
         | list[Prescription]
         | list[LabResult]
         | list[Invoice]
+        | list[LineItem]
     ):
         """Handle a healthcare effect.
 
@@ -124,6 +139,18 @@ class HealthcareInterpreter:
         match effect:
             case GetPatientById(patient_id=patient_id):
                 return await self._get_patient_by_id(patient_id)
+
+            case GetPatientByUserId(user_id=user_id):
+                return await self._get_patient_by_user_id(user_id)
+
+            case GetUserByEmail(email=email):
+                return await self._get_user_by_email(email)
+
+            case CreateUser(email=email, password_hash=password_hash, role=role):
+                return await self._create_user(email, password_hash, role)
+
+            case UpdateUserLastLogin(user_id=user_id):
+                return await self._update_user_last_login(user_id)
 
             case ListPatients():
                 return await self._list_patients()
@@ -153,8 +180,37 @@ class HealthcareInterpreter:
                     address,
                 )
 
+            case UpdatePatient(
+                patient_id=patient_id,
+                first_name=first_name,
+                last_name=last_name,
+                blood_type=blood_type,
+                allergies=allergies,
+                insurance_id=insurance_id,
+                emergency_contact=emergency_contact,
+                phone=phone,
+                address=address,
+            ):
+                return await self._update_patient(
+                    patient_id,
+                    first_name,
+                    last_name,
+                    blood_type,
+                    allergies,
+                    insurance_id,
+                    emergency_contact,
+                    phone,
+                    address,
+                )
+
+            case DeletePatient(patient_id=patient_id):
+                return await self._delete_patient(patient_id)
+
             case GetDoctorById(doctor_id=doctor_id):
                 return await self._get_doctor_by_id(doctor_id)
+
+            case GetDoctorByUserId(user_id=user_id):
+                return await self._get_doctor_by_user_id(user_id)
 
             case CreateAppointment(
                 patient_id=patient_id,
@@ -262,10 +318,34 @@ class HealthcareInterpreter:
             case ListInvoices(patient_id=patient_id):
                 return await self._list_invoices(patient_id)
 
+            case ListInvoiceLineItems(invoice_id=invoice_id):
+                return await self._list_invoice_line_items(invoice_id)
+
+            case CheckDatabaseHealth():
+                return await self._check_database_health()
+
     # Patient operations
     async def _get_patient_by_id(self, patient_id: UUID) -> Patient | None:
         """Get patient by ID."""
         return await self.patient_repo.get_by_id(patient_id)
+
+    async def _get_patient_by_user_id(self, user_id: UUID) -> Patient | None:
+        """Get patient by user ID."""
+        row = await self.pool.fetchrow(
+            """
+            SELECT id, user_id, first_name, last_name, date_of_birth,
+                   blood_type, allergies, insurance_id, emergency_contact,
+                   phone, address, created_at, updated_at
+            FROM patients
+            WHERE user_id = $1
+            """,
+            user_id,
+        )
+
+        if row is None:
+            return None
+
+        return self._row_to_patient(row)
 
     async def _list_patients(self) -> list[Patient]:
         """List all patients (admin only - authorization handled in API layer)."""
@@ -331,6 +411,70 @@ class HealthcareInterpreter:
 
         return self._row_to_patient(row)
 
+    async def _update_patient(
+        self,
+        patient_id: UUID,
+        first_name: str | None,
+        last_name: str | None,
+        blood_type: str | None,
+        allergies: list[str] | None,
+        insurance_id: str | None,
+        emergency_contact: str | None,
+        phone: str | None,
+        address: str | None,
+    ) -> Patient | None:
+        """Update patient record."""
+        existing = await self._get_patient_by_id(patient_id)
+        if existing is None:
+            return None
+
+        new_allergies = allergies if allergies is not None else existing.allergies
+        allergies_json = json.dumps(new_allergies)
+        now = datetime.now(timezone.utc)
+
+        row = await self.pool.fetchrow(
+            """
+            UPDATE patients
+            SET first_name = $2,
+                last_name = $3,
+                blood_type = $4,
+                allergies = $5::jsonb,
+                insurance_id = $6,
+                emergency_contact = $7,
+                phone = $8,
+                address = $9,
+                updated_at = $10
+            WHERE id = $1
+            RETURNING id, user_id, first_name, last_name, date_of_birth,
+                      blood_type, allergies, insurance_id, emergency_contact,
+                      phone, address, created_at, updated_at
+            """,
+            patient_id,
+            first_name if first_name is not None else existing.first_name,
+            last_name if last_name is not None else existing.last_name,
+            blood_type if blood_type is not None else existing.blood_type,
+            allergies_json,
+            insurance_id if insurance_id is not None else existing.insurance_id,
+            emergency_contact if emergency_contact is not None else existing.emergency_contact,
+            phone if phone is not None else existing.phone,
+            address if address is not None else existing.address,
+            now,
+        )
+
+        if row is None:
+            return None
+
+        return self._row_to_patient(row)
+
+    async def _delete_patient(self, patient_id: UUID) -> bool:
+        """Delete patient record."""
+        result = await self.pool.execute(
+            "DELETE FROM patients WHERE id = $1",
+            patient_id,
+        )
+        parts = result.split()
+        return len(parts) == 2 and parts[0].upper() == "DELETE" and parts[1] != "0"
+
     def _row_to_patient(self, row: asyncpg.Record) -> Patient:
         """Convert database row to Patient domain model."""
         allergies_obj = row["allergies"]
@@ -358,6 +502,22 @@ class HealthcareInterpreter:
     async def _get_doctor_by_id(self, doctor_id: UUID) -> Doctor | None:
         """Get doctor by ID."""
         return await self.doctor_repo.get_by_id(doctor_id)
+
+    async def _get_doctor_by_user_id(self, user_id: UUID) -> Doctor | None:
+        """Get doctor by user ID."""
+        return await self.doctor_repo.get_by_user_id(user_id)
+
+    async def _get_user_by_email(self, email: str) -> User | None:
+        """Get user by email."""
+        return await self.user_repo.get_by_email(email)
+
+    async def _create_user(self, email: str, password_hash: str, role: str) -> User:
+        """Create a new user."""
+        return await self.user_repo.create(email=email, password_hash=password_hash, role=UserRole(role))
+
+    async def _update_user_last_login(self, user_id: UUID) -> None:
+        """Update user's last login timestamp."""
+        await self.user_repo.update_last_login(user_id)
 
     # Appointment operations
     async def _create_appointment(
@@ -843,6 +1003,39 @@ class HealthcareInterpreter:
 
         rows = await self.pool.fetch(query, *params)
         return [self._row_to_invoice(row) for row in rows]
+
+    async def _list_invoice_line_items(self, invoice_id: UUID) -> list[LineItem]:
+        """List line items for an invoice."""
+        rows = await self.pool.fetch(
+            """
+            SELECT id, invoice_id, description, quantity, unit_price, total, created_at
+            FROM invoice_line_items
+            WHERE invoice_id = $1
+            ORDER BY created_at
+            """,
+            invoice_id,
+        )
+
+        return [
+            LineItem(
+                id=safe_uuid(row["id"]),
+                invoice_id=safe_uuid(row["invoice_id"]),
+                description=safe_str(row["description"]),
+                quantity=safe_int(row["quantity"]),
+                unit_price=safe_decimal(row["unit_price"]),
+                total=safe_decimal(row["total"]),
+                created_at=safe_datetime(row["created_at"]),
+            )
+            for row in rows
+        ]
+
+    async def _check_database_health(self) -> bool:
+        """Verify database connectivity."""
+        try:
+            await self.pool.fetchval("SELECT 1")
+            return True
+        except Exception:
+            return False
 
     async def _add_invoice_line_item(
         self, invoice_id: UUID, description: str, quantity: int, unit_price: Decimal

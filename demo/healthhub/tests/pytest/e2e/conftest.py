@@ -34,7 +34,7 @@ def base_url() -> str:
 
     Uses E2E_FRONTEND_URL environment variable or defaults to Docker internal URL.
     """
-    return os.environ.get("E2E_FRONTEND_URL", "http://frontend:5173")
+    return os.environ.get("E2E_FRONTEND_URL", "http://localhost:8851")
 
 
 @pytest.fixture(scope="session")

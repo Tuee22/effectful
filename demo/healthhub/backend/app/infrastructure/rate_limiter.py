@@ -11,7 +11,7 @@ import redis.asyncio as redis
 class RateLimiter:
     """Redis-based rate limiter with sliding window algorithm."""
 
-    def __init__(self, redis_client: redis.Redis[bytes]) -> None:
+    def __init__(self, redis_client: redis.Redis) -> None:
         self.redis_client = redis_client
 
     async def check_rate_limit(self, key: str, max_requests: int, window_seconds: int) -> bool:
@@ -52,7 +52,7 @@ class RateLimiter:
 
 def get_rate_limiter() -> RateLimiter:
     """Dependency to get rate limiter instance."""
-    redis_client: redis.Redis[bytes] = redis.Redis(
+    redis_client: redis.Redis = redis.Redis(
         host="redis",
         port=6379,
         decode_responses=False,

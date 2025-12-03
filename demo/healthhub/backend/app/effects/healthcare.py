@@ -34,6 +34,58 @@ class GetDoctorById:
 
 
 @dataclass(frozen=True)
+class GetDoctorByUserId:
+    """Effect: Fetch doctor by user ID.
+
+    Returns: Doctor | None
+    """
+
+    user_id: UUID
+
+
+@dataclass(frozen=True)
+class GetUserByEmail:
+    """Effect: Fetch user by email.
+
+    Returns: User | None
+    """
+
+    email: str
+
+
+@dataclass(frozen=True)
+class CreateUser:
+    """Effect: Create user with hashed password.
+
+    Returns: User
+    """
+
+    email: str
+    password_hash: str
+    role: str
+
+
+@dataclass(frozen=True)
+class UpdateUserLastLogin:
+    """Effect: Update user's last login timestamp.
+
+    Returns: None
+    """
+
+    user_id: UUID
+
+
+@dataclass(frozen=True)
+class GetPatientByUserId:
+    """Effect: Fetch patient by user ID.
+
+    Returns: Patient | None
+    """
+
+    user_id: UUID
+
+
+@dataclass(frozen=True)
 class CreateAppointment:
     """Effect: Create new appointment request.
 
@@ -260,6 +312,34 @@ class CreatePatient:
 
 
 @dataclass(frozen=True)
+class UpdatePatient:
+    """Effect: Update patient record.
+
+    Returns: Patient | None
+    """
+
+    patient_id: UUID
+    first_name: str | None
+    last_name: str | None
+    blood_type: str | None
+    allergies: list[str] | None
+    insurance_id: str | None
+    emergency_contact: str | None
+    phone: str | None
+    address: str | None
+
+
+@dataclass(frozen=True)
+class DeletePatient:
+    """Effect: Delete patient record.
+
+    Returns: bool (True if deleted)
+    """
+
+    patient_id: UUID
+
+
+@dataclass(frozen=True)
 class ListPatients:
     """Effect: List all patients (admin only).
 
@@ -269,9 +349,31 @@ class ListPatients:
     pass
 
 
+@dataclass(frozen=True)
+class ListInvoiceLineItems:
+    """Effect: List line items for an invoice.
+
+    Returns: list[LineItem]
+    """
+
+    invoice_id: UUID
+
+
+@dataclass(frozen=True)
+class CheckDatabaseHealth:
+    """Effect: Verify database connectivity."""
+
+    pass
+
+
 type HealthcareEffect = (
     GetPatientById
     | GetDoctorById
+    | GetDoctorByUserId
+    | GetUserByEmail
+    | CreateUser
+    | UpdateUserLastLogin
+    | GetPatientByUserId
     | CreateAppointment
     | GetAppointmentById
     | ListAppointments
@@ -290,5 +392,9 @@ type HealthcareEffect = (
     | GetInvoiceById
     | ListInvoices
     | CreatePatient
+    | UpdatePatient
+    | DeletePatient
     | ListPatients
+    | ListInvoiceLineItems
+    | CheckDatabaseHealth
 )

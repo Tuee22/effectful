@@ -195,6 +195,12 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tes
 3. **Reproducibility**: Tests behave identically across all developer machines
 4. **CI Parity**: Local tests match CI behavior exactly
 
+### Timeouts (SSoT)
+- **All test executions must set an explicit timeout**, including CI jobs, `docker compose exec ... pytest` commands, and ad-hoc scripts.
+- **Minimum timeout is 4 hours (14,400 seconds)** to avoid premature termination of long-running suites (integration/e2e); longer is allowed, shorter is forbidden.
+- Document the timeout value in PR descriptions when reporting test runs.
+- If a suite legitimately needs more time (e.g., load/perf or large e2e matrix), raise the timeout rather than disabling tests.
+
 ### Test Output Management
 
 **CRITICAL**: Bash tool truncates output at 30,000 characters. Large test suites exceed this.

@@ -6,16 +6,19 @@ Uses ADT pattern for authorization state: PatientAuthorized | DoctorAuthorized |
 
 from dataclasses import dataclass
 from typing import Annotated
+from collections.abc import Generator
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+import redis.asyncio as redis
 
 from app.auth import verify_token, TokenData, TokenType
 from app.auth.jwt import TokenValidationSuccess, TokenValidationError
 from app.infrastructure import get_database_manager
-from app.repositories.patient_repository import PatientRepository
-from app.repositories.doctor_repository import DoctorRepository
+from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
+from app.programs.runner import run_program
+from app.effects.healthcare import GetDoctorById
 
 
 # Security scheme for JWT Bearer authentication
@@ -116,16 +119,24 @@ async def get_current_user(
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
+    )
+    interpreter = CompositeInterpreter(pool, redis_client)
 
     match token_data.role:
         case "patient":
             # Use patient_id from JWT (no DB query)
             if token_data.patient_id is None:
+                await redis_client.aclose()
                 return Unauthorized(
                     reason="no_profile",
                     detail="Patient profile not found. Complete profile setup first.",
                 )
 
+            await redis_client.aclose()
             return PatientAuthorized(
                 user_id=token_data.user_id,
                 patient_id=token_data.patient_id,
@@ -135,21 +146,26 @@ async def get_current_user(
         case "doctor":
             # Use doctor_id from JWT, but query for can_prescribe capability
             if token_data.doctor_id is None:
+                await redis_client.aclose()
                 return Unauthorized(
                     reason="no_profile",
                     detail="Doctor profile not found. Complete profile setup first.",
                 )
 
             # Query only for can_prescribe and specialization (capabilities can change)
-            doctor_repo = DoctorRepository(pool)
-            doctor = await doctor_repo.get_by_id(token_data.doctor_id)
+            def doctor_program() -> Generator[AllEffects, object, object | None]:
+                return (yield GetDoctorById(doctor_id=token_data.doctor_id))
+
+            doctor = await run_program(doctor_program(), interpreter)
 
             if doctor is None:
+                await redis_client.aclose()
                 return Unauthorized(
                     reason="no_profile",
                     detail="Doctor profile not found or was deleted.",
                 )
 
+            await redis_client.aclose()
             return DoctorAuthorized(
                 user_id=token_data.user_id,
                 doctor_id=token_data.doctor_id,
@@ -159,16 +175,15 @@ async def get_current_user(
             )
 
         case "admin":
+            await redis_client.aclose()
             return AdminAuthorized(
                 user_id=token_data.user_id,
                 email=token_data.email,
             )
 
         case _:
-            return Unauthorized(
-                reason="invalid_role",
-                detail=f"Unknown role: {token_data.role}",
-            )
+            await redis_client.aclose()
+            return Unauthorized(reason="invalid_role", detail=f"Unknown role: {token_data.role}")
 
 
 # ============================================================================

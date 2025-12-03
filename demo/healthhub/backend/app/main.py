@@ -78,9 +78,9 @@ app.include_router(invoices_router, prefix=f"{settings.api_prefix}/invoices", ta
 frontend_build_path = Path("/opt/healthhub/frontend-build/build")
 if frontend_build_path.exists():
     app.mount(
-        "/static",
-        StaticFiles(directory=str(frontend_build_path / "static")),
-        name="static",
+        "/assets",
+        StaticFiles(directory=str(frontend_build_path / "assets")),
+        name="assets",
     )
 
     @app.get("/{full_path:path}", response_model=None)

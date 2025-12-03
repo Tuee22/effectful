@@ -13,6 +13,11 @@ from app.effects.healthcare import (
     HealthcareEffect,
     GetPatientById,
     GetDoctorById,
+    GetDoctorByUserId,
+    GetUserByEmail,
+    CreateUser,
+    UpdateUserLastLogin,
+    CheckDatabaseHealth,
     CreateAppointment,
     GetAppointmentById,
     ListAppointments,
@@ -31,6 +36,10 @@ from app.effects.healthcare import (
     UpdateInvoiceStatus,
     CreatePatient,
     ListPatients,
+    UpdatePatient,
+    DeletePatient,
+    GetPatientByUserId,
+    ListInvoiceLineItems,
 )
 from app.effects.notification import (
     NotificationEffect,
@@ -47,6 +56,10 @@ type AllEffects = HealthcareEffect | NotificationEffect
 _HEALTHCARE_EFFECTS = (
     GetPatientById,
     GetDoctorById,
+    GetDoctorByUserId,
+    GetUserByEmail,
+    CreateUser,
+    UpdateUserLastLogin,
     CreateAppointment,
     GetAppointmentById,
     ListAppointments,
@@ -66,6 +79,11 @@ _HEALTHCARE_EFFECTS = (
     ListInvoices,
     CreatePatient,
     ListPatients,
+    UpdatePatient,
+    DeletePatient,
+    GetPatientByUserId,
+    ListInvoiceLineItems,
+    CheckDatabaseHealth,
 )
 
 

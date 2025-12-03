@@ -3,6 +3,7 @@
 Provides appointment scheduling and state management.
 """
 
+from collections.abc import Generator
 from datetime import datetime
 from typing import Annotated
 from uuid import UUID
@@ -25,7 +26,7 @@ from app.domain.appointment import (
 from app.effects.notification import LogAuditEvent
 from app.infrastructure import get_database_manager, rate_limit
 from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
-from app.interpreters.composite_interpreter import CompositeInterpreter
+from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
 from app.programs.appointment_programs import (
     AppointmentDoctorMissing,
     AppointmentPatientMissing,
@@ -36,7 +37,6 @@ from app.programs.appointment_programs import (
 )
 from app.programs.runner import run_program
 from app.api.dependencies import (
-    AuthorizationState,
     PatientAuthorized,
     DoctorAuthorized,
     AdminAuthorized,
@@ -386,22 +386,35 @@ async def transition_status(
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
 
-    # First, get the appointment to check ownership
-    appointment_row = await pool.fetchrow(
-        "SELECT patient_id, doctor_id FROM appointments WHERE id = $1",
-        UUID(appointment_id),
+    # Authorization check based on role and transition
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
     )
 
-    if appointment_row is None:
+    base_interpreter = CompositeInterpreter(pool, redis_client)
+    interpreter = AuditedCompositeInterpreter(
+        base_interpreter,
+        AuditContext(user_id=auth.user_id, ip_address=None, user_agent=None),
+    )
+
+    def get_program() -> Generator[AllEffects, object, Appointment | None]:
+        appointment = yield GetAppointmentById(appointment_id=UUID(appointment_id))
+        return appointment
+
+    appointment = await run_program(get_program(), interpreter)
+
+    if appointment is None:
+        await redis_client.aclose()
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Appointment {appointment_id} not found",
         )
 
-    # Authorization check based on role and transition
     match auth:
         case PatientAuthorized(patient_id=auth_patient_id):
-            if appointment_row["patient_id"] != auth_patient_id:
+            if appointment.patient_id != auth_patient_id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Not authorized to modify this appointment",
@@ -414,7 +427,7 @@ async def transition_status(
                 )
 
         case DoctorAuthorized(doctor_id=auth_doctor_id):
-            if appointment_row["doctor_id"] != auth_doctor_id:
+            if appointment.doctor_id != auth_doctor_id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Not authorized to modify this appointment",
@@ -423,13 +436,6 @@ async def transition_status(
 
         case AdminAuthorized():
             pass  # Admins can perform all transitions
-
-    # Create Redis client
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
 
     # Parse status string to ADT - declare with union type for proper narrowing
     new_status: AppointmentStatus
@@ -453,13 +459,6 @@ async def transition_status(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Invalid status: {request.new_status}",
             )
-
-    # Create composite interpreter
-    base_interpreter = CompositeInterpreter(pool, redis_client)
-    interpreter = AuditedCompositeInterpreter(
-        base_interpreter,
-        AuditContext(user_id=auth.user_id, ip_address=None, user_agent=None),
-    )
 
     # Run effect program
     program = transition_appointment_program(

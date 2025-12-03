@@ -1,9 +1,15 @@
 """Health check endpoint."""
 
+from collections.abc import Generator
+
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
+import redis.asyncio as redis
 
+from app.effects.healthcare import CheckDatabaseHealth
 from app.infrastructure import get_database_manager
+from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
+from app.programs.runner import run_program
 
 router = APIRouter()
 
@@ -14,20 +20,22 @@ async def health_check() -> JSONResponse:
 
     Verifies database connectivity and returns service status.
     """
+    db_manager = get_database_manager()
+    pool = db_manager.get_pool()
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
+    )
+    interpreter = CompositeInterpreter(pool, redis_client)
+
+    def health_program() -> Generator[AllEffects, object, bool]:
+        return (yield CheckDatabaseHealth())
+
     try:
-        db_manager = get_database_manager()
-        pool = db_manager.get_pool()
-
-        # Test database connectivity with simple query
-        await pool.fetchval("SELECT 1")
-
-        return JSONResponse(
-            {
-                "status": "healthy",
-                "database": "connected",
-            }
-        )
+        is_healthy = await run_program(health_program(), interpreter)
     except Exception as e:
+        await redis_client.aclose()
         return JSONResponse(
             {
                 "status": "unhealthy",
@@ -36,3 +44,21 @@ async def health_check() -> JSONResponse:
             },
             status_code=503,
         )
+
+    await redis_client.aclose()
+
+    if is_healthy:
+        return JSONResponse(
+            {
+                "status": "healthy",
+                "database": "connected",
+            }
+        )
+
+    return JSONResponse(
+        {
+            "status": "unhealthy",
+            "database": "disconnected",
+        },
+        status_code=503,
+    )

@@ -5,9 +5,11 @@ Implements JWT dual-token authentication pattern:
 - Refresh token: 7 days (set in HttpOnly cookie)
 """
 
+from collections.abc import Generator
 from typing import Annotated
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
+import redis.asyncio as redis
 from pydantic import BaseModel, EmailStr
 
 from app.auth import (
@@ -21,8 +23,16 @@ from app.auth import (
     TokenValidationError,
 )
 from app.infrastructure import get_database_manager, rate_limit
-from app.repositories import UserRepository, PatientRepository, DoctorRepository
+from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
+from app.programs.runner import run_program
 from app.domain.user import UserRole
+from app.effects.healthcare import (
+    CreateUser,
+    GetDoctorByUserId,
+    GetPatientByUserId,
+    GetUserByEmail,
+    UpdateUserLastLogin,
+)
 
 
 router = APIRouter()
@@ -87,57 +97,59 @@ async def login(
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
-    user_repo = UserRepository(pool)
 
-    # Get user by email
-    user = await user_repo.get_by_email(request.email)
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
-        )
-
-    # Verify password
-    if not verify_password(request.password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
-        )
-
-    # Check user status
-    if user.status.value != "active":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"Account is {user.status.value}",
-        )
-
-    # Update last login timestamp
-    await user_repo.update_last_login(user.id)
-
-    # Resolve profile IDs based on role (performance optimization)
-    patient_id = None
-    doctor_id = None
-
-    if user.role.value == "patient":
-        patient_repo = PatientRepository(pool)
-        patient = await patient_repo.get_by_user_id(user.id)
-        if patient is not None:
-            patient_id = patient.id
-    elif user.role.value == "doctor":
-        doctor_repo = DoctorRepository(pool)
-        doctor = await doctor_repo.get_by_user_id(user.id)
-        if doctor is not None:
-            doctor_id = doctor.id
-
-    # Generate tokens with profile IDs
-    access_token = create_access_token(
-        user.id, user.email, user.role.value, patient_id=patient_id, doctor_id=doctor_id
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
     )
-    refresh_token = create_refresh_token(
-        user.id, user.email, user.role.value, patient_id=patient_id, doctor_id=doctor_id
-    )
+    interpreter = CompositeInterpreter(pool, redis_client)
+
+    def login_program() -> Generator[AllEffects, object, tuple[object, object | None, object | None]]:
+        user = yield GetUserByEmail(email=request.email)
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
+            )
+
+        if not verify_password(request.password, user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid email or password",
+            )
+
+        if user.status.value != "active":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Account is {user.status.value}",
+            )
+
+        yield UpdateUserLastLogin(user_id=user.id)
+
+        patient = None
+        doctor = None
+
+        if user.role.value == "patient":
+            patient = yield GetPatientByUserId(user_id=user.id)
+        elif user.role.value == "doctor":
+            doctor = yield GetDoctorByUserId(user_id=user.id)
+
+        return user, patient, doctor
+
+    try:
+        user, patient, doctor = await run_program(login_program(), interpreter)
+    finally:
+        await redis_client.aclose()
 
     # Set refresh token in HttpOnly cookie (7 days)
+    refresh_token = create_refresh_token(
+        user.id,
+        user.email,
+        user.role.value,
+        patient_id=patient.id if patient else None,
+        doctor_id=doctor.id if doctor else None,
+    )
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
@@ -145,6 +157,14 @@ async def login(
         secure=True,
         samesite="strict",
         max_age=7 * 24 * 60 * 60,
+    )
+
+    access_token = create_access_token(
+        user.id,
+        user.email,
+        user.role.value,
+        patient_id=patient.id if patient else None,
+        doctor_id=doctor.id if doctor else None,
     )
 
     return LoginResponse(
@@ -169,25 +189,33 @@ async def register(
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
-    user_repo = UserRepository(pool)
-
-    # Check if email already exists
-    existing_user = await user_repo.get_by_email(request.email)
-    if existing_user is not None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered",
-        )
-
-    # Hash password
-    password_hash = hash_password(request.password)
-
-    # Create user
-    user = await user_repo.create(
-        email=request.email,
-        password_hash=password_hash,
-        role=request.role,
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
     )
+    interpreter = CompositeInterpreter(pool, redis_client)
+
+    def register_program() -> Generator[AllEffects, object, object]:
+        existing_user = yield GetUserByEmail(email=request.email)
+        if existing_user is not None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered",
+            )
+
+        password_hash = hash_password(request.password)
+        user = yield CreateUser(
+            email=request.email,
+            password_hash=password_hash,
+            role=request.role.value,
+        )
+        return user
+
+    try:
+        user = await run_program(register_program(), interpreter)
+    finally:
+        await redis_client.aclose()
 
     return RegisterResponse(
         user_id=str(user.id),

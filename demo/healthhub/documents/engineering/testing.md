@@ -15,6 +15,7 @@
 - **Test layout**: unit tests in `tests/pytest/backend/`; E2E flows in `tests/pytest/e2e/`; integration tests hit real Postgres/Redis/MinIO/Pulsar via Docker.
 - **Commands**: run via demo service:  
   `docker compose -f docker/docker-compose.yml exec healthhub poetry run pytest tests/pytest`
+- **Timeouts**: Base SSoT timeout policy applies — every test command (CI and local) must declare a timeout of at least 4 hours. HealthHub E2E runs Playwright across Chromium/Firefox/WebKit; increase timeouts further if needed rather than shortening.
 - **Generator stepping**: assert effect ordering and ADT narrowing for appointments, prescriptions, lab results.
 - **PHI-safe fixtures**: scrub PHI from logs/assertions; seed data uses anonymized patients/doctors; never hardcode identifiers.
 - **Notification flows**: assert business logic does not block on SMS/email/WebSocket; verify audit and metrics events on failure.

@@ -15,6 +15,12 @@
 - **Authorization**: Require ADT-based auth (`PatientAuthorized`/`DoctorAuthorized`) via FastAPI `Depends` before invoking programs; programs never bypass auth.
 - **Request models**: Pydantic DTOs validate only; coercion into domain types happens at the boundary before calling programs.
 - **Notifications**: Delivery failures surface as Result ADTs and return 202/non-blocking responses while interpreters emit audit + metrics events.
+- **SQL via repositories in interpreters**: Database access happens only in interpreters through repository helpers built on `asyncpg`; routes/programs never compose SQL. Rationale: keep impurity isolated while still letting interpreters use expressive SQL (CTEs, locking, projections) tailored to each effect without leaking DB concerns into pure layers.
+- **SQL injection protections**:
+  - Use `asyncpg` positional parameters (`$1`, `$2`, …) exclusively; never f-string or concatenate user input into SQL.
+  - Centralize SQL in repositories/interpreters; programs/routes cannot build SQL strings.
+  - Prefer typed converters (`safe_uuid`, `safe_int`, `safe_decimal`, etc.) on all DB outputs before building domain objects.
+  - For dynamic filters, build parameterized fragments with positional binds; avoid interpolating identifiers unless whitelisted constants.
 
 ## Forbidden (demo overlay)
 - Re-implementing base routing/program patterns in route bodies.

@@ -29,6 +29,7 @@ from app.effects.healthcare import (
     AddInvoiceLineItem,
     CreateInvoice,
     GetInvoiceById,
+    ListInvoiceLineItems,
     ListInvoices,
     UpdateInvoiceStatus,
 )
@@ -375,7 +376,7 @@ async def get_invoice(
         )
 
         # Create effect program to get invoice with audit logging
-        def get_program() -> Generator[AllEffects, object, Invoice]:
+        def get_program() -> Generator[AllEffects, object, tuple[Invoice, list[LineItem]]]:
             invoice = yield GetInvoiceById(invoice_id=UUID(invoice_id))
 
             # HIPAA-required audit logging (log all access attempts)
@@ -395,10 +396,12 @@ async def get_invoice(
                     detail=f"Invoice {invoice_id} not found",
                 )
             assert isinstance(invoice, Invoice)
-            return invoice
+            line_items = yield ListInvoiceLineItems(invoice_id=UUID(invoice_id))
+            assert isinstance(line_items, list)
+            return invoice, line_items
 
         # Run effect program
-        invoice = await run_program(get_program(), interpreter)
+        invoice, line_items = await run_program(get_program(), interpreter)
 
         # Authorization check - patient can only see their own invoices
         match auth:
@@ -410,19 +413,6 @@ async def get_invoice(
                     )
             case _:
                 pass  # Doctors and admins can view any invoice
-
-        # Get line items (direct DB call - no effect defined yet)
-        line_item_rows = await pool.fetch(
-            """
-            SELECT id, invoice_id, description, quantity, unit_price, total, created_at
-            FROM invoice_line_items
-            WHERE invoice_id = $1
-            ORDER BY created_at
-            """,
-            UUID(invoice_id),
-        )
-
-        line_items = [_row_to_line_item(dict(row)) for row in line_item_rows]
 
         return InvoiceWithLineItemsResponse(
             invoice=invoice_to_response(invoice),
@@ -502,7 +492,7 @@ async def add_line_item(
                 user_agent=user_agent,
                 metadata={
                     "line_item_id": str(line_item.id),
-                    "description": request_data.description,
+                    "label": "line_item_added",
                 },
             )
 

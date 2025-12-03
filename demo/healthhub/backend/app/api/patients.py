@@ -15,18 +15,19 @@ import redis.asyncio as redis
 from app.domain.patient import Patient
 from app.effects.healthcare import (
     CreatePatient as CreatePatientEffect,
+    DeletePatient,
     GetPatientById,
+    GetPatientByUserId,
     ListPatients,
+    UpdatePatient,
 )
 from app.effects.notification import LogAuditEvent
 from app.infrastructure import get_database_manager, rate_limit
 from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
 from app.programs.runner import run_program
-from app.repositories.patient_repository import PatientRepository
 from app.api.dependencies import (
     AdminAuthorized,
-    AuthorizationState,
     DoctorAuthorized,
     PatientAuthorized,
     require_admin,
@@ -322,7 +323,6 @@ async def get_patient_by_user(
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
-    patient_repo = PatientRepository(pool)
 
     # Extract actor ID from auth state
     actor_id: UUID
@@ -350,10 +350,28 @@ async def get_patient_by_user(
         AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
     )
 
-    patient = await patient_repo.get_by_user_id(UUID(user_id))
+    def get_by_user_program() -> Generator[AllEffects, object, Patient | None]:
+        return (yield GetPatientByUserId(user_id=UUID(user_id)))
 
     # HIPAA-required audit logging (log all PHI access attempts)
     def audit_program() -> Generator[AllEffects, object, None]:
+        yield LogAuditEvent(
+            user_id=actor_id,
+            action="view_patient_by_user",
+            resource_type="patient",
+            resource_id=UUID("00000000-0000-0000-0000-000000000000"),
+            ip_address=ip_address,
+            user_agent=user_agent,
+            metadata={
+                "status": "pending",
+                "lookup_user_id": user_id,
+            },
+        )
+
+    patient = await run_program(get_by_user_program(), interpreter)
+
+    # Update audit metadata with result
+    def audit_result_program() -> Generator[AllEffects, object, None]:
         yield LogAuditEvent(
             user_id=actor_id,
             action="view_patient_by_user",
@@ -367,7 +385,7 @@ async def get_patient_by_user(
             },
         )
 
-    await run_program(audit_program(), interpreter)
+    await run_program(audit_result_program(), interpreter)
     await redis_client.aclose()
 
     if patient is None:
@@ -396,15 +414,6 @@ async def update_patient(
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
-    patient_repo = PatientRepository(pool)
-
-    # Get existing patient
-    patient = await patient_repo.get_by_id(UUID(patient_id))
-    if patient is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Patient {patient_id} not found",
-        )
 
     # Authorization check - patient can only update their own record
     match auth:
@@ -429,25 +438,36 @@ async def update_patient(
         AuditContext(user_id=auth.user_id, ip_address=None, user_agent=None),
     )
 
-    # Update patient (simplified - in production, use UPDATE query)
-    updated_patient = await patient_repo.create(
-        user_id=patient.user_id,
-        first_name=request.first_name or patient.first_name,
-        last_name=request.last_name or patient.last_name,
-        date_of_birth=patient.date_of_birth,
-        blood_type=request.blood_type if request.blood_type is not None else patient.blood_type,
-        allergies=request.allergies if request.allergies is not None else patient.allergies,
-        insurance_id=(
-            request.insurance_id if request.insurance_id is not None else patient.insurance_id
-        ),
-        emergency_contact=request.emergency_contact or patient.emergency_contact,
-        phone=request.phone if request.phone is not None else patient.phone,
-        address=request.address if request.address is not None else patient.address,
-    )
+    def fetch_program() -> Generator[AllEffects, object, Patient | None]:
+        return (yield GetPatientById(patient_id=UUID(patient_id)))
 
-    # Audit mutation
-    await interpreter.handle(
-        LogAuditEvent(
+    patient = await run_program(fetch_program(), interpreter)
+    if patient is None:
+        await redis_client.aclose()
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Patient {patient_id} not found",
+        )
+
+    def update_program() -> Generator[AllEffects, object, Patient]:
+        updated = yield UpdatePatient(
+            patient_id=UUID(patient_id),
+            first_name=request.first_name,
+            last_name=request.last_name,
+            blood_type=request.blood_type,
+            allergies=request.allergies,
+            insurance_id=request.insurance_id,
+            emergency_contact=request.emergency_contact,
+            phone=request.phone,
+            address=request.address,
+        )
+        if updated is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Patient {patient_id} not found",
+            )
+
+        yield LogAuditEvent(
             user_id=auth.user_id,
             action="update_patient",
             resource_type="patient",
@@ -456,7 +476,11 @@ async def update_patient(
             user_agent=None,
             metadata=None,
         )
-    )
+
+        return updated
+
+    updated_patient = await run_program(update_program(), interpreter)
+
     await redis_client.aclose()
 
     return patient_to_response(updated_patient)
@@ -488,14 +512,15 @@ async def delete_patient(
         AuditContext(user_id=auth.user_id, ip_address=None, user_agent=None),
     )
 
-    # Execute delete query (simplified)
-    await pool.execute(
-        "DELETE FROM patients WHERE id = $1",
-        UUID(patient_id),
-    )
+    def delete_program() -> Generator[AllEffects, object, None]:
+        deleted = yield DeletePatient(patient_id=UUID(patient_id))
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Patient {patient_id} not found",
+            )
 
-    await interpreter.handle(
-        LogAuditEvent(
+        yield LogAuditEvent(
             user_id=auth.user_id,
             action="delete_patient",
             resource_type="patient",
@@ -504,7 +529,8 @@ async def delete_patient(
             user_agent=None,
             metadata=None,
         )
-    )
+
+    await run_program(delete_program(), interpreter)
     await redis_client.aclose()
 
     # No content response
