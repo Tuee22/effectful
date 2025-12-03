@@ -18,7 +18,7 @@ HealthHub uses Redis pub/sub for real-time notifications delivered via WebSocket
 // Connect to WebSocket endpoint
 const userId = 'your-user-id';
 const token = 'your-jwt-token';
-const ws = new WebSocket(`wss://localhost:8850/ws/${userId}?token=${token}`);
+const ws = new WebSocket(`wss://localhost:8851/ws/${userId}?token=${token}`);
 
 ws.onopen = () => {
     console.log('Connected to notifications');
@@ -62,7 +62,7 @@ import asyncio
 import websockets
 
 async def listen_notifications(user_id: str, token: str):
-    uri = f"ws://localhost:8850/ws/{user_id}?token={token}"
+    uri = f"ws://localhost:8851/ws/{user_id}?token={token}"
 
     async with websockets.connect(uri) as websocket:
         print("Connected to notifications")
@@ -233,7 +233,7 @@ class NotificationClient {
     }
 
     connect() {
-        this.ws = new WebSocket(`wss://localhost:8850/ws/${this.userId}?token=${this.token}`);
+        this.ws = new WebSocket(`wss://localhost:8851/ws/${this.userId}?token=${this.token}`);
 
         this.ws.onopen = () => {
             console.log('Connected');

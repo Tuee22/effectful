@@ -5,7 +5,7 @@
 ---
 
 ## What differs from the base SSoT
-- **Single server/port**: FastAPI serves API + React on port `8850` (StaticFiles + catch-all). See [Frontend Architecture](../engineering/frontend_architecture.md) for serving details.
+- **Single server/port**: FastAPI serves API + React on port `8851` (StaticFiles + catch-all). See [Frontend Architecture](../engineering/frontend_architecture.md) for serving details.
 - **Interpreter split**: Composite interpreter routes two categories here—`HealthcareInterpreter` (PostgreSQL) and `NotificationInterpreter` (Redis pub/sub + audit logging). Effect catalog lives in [Effects Reference](effects_reference.md).
 - **Infrastructure bindings**: Ports are pinned for local stack parity—PostgreSQL `5433`, Redis `6380`, Pulsar `6651`, MinIO `9001`. Values are set in `demo/healthhub/docker/docker-compose.yml`.
 - **Audit-first paths**: Every PHI read/write emits audit effects from interpreters (never from programs). See [Code Quality overlay](../engineering/code_quality.md) and [Monitoring & Alerting overlay](../engineering/monitoring_and_alerting.md).

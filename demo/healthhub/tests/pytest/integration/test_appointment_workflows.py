@@ -80,7 +80,7 @@ class TestAppointmentScheduling:
         requested_time = datetime(2024, 12, 15, 14, 0, 0, tzinfo=timezone.utc)
         reason = "Annual checkup"
 
-        appointment = await run_program(
+        result = await run_program(
             schedule_appointment_program(
                 patient_id=seed_test_patient,
                 doctor_id=seed_test_doctor,
@@ -91,9 +91,8 @@ class TestAppointmentScheduling:
             interpreter,
         )
 
-        # Verify program returned appointment
-        assert appointment is not None
-        assert isinstance(appointment, Appointment)
+        assert isinstance(result, AppointmentScheduled)
+        appointment = result.appointment
         assert appointment.patient_id == seed_test_patient
         assert appointment.doctor_id == seed_test_doctor
         assert appointment.reason == reason
@@ -575,8 +574,8 @@ class TestAppointmentNotifications:
         payload = json.loads(data)
         assert payload["type"] == "appointment_requested"
         assert payload["appointment_id"] == str(appointment.id)
-        assert "patient_name" in payload
-        assert payload["reason"] == "Notification test"
+        # Payload intentionally minimal and PHI-free
+        assert payload.get("reason") is None
 
         await pubsub.unsubscribe(doctor_channel)
-        await pubsub.close()
+        await pubsub.aclose()

@@ -12,7 +12,7 @@ HealthHub uses a **single-server architecture** where FastAPI serves both the RE
 
 ```
 Request Flow:
-1. Browser → http://localhost:8850/
+1. Browser → http://localhost:8851/
 2. FastAPI checks registered routes:
    - /api/* → API routers (FastAPI route handlers)
    - /health → Health check endpoint
@@ -55,7 +55,7 @@ if frontend_build_path.exists():
 ### Why This Pattern?
 
 **Benefits**:
-- ✅ Single port (8850) for entire application
+- ✅ Single port (8851) for entire application
 - ✅ No CORS issues (same origin)
 - ✅ Simplified deployment (one container)
 - ✅ Production-ready by default
@@ -133,7 +133,7 @@ docker compose -f docker/docker-compose.yml up -d
 # Edit files in backend/app/
 # Changes reload automatically
 
-# Access app at http://localhost:8850
+# Access app at http://localhost:8851
 ```
 
 **No frontend rebuild needed** - uses embedded frontend from Docker build.
@@ -154,7 +154,7 @@ npm install  # First time only
 npm run dev
 
 # Access frontend at http://localhost:5173 (with HMR)
-# API proxied to http://localhost:8850 (via vite.config.ts)
+# API proxied to http://localhost:8851 (via vite.config.ts)
 ```
 
 **Benefits**: Hot module replacement, instant feedback on changes.
@@ -172,7 +172,7 @@ docker compose -f docker/docker-compose.yml build healthhub
 # Restart services
 docker compose -f docker/docker-compose.yml up -d
 
-# Access app at http://localhost:8850
+# Access app at http://localhost:8851
 ```
 
 **When to use**: Before committing, testing production build, E2E tests.
@@ -259,7 +259,7 @@ docker compose -f docker/docker-compose.yml exec healthhub poetry run test-integ
 
 ### Frontend Not Loading (503 Error)
 
-**Symptom**: Accessing http://localhost:8850 returns `{"error": "Frontend not built"}`
+**Symptom**: Accessing http://localhost:8851 returns `{"error": "Frontend not built"}`
 
 **Cause**: Frontend build didn't complete during Docker build.
 

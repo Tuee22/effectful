@@ -1019,7 +1019,15 @@ class HealthcareInterpreter:
 
     def _row_to_lab_result(self, row: asyncpg.Record) -> LabResult:
         """Convert database row to LabResult domain model."""
-        result_data_obj = safe_dict_str_object(row["result_data"])
+        raw_result_data = row["result_data"]
+        if isinstance(raw_result_data, str):
+            try:
+                raw_result_data = json.loads(raw_result_data)
+            except Exception:
+                # Fall through to converter which will raise a helpful TypeError
+                pass
+
+        result_data_obj = safe_dict_str_object(raw_result_data)
         result_data = {str(k): str(v) for k, v in result_data_obj.items()}
         return LabResult(
             id=safe_uuid(row["id"]),

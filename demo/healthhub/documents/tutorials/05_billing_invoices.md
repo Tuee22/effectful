@@ -18,12 +18,12 @@ Invoice workflow:
 
 ```bash
 # Login as admin
-TOKEN=$(curl -s -X POST http://localhost:8850/api/v1/auth/login \
+TOKEN=$(curl -s -X POST http://localhost:8851/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "admin@healthhub.com", "password": "admin123"}' | jq -r '.access_token')
 
 # Create invoice
-curl -X POST http://localhost:8850/api/v1/invoices \
+curl -X POST http://localhost:8851/api/v1/invoices \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -70,7 +70,7 @@ curl -X POST http://localhost:8850/api/v1/invoices \
 ## Step 2: Send Invoice
 
 ```bash
-curl -X POST http://localhost:8850/api/v1/invoices/<invoice_id>/send \
+curl -X POST http://localhost:8851/api/v1/invoices/<invoice_id>/send \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -82,16 +82,16 @@ Status changes from `draft` to `sent`.
 
 ```bash
 # Login as patient
-TOKEN=$(curl -s -X POST http://localhost:8850/api/v1/auth/login \
+TOKEN=$(curl -s -X POST http://localhost:8851/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "alice@example.com", "password": "patient123"}' | jq -r '.access_token')
 
 # View all invoices
-curl http://localhost:8850/api/v1/patients/me/invoices \
+curl http://localhost:8851/api/v1/patients/me/invoices \
   -H "Authorization: Bearer $TOKEN"
 
 # View specific invoice
-curl http://localhost:8850/api/v1/invoices/<invoice_id> \
+curl http://localhost:8851/api/v1/invoices/<invoice_id> \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -101,7 +101,7 @@ curl http://localhost:8850/api/v1/invoices/<invoice_id> \
 
 ```bash
 # Admin marks invoice as paid
-curl -X POST http://localhost:8850/api/v1/invoices/<invoice_id>/mark-paid \
+curl -X POST http://localhost:8851/api/v1/invoices/<invoice_id>/mark-paid \
   -H "Authorization: Bearer $TOKEN"
 ```
 

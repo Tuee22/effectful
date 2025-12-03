@@ -33,10 +33,20 @@ from app.effects.healthcare import (
 )
 from app.effects.notification import LogAuditEvent, PublishWebSocketNotification
 from app.programs.appointment_programs import (
+    AppointmentDoctorMissing,
+    AppointmentPatientMissing,
+    AppointmentScheduled,
     schedule_appointment_program,
     transition_appointment_program,
 )
-from app.programs.prescription_programs import create_prescription_program
+from app.programs.prescription_programs import (
+    PrescriptionBlocked,
+    PrescriptionCreated,
+    PrescriptionDoctorMissing,
+    PrescriptionDoctorUnauthorized,
+    PrescriptionPatientMissing,
+    create_prescription_program,
+)
 
 
 class TestScheduleAppointmentProgram:
@@ -134,7 +144,8 @@ class TestScheduleAppointmentProgram:
             program.send(None)
 
         result = exc_info.value.value
-        assert result == mock_appointment
+        assert isinstance(result, AppointmentScheduled)
+        assert result.appointment == mock_appointment
 
     def test_schedule_appointment_patient_not_found(self) -> None:
         """Should return None when patient not found."""
@@ -155,12 +166,13 @@ class TestScheduleAppointmentProgram:
         effect1 = next(program)
         assert isinstance(effect1, GetPatientById)
 
-        # Step 2: Send None (patient not found), should return None
+        # Step 2: Send None (patient not found), should return patient-missing ADT
         with pytest.raises(StopIteration) as exc_info:
             program.send(None)
 
         result = exc_info.value.value
-        assert result is None
+        assert isinstance(result, AppointmentPatientMissing)
+        assert result.patient_id == patient_id
 
     def test_schedule_appointment_doctor_not_found(self) -> None:
         """Should return None when doctor not found."""
@@ -201,12 +213,13 @@ class TestScheduleAppointmentProgram:
         effect2 = program.send(mock_patient)
         assert isinstance(effect2, GetDoctorById)
 
-        # Step 3: Send None (doctor not found), should return None
+        # Step 3: Send None (doctor not found), should return doctor-missing ADT
         with pytest.raises(StopIteration) as exc_info:
             program.send(None)
 
         result = exc_info.value.value
-        assert result is None
+        assert isinstance(result, AppointmentDoctorMissing)
+        assert result.doctor_id == doctor_id
 
 
 class TestTransitionAppointmentProgram:
@@ -460,7 +473,8 @@ class TestCreatePrescriptionProgram:
             program.send(None)
 
         result = exc_info.value.value
-        assert result == mock_prescription
+        assert isinstance(result, PrescriptionCreated)
+        assert result.prescription == mock_prescription
 
     def test_create_prescription_patient_not_found(self) -> None:
         """Should return error string when patient not found."""
@@ -486,13 +500,13 @@ class TestCreatePrescriptionProgram:
         effect1 = next(program)
         assert isinstance(effect1, GetPatientById)
 
-        # Step 2: Send None (not found), should return error string
+        # Step 2: Send None (not found), should return patient-missing ADT
         with pytest.raises(StopIteration) as exc_info:
             program.send(None)
 
         result = exc_info.value.value
-        assert isinstance(result, str)
-        assert "not found" in result.lower()
+        assert isinstance(result, PrescriptionPatientMissing)
+        assert result.patient_id == patient_id
 
     def test_create_prescription_doctor_not_found(self) -> None:
         """Should return error string when doctor not found."""
@@ -538,13 +552,13 @@ class TestCreatePrescriptionProgram:
         effect2 = program.send(mock_patient)
         assert isinstance(effect2, GetDoctorById)
 
-        # Step 3: Send None (doctor not found), should return error string
+        # Step 3: Send None (doctor not found), should return doctor-missing ADT
         with pytest.raises(StopIteration) as exc_info:
             program.send(None)
 
         result = exc_info.value.value
-        assert isinstance(result, str)
-        assert "not found" in result.lower()
+        assert isinstance(result, PrescriptionDoctorMissing)
+        assert result.doctor_id == doctor_id
 
     def test_create_prescription_doctor_cannot_prescribe(self) -> None:
         """Should return error string when doctor cannot prescribe."""
@@ -604,13 +618,13 @@ class TestCreatePrescriptionProgram:
         effect2 = program.send(mock_patient)
         assert isinstance(effect2, GetDoctorById)
 
-        # Step 3: Send doctor without authority, should return error string
+        # Step 3: Send doctor without authority, should return unauthorized ADT
         with pytest.raises(StopIteration) as exc_info:
             program.send(mock_doctor)
 
         result = exc_info.value.value
-        assert isinstance(result, str)
-        assert "not authorized" in result.lower()
+        assert isinstance(result, PrescriptionDoctorUnauthorized)
+        assert result.doctor_id == doctor_id
 
     def test_create_prescription_severe_interaction_blocks(self) -> None:
         """Should block prescription and return warning for severe interaction."""
@@ -684,13 +698,13 @@ class TestCreatePrescriptionProgram:
         assert isinstance(effect4, LogAuditEvent)
         assert effect4.action == "prescription_blocked_severe_interaction"
 
-        # Step 5: Send audit result, should return warning (prescription not created)
+        # Step 5: Send audit result, should return blocked ADT carrying warning
         with pytest.raises(StopIteration) as exc_info:
             program.send(None)
 
         result = exc_info.value.value
-        assert isinstance(result, MedicationInteractionWarning)
-        assert result.severity == "severe"
+        assert isinstance(result, PrescriptionBlocked)
+        assert result.warning == mock_interaction_warning
 
     def test_create_prescription_moderate_interaction_allowed(self) -> None:
         """Should create prescription but include warning for moderate interaction."""
@@ -796,4 +810,5 @@ class TestCreatePrescriptionProgram:
             program.send(None)
 
         result = exc_info.value.value
-        assert result == mock_prescription
+        assert isinstance(result, PrescriptionCreated)
+        assert result.prescription == mock_prescription

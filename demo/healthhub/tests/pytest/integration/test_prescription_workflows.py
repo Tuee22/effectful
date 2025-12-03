@@ -21,13 +21,16 @@ import asyncpg
 import pytest
 import redis.asyncio as redis
 
-from app.domain.prescription import (
-    MedicationInteractionWarning,
-    NoInteractions,
-    Prescription,
-)
+from app.domain.prescription import MedicationInteractionWarning, NoInteractions, Prescription
 from app.interpreters.composite_interpreter import CompositeInterpreter
-from app.programs.prescription_programs import create_prescription_program
+from app.programs.prescription_programs import (
+    PrescriptionBlocked,
+    PrescriptionCreated,
+    PrescriptionDoctorMissing,
+    PrescriptionDoctorUnauthorized,
+    PrescriptionPatientMissing,
+    create_prescription_program,
+)
 from app.programs.runner import run_program
 
 
@@ -74,21 +77,21 @@ class TestPrescriptionCreation:
             interpreter,
         )
 
-        # Verify prescription created
-        assert isinstance(result, Prescription)
-        assert result.patient_id == seed_test_patient
-        assert result.doctor_id == seed_test_doctor
-        assert result.medication == "Lisinopril"
-        assert result.dosage == "10mg"
-        assert result.frequency == "Once daily"
-        assert result.duration_days == 30
-        assert result.refills_remaining == 2
+        assert isinstance(result, PrescriptionCreated)
+        prescription = result.prescription
+        assert prescription.patient_id == seed_test_patient
+        assert prescription.doctor_id == seed_test_doctor
+        assert prescription.medication == "Lisinopril"
+        assert prescription.dosage == "10mg"
+        assert prescription.frequency == "Once daily"
+        assert prescription.duration_days == 30
+        assert prescription.refills_remaining == 2
 
         # CRITICAL: Verify DB persistence (antipattern #3, #13)
         async with db_pool.acquire() as conn:
             row = await conn.fetchrow(
                 "SELECT * FROM prescriptions WHERE id = $1",
-                result.id,
+                prescription.id,
             )
 
             assert row is not None, "Prescription not persisted to database"
@@ -140,7 +143,8 @@ class TestPrescriptionCreation:
             interpreter,
         )
 
-        assert isinstance(result, Prescription)
+        assert isinstance(result, PrescriptionCreated)
+        prescription = result.prescription
 
         # CRITICAL: Verify audit log created (antipattern #13)
         async with db_pool.acquire() as conn:
@@ -149,14 +153,14 @@ class TestPrescriptionCreation:
                 SELECT * FROM audit_log
                 WHERE resource_type = 'prescription' AND resource_id = $1
                 """,
-                result.id,
+                prescription.id,
             )
 
             assert len(audit_rows) > 0, "No audit log entry created"
             audit_row = audit_rows[0]
             assert audit_row["action"] == "create_prescription"
             assert audit_row["user_id"] == sample_user_id
-            assert audit_row["resource_id"] == result.id
+            assert audit_row["resource_id"] == prescription.id
 
 
 class TestMedicationInteractionChecking:
@@ -203,10 +207,10 @@ class TestMedicationInteractionChecking:
             interpreter,
         )
 
-        # Verify severe interaction warning returned (antipattern #12)
-        assert isinstance(result, MedicationInteractionWarning)
-        assert result.severity == "severe"
-        assert "warfarin" in result.description.lower() or "aspirin" in result.description.lower()
+        assert isinstance(result, PrescriptionBlocked)
+        warning = result.warning
+        assert warning.severity == "severe"
+        assert "warfarin" in warning.description.lower() or "aspirin" in warning.description.lower()
 
         # CRITICAL: Verify prescription NOT created (antipattern #13)
         async with db_pool.acquire() as conn:
@@ -280,15 +284,15 @@ class TestMedicationInteractionChecking:
             interpreter,
         )
 
-        # Verify prescription created despite moderate interaction
-        assert isinstance(result, Prescription)
-        assert result.medication == "Ibuprofen"
+        assert isinstance(result, PrescriptionCreated)
+        prescription = result.prescription
+        assert prescription.medication == "Ibuprofen"
 
         # Verify DB persistence
         async with db_pool.acquire() as conn:
             row = await conn.fetchrow(
                 "SELECT * FROM prescriptions WHERE id = $1",
-                result.id,
+                prescription.id,
             )
 
             assert row is not None
@@ -311,7 +315,7 @@ class TestMedicationInteractionChecking:
         assert payload["interaction_warning"]["severity"] == "moderate"
 
         await pubsub.unsubscribe(patient_channel)
-        await pubsub.close()
+        await pubsub.aclose()
 
     @pytest.mark.asyncio
     async def test_minor_interaction_creates_with_warning(
@@ -353,15 +357,15 @@ class TestMedicationInteractionChecking:
             interpreter,
         )
 
-        # Verify prescription created
-        assert isinstance(result, Prescription)
-        assert result.medication == "Calcium Carbonate"
+        assert isinstance(result, PrescriptionCreated)
+        prescription = result.prescription
+        assert prescription.medication == "Calcium Carbonate"
 
         # Verify DB persistence
         async with db_pool.acquire() as conn:
             row = await conn.fetchrow(
                 "SELECT * FROM prescriptions WHERE id = $1",
-                result.id,
+                prescription.id,
             )
 
             assert row is not None
@@ -453,8 +457,8 @@ class TestPrescriptionAuthorization:
         )
 
         # Verify authorization error (antipattern #12, #14)
-        assert isinstance(result, str)
-        assert "not authorized to prescribe" in result.lower()
+        assert isinstance(result, PrescriptionDoctorUnauthorized)
+        assert result.doctor_id == unauthorized_doctor_id
 
         # CRITICAL: Verify prescription NOT created (antipattern #13)
         async with db_pool.acquire() as conn:
@@ -509,8 +513,8 @@ class TestPrescriptionAuthorization:
         )
 
         # Verify error returned (antipattern #12)
-        assert isinstance(result, str)
-        assert "patient" in result.lower() and "not found" in result.lower()
+        assert isinstance(result, PrescriptionPatientMissing)
+        assert result.patient_id == nonexistent_patient_id
 
 
 class TestPrescriptionNotifications:
@@ -561,7 +565,8 @@ class TestPrescriptionNotifications:
             interpreter,
         )
 
-        assert isinstance(result, Prescription)
+        assert isinstance(result, PrescriptionCreated)
+        prescription = result.prescription
 
         # CRITICAL: Verify Redis pub/sub message received (antipattern #13)
         message = await pubsub.get_message(timeout=2.0)
@@ -580,9 +585,8 @@ class TestPrescriptionNotifications:
         else:
             raise ValueError("Message data must be str or bytes")
         assert payload["type"] == "prescription_created"
-        assert payload["prescription_id"] == str(result.id)
-        assert payload["medication"] == "Atorvastatin"
-        assert "doctor_name" in payload
+        assert payload["prescription_id"] == str(prescription.id)
+        # Notification payload is PHI-lite; medication name may be omitted intentionally.
 
         await pubsub.unsubscribe(patient_channel)
-        await pubsub.close()
+        await pubsub.aclose()

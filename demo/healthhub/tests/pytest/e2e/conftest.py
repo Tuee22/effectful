@@ -40,7 +40,7 @@ def base_url() -> str:
 @pytest.fixture(scope="session")
 def backend_url() -> str:
     """Get the backend base URL for E2E tests."""
-    return os.environ.get("E2E_BACKEND_URL", "http://localhost:8850")
+    return os.environ.get("E2E_BACKEND_URL", "http://localhost:8851")
 
 
 # =============================================================================

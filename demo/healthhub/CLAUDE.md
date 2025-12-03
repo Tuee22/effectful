@@ -107,7 +107,7 @@ All code changes must meet:
 
 | Service | Image | Port | Purpose |
 |---------|-------|------|---------|
-| healthhub | Python 3.12 + Poetry | 8850 | FastAPI application + React frontend |
+| healthhub | Python 3.12 + Poetry | 8851 | FastAPI application + React frontend |
 | postgres | postgres:15-alpine | 5433 | Patient/appointment data |
 | redis | redis:7-alpine | 6380 | Notifications, cache |
 | pulsar | apachepulsar/pulsar:3.0.0 | 6651 | Durable messaging |
@@ -140,7 +140,7 @@ from effectful.effects.database import GetUserById
 **Build Process**:
 - Frontend built during `docker build` step
 - Output: `/opt/healthhub/frontend-build/build/`
-- Served by FastAPI on port 8850
+- Served by FastAPI on port 8851
 
 **Routing**:
 - `/api/*` - API routes (FastAPI routers)

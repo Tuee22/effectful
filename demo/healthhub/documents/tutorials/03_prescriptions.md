@@ -20,12 +20,12 @@ Not all doctors can prescribe. Check the `can_prescribe` field:
 
 ```bash
 # Login as doctor
-TOKEN=$(curl -s -X POST http://localhost:8850/api/v1/auth/login \
+TOKEN=$(curl -s -X POST http://localhost:8851/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "dr.smith@example.com", "password": "doctor123"}' | jq -r '.access_token')
 
 # Check your profile
-curl http://localhost:8850/api/v1/doctors/me \
+curl http://localhost:8851/api/v1/doctors/me \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -38,7 +38,7 @@ Look for: `"can_prescribe": true`
 Before prescribing, check for interactions with the patient's current medications:
 
 ```bash
-curl -X POST http://localhost:8850/api/v1/prescriptions/check-interactions \
+curl -X POST http://localhost:8851/api/v1/prescriptions/check-interactions \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"medications": ["Aspirin", "Warfarin"]}'
@@ -61,7 +61,7 @@ curl -X POST http://localhost:8850/api/v1/prescriptions/check-interactions \
 ## Step 3: Create Prescription (No Interactions)
 
 ```bash
-curl -X POST http://localhost:8850/api/v1/prescriptions \
+curl -X POST http://localhost:8851/api/v1/prescriptions \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -100,7 +100,7 @@ Moderate interactions require acknowledgment but can proceed:
 
 ```bash
 # First check shows moderate interaction
-curl -X POST http://localhost:8850/api/v1/prescriptions/check-interactions \
+curl -X POST http://localhost:8851/api/v1/prescriptions/check-interactions \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"medications": ["Metformin", "Lisinopril"]}'
@@ -117,7 +117,7 @@ curl -X POST http://localhost:8850/api/v1/prescriptions/check-interactions \
 # }
 
 # Proceed with override
-curl -X POST http://localhost:8850/api/v1/prescriptions \
+curl -X POST http://localhost:8851/api/v1/prescriptions \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -205,12 +205,12 @@ def prescribe_medication_program(
 
 ```bash
 # Login as patient
-TOKEN=$(curl -s -X POST http://localhost:8850/api/v1/auth/login \
+TOKEN=$(curl -s -X POST http://localhost:8851/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "alice@example.com", "password": "patient123"}' | jq -r '.access_token')
 
 # View prescriptions
-curl http://localhost:8850/api/v1/patients/me/prescriptions \
+curl http://localhost:8851/api/v1/patients/me/prescriptions \
   -H "Authorization: Bearer $TOKEN"
 ```
 

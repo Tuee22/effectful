@@ -7,7 +7,7 @@
 ## What changes from the base quickstart
 - **Compose file**: Use `demo/healthhub/docker/docker-compose.yml` instead of the root compose.
 - **Service name**: Commands run inside the `healthhub` container (not `effectful`).
-- **Ports**: API + frontend served on `http://localhost:8850` (single origin).
+- **Ports**: API + frontend served on `http://localhost:8851` (single origin).
 - **Stack**: Includes PostgreSQL `5433`, Redis `6380`, Pulsar `6651`, MinIO `9001` seeded for demo data.
 - **Commands**:
   - Start: `docker compose -f demo/healthhub/docker/docker-compose.yml up -d`

@@ -121,8 +121,8 @@ services:
       JWT_ACCESS_TOKEN_EXPIRE_MINUTES: 15
       JWT_REFRESH_TOKEN_EXPIRE_DAYS: 7
 
-      # E2E Testing (ShipNorth pattern)
-      E2E_BACKEND_URL: http://localhost:8850
+      # E2E Testing
+      E2E_BACKEND_URL: http://localhost:8851
       DESTRUCTIVELY_SEED_DB_TEST_DATA: "true"
     volumes:
       # Mount effectful library read-only for hot reload
@@ -132,9 +132,9 @@ services:
       - ../backend/scripts:/app/healthhub/backend/scripts
       - ../tools:/app/healthhub/tools
       - ../tests:/app/healthhub/tests
-    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8850 --reload
+    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8851 --reload
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8850/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8851/health"]
       interval: 10s
       timeout: 5s
       retries: 5

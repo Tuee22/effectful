@@ -6,9 +6,9 @@
 
 ## Overview
 
-HealthHub exposes a REST API via FastAPI running on port 8850.
+HealthHub exposes a REST API via FastAPI running on port 8851.
 
-**Base URL**: `http://localhost:8850/api/v1`
+**Base URL**: `http://localhost:8851/api/v1`
 
 **Authentication**: JWT Bearer token in Authorization header
 

@@ -19,12 +19,12 @@ Lab results workflow:
 
 ```bash
 # Login as doctor
-TOKEN=$(curl -s -X POST http://localhost:8850/api/v1/auth/login \
+TOKEN=$(curl -s -X POST http://localhost:8851/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "dr.smith@example.com", "password": "doctor123"}' | jq -r '.access_token')
 
 # Create lab result
-curl -X POST http://localhost:8850/api/v1/lab-results \
+curl -X POST http://localhost:8851/api/v1/lab-results \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -48,7 +48,7 @@ curl -X POST http://localhost:8850/api/v1/lab-results \
 Critical results require immediate attention:
 
 ```bash
-curl -X POST http://localhost:8850/api/v1/lab-results \
+curl -X POST http://localhost:8851/api/v1/lab-results \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -73,7 +73,7 @@ curl -X POST http://localhost:8850/api/v1/lab-results \
 ## Step 3: Doctor Reviews Result
 
 ```bash
-curl -X POST http://localhost:8850/api/v1/lab-results/<result_id>/review \
+curl -X POST http://localhost:8851/api/v1/lab-results/<result_id>/review \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -87,16 +87,16 @@ curl -X POST http://localhost:8850/api/v1/lab-results/<result_id>/review \
 
 ```bash
 # Login as patient
-TOKEN=$(curl -s -X POST http://localhost:8850/api/v1/auth/login \
+TOKEN=$(curl -s -X POST http://localhost:8851/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "alice@example.com", "password": "patient123"}' | jq -r '.access_token')
 
 # View all lab results
-curl http://localhost:8850/api/v1/patients/me/lab-results \
+curl http://localhost:8851/api/v1/patients/me/lab-results \
   -H "Authorization: Bearer $TOKEN"
 
 # View specific result
-curl http://localhost:8850/api/v1/lab-results/<result_id> \
+curl http://localhost:8851/api/v1/lab-results/<result_id> \
   -H "Authorization: Bearer $TOKEN"
 ```
 

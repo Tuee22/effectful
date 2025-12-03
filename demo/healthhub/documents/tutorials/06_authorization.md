@@ -29,17 +29,17 @@ Patients can only access their own records:
 
 ```bash
 # Login as patient Alice
-TOKEN=$(curl -s -X POST http://localhost:8850/api/v1/auth/login \
+TOKEN=$(curl -s -X POST http://localhost:8851/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "alice@example.com", "password": "patient123"}' | jq -r '.access_token')
 
 # Can view own records
-curl http://localhost:8850/api/v1/patients/me \
+curl http://localhost:8851/api/v1/patients/me \
   -H "Authorization: Bearer $TOKEN"
 # 200 OK
 
 # Cannot view other patient's records
-curl http://localhost:8850/api/v1/patients/<other_patient_id> \
+curl http://localhost:8851/api/v1/patients/<other_patient_id> \
   -H "Authorization: Bearer $TOKEN"
 # 403 Forbidden
 ```
@@ -52,17 +52,17 @@ Doctors can access patients assigned to them and perform medical actions:
 
 ```bash
 # Login as doctor
-TOKEN=$(curl -s -X POST http://localhost:8850/api/v1/auth/login \
+TOKEN=$(curl -s -X POST http://localhost:8851/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "dr.smith@example.com", "password": "doctor123"}' | jq -r '.access_token')
 
 # Can view any patient (for treatment)
-curl http://localhost:8850/api/v1/patients/<any_patient_id> \
+curl http://localhost:8851/api/v1/patients/<any_patient_id> \
   -H "Authorization: Bearer $TOKEN"
 # 200 OK
 
 # Can confirm appointments
-curl -X POST http://localhost:8850/api/v1/appointments/<id>/transition \
+curl -X POST http://localhost:8851/api/v1/appointments/<id>/transition \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"new_status": "confirmed", "scheduled_time": "..."}'
@@ -86,7 +86,7 @@ class DoctorAuthorized:
 
 ```bash
 # Doctor without prescribing authority
-curl -X POST http://localhost:8850/api/v1/prescriptions \
+curl -X POST http://localhost:8851/api/v1/prescriptions \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"patient_id": "...", "medication": "..."}'
@@ -101,17 +101,17 @@ Admins have full system access:
 
 ```bash
 # Login as admin
-TOKEN=$(curl -s -X POST http://localhost:8850/api/v1/auth/login \
+TOKEN=$(curl -s -X POST http://localhost:8851/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "admin@healthhub.com", "password": "admin123"}' | jq -r '.access_token')
 
 # Can view any patient
-curl http://localhost:8850/api/v1/patients/<any_id> \
+curl http://localhost:8851/api/v1/patients/<any_id> \
   -H "Authorization: Bearer $TOKEN"
 # 200 OK
 
 # Can create invoices
-curl -X POST http://localhost:8850/api/v1/invoices \
+curl -X POST http://localhost:8851/api/v1/invoices \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{...}'

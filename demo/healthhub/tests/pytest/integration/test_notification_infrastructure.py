@@ -116,7 +116,7 @@ class TestRedisPublishSubscribe:
             assert "timestamp" in payload
 
         await pubsub.unsubscribe(channel)
-        await pubsub.close()
+        await pubsub.aclose()
 
     @pytest.mark.asyncio
     async def test_publish_to_multiple_channels(
@@ -197,8 +197,8 @@ class TestRedisPublishSubscribe:
 
         await pubsub1.unsubscribe(channel1)
         await pubsub2.unsubscribe(channel2)
-        await pubsub1.close()
-        await pubsub2.close()
+        await pubsub1.aclose()
+        await pubsub2.aclose()
 
     @pytest.mark.asyncio
     async def test_ephemeral_message_lost_without_subscriber(
@@ -248,7 +248,7 @@ class TestRedisPublishSubscribe:
             assert message is None, "Message should be lost (ephemeral behavior)"
 
         await pubsub.unsubscribe(channel)
-        await pubsub.close()
+        await pubsub.aclose()
 
 
 class TestAuditLogging:
@@ -546,4 +546,4 @@ class TestNotificationIntegration:
             assert metadata["channel"] == channel
 
         await pubsub.unsubscribe(channel)
-        await pubsub.close()
+        await pubsub.aclose()

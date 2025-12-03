@@ -138,7 +138,7 @@ All overlays in this folder inherit the base engineering SSoTs by filename; each
 
 **[Frontend Architecture](frontend_architecture.md)** (355 lines)
 - FastAPI StaticFiles mount + catch-all route pattern (ShipNorth reference)
-- Single-server architecture (backend + frontend on port 8850)
+- Single-server architecture (backend + frontend on port 8851)
 - Build process (Vite → build/ directory → Docker image)
 - Three development workflows (backend only, frontend dev with HMR, full stack rebuild)
 - Route registration order (API → StaticFiles → catch-all)

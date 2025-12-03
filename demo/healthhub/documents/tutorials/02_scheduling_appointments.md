@@ -20,12 +20,12 @@ Requested → Confirmed → InProgress → Completed
 
 ```bash
 # Login as patient
-TOKEN=$(curl -s -X POST http://localhost:8850/api/v1/auth/login \
+TOKEN=$(curl -s -X POST http://localhost:8851/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "alice@example.com", "password": "patient123"}' | jq -r '.access_token')
 
 # Request appointment
-curl -X POST http://localhost:8850/api/v1/appointments \
+curl -X POST http://localhost:8851/api/v1/appointments \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -44,12 +44,12 @@ curl -X POST http://localhost:8850/api/v1/appointments \
 
 ```bash
 # Login as doctor
-TOKEN=$(curl -s -X POST http://localhost:8850/api/v1/auth/login \
+TOKEN=$(curl -s -X POST http://localhost:8851/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email": "dr.smith@example.com", "password": "doctor123"}' | jq -r '.access_token')
 
 # Confirm the appointment
-curl -X POST http://localhost:8850/api/v1/appointments/<appointment_id>/transition \
+curl -X POST http://localhost:8851/api/v1/appointments/<appointment_id>/transition \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -65,7 +65,7 @@ curl -X POST http://localhost:8850/api/v1/appointments/<appointment_id>/transiti
 ## Step 3: Start the Visit (as Doctor)
 
 ```bash
-curl -X POST http://localhost:8850/api/v1/appointments/<appointment_id>/transition \
+curl -X POST http://localhost:8851/api/v1/appointments/<appointment_id>/transition \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"new_status": "in_progress"}'
@@ -76,7 +76,7 @@ curl -X POST http://localhost:8850/api/v1/appointments/<appointment_id>/transiti
 ## Step 4: Complete the Visit (as Doctor)
 
 ```bash
-curl -X POST http://localhost:8850/api/v1/appointments/<appointment_id>/transition \
+curl -X POST http://localhost:8851/api/v1/appointments/<appointment_id>/transition \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -165,7 +165,7 @@ assert isinstance(result, TransitionInvalid)
 Any non-terminal status can be cancelled:
 
 ```bash
-curl -X POST http://localhost:8850/api/v1/appointments/<appointment_id>/transition \
+curl -X POST http://localhost:8851/api/v1/appointments/<appointment_id>/transition \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -182,7 +182,7 @@ When appointments are created or transitioned, notifications are sent via WebSoc
 
 ```javascript
 // Connect to WebSocket
-const ws = new WebSocket('wss://localhost:8850/ws/<user_id>');
+const ws = new WebSocket('wss://localhost:8851/ws/<user_id>');
 
 ws.onmessage = (event) => {
     const notification = JSON.parse(event.data);
