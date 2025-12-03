@@ -5,12 +5,11 @@ Provides appointment scheduling and state management.
 
 from collections.abc import Generator
 from datetime import datetime
-from typing import Annotated, Literal, cast
+from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
-import redis.asyncio as redis
 
 from app.domain.appointment import (
     Appointment,
@@ -24,7 +23,7 @@ from app.domain.appointment import (
     TransitionSuccess,
 )
 from app.effects.healthcare import GetAppointmentById
-from app.infrastructure import get_database_manager, rate_limit
+from app.infrastructure import create_redis_client, get_database_manager, rate_limit
 from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
 from app.programs.appointment_programs import (
@@ -73,6 +72,20 @@ class TransitionStatusRequest(BaseModel):
 
     new_status: str  # "requested", "confirmed", "in_progress", "completed", "cancelled"
     actor_id: str
+
+
+def _parse_status_filter(raw_value: str | None) -> StatusFilter | None:
+    """Validate and narrow status filter to the literal type."""
+    match raw_value:
+        case None:
+            return None
+        case "requested" | "confirmed" | "in_progress" | "completed" | "cancelled":
+            return raw_value
+        case _:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid status filter: {raw_value}",
+            )
 
 
 def status_to_string(status: AppointmentStatus) -> str:
@@ -131,11 +144,7 @@ async def list_appointments(
     pool = db_manager.get_pool()
 
     # Create Redis client
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     # Extract actor ID from auth state
     actor_id: UUID
@@ -157,21 +166,7 @@ async def list_appointments(
     ip_address = request.client.host if request.client else None
     user_agent = request.headers.get("user-agent")
 
-    allowed_status_filters: set[StatusFilter] = {
-        "requested",
-        "confirmed",
-        "in_progress",
-        "completed",
-        "cancelled",
-    }
-    status_value: StatusFilter | None = None
-    if status_filter is not None:
-        if status_filter not in allowed_status_filters:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid status filter: {status_filter}",
-            )
-        status_value = cast(StatusFilter, status_filter)
+    status_value = _parse_status_filter(status_filter)
 
     # Create composite interpreter with audit wrapper
     base_interpreter = CompositeInterpreter(pool, redis_client)
@@ -236,11 +231,7 @@ async def create_appointment(
             actor_id = uid
 
     # Create Redis client
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     # Create composite interpreter
     base_interpreter = CompositeInterpreter(pool, redis_client)
@@ -306,11 +297,7 @@ async def get_appointment(
     pool = db_manager.get_pool()
 
     # Create Redis client
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     # Extract actor ID from auth state
     actor_id: UUID
@@ -334,21 +321,20 @@ async def get_appointment(
     )
 
     # Create effect program with audit logging
-    def get_program() -> Generator[AllEffects, object, Appointment]:
+    def get_program() -> Generator[AllEffects, object, Appointment | None]:
         appointment = yield GetAppointmentById(appointment_id=UUID(appointment_id))
-
-        if appointment is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Appointment {appointment_id} not found",
-            )
-        assert isinstance(appointment, Appointment)
-        return appointment
+        return appointment if isinstance(appointment, Appointment) else None
 
     # Run effect program
     appointment = await run_program(get_program(), interpreter)
 
     await redis_client.aclose()
+
+    if appointment is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Appointment {appointment_id} not found",
+        )
 
     return appointment_to_response(appointment)
 
@@ -379,11 +365,7 @@ async def transition_status(
     pool = db_manager.get_pool()
 
     # Authorization check based on role and transition
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     base_interpreter = CompositeInterpreter(pool, redis_client)
     interpreter = AuditedCompositeInterpreter(

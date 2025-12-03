@@ -3,6 +3,7 @@ globals:
     - "All development commands run via Docker: `docker compose -f docker/docker-compose.yml exec effectful poetry run <command>`"
     - "Zero escape hatches: forbid Any, cast(), and `# type: ignore` anywhere (code, tests, docs)."
     - "Favor immutable design: frozen dataclasses, pure programs, effects-as-data, exhaustive pattern matching, Result-based errors."
+    - "Test commands must set explicit timeouts that do not pre-empt runs without explicit human approval."
     - "No git commits/pushes by agents; leave changes uncommitted."
     - "Respect SSoT ordering: document SSoT statements override others; README navigation breaks ties."
   quality_gates:

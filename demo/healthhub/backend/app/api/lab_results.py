@@ -10,7 +10,6 @@ from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
-import redis.asyncio as redis
 
 from app.database.converters import (
     safe_bool,
@@ -26,7 +25,7 @@ from app.effects.healthcare import (
     ListLabResults,
     ReviewLabResult,
 )
-from app.infrastructure import get_database_manager, rate_limit
+from app.infrastructure import create_redis_client, get_database_manager, rate_limit
 from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
 from app.programs.runner import run_program
@@ -131,11 +130,7 @@ async def list_lab_results(
     pool = db_manager.get_pool()
 
     # Create Redis client
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     try:
         # Extract actor ID and determine filters based on role
@@ -210,11 +205,7 @@ async def create_lab_result(
     user_agent = http_request.headers.get("user-agent")
 
     # Create Redis client with resource management
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     try:
         # Create composite interpreter
@@ -267,11 +258,7 @@ async def get_lab_result(
     pool = db_manager.get_pool()
 
     # Create Redis client
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     # Extract actor ID from auth state
     actor_id: UUID
@@ -295,21 +282,20 @@ async def get_lab_result(
     )
 
     # Create effect program with audit logging
-    def get_program() -> Generator[AllEffects, object, LabResult]:
+    def get_program() -> Generator[AllEffects, object, LabResult | None]:
         lab_result = yield GetLabResultById(result_id=UUID(lab_result_id))
-
-        if lab_result is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Lab result {lab_result_id} not found",
-            )
-        assert isinstance(lab_result, LabResult)
-        return lab_result
+        return lab_result if isinstance(lab_result, LabResult) else None
 
     # Run effect program
     lab_result = await run_program(get_program(), interpreter)
 
     await redis_client.aclose()
+
+    if lab_result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Lab result {lab_result_id} not found",
+        )
 
     # Authorization check - patient can only see their own results
     match auth:
@@ -344,11 +330,7 @@ async def review_lab_result(
     pool = db_manager.get_pool()
 
     # Create Redis client
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     # Create composite interpreter
     base_interpreter = CompositeInterpreter(pool, redis_client)
@@ -358,23 +340,23 @@ async def review_lab_result(
     )
 
     # Create effect program
-    def review_program() -> Generator[AllEffects, object, LabResult]:
+    def review_program() -> Generator[AllEffects, object, LabResult | None]:
         lab_result = yield ReviewLabResult(
             result_id=UUID(lab_result_id),
             doctor_notes=request.doctor_notes,
         )
-        if lab_result is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Lab result {lab_result_id} not found",
-            )
-        assert isinstance(lab_result, LabResult)
-        return lab_result
+        return lab_result if isinstance(lab_result, LabResult) else None
 
     # Run effect program
     lab_result = await run_program(review_program(), interpreter)
 
     await redis_client.aclose()
+
+    if lab_result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Lab result {lab_result_id} not found",
+        )
 
     return lab_result_to_response(lab_result)
 
@@ -410,11 +392,7 @@ async def get_patient_lab_results(
     pool = db_manager.get_pool()
 
     # Create Redis client
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     # Extract actor ID from auth state
     actor_id: UUID

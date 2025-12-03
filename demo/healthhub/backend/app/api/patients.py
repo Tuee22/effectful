@@ -11,7 +11,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
-import redis.asyncio as redis
 
 from app.domain.patient import Patient
 from app.domain.optional_value import from_optional_value
@@ -23,7 +22,7 @@ from app.effects.healthcare import (
     ListPatients,
     UpdatePatient,
 )
-from app.infrastructure import get_database_manager, rate_limit
+from app.infrastructure import create_redis_client, get_database_manager, rate_limit
 from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
 from app.programs.runner import run_program
@@ -159,11 +158,7 @@ async def list_patients(
     pool = db_manager.get_pool()
 
     # Create Redis client
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     # Extract actor ID from auth state
     actor_id: UUID
@@ -214,11 +209,7 @@ async def create_patient(
     pool = db_manager.get_pool()
 
     # Create Redis client
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     # Create composite interpreter
     base_interpreter = CompositeInterpreter(pool, redis_client)
@@ -272,11 +263,7 @@ async def get_patient(
     pool = db_manager.get_pool()
 
     # Create Redis client
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     # Extract actor ID from auth state
     actor_id: UUID
@@ -364,11 +351,7 @@ async def get_patient_by_user(
     user_agent = request.headers.get("user-agent")
 
     # Create Redis client for audit logging
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
     base_interpreter = CompositeInterpreter(pool, redis_client)
     interpreter: AuditedCompositeInterpreter = AuditedCompositeInterpreter(
         base_interpreter,
@@ -422,11 +405,7 @@ async def update_patient(
             pass  # Admins can update any patient
 
     # Create Redis client and interpreter for auditing
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
     base_interpreter = CompositeInterpreter(pool, redis_client)
     interpreter: AuditedCompositeInterpreter = AuditedCompositeInterpreter(
         base_interpreter,
@@ -497,11 +476,7 @@ async def delete_patient(
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
     base_interpreter = CompositeInterpreter(pool, redis_client)
     interpreter = AuditedCompositeInterpreter(
         base_interpreter,

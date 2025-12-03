@@ -7,13 +7,15 @@
 - Supporting assets: `docker/` for local stack, `tools/` for linters/scripts, `stubs/` for third-party typing. `demo/healthhub/` is an example app; keep changes scoped unless working on the demo.
 
 ## Build, Test, and Development Commands
-- Start stack: `docker compose -f docker/docker-compose.yml up -d`
-- Lint + type check: `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code`
-- Tests: `... poetry run test-unit`, `... poetry run test-integration`, or `... poetry run test-all`
+- Base library stack: `docker compose -f docker/docker-compose.yml up -d` (service: `effectful`)
+- Base lint + type check: `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code`
+- Base tests: `... poetry run test-unit`, `... poetry run test-integration`, or `... poetry run test-all` (Codex must set its own test-run timeout and it must be >= 4 hours; never shorten or pre-empt runs)
 - Packaging: `... poetry build`
-- Run ad-hoc code: `docker compose -f docker/docker-compose.yml exec effectful poetry run python`
+- Run ad-hoc code (base): `docker compose -f docker/docker-compose.yml exec effectful poetry run python`
 
-**Only Python entrypoint**: Always run Python via `docker compose ... exec effectful poetry run <cmd>`. Never call `python` or `python3` on the host; Poetry virtualenvs are disabled and host interpreters are unsupported.
+**Multiple containers**: Each demo has its own Docker environment and service names (e.g., HealthHub under `demo/healthhub/docker/`). Before running any `docker compose ... exec ... poetry run ...`, decide whether you are targeting the base library (`effectful` service) or a demo’s container; use that compose file and service name consistently.
+
+**Only Python entrypoint**: Always run Python via the appropriate container + Poetry command for the target (base vs demo). Never call `python` or `python3` on the host; Poetry virtualenvs are disabled and host interpreters are unsupported.
 
 ## Coding Style & Naming Conventions
 - Black (line length 100) + MyPy `--strict`; zero tolerance for `Any`, `cast()`, or `# type: ignore`.
@@ -22,6 +24,7 @@
 
 ## Testing Guidelines
 - Pytest everywhere; name files `test_*.py`, keep async tests using `pytest.mark.asyncio`.
+- pytest-timeout default is 60s **per test** (unit, integration, e2e), including fixture setup/teardown; increase per test only with evidence, never disable globally.
 - Use `mocker.AsyncMock(spec=Protocol)` for infrastructure fakes; fixtures in `tests/fixtures/` seed deterministic data.
 - Integration/e2e tests require Docker services running; they operate on real infra and may TRUNCATE/seed state per test.
 

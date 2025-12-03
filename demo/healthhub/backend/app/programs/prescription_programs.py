@@ -139,7 +139,7 @@ def create_prescription_program(
                 ip_address=None,
                 user_agent=None,
                 metadata={
-                    "medications": ",".join(interaction_result.medications),
+                    "medication_count": str(len(interaction_result.medications)),
                     "severity": interaction_result.severity,
                 },
             )

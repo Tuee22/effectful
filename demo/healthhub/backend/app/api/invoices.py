@@ -11,7 +11,6 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
-import redis.asyncio as redis
 
 from app.database import (
     safe_datetime,
@@ -34,7 +33,7 @@ from app.effects.healthcare import (
     UpdateInvoiceStatus,
 )
 from app.domain.optional_value import from_optional_value, to_optional_value
-from app.infrastructure import get_database_manager, rate_limit
+from app.infrastructure import create_redis_client, get_database_manager, rate_limit
 from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
 from app.programs.runner import run_program
@@ -210,11 +209,7 @@ async def list_invoices(
     user_agent = request.headers.get("user-agent")
 
     # Create Redis client
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     try:
         # Create composite interpreter
@@ -270,11 +265,7 @@ async def create_invoice(
     user_agent = http_request.headers.get("user-agent")
 
     # Create Redis client with resource management
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     try:
         # Create composite interpreter
@@ -326,11 +317,7 @@ async def get_invoice(
     pool = db_manager.get_pool()
 
     # Create Redis client
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     try:
         # Extract actor ID from auth state
@@ -354,20 +341,24 @@ async def get_invoice(
             AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
         )
 
-        def get_program() -> Generator[AllEffects, object, tuple[Invoice, list[LineItem]]]:
+        def get_program() -> Generator[AllEffects, object, tuple[Invoice, list[LineItem]] | None]:
             invoice = yield GetInvoiceById(invoice_id=UUID(invoice_id))
-            if invoice is None:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Invoice {invoice_id} not found",
-                )
-            assert isinstance(invoice, Invoice)
+            if not isinstance(invoice, Invoice):
+                return None
             line_items = yield ListInvoiceLineItems(invoice_id=UUID(invoice_id))
             assert isinstance(line_items, list)
             return invoice, line_items
 
         # Run effect program
-        invoice, line_items = await run_program(get_program(), interpreter)
+        result = await run_program(get_program(), interpreter)
+
+        if result is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Invoice {invoice_id} not found",
+            )
+
+        invoice, line_items = result
 
         # Authorization check - patient can only see their own invoices
         match auth:
@@ -424,11 +415,7 @@ async def add_line_item(
     user_agent = http_request.headers.get("user-agent")
 
     # Create Redis client with resource management
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     try:
         # Create composite interpreter
@@ -488,11 +475,7 @@ async def update_invoice_status(
     user_agent = http_request.headers.get("user-agent")
 
     # Create Redis client with resource management
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     try:
         # Create composite interpreter
@@ -502,24 +485,22 @@ async def update_invoice_status(
             AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
         )
 
-        def update_status_program() -> Generator[AllEffects, object, Invoice]:
+        def update_status_program() -> Generator[AllEffects, object, Invoice | None]:
             invoice = yield UpdateInvoiceStatus(
                 invoice_id=UUID(invoice_id),
                 status=request_data.status,
             )
 
-            if invoice is None:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Invoice {invoice_id} not found",
-                )
-
-            assert isinstance(invoice, Invoice)
-
-            return invoice
+            return invoice if isinstance(invoice, Invoice) else None
 
         # Run effect program
         invoice = await run_program(update_status_program(), interpreter)
+
+        if invoice is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Invoice {invoice_id} not found",
+            )
 
         return invoice_to_response(invoice)
 
@@ -558,11 +539,7 @@ async def get_patient_invoices(
     pool = db_manager.get_pool()
 
     # Create Redis client
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     try:
         # Extract actor ID from auth state

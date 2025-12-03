@@ -197,8 +197,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tes
 
 ### Timeouts (SSoT)
 - **All test executions must set an explicit timeout**, including CI jobs, `docker compose exec ... pytest` commands, and ad-hoc scripts.
-- **Minimum timeout is 4 hours (14,400 seconds)** to avoid premature termination of long-running suites (integration/e2e); longer is allowed, shorter is forbidden. Codex and other automation must never end runs earlier than this floor unless aborted with explicit human approval and recorded rationale.
-- **Per-test timeout default = 60s** enforced via pytest-timeout. Raise per-test limits when evidence warrants; never disable timeouts globally.
+- **Per-test timeout default = 60s** enforced via pytest-timeout for every individual test (unit, integration, e2e), including fixture setup/teardown. This prevents hung tests from blocking the suite; each test fails at 60s unless a higher per-test limit is justified and documented. Never disable timeouts globally.
 - Document the timeout value in PR descriptions when reporting test runs.
 - If a suite legitimately needs more time (e.g., load/perf or large e2e matrix), raise the timeout rather than disabling tests.
 

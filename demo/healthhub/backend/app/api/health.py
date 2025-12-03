@@ -4,10 +4,9 @@ from collections.abc import Generator
 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-import redis.asyncio as redis
 
 from app.effects.healthcare import CheckDatabaseHealth
-from app.infrastructure import get_database_manager
+from app.infrastructure import create_redis_client, get_database_manager
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
 from app.programs.runner import run_program
 
@@ -22,11 +21,7 @@ async def health_check() -> JSONResponse:
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
     interpreter = CompositeInterpreter(pool, redis_client)
 
     def health_program() -> Generator[AllEffects, object, bool]:

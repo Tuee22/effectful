@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
-import redis.asyncio as redis
 from pydantic import BaseModel, EmailStr
 
 from app.auth import (
@@ -23,7 +22,7 @@ from app.auth import (
     TokenValidationSuccess,
     TokenValidationError,
 )
-from app.infrastructure import get_database_manager, rate_limit
+from app.infrastructure import create_redis_client, get_database_manager, rate_limit
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
 from app.programs.runner import run_program
 from app.effects.notification import LogAuditEvent
@@ -136,11 +135,7 @@ async def login(
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
 
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
     interpreter = CompositeInterpreter(pool, redis_client)
 
     def login_program() -> Generator[AllEffects, object, LoginResult]:
@@ -167,6 +162,16 @@ async def login(
         elif user.role.value == "doctor":
             found_doctor = yield GetDoctorByUserId(user_id=user.id)
             doctor = found_doctor if isinstance(found_doctor, Doctor) else None
+
+        yield LogAuditEvent(
+            user_id=user.id,
+            action="login_success",
+            resource_type="auth",
+            resource_id=user.id,
+            ip_address=http_request.client.host if http_request.client else None,
+            user_agent=http_request.headers.get("user-agent"),
+            metadata=None,
+        )
 
         return LoginSuccess(user=user, patient=patient, doctor=doctor)
 
@@ -217,18 +222,6 @@ async def login(
             doctor_id=doctor.id if doctor else None,
         )
 
-        await interpreter.notification_interpreter.handle(
-            LogAuditEvent(
-                user_id=user.id,
-                action="login_success",
-                resource_type="auth",
-                resource_id=user.id,
-                ip_address=http_request.client.host if http_request.client else None,
-                user_agent=http_request.headers.get("user-agent"),
-                metadata=None,
-            )
-        )
-
         return LoginResponse(
             access_token=access_token,
             token_type="Bearer",
@@ -254,11 +247,7 @@ async def register(
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
     interpreter = CompositeInterpreter(pool, redis_client)
 
     def register_program() -> Generator[AllEffects, object, RegisterResult]:
@@ -273,6 +262,15 @@ async def register(
             role=request.role.value,
         )
         assert isinstance(created_user, User)
+        yield LogAuditEvent(
+            user_id=created_user.id,
+            action="register_user",
+            resource_type="auth",
+            resource_id=created_user.id,
+            ip_address=http_request.client.host if http_request.client else None,
+            user_agent=http_request.headers.get("user-agent"),
+            metadata=None,
+        )
         return RegisterSuccess(user=created_user)
 
     try:
@@ -292,18 +290,6 @@ async def register(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail="Unexpected register result",
                 )
-
-        await interpreter.notification_interpreter.handle(
-            LogAuditEvent(
-                user_id=user.id,
-                action="register_user",
-                resource_type="auth",
-                resource_id=user.id,
-                ip_address=http_request.client.host if http_request.client else None,
-                user_agent=http_request.headers.get("user-agent"),
-                metadata=None,
-            )
-        )
 
         return RegisterResponse(
             user_id=str(user.id),

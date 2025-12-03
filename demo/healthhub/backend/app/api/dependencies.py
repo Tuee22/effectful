@@ -11,11 +11,10 @@ from uuid import UUID
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-import redis.asyncio as redis
 
 from app.auth import verify_token, TokenData, TokenType
 from app.auth.jwt import TokenValidationSuccess, TokenValidationError
-from app.infrastructure import get_database_manager
+from app.infrastructure import create_redis_client, get_database_manager
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
 from app.programs.runner import run_program
 from app.effects.healthcare import GetDoctorById
@@ -121,11 +120,7 @@ async def get_current_user(
     """
     db_manager = get_database_manager()
     pool = db_manager.get_pool()
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
     interpreter = CompositeInterpreter(pool, redis_client)
 
     try:
@@ -186,8 +181,8 @@ async def get_current_user(
                     reason="invalid_role", detail=f"Unknown role: {token_data.role}"
                 )
 
-        await interpreter.notification_interpreter.handle(
-            LogAuditEvent(
+        def audit_program() -> Generator[AllEffects, object, bool]:
+            yield LogAuditEvent(
                 user_id=token_data.user_id,
                 action="authorize_user",
                 resource_type="auth",
@@ -196,7 +191,9 @@ async def get_current_user(
                 user_agent=request.headers.get("user-agent"),
                 metadata={"role": token_data.role},
             )
-        )
+            return True
+
+        await run_program(audit_program(), interpreter)
 
         return auth_state
     finally:

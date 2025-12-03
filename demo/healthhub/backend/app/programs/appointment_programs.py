@@ -119,7 +119,7 @@ def schedule_appointment_program(
         resource_id=appointment.id,
         ip_address=None,
         user_agent=None,
-        metadata={"reason": reason},
+        metadata={"reason_present": "true"},
     )
 
     return AppointmentScheduled(appointment=appointment)

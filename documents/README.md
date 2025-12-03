@@ -6,6 +6,8 @@ Welcome to the **effectful** documentation!
 
 All development happens inside Docker containers. See [Docker Workflow](engineering/docker_workflow.md).
 
+**Multiple stacks**: The base library runs in the `effectful` service defined in `docker/docker-compose.yml`. Demo apps (e.g., HealthHub) ship their own compose files and service names under `demo/**/docker/`; use the correct compose file and service when running Poetry commands.
+
 **CRITICAL**: Poetry is configured to NOT create virtual environments (`poetry.toml`). Do NOT run `poetry install` locally.
 
 ```bash

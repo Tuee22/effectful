@@ -9,11 +9,10 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
-import redis.asyncio as redis
 
 from app.domain.optional_value import from_optional_value
 from app.domain.prescription import MedicationInteractionWarning, Prescription
-from app.infrastructure import get_database_manager, rate_limit
+from app.infrastructure import create_redis_client, get_database_manager, rate_limit
 from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
 from app.interpreters.composite_interpreter import CompositeInterpreter
 from app.programs.prescription_programs import (
@@ -109,11 +108,7 @@ async def list_prescriptions(
     pool = db_manager.get_pool()
 
     # Create Redis client
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     # Extract actor ID and determine filters based on role
     actor_id: UUID
@@ -211,11 +206,7 @@ async def create_prescription(
     pool = db_manager.get_pool()
 
     # Create Redis client
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     program = create_prescription_program(
         patient_id=UUID(request.patient_id),
@@ -301,11 +292,7 @@ async def get_prescription(
     pool = db_manager.get_pool()
 
     # Create Redis client
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     # Extract actor ID from auth state
     actor_id: UUID
@@ -328,21 +315,20 @@ async def get_prescription(
         AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
     )
 
-    def get_program() -> Generator[AllEffects, object, Prescription]:
+    def get_program() -> Generator[AllEffects, object, Prescription | None]:
         prescription = yield GetPrescriptionById(prescription_id=UUID(prescription_id))
-
-        if prescription is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Prescription {prescription_id} not found",
-            )
-        assert isinstance(prescription, Prescription)
-        return prescription
+        return prescription if isinstance(prescription, Prescription) else None
 
     # Run effect program
     prescription = await run_program(get_program(), interpreter)
 
     await redis_client.aclose()
+
+    if prescription is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Prescription {prescription_id} not found",
+        )
 
     return prescription_to_response(prescription)
 
@@ -371,11 +357,7 @@ async def get_patient_prescriptions(
     pool = db_manager.get_pool()
 
     # Create Redis client
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
 
     # Extract actor ID from auth state
     actor_id: UUID
