@@ -364,7 +364,7 @@ def test_unauthorized_captures_reason() -> None:
 ## Related Documentation
 
 ### Best Practices
-- [Authorization Patterns](../engineering/authorization_patterns.md) - Usage patterns and anti-patterns
+- [Authorization Patterns](../engineering/authorization.md) - Usage patterns and anti-patterns
 
 ### Product Documentation
 - [Authentication](authentication.md) - JWT token handling
@@ -376,5 +376,5 @@ def test_unauthorized_captures_reason() -> None:
 
 **Last Updated**: 2025-11-25  
 **Supersedes**: none  
-**Referenced by**: ../README.md, ../engineering/authorization_patterns.md
+**Referenced by**: ../README.md, ../engineering/authorization.md
 **Maintainer**: HealthHub Team

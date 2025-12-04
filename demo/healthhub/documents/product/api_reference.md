@@ -476,7 +476,7 @@ All errors return consistent format:
 - [HIPAA Compliance](../domain/hipaa_compliance.md) - PHI access logging requirements
 
 ### Best Practices
-- [Authorization Patterns](../engineering/authorization_patterns.md) - Route-level authorization checks
+- [Authorization Patterns](../engineering/authorization.md) - Route-level authorization checks
 - [Testing](../engineering/testing.md) - API endpoint testing strategies
 
 ### Product Documentation
@@ -490,5 +490,5 @@ All errors return consistent format:
 
 **Last Updated**: 2025-11-26  
 **Supersedes**: none  
-**Referenced by**: ../README.md, ../engineering/fastapi_integration_patterns.md
+**Referenced by**: ../README.md, ../engineering/architecture.md
 **Maintainer**: HealthHub Team

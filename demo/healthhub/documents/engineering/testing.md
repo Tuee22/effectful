@@ -21,6 +21,7 @@
 - **PHI-safe fixtures**: scrub PHI from logs/assertions; seed data uses anonymized patients/doctors; never hardcode identifiers.
 - **Notification flows**: assert business logic does not block on SMS/email/WebSocket; verify audit and metrics events on failure.
 - **Audit coverage**: tests must assert audit effects for PHI access/mutation.
+- **HIPAA rationale**: Audit assertions, UTC/time controls, and PHI-free fixtures map to §164.312(b) (audit controls) and §164.312(c)(1) (integrity); non-blocking notifications avoid care disruption while still audited.
 - **Output capture**: capture full E2E logs for WebSocket and notification flows to files (for triage and audit).
 
 ## Checklists

@@ -14,6 +14,7 @@
   - Tests: `docker compose -f demo/healthhub/docker/docker-compose.yml exec healthhub poetry run test-all`
   - Lint/type check: `docker compose -f demo/healthhub/docker/docker-compose.yml exec healthhub poetry run check-code`
 - **Data**: Demo fixtures are anonymized; never use production PHI. See [HIPAA Compliance](../domain/hipaa_compliance.md).
+- **Compliance patterns**: Tutorials reference engineering deltas (e.g., [audit logging](../engineering/monitoring_and_alerting.md#audit-logging-observability), [authorization patterns](../engineering/authorization.md)); do not reimplement or restate SSoT content here.
 
 ## See also
 - Base: [Tutorial 01: Quickstart](../../../../documents/tutorials/01_quickstart.md)

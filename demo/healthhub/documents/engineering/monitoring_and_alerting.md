@@ -12,12 +12,13 @@
 - Keep dashboards and alerts defined as code where possible.
 - Use TB-oriented safe Mermaid patterns when diagramming observability pipelines.
 
-## HealthHub-specific additions
+## HealthHub-specific additions (HIPAA linkage)
 - **PHI metrics catalog**: track PHI access (`phi_access_total`, `phi_access_denied_total`), appointment lifecycle, lab result delivery, prescriptions, and billing events; always aggregate—no PHI/PII in labels.
 - **PHI/PII guardrails**: metrics/logs exclude PHI; labels are categorical only (e.g., `portal=patient`, `result_status=abnormal`).
-- **Audit alignment**: page immediately on missing audit events, audit queue backlog, or interpreter failures to emit audit logs.
+- **Audit alignment**: page immediately on missing audit events, audit queue backlog, or interpreter failures to emit audit logs; maps to HIPAA §164.312(b) audit controls. Required fields: purpose_of_use, patient_id/org_id when applicable, correlation_id, outcome, UTC timestamp.
+- **Audit effect shape**: Use the shared `LogAuditEvent` effect (see engineering delta) with append-only interpreter, hash chaining, and idempotency key `(correlation_id, resource_id, action, outcome)`. Reject non-UTC timestamps at the interpreter boundary.
 - **Notification failure policy**: notification send failures (email/SMS/WebSocket) must alert via metrics but must not block business flows; treat as non-blocking with bounded retries.
-- **HIPAA traceability**: include audit event IDs in logs/metrics (opaque identifiers, not patient data) to correlate PHI access.
+- **HIPAA traceability**: include audit event IDs in logs/metrics (opaque identifiers, not patient data) to correlate PHI access; supports forensic requirements.
 - **Data store visibility**: monitor Postgres/Redis/MinIO/Pulsar with health checks tied to interpreter success rates, not raw container liveness.
 - **Rate limits**: alert on sustained rate-limit breaches to detect abuse without logging identifiers.
 - **Commands**: run observability checks via demo service:  

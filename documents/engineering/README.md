@@ -40,6 +40,7 @@ flowchart TB
 | What do you need? | SSoT Document |
 |-------------------|---------------|
 | Understand system design | [Architecture](architecture.md) |
+| Model authentication flows | [Authentication](authentication.md) |
 | Write type-safe, pure code | [Code Quality](code_quality.md) |
 | Test programs correctly | [Testing](testing.md) |
 | Set up development environment | [Docker Workflow](docker_workflow.md) |
@@ -172,7 +173,6 @@ All engineering decisions flow from this principle. Every standard, pattern, and
 
 **Total**: 16 engineering documents (8 core + 8 guides)
 **Lines of Code**: ~9,000 lines of engineering documentation
-**Last Major Update**: 2025-11-29 (documentation refactor - moved from core/)
 
 All engineering documents marked with "**SSoT**" are authoritative. When conflicts arise between documents, SSoT documents take precedence.
 

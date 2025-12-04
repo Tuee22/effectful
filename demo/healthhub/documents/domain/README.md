@@ -62,14 +62,26 @@ The **domain/** tier contains healthcare domain knowledge that is **NOT specific
 
 ---
 
+### Cross-Cutting Compliance Addendum (all healthcare apps)
+
+- **Payment isolation**: Keep PCI DSS cardholder data and systems fully segregated from PHI; avoid storing PANs alongside clinical data.
+- **EPCS/DEA**: Two-factor auth with identity proofing for controlled substances; audit device bindings and approvals.
+- **Data residency**: Map storage/processing regions to patient jurisdiction; block writes to disallowed regions.
+- **Retention/destruction**: Define data-class matrix (appointments, clinical notes, billing, pediatrics) per jurisdiction; enforce timed destruction with audit trail.
+- **Vendors/BAAs**: Inventory subprocessors, ensure BAAs, and monitor access; log vendor access separately.
+- **Backups/DR**: RPO/RTO targets defined; periodic restore tests; encrypt backups; document emergency mode operations.
+- **Monitoring**: Alerts on anomalous access, mass export, and break-glass use; periodic log reviews with evidence.
+
+---
+
 ## Relationship to Other Tiers
 
 ### Domain → Best Practices
 
 The **engineering/** tier provides **HealthHub-specific implementation patterns** that apply these domain concepts:
 
-- [State Machine Patterns](../engineering/state_machine_patterns.md) - How to implement medical state machines using ADTs
-- [Authorization Patterns](../engineering/authorization_patterns.md) - How to use ADT-based authorization for medical roles
+- [State Machine Patterns](../engineering/effect_patterns.md#state-machines) - How to implement medical state machines using ADTs
+- [Authorization Patterns](../engineering/authorization.md) - How to use ADT-based authorization for medical roles
 - [Effect Patterns](../engineering/effect_patterns.md) - How to compose medical workflows as effect programs
 
 **Flow**: Domain knowledge → HealthHub implementation patterns
@@ -109,7 +121,7 @@ The **tutorials/** tier provides **step-by-step guides** that reference domain c
 
 **Reference Material**: If you're implementing a new medical workflow:
 1. Check [Medical State Machines](medical_state_machines.md) for general patterns
-2. Check [engineering/state_machine_patterns.md](../engineering/state_machine_patterns.md) for ADT implementation patterns
+2. Check [engineering/effect_patterns.md#state-machines](../engineering/effect_patterns.md#state-machines) for ADT implementation patterns
 3. Check [product/](../product/) for examples from existing HealthHub workflows
 
 **Compliance Questions**: If you need to verify HIPAA compliance:
@@ -127,8 +139,8 @@ graph TB
     B[domain/medical_state_machines.md]
     C[domain/hipaa_compliance.md]
 
-    D[engineering/state_machine_patterns.md]
-    E[engineering/authorization_patterns.md]
+    D[engineering/effect_patterns.md#state-machines]
+    E[engineering/authorization.md]
 
     F[product/appointment_state_machine.md]
     G[product/domain_models.md]
@@ -189,11 +201,11 @@ Update **domain/** documents when:
 | Design a new medical workflow | [Medical State Machines](medical_state_machines.md) |
 | Verify HIPAA compliance | [HIPAA Compliance](hipaa_compliance.md) |
 | Implement appointment state machine | [../product/appointment_state_machine.md](../product/appointment_state_machine.md) |
-| Learn ADT state machine patterns | [../engineering/state_machine_patterns.md](../engineering/state_machine_patterns.md) |
+| Learn ADT state machine patterns | [../engineering/effect_patterns.md#state-machines](../engineering/effect_patterns.md#state-machines) |
 
 ---
 
-**Last Updated**: 2025-11-26
+**Last Updated**: 2025-12-01
 **Supersedes**: none
 **Maintainer**: HealthHub Team
 **Document Count**: 3 domain documents  

@@ -6,11 +6,12 @@
 
 ## Overview
 
-Prescription creation involves:
-1. Authorization check (doctor must have `can_prescribe=true`)
-2. Medication interaction check
-3. Prescription creation
-4. Patient notification
+This tutorial is delta-only. Full prescription lifecycle, safety rules, and HIPAA audit fields live in the SSoTs below.
+
+**Read first**:
+- Domain: [Medical State Machines](../domain/medical_state_machines.md)
+- Engineering: [Authorization Patterns](../engineering/authorization.md), [State Machine Patterns](../engineering/effect_patterns.md#state-machines), [Audit Logging](../engineering/monitoring_and_alerting.md#audit-logging-observability)
+- Product: [Domain Models](../product/domain_models.md) (Prescription), [Medication Interactions](../product/medication_interactions.md)
 
 ---
 

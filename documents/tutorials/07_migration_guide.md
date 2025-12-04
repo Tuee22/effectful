@@ -16,7 +16,7 @@ This tutorial guides you through migrating from imperative WebSocket code to eff
 ## Learning Objectives
 
 By the end of this tutorial, you will:
-- Identify imperative patterns to refactor
+- Identify imperative patterns to replace with effect programs
 - Transform imperative code to functional programs
 - Migrate error handling to Result types
 - Replace mutable state with immutable data flow
@@ -817,7 +817,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 ## Summary
 
 You learned how to:
-- ✅ Identify imperative patterns to refactor
+- ✅ Identify imperative patterns to replace with effect programs
 - ✅ Transform imperative code to functional programs
 - ✅ Migrate error handling to Result types
 - ✅ Replace mutable state with immutable data flow

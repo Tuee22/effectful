@@ -32,6 +32,16 @@ This document provides **real-world patterns** for writing effect programs using
 
 For complete purity and type safety rules, see [Code Quality](code_quality.md).
 
+## State Machines
+
+- Model workflow states as ADTs with state-specific fields (no shared nullable fields).
+- Validate every transition explicitly; return a result ADT (e.g., `TransitionSuccess | TransitionInvalid`) instead of raising.
+- Detect terminal states and refuse further transitions to protect integrity and auditability.
+- Encode role/time constraints in pure functions; keep side effects out of validation.
+- Testing: exhaustively cover valid/invalid transitions and role/time-based constraints.
+
+Use this pattern for any multi-step workflow (payments, provisioning, billing, healthcare) to make illegal states unrepresentable and to keep effect code pure.
+
 ## Pattern 1: Generator-Based DSL
 
 **Use Case**: All effect programs use this pattern as the foundation.

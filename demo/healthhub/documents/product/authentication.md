@@ -338,7 +338,7 @@ async def get_current_user(
 ## Related Documentation
 
 ### Best Practices
-- [Authorization Patterns](../engineering/authorization_patterns.md) - Using AuthorizationState ADT in routes
+- [Authorization Patterns](../engineering/authorization.md) - Using AuthorizationState ADT in routes
 
 ### Product Documentation
 - [Authorization System](authorization_system.md) - AuthorizationState ADT and role-based access
@@ -349,5 +349,5 @@ async def get_current_user(
 
 **Last Updated**: 2025-11-26  
 **Supersedes**: none  
-**Referenced by**: ../README.md, ../engineering/security_hardening.md
+**Referenced by**: ../README.md, ../engineering/architecture.md
 **Maintainer**: HealthHub Team

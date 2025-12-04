@@ -343,5 +343,5 @@ For moderate interactions with override option:
 
 **Last Updated**: 2025-11-26  
 **Supersedes**: none  
-**Referenced by**: ../README.md, ../engineering/purity_standards.md
+**Referenced by**: ../README.md, ../engineering/code_quality.md
 **Maintainer**: HealthHub Team

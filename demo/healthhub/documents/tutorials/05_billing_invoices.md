@@ -6,11 +6,12 @@
 
 ## Overview
 
-Invoice workflow:
-1. Admin creates invoice with line items
-2. Invoice sent to patient
-3. Patient views and pays
-4. Status tracked (draft → sent → paid/overdue)
+Delta-only. Full invoice workflow rules, terminal states, and audit requirements are defined in the SSoTs below.
+
+**Read first**:
+- Domain: [Medical State Machines](../domain/medical_state_machines.md) (Invoice lifecycle)
+- Engineering: [State Machine Patterns](../engineering/effect_patterns.md#state-machines), [Audit Logging](../engineering/monitoring_and_alerting.md#audit-logging-observability)
+- Product: [Domain Models](../product/domain_models.md) (Invoice)
 
 ---
 

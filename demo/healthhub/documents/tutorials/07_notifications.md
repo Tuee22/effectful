@@ -6,7 +6,11 @@
 
 ## Overview
 
-HealthHub uses Redis pub/sub for real-time notifications delivered via WebSocket. Notifications are ephemeral and only delivered to active connections.
+Delta-only. Notification architecture, security, and audit requirements are covered in the SSoTs below.
+
+**Read first**:
+- Engineering: [WebSocket Security](../engineering/architecture.md), [Monitoring & Alerting](../engineering/monitoring_and_alerting.md) (notification alerting), [Audit Logging](../engineering/monitoring_and_alerting.md#audit-logging-observability)
+- Product: [Notification System](../product/notification_system.md)
 
 ---
 
@@ -269,4 +273,4 @@ class NotificationClient {
 
 **Last Updated**: 2025-11-25  
 **Supersedes**: none  
-**Referenced by**: ../README.md, ../engineering/websocket_security.md
+**Referenced by**: ../README.md, ../engineering/architecture.md

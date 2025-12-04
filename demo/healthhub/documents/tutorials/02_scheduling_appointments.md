@@ -6,13 +6,12 @@
 
 ## Overview
 
-Appointments follow a state machine:
+This tutorial shows only HealthHub deltas; the full state machine, medical rules, and HIPAA audit needs are in the SSoTs below. Do not restate them here.
 
-```
-Requested → Confirmed → InProgress → Completed
-    ↓           ↓           ↓
- Cancelled  Cancelled   Cancelled
-```
+**Read first**:
+- Domain: [Appointment Workflows](../domain/appointment_workflows.md), [Medical State Machines](../domain/medical_state_machines.md)
+- Engineering: [State Machine Patterns](../engineering/effect_patterns.md#state-machines), [Audit Logging](../engineering/monitoring_and_alerting.md#audit-logging-observability), [Authorization Patterns](../engineering/authorization.md)
+- Product: [Appointment State Machine](../product/appointment_state_machine.md)
 
 ---
 

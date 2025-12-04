@@ -36,6 +36,18 @@ Monitoring tracks **what is happening**; alerting pages humans when thresholds b
 
 ---
 
+## Audit Logging Observability
+
+- Treat audit pipelines as tier-1: page on ingestion failures, backlog, missing required fields, or NTP drift that invalidates timestamps.
+- Never put PII/PHI in labels; use opaque IDs and correlation IDs to tie audit events to requests.
+- Ensure audit writes are append-only; monitor for UPDATE/DELETE attempts or schema drift.
+- Alert on unusual access patterns (mass export, excessive denied events) via aggregated metrics, not raw identifiers.
+- Validate UTC timestamps and synchronized clocks; emit metrics for drift and log rejection.
+
+Use this section as the base; app- or compliance-specific overlays belong in their respective deltas.
+
+---
+
 ## Monitoring Standards
 
 ### Metric Naming

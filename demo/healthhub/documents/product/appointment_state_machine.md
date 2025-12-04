@@ -429,7 +429,7 @@ def get_available_actions(
 - [Medical State Machines](../domain/medical_state_machines.md) - General medical workflow patterns
 
 ### Best Practices
-- [State Machine Patterns](../engineering/state_machine_patterns.md) - ADT-based state machine implementation patterns
+- [State Machine Patterns](../engineering/effect_patterns.md#state-machines) - ADT-based state machine implementation patterns
 
 ### Product Documentation
 - [Domain Models](domain_models.md) - Appointment entity structure
@@ -441,5 +441,5 @@ def get_available_actions(
 
 **Last Updated**: 2025-11-26  
 **Supersedes**: none  
-**Referenced by**: ../README.md, ../engineering/state_machine_patterns.md
+**Referenced by**: ../README.md, ../engineering/effect_patterns.md#state-machines
 **Maintainer**: HealthHub Team

@@ -1,6 +1,6 @@
-# Authorization Patterns (HealthHub supplement)
+# Authorization (HealthHub delta)
 
-> Supplements base [Architecture](../../../../documents/engineering/architecture.md) and [Code Quality](../../../../documents/engineering/code_quality.md); use this for HealthHub-specific authorization details. Base rules apply; see `architecture.md` overlay for core deltas.
+> Extends base [Authentication](../../../../documents/engineering/authentication.md), [Engineering Architecture](../../../../documents/engineering/architecture.md), and [Code Quality](../../../../documents/engineering/code_quality.md); base rules apply. This overlay lists HealthHub-specific authorization deltas only.
 
 ---
 

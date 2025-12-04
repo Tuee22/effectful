@@ -1,6 +1,6 @@
 # HealthHub Documentation
 
-> Extends base [Effectful Documentation](../../documents/README.md) and [Documentation Standards](../../documents/documentation_standards.md). Base standards apply; this hub lists HealthHub-specific deltas.
+> Extends base [Effectful Documentation](../../documents/README.md) and [Documentation Standards](documentation_standards.md). Base standards apply; this hub lists HealthHub-specific deltas.
 
 ---
 
@@ -13,7 +13,7 @@
 | **New Developer** | [tutorials/01_quickstart.md](tutorials/01_quickstart.md) |
 | **Healthcare Context** | [domain/README.md](domain/README.md) |
 | **Backend Engineer** | [product/architecture_overview.md](product/architecture_overview.md) |
-| **Implementation Patterns** | [engineering/README.md](engineering/README.md) |
+| **Implementation Patterns & Compliance** | [engineering/README.md](engineering/README.md) |
 
 ### By Topic
 
@@ -28,10 +28,12 @@
 | Domain Models | [product/domain_models.md](product/domain_models.md) |
 | Effects Reference | [product/effects_reference.md](product/effects_reference.md) |
 | Authorization | [product/authorization_system.md](product/authorization_system.md) |
+| Audit Surfacing | [product/audit_logging.md](product/audit_logging.md) |
 | **Patterns & Testing** | |
-| Authorization Patterns | [engineering/authorization_patterns.md](engineering/authorization_patterns.md) |
-| State Machine Implementation | [engineering/state_machine_patterns.md](engineering/state_machine_patterns.md) |
+| Authorization Patterns | [engineering/authorization.md](engineering/authorization.md) |
+| State Machine Implementation | [engineering/effect_patterns.md#state-machines](engineering/effect_patterns.md#state-machines) |
 | Effect Programs | [engineering/effect_patterns.md](engineering/effect_patterns.md) |
+| Audit Logging Implementation | [engineering/monitoring_and_alerting.md#audit-logging-observability](engineering/monitoring_and_alerting.md#audit-logging-observability) |
 | Testing | [engineering/testing.md](engineering/testing.md) |
 
 ---
@@ -75,8 +77,8 @@ HealthHub documentation follows a strict **Single Source of Truth (SSoT)** hiera
 
 | Document | Lines | Description |
 |----------|-------|-------------|
-| [authorization_patterns.md](engineering/authorization_patterns.md) | 244 | ADT-based authorization patterns (PatientAuthorized, DoctorAuthorized) |
-| [state_machine_patterns.md](engineering/state_machine_patterns.md) | 456 | ADT state machine implementation (frozen dataclasses, TransitionResult ADT) |
+| [authorization.md](engineering/authorization.md) | 244 | ADT-based authorization patterns (PatientAuthorized, DoctorAuthorized) |
+| [effect_patterns.md#state-machines](engineering/effect_patterns.md#state-machines) | 456 | ADT state machine implementation (frozen dataclasses, TransitionResult ADT) |
 | [effect_patterns.md](engineering/effect_patterns.md) | 318 | Pure effect programs (generators, type narrowing, fire-and-forget notifications) |
 | [testing.md](engineering/testing.md) | 1,345 | Comprehensive testing philosophy (22 anti-patterns, generator testing) |
 | [README.md](engineering/README.md) | 240 | Engineering tier overview and navigation |
@@ -150,7 +152,7 @@ HealthHub documentation follows a strict **Single Source of Truth (SSoT)** hiera
 **Use case**: Implementing a new medical workflow
 
 1. Read [domain/medical_state_machines.md](domain/medical_state_machines.md) for healthcare requirements
-2. Read [engineering/state_machine_patterns.md](engineering/state_machine_patterns.md) for ADT patterns
+2. Read [engineering/effect_patterns.md#state-machines](engineering/effect_patterns.md#state-machines) for ADT patterns
 3. Reference [product/appointment_state_machine.md](product/appointment_state_machine.md) for concrete example
 4. Follow [tutorials/02_scheduling_appointments.md](tutorials/02_scheduling_appointments.md) for step-by-step guide
 
@@ -161,7 +163,7 @@ HealthHub documentation follows a strict **Single Source of Truth (SSoT)** hiera
 **Use case**: Understanding why a feature works a certain way
 
 1. See implementation in [product/appointment_state_machine.md](product/appointment_state_machine.md)
-2. Understand patterns in [engineering/state_machine_patterns.md](engineering/state_machine_patterns.md)
+2. Understand patterns in [engineering/effect_patterns.md#state-machines](engineering/effect_patterns.md#state-machines)
 3. Learn healthcare requirements in [domain/appointment_workflows.md](domain/appointment_workflows.md)
 
 ---
@@ -171,7 +173,7 @@ HealthHub documentation follows a strict **Single Source of Truth (SSoT)** hiera
 **Use case**: Understanding related concepts at the same level
 
 - **Domain tier**: [appointment_workflows.md](domain/appointment_workflows.md) references [medical_state_machines.md](domain/medical_state_machines.md) and [hipaa_compliance.md](domain/hipaa_compliance.md)
-- **Engineering tier**: [effect_patterns.md](engineering/effect_patterns.md) references [state_machine_patterns.md](engineering/state_machine_patterns.md)
+- **Engineering tier**: [effect_patterns.md](engineering/effect_patterns.md) references [effect_patterns.md#state-machines](engineering/effect_patterns.md#state-machines)
 - **Product tier**: [api_reference.md](product/api_reference.md) references [authorization_system.md](product/authorization_system.md), [authentication.md](product/authentication.md), [audit_logging.md](product/audit_logging.md)
 
 ---

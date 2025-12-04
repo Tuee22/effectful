@@ -379,5 +379,5 @@ REDIS_DB=0
 
 **Last Updated**: 2025-11-26  
 **Supersedes**: none  
-**Referenced by**: ../README.md, ../engineering/websocket_security.md
+**Referenced by**: ../README.md, ../engineering/architecture.md
 **Maintainer**: HealthHub Team

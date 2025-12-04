@@ -423,7 +423,7 @@ def process_interaction_check(result: MedicationCheckResult) -> bool:
 - [Medical State Machines](../domain/medical_state_machines.md) - Healthcare state machine patterns for all workflows
 
 ### Best Practices
-- [State Machine Patterns](../engineering/state_machine_patterns.md) - ADT-based state machine implementation
+- [State Machine Patterns](../engineering/effect_patterns.md#state-machines) - ADT-based state machine implementation
 
 ### Product Documentation
 - [Appointment State Machine](appointment_state_machine.md) - Appointment status transitions and validation

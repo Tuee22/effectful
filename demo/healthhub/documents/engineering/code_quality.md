@@ -16,6 +16,9 @@
 - **HIPAA-focused lint bans**: retain Ruff banned APIs to block direct infra imports (asyncpg, Redis, Pulsar) from programs and domain modules.
 - **PHI safety**: never log or label metrics with PHI/PII; prefer categorical tags (e.g., `portal="patient"` not patient names/ids).
 - **Audit-first logging**: route sensitive events through audit log effects; avoid ad-hoc `logger.info` for PHI.
+- **I/O isolation**: Routes call `run_program` only; no direct DB/Redis/Pulsar/HTTP clients in programs or domain modules. Audit emitted from interpreters, never programs.
+- **Idempotent effects**: Effects carry opaque identifiers (`appointment_id`, `lab_order_id`) so retries do not duplicate PHI side effects.
+- **Notification discipline**: Patient-facing notifications are fire-and-forget and PHI-free; pair with audit + metric recording in interpreters.
 - **Check wrapper**: run quality gates through the demo service name:  
   `docker compose -f docker/docker-compose.yml exec healthhub poetry run check-code`
 - **Outbound notifications**: ensure notification effects are non-blocking and redact PHI payloads before queuing.
@@ -29,6 +32,8 @@
 - Effects and domain types are frozen; constructors validate invariants.
 - Exhaustive ADT matching for medical states (appointments, prescriptions, labs).
 - Generators remain synchronous; interpreters own async I/O.
+- Idempotency keys present for retryable effects; no unbounded retries.
+- Notifications are PHI-free and non-blocking with audit/metrics on failure.
 - No silent error handling; use Result/ADT error shapes per base code quality.
 
 ## Anti-patterns (blockers)

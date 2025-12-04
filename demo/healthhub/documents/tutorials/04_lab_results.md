@@ -6,12 +6,12 @@
 
 ## Overview
 
-Lab results workflow:
-1. Doctor orders lab test
-2. Results are recorded (may be critical)
-3. Critical results trigger immediate notification
-4. Doctor reviews and adds notes
-5. Patient can view results
+This tutorial is delta-only. Full lab workflow, critical value handling, and HIPAA audit requirements are in the SSoTs below.
+
+**Read first**:
+- Domain: [Medical State Machines](../domain/medical_state_machines.md)
+- Engineering: [State Machine Patterns](../engineering/effect_patterns.md#state-machines), [Audit Logging](../engineering/monitoring_and_alerting.md#audit-logging-observability), [Notification Patterns](../engineering/monitoring_and_alerting.md) for alerting hooks
+- Product: [Domain Models](../product/domain_models.md) (LabResult), [Notification System](../product/notification_system.md)
 
 ---
 

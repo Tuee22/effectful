@@ -6,12 +6,11 @@
 
 ## Overview
 
-HealthHub has two test categories:
+Delta-only. Full testing SSoT lives in base + engineering overlays; this tutorial just lists HealthHub-specific commands and layout.
 
-| Category | Location | Infrastructure | Speed |
-|----------|----------|----------------|-------|
-| Unit Tests | `tests/pytest/backend/` | pytest-mock only | ~0.5s |
-| Integration | `tests/pytest/integration/` | Real PostgreSQL, Redis | ~1.5s |
+**Read first**:
+- Base: [Testing](../../../../documents/testing/README.md)
+- Engineering: [Testing](../engineering/testing.md), [Audit Logging](../engineering/monitoring_and_alerting.md#audit-logging-observability) for PHI audit assertions
 
 ---
 

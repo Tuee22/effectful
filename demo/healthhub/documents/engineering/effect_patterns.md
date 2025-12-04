@@ -5,7 +5,8 @@
 ## Scope
 - HealthHub-specific shape rules for effects, programs, and interpreters on top of the base patterns.
 - Focused on PHI-safe auditability, non-blocking notifications, and medical ADT handling.
-- Applies to new effects, refactors, and reviews inside the HealthHub demo.
+- Applies to new effects and reviews inside the HealthHub demo.
+- HIPAA linkage: purity + auditability enforces §164.312(b) (audit controls) and §164.312(c)(1) (integrity).
 
 ## Base Inheritance (retain)
 - Programs stay pure and synchronous; interpreters own all I/O.
@@ -13,11 +14,18 @@
 - Exhaustive matching on ADT results; use `assert_never` for unreachable states.
 - Non-blocking notifications and Result-based error handling remain mandatory.
 
+## State Machines
+- Apply base state machine pattern to appointments, prescriptions, labs, invoices.
+- Validate transitions before side effects; log both successes and failures with `correlation_id`.
+- Break-glass transitions still honor terminal-state immutability; they only bypass authZ.
+- Use role/time-based guards in pure functions; interpreters apply effects after validation.
+
 ## HealthHub-specific additions
 - **Audit logging**: every PHI access/mutation effect must be paired with an audit log effect; emit from interpreters, not programs.
 - **Patient messaging**: SMS/email/WebSocket effects are fire-and-forget; failures log to audit/metrics but must not abort business flows.
 - **Medical ADT narrowing**: after each yield, pattern-match appointment/prescription/lab ADTs; use dedicated error ADTs for invalid transitions.
 - **State machines**: compose appointment/prescription/lab state machines via sub-programs; transitions validated before side effects.
+- **Correlation & break-glass**: carry `correlation_id` through cascades (appointment → invoice → notification) and emit enriched audit data for break-glass flows with mandatory review.
 - **Security context**: propagate authenticated principal through effects; forbid implicit globals for user identity.
 - **Idempotency**: design effects with idempotent identifiers (appointment_id, prescription_id, lab_order_id) to support retries.
 - **Notifications vs. audits**: audit logs capture PHI access; notifications redact PHI and avoid embedding identifiers.

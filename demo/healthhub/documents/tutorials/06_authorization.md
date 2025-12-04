@@ -6,7 +6,11 @@
 
 ## Overview
 
-HealthHub uses **Algebraic Data Types (ADT)** for authorization instead of string-based role checking. This makes invalid states unrepresentable at compile time.
+Delta-only. Full auth SSoT lives in engineering/product docs; this tutorial just shows HealthHub-specific steps.
+
+**Read first**:
+- Engineering: [Authorization Patterns](../engineering/authorization.md), [Audit Logging](../engineering/monitoring_and_alerting.md#audit-logging-observability)
+- Product: [Authorization System](../product/authorization_system.md)
 
 ---
 
@@ -207,4 +211,4 @@ def test_doctor_can_access_any_patient() -> None:
 
 **Last Updated**: 2025-11-25  
 **Supersedes**: none  
-**Referenced by**: ../README.md, ../engineering/authorization_patterns.md
+**Referenced by**: ../README.md, ../engineering/authorization.md

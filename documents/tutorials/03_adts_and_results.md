@@ -47,7 +47,7 @@ async def get_user(user_id: UUID) -> UserLookupResult:
 **Benefits:**
 - All cases **explicit** and **self-documenting**
 - Caller **forced to handle** all cases (type checker enforces)
-- Easy to **add new cases** (type errors guide refactoring)
+- Easy to **add new cases** (type errors guide extensions)
 
 ### Visual Comparison: Optional vs ADT
 

@@ -278,6 +278,44 @@ Every appointment state transition must be logged for:
 - `previous_status`: State before transition
 - `new_status`: State after transition
 - `reason`: Why transition happened (for cancellations)
+- `purpose_of_use`: Treatment | payment | operations | break_glass
+- `patient_id`: Patient the appointment belongs to
+- `correlation_id`: Ties appointment transitions to related actions (notifications, billing)
+
+---
+
+## Privacy & Minimum Necessary
+
+- Do not store detailed reason-for-visit in appointment titles; keep clinical details in charting systems
+- Notifications (email/SMS/push) must mask sensitive fields (no diagnosis codes, minimal PHI)
+- Calendar exports: provide masked summaries unless user explicitly opts into detailed entries
+- Staff views: restrict by role and location; audit all accesses with purpose_of_use
+
+---
+
+## Telehealth-Specific Requirements
+
+- Verify provider licensure for patient’s location before confirming (Requested → Confirmed gate)
+- Obtain patient consent for recording; default to no recording; if recorded, tag and retain per policy
+- Enforce secure platform use (TLS, authenticated links, no public meeting IDs); rotating meeting tokens per session
+- Capture location at check-in for jurisdictional compliance; re-check if IP geo differs materially
+
+---
+
+## Pediatric & Guardian Scenarios
+
+- Appointments may require guardian consent; capture guardian relationship and consent timestamp
+- Age-based privacy: restrict visibility of sensitive visits based on jurisdictional minor privacy rules
+- Transition authority: guardians can schedule/cancel when permitted; certain services may require provider confirmation
+
+---
+
+## Cancellation & No-Show Documentation
+
+- Log who cancelled, when, and communication sent to patient; retain proof of notice for disputes
+- Track notice timing (<24h) for fee policy; audit calculation inputs
+- Record patient communications (email/SMS metadata) related to cancellations/reschedules
+- For no-shows, record check-in absence, attempt to contact, and follow-up scheduling offer
 
 ---
 
@@ -293,6 +331,6 @@ Every appointment state transition must be logged for:
 
 ---
 
-**Last Updated**: 2025-11-26  
+**Last Updated**: 2025-12-01  
 **Supersedes**: none  
 **Referenced by**: ../README.md, ../product/appointment_state_machine.md

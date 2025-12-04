@@ -537,6 +537,35 @@ def transition_with_audit(
 
 ---
 
+## Reliability, Idempotency, and Concurrency
+
+- **Deterministic time**: Use an injected clock (UTC, NTP-disciplined); never call `datetime.now()` directly inside validation logic
+- **Idempotency**: All transitions must be safe to retry (idempotency keys for APIs; dedupe on `correlation_id` + `entity_id` + target status)
+- **Concurrency control**: Use optimistic locking/version checks to prevent double transitions (e.g., two doctors finishing same appointment)
+- **Background jobs**: Time-based transitions (expiry/overdue) must be retryable with deduplication; log attempts and final outcomes
+- **Failure handling**: On validation failure, log audit entry and return TransitionInvalid without partial writes
+
+---
+
+## Break-Glass Access
+
+- Allow emergency override only via explicit “break_glass” path that:
+  - Captures reason/purpose, actor, patient, and correlation_id
+  - Elevates audit detail (IP, user agent, session identifiers)
+  - Notifies compliance/on-call automatically
+  - Requires post-incident review within 24 hours
+- Break-glass transitions must still honor terminal state immutability; they bypass authorization, not state machine rules
+
+---
+
+## Correlation Across Entities
+
+- Generate a `correlation_id` per business action (e.g., appointment completion → invoice creation → claim submission)
+- Include correlation_id in all transition audits to trace end-to-end workflows
+- When cascading transitions (appointment → invoice), ensure downstream transitions are conditional on upstream success and are idempotent on the same correlation_id
+
+---
+
 ## Testing State Machines
 
 ### Complete Transition Matrix Testing
@@ -630,12 +659,12 @@ def test_cannot_start_appointment_before_scheduled_time() -> None:
 - [Domain Models](../product/domain_models.md) - Prescription, LabResult, Invoice models
 
 ### Best Practices
-- [State Machine Patterns](../engineering/state_machine_patterns.md) - Implementation patterns and anti-patterns
+- [State Machine Patterns](../engineering/effect_patterns.md#state-machines) - Implementation patterns and anti-patterns
 - [Effect Patterns](../engineering/effect_patterns.md) - Using state machines in effect programs
 
 ---
 
-**Last Updated**: 2025-11-26  
+**Last Updated**: 2025-12-01  
 **Supersedes**: none  
 **Referenced by**: ../README.md, ../product/appointment_state_machine.md
 **Maintainer**: HealthHub Team
