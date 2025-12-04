@@ -1,5 +1,13 @@
 # effectful Documentation
 
+> Navigation hub for all effectful documentation (engineering standards, tutorials, and API reference).
+
+---
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: README.md, CONTRIBUTING.md, demo/healthhub/documents/README.md
+
 Welcome to the **effectful** documentation!
 
 ## Prerequisites
@@ -258,7 +266,3 @@ async def test_my_program() -> None:
 ---
 
 **Happy effect programming!**
-
-**Last Updated**: 2025-12-01  
-**Supersedes**: none  
-**Referenced by**: README.md, CONTRIBUTING.md, demo/healthhub/documents/README.md

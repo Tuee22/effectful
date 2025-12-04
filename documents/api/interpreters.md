@@ -113,10 +113,13 @@ Handles WebSocket communication effects.
 **Type Signature**:
 ```python
 class WebSocketInterpreter:
-    def __init__(self, connection: WebSocketConnection) -> None: ...
+    def __init__(self, connection: WebSocketConnection) -> None:
+        self._connection = connection
+
     async def interpret(
         self, effect: WebSocketEffect
-    ) -> Result[EffectReturn[EffectResult], InterpreterError]: ...
+    ) -> Result[EffectReturn[EffectResult], InterpreterError]:
+        return await self._connection.run(effect)
 ```
 
 **Supported Effects**:
@@ -154,10 +157,14 @@ class DatabaseInterpreter:
         self,
         user_repo: UserRepository,
         message_repo: ChatMessageRepository,
-    ) -> None: ...
+    ) -> None:
+        self._user_repo = user_repo
+        self._message_repo = message_repo
+
     async def interpret(
         self, effect: DatabaseEffect
-    ) -> Result[EffectReturn[EffectResult], InterpreterError]: ...
+    ) -> Result[EffectReturn[EffectResult], InterpreterError]:
+        return await route_database_effect(effect, self._user_repo, self._message_repo)
 ```
 
 **Supported Effects**:
@@ -196,10 +203,13 @@ Handles cache operations.
 **Type Signature**:
 ```python
 class CacheInterpreter:
-    def __init__(self, cache: ProfileCache) -> None: ...
+    def __init__(self, cache: ProfileCache) -> None:
+        self._cache = cache
+
     async def interpret(
         self, effect: CacheEffect
-    ) -> Result[EffectReturn[EffectResult], InterpreterError]: ...
+    ) -> Result[EffectReturn[EffectResult], InterpreterError]:
+        return await self._cache.execute(effect)
 ```
 
 **Supported Effects**:
@@ -644,10 +654,9 @@ result = await run_ws_program(my_program(), interpreter)
 match result:
     case Err(error):
         sentry_sdk.capture_exception(Exception(str(error)))
-        # Handle error...
+        logger.error("Interpreter error", extra={"error": str(error)})
     case Ok(value):
-        # Handle success...
-        pass
+        logger.info("Program completed", extra={"result": value})
 ```
 
 ### Timeouts
@@ -665,7 +674,7 @@ try:
     )
 except asyncio.TimeoutError:
     logger.error("Program execution timeout")
-    # Handle timeout...
+    alert_ops_team("program timeout after 30s")
 ```
 
 ---

@@ -29,8 +29,8 @@ By the end of this tutorial, you will:
 ```mermaid
 flowchart TB
     Dashboard[Grafana Dashboard]
-    Rows[Rows: Logical grouping]
-    Panels[Panels: Individual visualizations]
+    Rows[Rows Logical grouping]
+    Panels[Panels Individual visualizations]
     Queries[PromQL Queries]
     Variables[Template Variables]
 

@@ -4,6 +4,12 @@
 
 This is the Single Source of Truth (SSoT) for the Effectful observability architecture, metrics philosophy, and Prometheus/Grafana integration.
 
+---
+
+**Last Updated**: 2025-12-03
+**Supersedes**: None
+**Referenced by**: monitoring_and_alerting.md, configuration.md, docker_workflow.md, engineering/README.md
+
 ## SSoT Link Map
 
 ```mermaid

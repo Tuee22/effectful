@@ -2,6 +2,14 @@
 
 > **SSoT** for all environment variables and service configuration in effectful.
 
+Defines environment variables and service wiring for effectful across local development and production.
+
+---
+
+**Last Updated**: 2025-12-03
+**Supersedes**: None
+**Referenced by**: docker_workflow.md, development_workflow.md, README.md, monitoring_and_alerting.md
+
 ## SSoT Link Map
 
 ```mermaid

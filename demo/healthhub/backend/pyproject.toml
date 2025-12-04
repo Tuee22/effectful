@@ -28,6 +28,7 @@ pytest = "^7.4.3"
 pytest-asyncio = "^0.21.1"
 pytest-cov = "^4.1.0"
 pytest-mock = "^3.12.0"
+pytest-timeout = "^2.3.1"
 mypy = "^1.7.1"
 black = "^23.11.0"
 ruff = "^0.1.6"
@@ -80,6 +81,8 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "--strict-markers --tb=short"
+timeout = 60
+timeout_method = "thread"
 
 [tool.coverage.run]
 source = ["app"]

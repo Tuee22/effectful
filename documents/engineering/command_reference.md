@@ -2,6 +2,14 @@
 
 > **SSoT** for all Docker commands, test execution patterns, and output management in effectful.
 
+Authoritative command map for running, testing, and packaging inside the containerized toolchain.
+
+---
+
+**Last Updated**: 2025-12-03
+**Supersedes**: None
+**Referenced by**: docker_workflow.md, development_workflow.md, testing.md, README.md
+
 ## SSoT Link Map
 
 ```mermaid

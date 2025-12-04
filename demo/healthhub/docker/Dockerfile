@@ -92,7 +92,7 @@ RUN poetry lock --no-update 2>/dev/null || true && \
     fastapi uvicorn[standard] pydantic[email] pydantic-settings \
     asyncpg redis pulsar-client bcrypt pyjwt python-multipart \
     python-jose[cryptography] passlib[bcrypt] boto3 prometheus-client \
-    email-validator pytest pytest-asyncio pytest-cov pytest-mock httpx \
+    email-validator pytest pytest-asyncio pytest-cov pytest-mock pytest-timeout httpx \
     mypy black ruff playwright pytest-playwright
 
 # Install Playwright browsers (ShipNorth pattern)

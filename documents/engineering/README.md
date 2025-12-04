@@ -2,6 +2,12 @@
 
 > **Single Source of Truth (SSoT)** for navigating engineering practices, coding standards, and development workflows.
 
+---
+
+**Last Updated**: 2025-12-01  
+**Supersedes**: none  
+**Referenced by**: documents/README.md, CLAUDE.md, CONTRIBUTING.md
+
 ## Purpose
 
 The **engineering/** directory contains **effectful-specific engineering standards** for building pure functional effect programs in Python. These documents define **HOW to implement** features following type safety, purity, and testing doctrines.
@@ -187,10 +193,3 @@ All engineering documents marked with "**SSoT**" are authoritative. When conflic
 - **[Documentation Hub](../README.md)** - Complete documentation index (tutorials + API + engineering)
 - **[Contributing Guide](../CONTRIBUTING.md)** - How to contribute to effectful
 - **[Main README](../../README.md)** - Project overview and quickstart
-
----
-
-**Last Updated**: 2025-12-01
-**Document Count**: 18 engineering standards
-**Status**: Authoritative engineering reference for effectful library
-**Supersedes**: none

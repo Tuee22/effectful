@@ -481,14 +481,33 @@ Result types make errors explicit in function signatures:
 
 ```python
 # ❌ Hidden exception - caller doesn't know it can fail
-def fetch_user(user_id: int) -> User:
-    # May raise DatabaseError - caller unaware!
-    ...
+from dataclasses import dataclass
+from effectful import Result, Ok, Err
+
+
+class DatabaseError(Exception):
+    """Raised when a database operation fails."""
+
+
+@dataclass(frozen=True)
+class User:
+    user_id: int
+    name: str
+
+
+def fetch_user_unchecked(user_id: int, users: dict[int, User]) -> User:
+    # Raises DatabaseError if the user is missing (silent in the signature)
+    user = users.get(user_id)
+    if user is None:
+        raise DatabaseError(f"User {user_id} not found")
+    return user
 
 # ✅ Explicit error - type signature shows it can fail
-def fetch_user(user_id: int) -> Result[User, DatabaseError]:
-    # Caller MUST handle both Ok and Err cases
-    ...
+def fetch_user(user_id: int, users: dict[int, User]) -> Result[User, DatabaseError]:
+    user = users.get(user_id)
+    if user is None:
+        return Err(DatabaseError(f"User {user_id} not found"))
+    return Ok(user)
 ```
 
 ### Forced Error Handling
@@ -496,8 +515,8 @@ def fetch_user(user_id: int) -> Result[User, DatabaseError]:
 Pattern matching ensures all cases are handled:
 
 ```python
-def process(user_id: int) -> str:
-    result = fetch_user(user_id)
+def process(user_id: int, users: dict[int, User]) -> str:
+    result = fetch_user(user_id=user_id, users=users)
 
     # Type checker ensures both cases handled:
     match result:

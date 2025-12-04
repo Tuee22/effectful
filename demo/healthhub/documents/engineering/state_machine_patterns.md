@@ -23,6 +23,11 @@ Each state is a distinct type carrying state-specific data.
 **Key Benefit**: Impossible to access fields that don't exist in current state (type error).
 
 ```python
+# Shared imports for state machine examples
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from uuid import UUID
+
 # GOOD - Each state has its own context
 @dataclass(frozen=True)
 class EntityRequested:
@@ -186,7 +191,7 @@ def validate_transition(
             reason="Cannot transition from terminal state",
         )
 
-    # ... rest of validation
+    # Validate domain rules (authorization, schedule conflicts, capacity) here
 ```
 
 ---
@@ -246,10 +251,20 @@ def confirm(entity: Entity) -> None:
 def confirm(entity: Entity) -> TransitionResult:
     match entity.status:
         case EntityRequested():
-            new_status = EntityConfirmed(...)
+            now = datetime.now(tz=timezone.utc)
+            new_status = EntityConfirmed(
+                requested_at=entity.status.requested_at,
+                confirmed_at=now,
+                scheduled_time=now + timedelta(hours=1),
+                confirmed_by=entity.status.requested_by,
+            )
             return validate_transition(entity.status, new_status)
         case _:
-            return TransitionInvalid(...)
+            return TransitionInvalid(
+                current_status=type(entity.status).__name__,
+                attempted_status="EntityConfirmed",
+                reason="Cannot confirm from non-requested status",
+            )
 ```
 
 **Why Bad**: String typos cause runtime errors, not compile-time errors. Type checker can't help.
@@ -266,14 +281,20 @@ class Entity:
 
 # GOOD - Validate before transition
 def complete_entity(entity: Entity, notes: str) -> TransitionResult:
-    new_status = EntityCompleted(notes=notes, ...)
+    new_status = EntityCompleted(
+        requested_at=entity.status.requested_at,
+        confirmed_at=entity.status.confirmed_at,
+        started_at=entity.status.started_at,
+        completed_at=datetime.now(tz=timezone.utc),
+        notes=notes,
+    )
     result = validate_transition(entity.status, new_status)
 
     if isinstance(result, TransitionInvalid):
         return result
 
     # Update entity via effect
-    # ...
+    return TransitionSuccess(new_status=new_status)
 ```
 
 **Why Bad**: Skipping validation allows dangerous transitions (e.g., Requested → Completed skips approval).
@@ -291,7 +312,7 @@ class Entity:
 
 # GOOD - Status carries context
 class Entity:
-    status: EntityStatus  # EntityCompleted(completed_at=..., notes=...)
+    status: EntityStatus  # EntityCompleted(completed_at=datetime(2025, 1, 1, tzinfo=timezone.utc), notes="finished")
 ```
 
 **Why Bad**: Optional fields allow invalid combinations (status="requested" but completed_at is set).
@@ -307,7 +328,7 @@ entity.completed_at = datetime.now()
 
 # GOOD - Return new entity with new status (immutable update)
 new_status = EntityCompleted(
-    completed_at=datetime.now(UTC),
+    completed_at=datetime.now(timezone.utc),
     notes=notes,
 )
 new_entity = replace(entity, status=new_status)
@@ -324,7 +345,7 @@ new_entity = replace(entity, status=new_status)
 def transition(entity: Entity, new_status: EntityStatus) -> Entity:
     if not is_valid_transition(entity.status, new_status):
         raise InvalidTransitionError()  # Caller must catch
-    # ...
+    return replace(entity, status=new_status)
 
 # GOOD - Return result type, composable
 def transition(entity: Entity, new_status: EntityStatus) -> TransitionResult:
@@ -342,13 +363,41 @@ def transition(entity: Entity, new_status: EntityStatus) -> TransitionResult:
 ```python
 def test_all_valid_transitions() -> None:
     """Test every valid transition in the state machine."""
+    requested = EntityRequested(
+        requested_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+        requested_by=UUID("00000000-0000-0000-0000-000000000001"),
+    )
+    confirmed = EntityConfirmed(
+        requested_at=requested.requested_at,
+        confirmed_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+        scheduled_time=datetime(2025, 1, 2, tzinfo=timezone.utc),
+        confirmed_by=requested.requested_by,
+    )
+    in_progress = EntityInProgress(
+        requested_at=requested.requested_at,
+        confirmed_at=confirmed.confirmed_at,
+        started_at=datetime(2025, 1, 2, tzinfo=timezone.utc),
+    )
+    cancelled = EntityCancelled(
+        cancelled_at=datetime(2025, 1, 2, tzinfo=timezone.utc),
+        cancelled_by=UUID("00000000-0000-0000-0000-000000000002"),
+        reason="User cancelled",
+    )
+    completed = EntityCompleted(
+        requested_at=requested.requested_at,
+        confirmed_at=confirmed.confirmed_at,
+        started_at=in_progress.started_at,
+        completed_at=datetime(2025, 1, 3, tzinfo=timezone.utc),
+        notes="Workflow finished",
+    )
+
     valid_transitions: list[tuple[EntityStatus, EntityStatus]] = [
-        (EntityRequested(...), EntityConfirmed(...)),
-        (EntityRequested(...), EntityCancelled(...)),
-        (EntityConfirmed(...), EntityInProgress(...)),
-        (EntityConfirmed(...), EntityCancelled(...)),
-        (EntityInProgress(...), EntityCompleted(...)),
-        (EntityInProgress(...), EntityCancelled(...)),
+        (requested, confirmed),
+        (requested, cancelled),
+        (confirmed, in_progress),
+        (confirmed, cancelled),
+        (in_progress, completed),
+        (in_progress, cancelled),
     ]
 
     for current, new in valid_transitions:
@@ -364,12 +413,40 @@ def test_all_valid_transitions() -> None:
 ```python
 def test_invalid_transitions() -> None:
     """Test common invalid transitions."""
+    requested = EntityRequested(
+        requested_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+        requested_by=UUID("00000000-0000-0000-0000-000000000001"),
+    )
+    confirmed = EntityConfirmed(
+        requested_at=requested.requested_at,
+        confirmed_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+        scheduled_time=datetime(2025, 1, 2, tzinfo=timezone.utc),
+        confirmed_by=requested.requested_by,
+    )
+    in_progress = EntityInProgress(
+        requested_at=requested.requested_at,
+        confirmed_at=confirmed.confirmed_at,
+        started_at=datetime(2025, 1, 2, tzinfo=timezone.utc),
+    )
+    completed = EntityCompleted(
+        requested_at=requested.requested_at,
+        confirmed_at=confirmed.confirmed_at,
+        started_at=in_progress.started_at,
+        completed_at=datetime(2025, 1, 3, tzinfo=timezone.utc),
+        notes="Workflow finished",
+    )
+    cancelled = EntityCancelled(
+        cancelled_at=datetime(2025, 1, 2, tzinfo=timezone.utc),
+        cancelled_by=UUID("00000000-0000-0000-0000-000000000002"),
+        reason="User cancelled",
+    )
+
     invalid_transitions: list[tuple[EntityStatus, EntityStatus]] = [
-        (EntityRequested(...), EntityCompleted(...)),  # Skip confirmation
-        (EntityRequested(...), EntityInProgress(...)),  # Skip confirmation
-        (EntityCompleted(...), EntityCancelled(...)),  # Terminal state
-        (EntityCancelled(...), EntityRequested(...)),  # Terminal state
-        (EntityConfirmed(...), EntityCompleted(...)),  # Skip InProgress
+        (requested, completed),  # Skip confirmation
+        (requested, in_progress),  # Skip confirmation
+        (completed, cancelled),  # Terminal state
+        (cancelled, requested),  # Terminal state
+        (confirmed, completed),  # Skip InProgress
     ]
 
     for current, new in invalid_transitions:
@@ -387,17 +464,39 @@ def test_invalid_transitions() -> None:
 def test_terminal_states() -> None:
     """Verify terminal states are correctly identified."""
     terminal_states = [
-        EntityCompleted(...),
-        EntityCancelled(...),
+        EntityCompleted(
+            requested_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+            confirmed_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+            started_at=datetime(2025, 1, 2, tzinfo=timezone.utc),
+            completed_at=datetime(2025, 1, 3, tzinfo=timezone.utc),
+            notes="Workflow finished",
+        ),
+        EntityCancelled(
+            cancelled_at=datetime(2025, 1, 2, tzinfo=timezone.utc),
+            cancelled_by=UUID("00000000-0000-0000-0000-000000000002"),
+            reason="User cancelled",
+        ),
     ]
 
     for status in terminal_states:
         assert is_terminal(status), f"{type(status).__name__} should be terminal"
 
     non_terminal_states = [
-        EntityRequested(...),
-        EntityConfirmed(...),
-        EntityInProgress(...),
+        EntityRequested(
+            requested_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+            requested_by=UUID("00000000-0000-0000-0000-000000000001"),
+        ),
+        EntityConfirmed(
+            requested_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+            confirmed_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+            scheduled_time=datetime(2025, 1, 2, tzinfo=timezone.utc),
+            confirmed_by=UUID("00000000-0000-0000-0000-000000000001"),
+        ),
+        EntityInProgress(
+            requested_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+            confirmed_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+            started_at=datetime(2025, 1, 2, tzinfo=timezone.utc),
+        ),
     ]
 
     for status in non_terminal_states:
@@ -411,7 +510,10 @@ def test_terminal_states() -> None:
 ```python
 def test_available_actions_by_role() -> None:
     """Test role-based action availability."""
-    requested = EntityRequested(...)
+    requested = EntityRequested(
+        requested_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+        requested_by=UUID("00000000-0000-0000-0000-000000000001"),
+    )
 
     # Requester can only cancel
     assert get_available_actions(requested, "requester") == ["cancel"]
@@ -425,8 +527,18 @@ def test_available_actions_by_role() -> None:
 
 def test_terminal_states_have_no_actions() -> None:
     """Terminal states should have no available actions."""
-    completed = EntityCompleted(...)
-    cancelled = EntityCancelled(...)
+    completed = EntityCompleted(
+        requested_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+        confirmed_at=datetime(2025, 1, 1, tzinfo=timezone.utc),
+        started_at=datetime(2025, 1, 2, tzinfo=timezone.utc),
+        completed_at=datetime(2025, 1, 3, tzinfo=timezone.utc),
+        notes="Workflow finished",
+    )
+    cancelled = EntityCancelled(
+        cancelled_at=datetime(2025, 1, 2, tzinfo=timezone.utc),
+        cancelled_by=UUID("00000000-0000-0000-0000-000000000002"),
+        reason="User cancelled",
+    )
 
     for role in ["requester", "approver", "processor"]:
         assert get_available_actions(completed, role) == []

@@ -722,7 +722,9 @@ async def test_cache_aside_pattern(clean_db, clean_redis) -> None:
     )
 
     # Workflow: check cache, fallback to DB, populate cache
-    def cache_fallback_program(uid: UUID):
+    def cache_fallback_program(
+        uid: UUID,
+    ) -> Generator[AllEffects, EffectResult, tuple[str, ProfileData | None]]:
         # 1. Try cache first
         cached = yield GetCachedProfile(user_id=uid)
 
@@ -2094,7 +2096,9 @@ async def test_cache_aside_pattern_with_database_fallback(
         cache=cache,  # Real Redis
     )
 
-    def cache_fallback_program(uid: UUID):
+    def cache_fallback_program(
+        uid: UUID,
+    ) -> Generator[AllEffects, EffectResult, tuple[str, ProfileData | None]]:
         # 1. Try cache first
         cached = yield GetCachedProfile(user_id=uid)
 

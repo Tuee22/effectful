@@ -68,14 +68,34 @@ class DoctorAuthorized:
     specialization: str
     can_prescribe: bool  # Capability embedded in type
     role: Literal["doctor"] = "doctor"
-```
 
-Usage:
-```python
-def prescribe(auth: DoctorAuthorized, ...):
+
+@dataclass(frozen=True)
+class PrescriptionRequest:
+    medication: str
+    dosage: str
+    notes: str | None
+
+
+@dataclass(frozen=True)
+class AuthorizationError:
+    reason: str
+
+
+def prescribe(
+    auth: DoctorAuthorized,
+    request: PrescriptionRequest,
+) -> Result[None, AuthorizationError]:
     if not auth.can_prescribe:
-        return None  # No prescription authority
-    # ... proceed
+        return Err(AuthorizationError(reason="Doctor cannot prescribe"))
+
+    queue_prescription_order(
+        doctor_id=auth.doctor_id,
+        medication=request.medication,
+        dosage=request.dosage,
+        notes=request.notes,
+    )
+    return Ok(None)
 ```
 
 ---
@@ -131,9 +151,19 @@ def is_authorized(user: User) -> bool:
 def get_authorization(user: User) -> AuthorizationState:
     match user.role:
         case "patient":
-            return PatientAuthorized(user_id=user.id, patient_id=..., ...)
+            return PatientAuthorized(
+                user_id=user.id,
+                patient_id=user.patient_id,
+                email=user.email,
+            )
         case "doctor":
-            return DoctorAuthorized(...)
+            return DoctorAuthorized(
+                user_id=user.id,
+                doctor_id=user.doctor_id,
+                email=user.email,
+                specialization=user.specialization,
+                can_prescribe=user.can_prescribe,
+            )
         case _:
             return Unauthorized(reason="Unknown role")
 ```
@@ -181,7 +211,7 @@ def get_authorization() -> AuthorizationState:
 def get_patient(auth, patient_id):
     if auth.is_admin:  # Magic property check
         return get_any_patient(patient_id)
-    ...
+    return None
 
 # GOOD - Explicit pattern match
 def get_patient(auth: AuthorizationState, patient_id: UUID):

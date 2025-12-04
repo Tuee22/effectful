@@ -402,15 +402,15 @@ flowchart TB
     Start[Start Pipeline]
     ValidateEmpty{Validate<br/>Empty Message?}
     ValidateLength{Validate<br/>Message Length?}
-    LookupUser[Step 2: Lookup User]
+    LookupUser[Step 2 Lookup User]
     UserExists{User<br/>Found?}
-    SaveMessage[Step 3: Save Message<br/>SaveChatMessage]
-    CacheProfile[Step 4: Cache Profile<br/>cache_profile]
-    NotifySuccess[Step 5: Notify User<br/>Message saved]
+    SaveMessage[Step 3 Save Message<br/>SaveChatMessage]
+    CacheProfile[Step 4 Cache Profile<br/>cache_profile]
+    NotifySuccess[Step 5 Notify User<br/>Message saved]
 
-    ErrorEmpty[Notify: Empty message<br/>Return error_empty_message]
-    ErrorLength[Notify: Message too long<br/>Return error_message_too_long]
-    ErrorUser[Notify: User not found<br/>Return error_user_not_found]
+    ErrorEmpty[Notify empty message<br/>Return error_empty_message]
+    ErrorLength[Notify message too long<br/>Return error_message_too_long]
+    ErrorUser[Notify user not found<br/>Return error_user_not_found]
     Success[Return message_saved]
 
     Start --> ValidateEmpty

@@ -287,13 +287,13 @@ flowchart TB
     Start[Request Profile]
     CheckCache{Check Cache<br/>GetCachedProfile}
 
-    CheckCache -->|Cache Hit| ReturnCached[Return ProfileData<br/>Source: cache]
+    CheckCache -->|Cache Hit| ReturnCached[Return ProfileData<br/>Source cache]
     CheckCache -->|Cache Miss| QueryDB{Query Database<br/>GetUserById}
 
-    QueryDB -->|User Found| UpdateCache[Update Cache<br/>PutCachedProfile<br/>TTL: 300s]
+    QueryDB -->|User Found| UpdateCache[Update Cache<br/>PutCachedProfile<br/>TTL 300s]
     QueryDB -->|User Not Found| ReturnNone[Return None]
 
-    UpdateCache --> ReturnDB[Return ProfileData<br/>Source: database]
+    UpdateCache --> ReturnDB[Return ProfileData<br/>Source database]
 
     ReturnCached --> End[Response]
     ReturnDB --> End
@@ -808,10 +808,10 @@ flowchart TB
     Receive --> Method
 
     Method -->|isinstance check| Assert[assert isinstance msg ChatMessage]
-    Method -->|Pattern Match| Match[match msg:<br/>case ChatMessage id=id]
+    Method -->|Pattern Match| Match[match msg<br/>case ChatMessage id=id]
 
-    Assert --> Narrowed1[Type Narrowed<br/>msg: ChatMessage]
-    Match --> Narrowed2[Type Narrowed<br/>id: UUID]
+    Assert --> Narrowed1[Type Narrowed<br/>msg ChatMessage]
+    Match --> Narrowed2[Type Narrowed<br/>id UUID]
 
     Narrowed1 --> Access1[Access msg.id - Valid]
     Narrowed2 --> Access2[Access id - Valid]

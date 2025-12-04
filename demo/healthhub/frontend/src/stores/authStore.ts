@@ -7,6 +7,7 @@
  */
 
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import {
   AuthState,
@@ -28,11 +29,15 @@ import { login as apiLogin, refresh as apiRefresh, LoginResponse, RefreshRespons
 import { ApiError } from '../api/client'
 
 const ACCESS_TOKEN_TTL_MS = 15 * 60 * 1000
+const AUTH_STORAGE_KEY = 'healthhub-auth'
+
+const toDate = (value: Date | string): Date => (value instanceof Date ? value : new Date(value))
 
 export interface AuthStore {
   // State
   authState: AuthState
   _hasHydrated: boolean
+  _hasRefreshCookie: () => boolean
 
   // Actions
   login: (email: string, password: string) => Promise<Result<LoginResponse, ApiError>>
@@ -51,10 +56,14 @@ export interface AuthStore {
 }
 
 export const useAuthStore = create<AuthStore>()(
-  immer((set, get) => ({
+  persist(
+    immer((set, get) => ({
     // Initial state - Hydrating while probing refresh cookie
     authState: hydrating(),
     _hasHydrated: false,
+
+    // Internal helper - check for refresh token cookie before hitting backend
+    _hasRefreshCookie: (): boolean => document.cookie.includes('refresh_token='),
 
     // Actions
     login: async (email: string, password: string): Promise<Result<LoginResponse, ApiError>> => {
@@ -98,6 +107,19 @@ export const useAuthStore = create<AuthStore>()(
     },
 
     refreshSession: async (reason: 'missing_access' | 'expired'): Promise<boolean> => {
+      // Avoid backend call if we know no refresh cookie exists
+      if (!get()._hasRefreshCookie()) {
+        set((draft) => {
+          draft.authState = refreshDenied('Refresh token not found in cookie', new Date())
+          draft._hasHydrated = true
+        })
+        set((draft) => {
+          draft.authState = unauthenticated()
+          draft._hasHydrated = true
+        })
+        return false
+      }
+
       set((draft) => {
         draft.authState = refreshing(reason)
       })
@@ -129,6 +151,15 @@ export const useAuthStore = create<AuthStore>()(
     },
 
     bootstrap: async () => {
+      // Skip refresh entirely when no refresh cookie is present (common for first load/E2E)
+      if (!get()._hasRefreshCookie()) {
+        set((draft) => {
+          draft.authState = unauthenticated()
+          draft._hasHydrated = true
+        })
+        return
+      }
+
       const refreshed = await get().refreshSession('missing_access')
       if (!refreshed) {
         set((draft) => {
@@ -182,17 +213,40 @@ export const useAuthStore = create<AuthStore>()(
 
     getValidAccessToken: async (): Promise<string | null> => {
       const state = get().authState
-      if (isAuthenticated(state) && state.expiresAt.getTime() > Date.now()) {
+      if (isAuthenticated(state) && toDate(state.expiresAt).getTime() > Date.now()) {
         return state.accessToken
       }
 
-      const refreshed = await get().refreshSession('missing_access')
+      const hasCookie = get()._hasRefreshCookie()
+
+      const refreshed = hasCookie ? await get().refreshSession('missing_access') : false
       if (!refreshed) {
+        // When unauthenticated and no cookie, avoid spamming refresh attempts
+        if (!hasCookie) {
+          set((draft) => {
+            draft.authState = unauthenticated()
+            draft._hasHydrated = true
+          })
+        }
         return null
       }
 
       const updated = get().authState
       return isAuthenticated(updated) ? updated.accessToken : null
     },
-  }))
+  })),
+    {
+      name: AUTH_STORAGE_KEY,
+      partialize: (state) => ({
+        authState: state.authState,
+        _hasHydrated: state._hasHydrated,
+      }),
+      onRehydrateStorage: () => (state) => {
+        // Re-mark hydration after localStorage replay
+        if (state) {
+          state._hasHydrated = true
+        }
+      },
+    }
+  )
 )

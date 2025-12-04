@@ -95,7 +95,7 @@ Artifacts produced in these steps stay under `/opt/**` in the container; do not 
 ## Cross-References
 
 - Upstream doctrine: [Documentation Standards](../documentation_standards.md) — SSoT/link hygiene and ignore file commentary.
-- Build workflows: [Docker Workflow](docker.md) — container-only development contract.
+- Build workflows: [Docker Workflow](docker_workflow.md) — container-only development contract.
 - Frontend build: [demo/healthhub/documents/engineering/frontend_architecture.md](/demo/healthhub/documents/engineering/frontend_architecture.md) — build stage copies and `/opt` output rules.
 - Code quality gates: [Code Quality](code_quality.md) — enforcement pipeline that regenerates artifacts.
 

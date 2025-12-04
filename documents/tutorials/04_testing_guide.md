@@ -399,8 +399,9 @@ Let's test a complex program that demonstrates auth, cache, database, storage, m
 
 ```python
 # src/programs/chat_programs.py
+import json
 from collections.abc import Generator
-from uuid import uuid4
+from uuid import UUID, uuid4
 from datetime import datetime, timezone
 
 from effectful import (
@@ -415,6 +416,13 @@ from effectful.domain.profile import CacheMiss
 from demo.domain.errors import AuthError, AppError
 from demo.domain.responses import MessageResponse
 
+
+def decode_user_from_cache(raw_cache_value: bytes | str) -> User:
+    """Decode cached user JSON into a User instance."""
+    payload = raw_cache_value.encode() if isinstance(raw_cache_value, str) else raw_cache_value
+    cached = json.loads(payload.decode())
+    return User(id=UUID(cached["id"]), email=cached["email"])
+
 def send_authenticated_message_with_storage_program(
     token: str, text: str
 ) -> Generator[AllEffects, EffectResult, Result[MessageResponse, AuthError | AppError]]:
@@ -426,26 +434,32 @@ def send_authenticated_message_with_storage_program(
         case TokenInvalid():
             return Err(AuthError(message="Invalid token", error_type="token_invalid"))
         case TokenValid(user_id=user_id):
-            pass
+            token_owner = user_id
 
     # Step 2-4: [Cache + Database] Cache-aside pattern
-    cached_result = yield GetCachedValue(key=f"user:{user_id}")
+    cached_result = yield GetCachedValue(key=f"user:{token_owner}")
 
     match cached_result:
         case CacheMiss():
             # Cache miss - load from database
-            user = yield GetUserById(user_id=user_id)
+            user = yield GetUserById(user_id=token_owner)
 
             match user:
                 case UserNotFound():
-                    return Err(AppError.not_found(f"User {user_id} not found"))
+                    return Err(AppError.not_found(f"User {token_owner} not found"))
                 case User():
-                    pass
+                    user_payload = json.dumps(
+                        {"id": str(user.id), "email": user.email},
+                    ).encode()
 
             # Store in cache
-            yield PutCachedValue(key=f"user:{user_id}", value=b"...", ttl_seconds=300)
+            yield PutCachedValue(
+                key=f"user:{token_owner}",
+                value=user_payload,
+                ttl_seconds=300,
+            )
         case _:
-            pass
+            user = decode_user_from_cache(cached_result)
 
     # Validation
     if not text or text.strip() == "":
@@ -453,11 +467,21 @@ def send_authenticated_message_with_storage_program(
 
     # Step 5: [Storage] Archive to S3
     message_id = uuid4()
-    s3_key = f"messages/{user_id}/{message_id}.json"
-    storage_result = yield PutObject(bucket="chat-archive", key=s3_key, content=b"...")
+    s3_key = f"messages/{token_owner}/{message_id}.json"
+    storage_payload = json.dumps(
+        {"message_id": str(message_id), "user_id": str(token_owner), "text": text},
+    ).encode()
+    storage_result = yield PutObject(
+        bucket="chat-archive",
+        key=s3_key,
+        content=storage_payload,
+    )
 
     # Step 6: [Messaging] Publish to Pulsar
-    pulsar_message_id = yield PublishMessage(topic="chat-messages", payload=b"...")
+    pulsar_message_id = yield PublishMessage(
+        topic="chat-messages",
+        payload=storage_payload,
+    )
 
     # Step 7: [WebSocket] Send confirmation
     yield SendText(text=f"Message sent: {message_id}")
@@ -594,19 +618,53 @@ class TestSendMessageProgram:
 
     def test_send_message_success(self, mocker: MockerFixture) -> None:
         """Test successfully sending a message."""
-        # ...
+        gen = send_authenticated_message_with_storage_program(
+            token="valid-token",
+            text="hello",
+        )
+        assert isinstance(next(gen), ValidateToken)
+        gen.send(TokenValid(user_id=uuid4()))
+        gen.send(CacheMiss())
+        gen.send(User(id=uuid4(), email="user@example.com"))
+        gen.send(Ok(EffectReturn(value=None, effect_name="PutCachedValue")))
+        gen.send(Ok(EffectReturn(value=None, effect_name="PutObject")))
+        result = gen.send(Ok(EffectReturn(value=b"message-id", effect_name="PublishMessage")))
+        assert isinstance(result, Ok)
 
     def test_send_message_user_not_found(self, mocker: MockerFixture) -> None:
         """Test sending message fails when user doesn't exist."""
-        # ...
+        gen = send_authenticated_message_with_storage_program(
+            token="valid-token",
+            text="hello",
+        )
+        next(gen)
+        gen.send(TokenValid(user_id=uuid4()))
+        gen.send(CacheMiss())
+        result = gen.send(UserNotFound())
+        assert isinstance(result, Err)
 
     def test_send_message_empty_text(self, mocker: MockerFixture) -> None:
         """Test sending message fails with empty text."""
-        # ...
+        gen = send_authenticated_message_with_storage_program(
+            token="valid-token",
+            text="",
+        )
+        next(gen)
+        gen.send(TokenValid(user_id=uuid4()))
+        err = gen.send(CacheMiss())
+        assert isinstance(err, Err)
 
     def test_send_message_text_too_long(self, mocker: MockerFixture) -> None:
         """Test sending message fails when text exceeds max length."""
-        # ...
+        long_text = "x" * 5001
+        gen = send_authenticated_message_with_storage_program(
+            token="valid-token",
+            text=long_text,
+        )
+        next(gen)
+        gen.send(TokenValid(user_id=uuid4()))
+        err = gen.send(CacheMiss())
+        assert isinstance(err, Err)
 ```
 
 ### Directory Structure
@@ -639,16 +697,42 @@ tests/
 2. **Use Result Types for Explicit Error Handling**
    ```python
    # ✅ Return Result[T, E] from programs
-   def get_user(...) -> Generator[..., Result[User, AppError]]:
-       # ...
-       return Ok(user)  # or Err(AppError(...))
+   from collections.abc import Generator
+   from dataclasses import dataclass
+   from uuid import UUID
+   from effectful import GetUserById, Ok, Err, Result
+
+   @dataclass(frozen=True)
+   class AppError:
+       message: str
+
+   @dataclass(frozen=True)
+   class User:
+       user_id: UUID
+       name: str
+
+   def get_user(user_id: UUID) -> Generator[GetUserById, Result[User, AppError], Result[User, AppError]]:
+       repo_result = yield GetUserById(user_id=user_id)
+       match repo_result:
+           case Ok(user):
+               return Ok(user)
+           case Err(error):
+               return Err(error)
    ```
 
 3. **Test One Behavior Per Test**
    ```python
-   def test_user_found_returns_ok() -> None: ...
-   def test_user_not_found_returns_err() -> None: ...
-   def test_validation_fails_returns_err() -> None: ...
+   def test_user_found_returns_ok() -> None:
+       result = Ok(User(user_id=uuid4(), name="Alice"))
+       assert isinstance(result, Ok)
+
+   def test_user_not_found_returns_err() -> None:
+       result = Err(AppError(message="User not found"))
+       assert isinstance(result, Err)
+
+   def test_validation_fails_returns_err() -> None:
+       result = Err(AppError(message="Missing required field"))
+       assert result.value.message == "Missing required field"
    ```
 
 4. **Verify Effect Properties**
@@ -684,14 +768,14 @@ tests/
 
 1. **Don't Use Fakes or Test Doubles**
    ```python
-   # ❌ Forbidden
-   interpreter = MessagingInterpreter(producer=FakeMessageProducer())
+# ❌ Forbidden
+interpreter = MessagingInterpreter(producer=FakeMessageProducer())
 
-   # ✅ Use generator-based testing instead
-   gen = send_message_program(...)
-   effect = next(gen)
-   result = gen.send(mock_response)
-   ```
+# ✅ Use generator-based testing instead
+gen = send_message_program(user_id=uuid4(), text="hello")
+effect = next(gen)
+result = gen.send(mock_response)
+```
 
 2. **Don't Skip Result Type Verification**
    ```python
@@ -705,12 +789,15 @@ tests/
    ```
 
 3. **Don't Test Multiple Behaviors in One Test**
-   ```python
-   # ❌ Too much in one test
-   def test_get_user() -> None:
-       # Tests both found AND not found - split into 2 tests!
-       ...
-   ```
+```python
+# ❌ Too much in one test
+def test_get_user() -> None:
+    # Tests both found AND not found - split into 2 tests!
+    result = get_user(user_id=uuid4())
+    assert isinstance(result, Ok)
+    missing = get_user(user_id=UUID("00000000-0000-0000-0000-000000000999"))
+    assert isinstance(missing, Err)
+```
 
 4. **Don't Use Real Infrastructure in Unit Tests**
    ```python
@@ -721,9 +808,10 @@ tests/
 
 5. **Don't Use pytest.skip()**
    ```python
-   # ❌ Forbidden - creates false confidence
-   @pytest.mark.skip(reason="Not implemented yet")
-   def test_complex_workflow() -> None: ...
+# ❌ Forbidden - creates false confidence
+@pytest.mark.skip(reason="Not implemented yet")
+def test_complex_workflow() -> None:
+    pytest.fail("Implement complex workflow test or remove it")
 
    # ✅ Let tests FAIL to expose gaps, or delete test
    ```
@@ -905,14 +993,15 @@ async def test_counter_increments(clean_metrics: None) -> None:
             labels={"test": "value"},
         )
 
-        match query_result:
-            case QuerySuccess(metrics=metrics):
-                # Should be 2.0 after two increments
-                total = sum(metrics.values())
-                assert total == 2.0
+    match query_result:
+        case QuerySuccess(metrics=metrics):
+            # Should be 2.0 after two increments
+            total = sum(metrics.values())
+            assert total == 2.0
 
     # Run program (would use real interpreter in integration test)
-    # ... test implementation
+    result = await run_ws_program(increment_twice(), metrics_interpreter)
+    assert result is None
 ```
 
 ### Testing Metric Validation
@@ -996,10 +1085,10 @@ async def test_interpreter_records_automatic_metrics() -> None:
         metrics_collector=mock_collector,  # Inject mock
     )
 
-    # Execute effect
-    result = await interpreter.interpret(
-        GetUserById(user_id=UUID("..."))
-    )
+# Execute effect
+result = await interpreter.interpret(
+    GetUserById(user_id=UUID("00000000-0000-0000-0000-000000000123"))
+)
 
     # Verify interpreter recorded duration metric
     mock_collector.observe_histogram.assert_called_once()

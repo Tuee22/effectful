@@ -58,7 +58,8 @@ Receive a text message from the WebSocket connection.
 ```python
 @dataclass(frozen=True)
 class ReceiveText:
-    pass
+    """Effect: Receive a text message."""
+    # No fields; interpreter yields the inbound text as the generator result
 ```
 
 **Parameters**: None
