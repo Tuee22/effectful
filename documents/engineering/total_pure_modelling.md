@@ -2,7 +2,7 @@
 
 **Status**: Authoritative source  
 **Supersedes**: N/A  
-**Referenced by**: [engineering/security.md](security.md#overview), [engineering/testing.md](testing.md#philosophy), [engineering/code_quality.md](code_quality.md#tldr)
+**Referenced by**: [engineering/testing.md](testing.md#philosophy), [engineering/code_quality.md](code_quality.md#tldr)
 
 > **Purpose**: A friendly, practical guide for modelling domain state with total, pure ADTs and state machines that match reality. Illegal states must be impossible to represent, and timing tricks or env toggles are off-limits. By separating pure decisions from side effects, we keep frontend and backend in lockstep, avoid ghost states, and stay resilient when real networks and devices misbehave.
 
@@ -49,7 +49,7 @@ Pure modelling keeps the software and the real world in sync. When every legitim
 ## Mermaid maps
 ### Frontend state and guard
 ```mermaid
-flowchart TD
+flowchart TB
     A[App Boot] --> B[Auth Readiness Initializing]
     B --> C{Persisted user?}
     C -->|No| D[Ready Unauthenticated]
@@ -136,6 +136,7 @@ flowchart TB
 ## Small code postcards
 ### Hydration (frontend)
 ```ts
+// file: examples/total_pure_modelling.ts
 // File: documents/engineering/total_pure_modelling.md
 // WRONG: can stick in Hydrating with no exit
 if (readiness.type === 'Hydrating') return <Spinner />;
@@ -148,6 +149,7 @@ const toReady = persistedUser
 
 ### Guard (frontend)
 ```ts
+// file: examples/total_pure_modelling.ts
 // File: documents/engineering/total_pure_modelling.md
 // WRONG: implicit access via truthy roles
 if (!user.roles) return true;
@@ -161,6 +163,7 @@ return <Admin />;
 
 ### Backend AuthZ
 ```python
+# file: examples/total_pure_modelling.py
 # File: documents/engineering/total_pure_modelling.md
 # WRONG: truthy/None role checks
 if user and (user.roles or user.role == "admin"):
@@ -176,6 +179,7 @@ match decision:
 
 ### WS Connection
 ```ts
+// file: examples/total_pure_modelling.ts
 // File: documents/engineering/total_pure_modelling.md
 // WRONG: connect regardless of guard
 ws.connect();
@@ -189,7 +193,7 @@ if (guardDecision.type === 'Authorized') {
 ```
 
 ## Cross-References
-- [Code Quality](code_quality.md)  
-- [Security](security.md)  
-- [Testing](testing.md)  
-- [Navigation](navigation.md)
+- [Authentication](authentication.md)
+- [Code Quality](code_quality.md)
+- [Testing](testing.md)
+- [Documentation Standards](../documentation_standards.md)

@@ -1,6 +1,10 @@
 # Monitoring and Alerting
 
-> **Single Source of Truth (SSoT)** for monitoring standards and alerting policy in Effectful. This replaces `monitoring_standards.md` and `alerting.md` to keep observability guidance DRY and cross-linked.
+**Status**: Authoritative source  
+**Supersedes**: monitoring_standards.md, alerting.md  
+**Referenced by**: engineering/README.md, documents/readme.md
+
+> **Purpose**: Single Source of Truth for monitoring standards and alerting policy in Effectful.
 
 ## SSoT Link Map
 
@@ -132,9 +136,3 @@ Use this section as the base; app- or compliance-specific overlays belong in the
 - **Testing strategy**: [testing.md](testing.md#part-5-testing-patterns) — alert expression tests and integration coverage.
 - **Documentation hygiene**: [documentation_standards.md](../documentation_standards.md) — link-first, DRY policy for observability docs.
 - **Code quality**: [code_quality.md](code_quality.md) — purity/type guarantees around metrics and interpreters.
-
----
-
-**Last Updated**: 2025-12-01  
-**Supersedes**: alerting.md, monitoring_standards.md  
-**Referenced by**: README.md, observability.md, ../documentation_standards.md, testing.md

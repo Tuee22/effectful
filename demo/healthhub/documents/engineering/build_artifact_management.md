@@ -1,9 +1,12 @@
-# Build Artifact Management (HealthHub delta)
+# Build Artifact Management
 
-> Extends base [Build Artifact Management](../../../../documents/engineering/build_artifact_management.md). No HealthHub-specific deltas at this time; follow the base SSoT.
-
----
-
-**Last Updated**: 2025-12-02  
+**Status**: Reference only  
 **Supersedes**: none  
-**Referenced by**: README.md
+**Referenced by**: demo/healthhub/documents/readme.md
+
+> **Purpose**: HealthHub delta for Build Artifact Management. Base: [build_artifact_management.md](../../../../documents/engineering/build_artifact_management.md).
+> **📖 Authoritative Reference**: [Build Artifact Management](../../../../documents/engineering/build_artifact_management.md)
+
+## Deltas
+- HealthHub follows the base guidance; no additional deltas are documented here beyond using the HealthHub compose stack and service name (`healthhub`).
+- Refer to the base document for canonical procedures; apply HealthHub-specific ports, credentials, and service names where applicable.

@@ -1,6 +1,10 @@
 # Result Type API Reference
 
-This document provides a comprehensive reference for the `Result[T, E]` type and related utilities.
+**Status**: Authoritative source  
+**Supersedes**: none  
+**Referenced by**: documents/api/README.md
+
+> **Purpose**: Reference for the `Result[T, E]` type and related utilities.
 
 > **Core Doctrine**: For the Result type patterns and error handling diagrams, see [Code Quality](../engineering/code_quality.md#3-result-type-for-error-handling).
 
@@ -11,6 +15,7 @@ The `Result[T, E]` type represents either success (`Ok[T]`) or failure (`Err[E]`
 ## Type Definition
 
 ```python
+# file: examples/result.py
 type Result[T, E] = Ok[T] | Err[E]
 ```
 
@@ -51,6 +56,7 @@ flowchart TB
 ### Construction
 
 ```python
+# file: examples/result.py
 from effectful import Ok
 
 success: Result[int, str] = Ok(42)
@@ -63,6 +69,7 @@ success: Result[int, str] = Ok(42)
 Check if this result is a success.
 
 ```python
+# file: examples/result.py
 result = Ok(42)
 assert result.is_ok() is True
 ```
@@ -72,6 +79,7 @@ assert result.is_ok() is True
 Check if this result is a failure.
 
 ```python
+# file: examples/result.py
 result = Ok(42)
 assert result.is_err() is False
 ```
@@ -81,6 +89,7 @@ assert result.is_err() is False
 Transform the success value.
 
 ```python
+# file: examples/result.py
 result = Ok(42)
 doubled = result.map(lambda x: x * 2)
 assert doubled == Ok(84)
@@ -91,6 +100,7 @@ assert doubled == Ok(84)
 Chain another Result-producing computation (monadic bind).
 
 ```python
+# file: examples/result.py
 def divide(x: int) -> Result[int, str]:
     if x == 0:
         return Err("division by zero")
@@ -110,6 +120,7 @@ assert chained_err == Err("division by zero")
 Transform the error value (no-op for Ok).
 
 ```python
+# file: examples/result.py
 result = Ok(42)
 mapped = result.map_err(lambda e: f"Error: {e}")
 assert mapped == Ok(42)  # Unchanged
@@ -120,6 +131,7 @@ assert mapped == Ok(42)  # Unchanged
 Extract the success value (safe for Ok).
 
 ```python
+# file: examples/result.py
 result = Ok(42)
 value = result.unwrap()
 assert value == 42
@@ -130,6 +142,7 @@ assert value == 42
 Extract the value or return default (returns value for Ok).
 
 ```python
+# file: examples/result.py
 result = Ok(42)
 value = result.unwrap_or(0)
 assert value == 42  # Returns actual value, not default
@@ -140,6 +153,7 @@ assert value == 42  # Returns actual value, not default
 Extract the error value (raises ValueError for Ok).
 
 ```python
+# file: examples/result.py
 result = Ok(42)
 # result.unwrap_err()  # Raises ValueError
 ```
@@ -151,6 +165,7 @@ result = Ok(42)
 ### Construction
 
 ```python
+# file: examples/result.py
 from effectful import Err
 
 failure: Result[int, str] = Err("not found")
@@ -163,6 +178,7 @@ failure: Result[int, str] = Err("not found")
 Check if this result is a success.
 
 ```python
+# file: examples/result.py
 result = Err("failed")
 assert result.is_ok() is False
 ```
@@ -172,6 +188,7 @@ assert result.is_ok() is False
 Check if this result is a failure.
 
 ```python
+# file: examples/result.py
 result = Err("failed")
 assert result.is_err() is True
 ```
@@ -181,6 +198,7 @@ assert result.is_err() is True
 Transform the success value (no-op for Err).
 
 ```python
+# file: examples/result.py
 result: Result[int, str] = Err("failed")
 doubled = result.map(lambda x: x * 2)
 assert doubled == Err("failed")  # Unchanged
@@ -191,6 +209,7 @@ assert doubled == Err("failed")  # Unchanged
 Chain another Result-producing computation (no-op for Err).
 
 ```python
+# file: examples/result.py
 def process(x: int) -> Result[int, str]:
     return Ok(x * 2)
 
@@ -204,6 +223,7 @@ assert chained == Err("failed")  # Short-circuits
 Transform the error value.
 
 ```python
+# file: examples/result.py
 result = Err("not found")
 mapped = result.map_err(lambda e: f"Error: {e}")
 assert mapped == Err("Error: not found")
@@ -214,6 +234,7 @@ assert mapped == Err("Error: not found")
 Extract the success value (raises ValueError for Err).
 
 ```python
+# file: examples/result.py
 result = Err("failed")
 # result.unwrap()  # Raises ValueError
 ```
@@ -223,6 +244,7 @@ result = Err("failed")
 Extract the value or return default (returns default for Err).
 
 ```python
+# file: examples/result.py
 result: Result[int, str] = Err("failed")
 value = result.unwrap_or(0)
 assert value == 0  # Returns default
@@ -233,6 +255,7 @@ assert value == 0  # Returns default
 Extract the error value (safe for Err).
 
 ```python
+# file: examples/result.py
 result = Err("failed")
 error = result.unwrap_err()
 assert error == "failed"
@@ -245,6 +268,7 @@ assert error == "failed"
 The recommended way to handle Result values is pattern matching:
 
 ```python
+# file: examples/result.py
 from effectful import Result, Ok, Err
 
 def process(result: Result[int, str]) -> str:
@@ -260,6 +284,7 @@ def process(result: Result[int, str]) -> str:
 Pattern matching automatically narrows types:
 
 ```python
+# file: examples/result.py
 result: Result[int, str] = Ok(42)
 
 match result:
@@ -276,6 +301,7 @@ match result:
 Pattern matching ensures all cases are handled:
 
 ```python
+# file: examples/result.py
 # MyPy error: Missing case Err
 def incomplete(result: Result[int, str]) -> int:
     match result:
@@ -293,6 +319,7 @@ Effects return their values wrapped in `EffectReturn[T]` for debugging and telem
 ### Type Definition
 
 ```python
+# file: examples/result.py
 @dataclass(frozen=True)
 class EffectReturn[T]:
     value: T
@@ -304,6 +331,7 @@ class EffectReturn[T]:
 Interpreters wrap effect results:
 
 ```python
+# file: examples/result.py
 from effectful import EffectReturn, SendText
 
 # Interpreter returns:
@@ -313,6 +341,7 @@ Ok(EffectReturn(value=None, effect_name="SendText"))
 Programs receive unwrapped values:
 
 ```python
+# file: examples/result.py
 # In program code, you work with the value directly:
 def program() -> Generator[AllEffects, EffectResult, None]:
     # SendText returns None, not EffectReturn[None]
@@ -327,6 +356,7 @@ def program() -> Generator[AllEffects, EffectResult, None]:
 Transform the wrapped value while preserving effect_name:
 
 ```python
+# file: examples/result.py
 result = EffectReturn(42, "GetCount")
 doubled = result.map(lambda x: x * 2)
 assert doubled == EffectReturn(84, "GetCount")
@@ -341,6 +371,7 @@ assert doubled == EffectReturn(84, "GetCount")
 Exhaustive pattern matching as a function:
 
 ```python
+# file: examples/result.py
 from effectful.algebraic.result import fold_result
 
 def process_value(result: Result[int, str]) -> int:
@@ -356,6 +387,7 @@ assert process_value(Err("failed")) == 0
 
 **Type Signature**:
 ```python
+# file: examples/result.py
 def fold_result[T, E, R] (
     result: Result[T, E],
     on_ok: Callable[[T], R],
@@ -372,6 +404,7 @@ def fold_result[T, E, R] (
 Use `flat_map` to chain Result-producing operations:
 
 ```python
+# file: examples/result.py
 from effectful import Result, Ok, Err
 
 def parse_int(s: str) -> Result[int, str]:
@@ -398,6 +431,7 @@ assert result == Ok("Result: 21.0")
 Use `map_err` to enrich error information:
 
 ```python
+# file: examples/result.py
 from effectful import Result, Err
 
 def fetch_user(user_id: int) -> Result[User, str]:
@@ -415,6 +449,7 @@ assert result == Err("Failed to fetch user 123: not found")
 Use `unwrap_or` for safe defaults:
 
 ```python
+# file: examples/result.py
 from effectful import Result, Ok, Err
 
 def get_count(cache_key: str) -> Result[int, str]:
@@ -430,6 +465,7 @@ assert count == 0  # Uses default on error
 Wrap exception-throwing code:
 
 ```python
+# file: examples/result.py
 from effectful import Result, Ok, Err
 
 def safe_divide(a: int, b: int) -> Result[float, str]:
@@ -447,6 +483,7 @@ assert safe_divide(10, 0) == Err("division by zero")
 Chain operations that stop on first error:
 
 ```python
+# file: examples/result.py
 from effectful import Result, Ok, Err
 
 def validate_email(email: str) -> Result[str, str]:
@@ -480,6 +517,7 @@ assert create_user("a@b") == Err("Invalid email: too short")
 Result types make errors explicit in function signatures:
 
 ```python
+# file: examples/result.py
 # ❌ Hidden exception - caller doesn't know it can fail
 from dataclasses import dataclass
 from effectful import Result, Ok, Err
@@ -515,6 +553,7 @@ def fetch_user(user_id: int, users: dict[int, User]) -> Result[User, DatabaseErr
 Pattern matching ensures all cases are handled:
 
 ```python
+# file: examples/result.py
 def process(user_id: int, users: dict[int, User]) -> str:
     result = fetch_user(user_id=user_id, users=users)
 
@@ -531,6 +570,7 @@ def process(user_id: int, users: dict[int, User]) -> str:
 Result types preserve generic information:
 
 ```python
+# file: examples/result.py
 def map_twice[T] (result: Result[T, str]) -> Result[T, str]:
     return result.map(lambda x: x).map(lambda x: x)
 
@@ -550,6 +590,6 @@ int_result = map_twice(Ok(42))
 
 ---
 
-**Last Updated**: 2025-12-01  
-**Supersedes**: none  
-**Referenced by**: documents/api/README.md, ../README.md
+## Cross-References
+- [Documentation Standards](../documentation_standards.md)
+- [Engineering Architecture](../engineering/architecture.md)

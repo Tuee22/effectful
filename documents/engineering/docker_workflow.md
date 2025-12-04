@@ -1,12 +1,12 @@
 # Docker Development Doctrine
 
-> **Single Source of Truth (SSoT)** for all Docker development workflow and environment setup in effectful.
-
----
-
-**Last Updated**: 2025-12-03  
+**Status**: Authoritative source  
 **Supersedes**: none  
 **Referenced by**: CLAUDE.md, command_reference.md, configuration.md, development_workflow.md, engineering/README.md, README.md
+
+> **Purpose**: Single Source of Truth for all Docker development workflow and environment setup in effectful.
+
+---
 
 ## SSoT Link Map
 
@@ -34,6 +34,12 @@ flowchart TB
 | Environment variables | [Configuration](configuration.md) |
 | How to test | [Testing](testing.md#running-tests) |
 | Documentation requirements | [Documentation Standards](../documentation_standards.md) |
+
+## Development Contract
+
+- All engineering commands run **only** inside the Docker container (`docker compose ... exec effectful poetry run ...`).
+- Host-level Python, Poetry, and pytest are out of scope; `poetry.toml` disables local virtualenvs.
+- Infrastructure dependencies (PostgreSQL, Redis, MinIO, Pulsar, Prometheus) are provided by the compose stack; tests rely on them being running.
 
 ## Core Principle
 
@@ -71,6 +77,7 @@ This doctrine applies to:
 All commands follow this structure:
 
 ```bash
+# file: scripts/docker_workflow.sh
 docker compose -f docker/docker-compose.yml exec effectful poetry run <command>
 ```
 
@@ -91,6 +98,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run <command>
 For convenience, add to your shell profile:
 
 ```bash
+# file: scripts/docker_workflow.sh
 alias eff='docker compose -f docker/docker-compose.yml exec effectful poetry run'
 ```
 
@@ -101,6 +109,7 @@ Then use: `eff pytest`, `eff check-code`, etc.
 ### NEVER Do This
 
 ```bash
+# file: scripts/docker_workflow.sh
 # FORBIDDEN - Running pytest locally
 pytest tests/
 
@@ -136,6 +145,7 @@ source .venv/bin/activate
 ### Initial Setup
 
 ```bash
+# file: scripts/docker_workflow.sh
 # Start all services (effectful + infrastructure)
 docker compose -f docker/docker-compose.yml up -d
 
@@ -146,6 +156,7 @@ docker compose -f docker/docker-compose.yml ps
 ### Daily Development
 
 ```bash
+# file: scripts/docker_workflow.sh
 # 1. Make code changes in your editor (host machine)
 # 2. Run type checker
 docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
@@ -159,6 +170,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
 ### Adding Dependencies
 
 ```bash
+# file: scripts/docker_workflow.sh
 # Runtime dependency
 docker compose -f docker/docker-compose.yml exec effectful poetry add <package>
 
@@ -173,6 +185,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry add --group de
 Before committing any code, ensure all gates pass:
 
 ```bash
+# file: scripts/docker_workflow.sh
 # 1. Type check (mypy --strict)
 docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
 
@@ -221,6 +234,7 @@ Before submitting a PR:
 ### Viewing Logs
 
 ```bash
+# file: scripts/docker_workflow.sh
 # All services
 docker compose -f docker/docker-compose.yml logs -f
 
@@ -231,6 +245,7 @@ docker compose -f docker/docker-compose.yml logs -f effectful
 ### Stopping Services
 
 ```bash
+# file: scripts/docker_workflow.sh
 # Stop but keep data
 docker compose -f docker/docker-compose.yml stop
 
@@ -250,6 +265,7 @@ docker compose -f docker/docker-compose.yml down -v
 The repository includes `poetry.toml` at the root:
 
 ```toml
+# file: configs/docker_workflow.toml
 [virtualenvs]
 create = false
 in-project = false
@@ -266,6 +282,7 @@ in-project = false
 If you see a `.venv` directory in the project root, it should NOT exist:
 
 ```bash
+# file: scripts/docker_workflow.sh
 # Remove it
 rm -rf .venv
 
@@ -308,6 +325,7 @@ The effectful Docker Compose stack includes multiple services that work together
 
 **Environment Variables**:
 ```bash
+# file: scripts/docker_workflow.sh
 POSTGRES_HOST=postgres
 REDIS_HOST=redis
 MINIO_ENDPOINT=minio:9000
@@ -399,7 +417,7 @@ PROMETHEUS_URL=http://prometheus:9090
 
 **Data Persistence**: Named volume `grafanadata`.
 
-**See Also**: `documents/tutorials/15_grafana_dashboards.md` for dashboard creation.
+**See Also**: `documents/tutorials/grafana_dashboards.md` for dashboard creation.
 
 ## IDE Integration
 
@@ -428,6 +446,7 @@ Edit files on host, run commands via Docker exec as shown above.
 ### "Container not running"
 
 ```bash
+# file: scripts/docker_workflow.sh
 # Start the containers
 docker compose -f docker/docker-compose.yml up -d
 ```
@@ -435,6 +454,7 @@ docker compose -f docker/docker-compose.yml up -d
 ### "Permission denied"
 
 ```bash
+# file: scripts/docker_workflow.sh
 # Reset volumes (loses data)
 docker compose -f docker/docker-compose.yml down -v
 docker compose -f docker/docker-compose.yml up -d
@@ -443,6 +463,7 @@ docker compose -f docker/docker-compose.yml up -d
 ### "Poetry install failed"
 
 ```bash
+# file: scripts/docker_workflow.sh
 # Rebuild the container
 docker compose -f docker/docker-compose.yml build --no-cache effectful
 docker compose -f docker/docker-compose.yml up -d
@@ -453,6 +474,7 @@ docker compose -f docker/docker-compose.yml up -d
 Ensure all infrastructure services are running:
 
 ```bash
+# file: scripts/docker_workflow.sh
 docker compose -f docker/docker-compose.yml ps
 # Should show: effectful, postgres, redis, minio, pulsar, prometheus, grafana all "Up"
 ```
@@ -465,3 +487,10 @@ docker compose -f docker/docker-compose.yml ps
 - [Observability](observability.md) - Prometheus/Grafana integration
 - [Development Workflow](development_workflow.md) - Daily development loop
 - [Monitoring & Alerting](monitoring_and_alerting.md) - Metric/alert policy executed from Docker
+
+## Cross-References
+- [Command Reference](command_reference.md)
+- [Development Workflow](development_workflow.md)
+- [Configuration](configuration.md)
+- [Testing](testing.md)
+- [Documentation Standards](../documentation_standards.md)

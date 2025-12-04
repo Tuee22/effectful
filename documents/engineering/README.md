@@ -1,12 +1,11 @@
 # Effectful Engineering Standards
 
-> **Single Source of Truth (SSoT)** for navigating engineering practices, coding standards, and development workflows.
-
----
-
-**Last Updated**: 2025-12-01  
+**Status**: Reference only  
 **Supersedes**: none  
-**Referenced by**: documents/README.md, CLAUDE.md, CONTRIBUTING.md
+**Referenced by**: documents/readme.md, CLAUDE.md, contributing.md
+
+> **Purpose**: Navigation hub for engineering practices, coding standards, and development workflows.
+> **📖 Authoritative Reference**: [Documentation Standards](../documentation_standards.md)
 
 ## Purpose
 
@@ -143,7 +142,7 @@ flowchart TB
 ### Engineering → Tutorials
 - **Engineering** defines standards and patterns (HOW)
 - **Tutorials** teach how to apply them step-by-step (LEARN)
-- Example: [Code Quality](code_quality.md) (standard) → [tutorials/03_adts_and_results.md](../tutorials/03_adts_and_results.md) (tutorial)
+- Example: [Code Quality](code_quality.md) (standard) → [tutorials/adts_and_results.md](../tutorials/adts_and_results.md) (tutorial)
 
 ### Engineering → API
 - **Engineering** explains architectural decisions (WHY)
@@ -152,7 +151,7 @@ flowchart TB
 
 ### Engineering → Contributing
 - **Engineering** defines what is required
-- **[Contributing](../CONTRIBUTING.md)** explains the contribution process
+- **[Contributing](../contributing.md)** explains the contribution process
 - Both must be satisfied for pull requests
 
 ## Philosophy
@@ -181,15 +180,15 @@ All engineering documents marked with "**SSoT**" are authoritative. When conflic
 **How to update these standards:**
 1. Read [Documentation Guidelines](../documentation_standards.md) for standards
 2. Make changes to appropriate SSoT document
-3. Update "Last Updated" timestamp
+3. Confirm header metadata (Status/Supersedes/Referenced by/Purpose) is correct
 4. Update "Referenced by" list if adding new cross-references
 5. Run link verification: `python tools/verify_links.py`
-6. Create pull request (see [Contributing](../CONTRIBUTING.md))
+6. Create pull request (see [Contributing](../contributing.md))
 
 **Naming convention**: All files lowercase with underscores, descriptive names (e.g., `code_quality.md` not `types.md`)
 
 ## See Also
 
 - **[Documentation Hub](../README.md)** - Complete documentation index (tutorials + API + engineering)
-- **[Contributing Guide](../CONTRIBUTING.md)** - How to contribute to effectful
+- **[Contributing Guide](../contributing.md)** - How to contribute to effectful
 - **[Main README](../../README.md)** - Project overview and quickstart

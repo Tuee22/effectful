@@ -279,7 +279,7 @@ flowchart TB
 - `AcknowledgeMessage(message_id: str)` - Acknowledge successful message processing
 - `NegativeAcknowledge(message_id: str, delay_seconds: int | None)` - Reject message for redelivery
 
-See [Tutorial 08: Messaging Effects](documents/tutorials/08_messaging_effects.md) for comprehensive examples and patterns.
+See [Tutorial 08: Messaging Effects](documents/tutorials/messaging_effects.md) for comprehensive examples and patterns.
 
 ### Storage Effects
 - `GetObject(bucket: str, key: str)` - Retrieve object from S3
@@ -287,7 +287,7 @@ See [Tutorial 08: Messaging Effects](documents/tutorials/08_messaging_effects.md
 - `DeleteObject(bucket: str, key: str)` - Remove object from S3
 - `ListObjects(bucket: str, prefix: str | None, max_keys: int)` - List objects in S3 bucket
 
-See [Tutorial 09: Storage Effects](documents/tutorials/09_storage_effects.md) for comprehensive examples and patterns.
+See [Tutorial 09: Storage Effects](documents/tutorials/storage_effects.md) for comprehensive examples and patterns.
 
 ## Testing Utilities
 
@@ -323,15 +323,15 @@ async def test_example(mocker: MockerFixture):
 ### Tutorials (Step-by-Step Guides)
 
 **Getting Started**:
-- **[01. Quickstart Guide](documents/tutorials/01_quickstart.md)** - Get running in 10 minutes
-- **[02. Effect Types](documents/tutorials/02_effect_types.md)** - Learn all available effects
-- **[03. ADTs and Result Types](documents/tutorials/03_adts_and_results.md)** - Master type safety
+- **[01. Quickstart Guide](documents/tutorials/quickstart.md)** - Get running in 10 minutes
+- **[02. Effect Types](documents/tutorials/effect_types.md)** - Learn all available effects
+- **[03. ADTs and Result Types](documents/tutorials/adts_and_results.md)** - Master type safety
 
 **Advanced Topics**:
-- **[04. Testing Guide](documents/tutorials/04_testing_guide.md)** - Comprehensive testing strategies
-- **[05. Production Deployment](documents/tutorials/05_production_deployment.md)** - Deploy with Docker, PostgreSQL, Redis
-- **[06. Advanced Composition](documents/tutorials/06_advanced_composition.md)** - Build complex workflows
-- **[07. Migration Guide](documents/tutorials/07_migration_guide.md)** - Migrate from imperative code
+- **[04. Testing Guide](documents/tutorials/testing_guide.md)** - Comprehensive testing strategies
+- **[05. Production Deployment](documents/tutorials/production_deployment.md)** - Deploy with Docker, PostgreSQL, Redis
+- **[06. Advanced Composition](documents/tutorials/advanced_composition.md)** - Build complex workflows
+- **[07. Migration Guide](documents/tutorials/migration_guide.md)** - Migrate from imperative code
 
 ### API Reference
 

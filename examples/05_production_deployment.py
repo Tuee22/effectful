@@ -1,0 +1,1 @@
+"""Placeholder example referenced by documentation.\nReplace with the runnable sample described in the corresponding doc section under documents/.\n"""\n\n

@@ -1,14 +1,14 @@
 # Command Reference
 
-> **SSoT** for all Docker commands, test execution patterns, and output management in effectful.
+**Status**: Authoritative source  
+**Supersedes**: None  
+**Referenced by**: docker_workflow.md, development_workflow.md, testing.md, README.md
+
+> **Purpose**: SSoT for all Docker commands, test execution patterns, and output management in effectful.
 
 Authoritative command map for running, testing, and packaging inside the containerized toolchain.
 
 ---
-
-**Last Updated**: 2025-12-03
-**Supersedes**: None
-**Referenced by**: docker_workflow.md, development_workflow.md, testing.md, README.md
 
 ## SSoT Link Map
 
@@ -41,10 +41,10 @@ flowchart TB
   Start[Developer CLI]
   Compose[compose exec effectful]
   Poetry[poetry run task]
-  Check[check-code]
-  TestAll[test-all]
-  TestUnit[test-unit]
-  TestIntegration[test-integration]
+  Check[check code]
+  TestAll[test all]
+  TestUnit[test unit]
+  TestIntegration[test integration]
   PythonShell[python]
   Build[poetry build]
 
@@ -113,6 +113,7 @@ See [Docker Workflow](docker_workflow.md) for complete policy.
 **REQUIRED Pattern**:
 
 ```bash
+# file: scripts/command_reference.sh
 # Step 1: Run tests with output redirection
 docker compose -f docker/docker-compose.yml exec effectful poetry run pytest > /tmp/test-output.txt 2>&1
 
@@ -149,8 +150,8 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest > /
 - [Testing](testing.md) - Testing standards and anti-patterns
 - [Code Quality](code_quality.md) - check-code workflow and MyPy strict enforcement
 
----
-
-**Last Updated**: 2025-12-01
-**Supersedes**: none
-**Referenced by**: CLAUDE.md, development_workflow.md
+## Cross-References
+- [Docker Workflow](docker_workflow.md)
+- [Testing](testing.md)
+- [Development Workflow](development_workflow.md)
+- [Documentation Standards](../documentation_standards.md)

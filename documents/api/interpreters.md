@@ -1,6 +1,10 @@
 # Interpreters API Reference
 
-This document provides a comprehensive reference for effect interpreters and error types.
+**Status**: Authoritative source  
+**Supersedes**: none  
+**Referenced by**: documents/api/README.md
+
+> **Purpose**: Reference for effect interpreters and interpreter error types.
 
 > **Core Doctrine**: For the 5-layer architecture and data flow diagrams, see [architecture.md](../engineering/architecture.md#5-layer-architecture).
 
@@ -18,6 +22,7 @@ Create a composite interpreter that delegates to specialized sub-interpreters.
 
 **Type Signature**:
 ```python
+# file: examples/interpreters.py
 def create_composite_interpreter(
     websocket_connection: WebSocketConnection,
     user_repo: UserRepository,
@@ -44,6 +49,7 @@ def create_composite_interpreter(
 
 **Usage**:
 ```python
+# file: examples/interpreters.py
 from effectful import create_composite_interpreter, run_ws_program
 from effectful.adapters.postgres import PostgresUserRepository, PostgresChatMessageRepository
 from effectful.adapters.redis_cache import RedisProfileCache
@@ -112,6 +118,7 @@ Handles WebSocket communication effects.
 
 **Type Signature**:
 ```python
+# file: examples/interpreters.py
 class WebSocketInterpreter:
     def __init__(self, connection: WebSocketConnection) -> None:
         self._connection = connection
@@ -129,6 +136,7 @@ class WebSocketInterpreter:
 
 **Usage**:
 ```python
+# file: examples/interpreters.py
 from effectful.interpreters.websocket import WebSocketInterpreter
 from effectful import SendText, Ok
 
@@ -152,6 +160,7 @@ Handles database persistence effects.
 
 **Type Signature**:
 ```python
+# file: examples/interpreters.py
 class DatabaseInterpreter:
     def __init__(
         self,
@@ -173,6 +182,7 @@ class DatabaseInterpreter:
 
 **Usage**:
 ```python
+# file: examples/interpreters.py
 from effectful.interpreters.database import DatabaseInterpreter
 from effectful import GetUserById, Ok
 from uuid import uuid4
@@ -202,6 +212,7 @@ Handles cache operations.
 
 **Type Signature**:
 ```python
+# file: examples/interpreters.py
 class CacheInterpreter:
     def __init__(self, cache: ProfileCache) -> None:
         self._cache = cache
@@ -218,6 +229,7 @@ class CacheInterpreter:
 
 **Usage**:
 ```python
+# file: examples/interpreters.py
 from effectful.interpreters.cache import CacheInterpreter
 from effectful import GetCachedProfile, Ok
 from uuid import uuid4
@@ -245,6 +257,7 @@ match result:
 Union type for all interpreter errors.
 
 ```python
+# file: examples/interpreters.py
 type InterpreterError = (
     UnhandledEffectError
     | WebSocketClosedError
@@ -264,6 +277,7 @@ Database operation failures.
 
 **Type Signature**:
 ```python
+# file: examples/interpreters.py
 @dataclass(frozen=True)
 class DatabaseError:
     effect: DatabaseEffect
@@ -284,6 +298,7 @@ class DatabaseError:
 
 **Usage**:
 ```python
+# file: examples/interpreters.py
 from effectful import run_ws_program, Err
 from effectful.interpreters.errors import DatabaseError
 
@@ -308,6 +323,7 @@ WebSocket connection closed.
 
 **Type Signature**:
 ```python
+# file: examples/interpreters.py
 @dataclass(frozen=True)
 class WebSocketClosedError:
     effect: WebSocketEffect
@@ -328,6 +344,7 @@ class WebSocketClosedError:
 
 **Usage**:
 ```python
+# file: examples/interpreters.py
 from effectful import run_ws_program, Err
 from effectful.interpreters.errors import WebSocketClosedError
 
@@ -352,6 +369,7 @@ Cache operation failures.
 
 **Type Signature**:
 ```python
+# file: examples/interpreters.py
 @dataclass(frozen=True)
 class CacheError:
     effect: CacheEffect
@@ -372,6 +390,7 @@ class CacheError:
 
 **Usage**:
 ```python
+# file: examples/interpreters.py
 from effectful import run_ws_program, Err
 from effectful.interpreters.errors import CacheError
 
@@ -398,6 +417,7 @@ Interpreter received an effect type it doesn't support.
 
 **Type Signature**:
 ```python
+# file: examples/interpreters.py
 @dataclass(frozen=True)
 class UnhandledEffectError:
     effect: Effect
@@ -412,6 +432,7 @@ class UnhandledEffectError:
 This error indicates a programming error (effect sent to wrong interpreter):
 
 ```python
+# file: examples/interpreters.py
 from effectful.interpreters.errors import UnhandledEffectError
 
 match result:
@@ -432,6 +453,7 @@ Interpreters depend on protocol interfaces for actual I/O operations.
 Protocol for WebSocket operations.
 
 ```python
+# file: examples/interpreters.py
 class WebSocketConnection(Protocol):
     def is_open(self) -> bool:
         """Check if connection is open."""
@@ -456,6 +478,7 @@ class WebSocketConnection(Protocol):
 Protocol for user data operations.
 
 ```python
+# file: examples/interpreters.py
 class UserRepository(Protocol):
     async def get_by_id(self, user_id: UUID) -> UserLookupResult:
         """Lookup user by ID."""
@@ -463,6 +486,7 @@ class UserRepository(Protocol):
 
 **Return Type**:
 ```python
+# file: examples/interpreters.py
 type UserLookupResult = UserFound | UserNotFound
 
 @dataclass(frozen=True)
@@ -486,6 +510,7 @@ class UserNotFound:
 Protocol for message persistence.
 
 ```python
+# file: examples/interpreters.py
 class ChatMessageRepository(Protocol):
     async def save_message(self, user_id: UUID, text: str) -> ChatMessage:
         """Save message to database."""
@@ -501,6 +526,7 @@ class ChatMessageRepository(Protocol):
 Protocol for profile caching.
 
 ```python
+# file: examples/interpreters.py
 class ProfileCache(Protocol):
     async def get_profile(self, user_id: UUID) -> CacheLookupResult:
         """Get profile from cache."""
@@ -513,6 +539,7 @@ class ProfileCache(Protocol):
 
 **Return Type**:
 ```python
+# file: examples/interpreters.py
 type CacheLookupResult = CacheHit | CacheMiss
 
 @dataclass(frozen=True)
@@ -538,6 +565,7 @@ You can create custom interpreters by implementing the interpreter protocol.
 ### Example: Logging Interpreter
 
 ```python
+# file: examples/interpreters.py
 from effectful.interpreters.base import EffectInterpreter
 from effectful import Result, Ok, EffectReturn, EffectResult
 from effectful.interpreters.errors import InterpreterError, UnhandledEffectError
@@ -570,6 +598,7 @@ class LoggingInterpreter(EffectInterpreter):
 ### Example: Metrics Interpreter
 
 ```python
+# file: examples/interpreters.py
 from effectful.interpreters.base import EffectInterpreter
 import time
 
@@ -606,6 +635,7 @@ class MetricsInterpreter(EffectInterpreter):
 Use connection pools for production workloads:
 
 ```python
+# file: examples/interpreters.py
 import asyncpg
 import aioredis
 
@@ -646,6 +676,7 @@ async with db_pool.acquire() as db_conn:
 Integrate with error tracking services:
 
 ```python
+# file: examples/interpreters.py
 import sentry_sdk
 from effectful import run_ws_program, Err
 
@@ -664,6 +695,7 @@ match result:
 Configure interpreter timeouts:
 
 ```python
+# file: examples/interpreters.py
 import asyncio
 
 # Wrap program execution with timeout
@@ -688,6 +720,6 @@ except asyncio.TimeoutError:
 
 ---
 
-**Last Updated**: 2025-12-01  
-**Supersedes**: none  
-**Referenced by**: documents/api/README.md, ../README.md
+## Cross-References
+- [Documentation Standards](../documentation_standards.md)
+- [Engineering Architecture](../engineering/architecture.md)

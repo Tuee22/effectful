@@ -1,6 +1,10 @@
 # Effect Program Patterns
 
-> **SSoT** for effect program composition, error handling, and real-world code examples in effectful.
+**Status**: Authoritative source  
+**Supersedes**: none  
+**Referenced by**: engineering/README.md
+
+> **Purpose**: SSoT for effect program composition, error handling, and real-world code examples in effectful.
 
 ## SSoT Link Map
 
@@ -47,6 +51,7 @@ Use this pattern for any multi-step workflow (payments, provisioning, billing, h
 **Use Case**: All effect programs use this pattern as the foundation.
 
 ```python
+# file: examples/effect_patterns.py
 from collections.abc import Generator
 from effectful import (
     AllEffects,
@@ -95,6 +100,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, bool]:
 **Use Case**: Handle errors from effect execution at the program boundary.
 
 ```python
+# file: examples/effect_patterns.py
 from effectful import run_ws_program
 from effectful.algebraic.result import Ok, Err
 
@@ -127,6 +133,7 @@ async def execute() -> None:
 **Use Case**: Build complex workflows from smaller, reusable programs.
 
 ```python
+# file: examples/effect_patterns.py
 def lookup_and_cache_profile(
     user_id: UUID
 ) -> Generator[AllEffects, EffectResult, ProfileData | None]:
@@ -175,6 +182,7 @@ def greet_with_caching(user_id: UUID) -> Generator[AllEffects, EffectResult, str
 **Use Case**: Record metrics without causing business logic to fail.
 
 ```python
+# file: examples/effect_patterns.py
 from effectful.effects.metrics import IncrementCounter, ObserveHistogram
 from effectful.domain.metrics_result import MetricRecorded, MetricRecordingFailed
 import time
@@ -239,6 +247,7 @@ def process_task_with_metrics(
 **Use Case**: Handle all possible result variants from effects.
 
 ```python
+# file: examples/effect_patterns.py
 from effectful.domain import UserFound, UserNotFound
 
 def handle_user_lookup(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
@@ -287,6 +296,7 @@ def handle_user_lookup(user_id: UUID) -> Generator[AllEffects, EffectResult, str
 
 **❌ WRONG**:
 ```python
+# file: examples/effect_patterns.py
 def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
     user = yield GetUserById(user_id=user_id)
     # MyPy error: user might not be User, could be None or error type
@@ -295,6 +305,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 
 **✅ CORRECT**:
 ```python
+# file: examples/effect_patterns.py
 def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
     user = yield GetUserById(user_id=user_id)
 
@@ -309,6 +320,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 
 **❌ WRONG**:
 ```python
+# file: examples/effect_patterns.py
 async def greet_user(user_id: UUID, db: UserRepository) -> str:
     user = await db.get_by_id(user_id)  # Forbidden!
     return f"Hello {user.name}!"
@@ -316,6 +328,7 @@ async def greet_user(user_id: UUID, db: UserRepository) -> str:
 
 **✅ CORRECT**:
 ```python
+# file: examples/effect_patterns.py
 def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
     user = yield GetUserById(user_id=user_id)
     # ...
@@ -327,6 +340,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 
 **❌ WRONG**:
 ```python
+# file: examples/effect_patterns.py
 def save_message(user_id: UUID, text: str) -> Generator[AllEffects, EffectResult, None]:
     yield SaveChatMessage(user_id=user_id, text=text)
     # Ignored result! Don't know if save succeeded
@@ -334,6 +348,7 @@ def save_message(user_id: UUID, text: str) -> Generator[AllEffects, EffectResult
 
 **✅ CORRECT**:
 ```python
+# file: examples/effect_patterns.py
 def save_message(user_id: UUID, text: str) -> Generator[AllEffects, EffectResult, bool]:
     result = yield SaveChatMessage(user_id=user_id, text=text)
 
@@ -351,6 +366,8 @@ def save_message(user_id: UUID, text: str) -> Generator[AllEffects, EffectResult
 
 ---
 
-**Last Updated**: 2025-12-01
-**Supersedes**: none
-**Referenced by**: CLAUDE.md, code_quality.md, README.md
+## Cross-References
+- [Code Quality](code_quality.md)
+- [Testing](testing.md)
+- [Architecture](architecture.md)
+- [Documentation Standards](../documentation_standards.md)

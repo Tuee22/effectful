@@ -1,9 +1,12 @@
-# Development Workflow (HealthHub delta)
+# Development Workflow
 
-> Extends base [Development Workflow](../../../../documents/engineering/development_workflow.md). No HealthHub-specific deltas; follow base workflow and use HealthHub docker compose/service names where applicable.
-
----
-
-**Last Updated**: 2025-12-02  
+**Status**: Reference only  
 **Supersedes**: none  
-**Referenced by**: README.md
+**Referenced by**: demo/healthhub/documents/readme.md
+
+> **Purpose**: HealthHub delta for Development Workflow. Base: [development_workflow.md](../../../../documents/engineering/development_workflow.md).
+> **📖 Authoritative Reference**: [Development Workflow](../../../../documents/engineering/development_workflow.md)
+
+## Deltas
+- HealthHub follows the base guidance; no additional deltas are documented here beyond using the HealthHub compose stack and service name (`healthhub`).
+- Refer to the base document for canonical procedures; apply HealthHub-specific ports, credentials, and service names where applicable.

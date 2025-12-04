@@ -1,8 +1,12 @@
 # Architecture
 
-**effectful** - A pure functional effect system for Python with algebraic data types and explicit error handling.
+**Status**: Authoritative source  
+**Supersedes**: none  
+**Referenced by**: documents/readme.md, engineering/README.md
 
-This is the Single Source of Truth (SSoT) for the Effectful architecture.
+> **Purpose**: Single Source of Truth for the Effectful architecture, including layers, effect hierarchy, and data flow patterns.
+
+**effectful** - A pure functional effect system for Python with algebraic data types and explicit error handling.
 
 ## SSoT Link Map
 
@@ -53,11 +57,11 @@ For detailed type safety patterns, see `documents/engineering/code_quality.md`.
 
 ```mermaid
 flowchart TB
-    App[Layer 1 - Application]
-    Runner[Layer 2 - Program Runner]
-    Composite[Layer 3 - Composite Interpreter]
-    Specialized[Layer 4 - Specialized Interpreters]
-    Infra[Layer 5 - Infrastructure]
+    App[Layer 1 Application]
+    Runner[Layer 2 Program Runner]
+    Composite[Layer 3 Composite Interpreter]
+    Specialized[Layer 4 Specialized Interpreters]
+    Infra[Layer 5 Infrastructure]
 
     App --> Runner
     Runner --> Composite
@@ -85,9 +89,9 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    Program[Application Layer - Effect Program]
-    Runner[Program Runner - Execution Loop]
-    Composite[Composite Interpreter - Routing]
+    Program[Application Layer Effect Program]
+    Runner[Program Runner Execution Loop]
+    Composite[Composite Interpreter Routing]
     WSInterp[WebSocket Interpreter]
     DBInterp[Database Interpreter]
     CacheInterp[Cache Interpreter]
@@ -134,6 +138,7 @@ flowchart TB
 Effects are **pure data** - they describe what should happen, not how to do it.
 
 ```python
+# file: examples/architecture.py
 @dataclass(frozen=True)
 class SendText:
     """Effect: Send text message over WebSocket."""
@@ -154,6 +159,7 @@ class GetUserById:
 ### 2. Result Type (Explicit Error Handling)
 
 ```python
+# file: examples/architecture.py
 @dataclass(frozen=True)
 class Ok[T]:
     """Success case containing value."""
@@ -178,6 +184,7 @@ type Result[T, E] = Ok[T] | Err[E]
 ADTs use type unions to represent "one of these cases" explicitly.
 
 ```python
+# file: examples/architecture.py
 @dataclass(frozen=True)
 class UserFound:
     user: User
@@ -201,6 +208,7 @@ type UserLookupResult = UserFound | UserNotFound
 Programs are generators that yield effects and receive results.
 
 ```python
+# file: examples/architecture.py
 from collections.abc import Generator
 
 def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
@@ -227,6 +235,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 Interpreters execute effects against real or fake infrastructure.
 
 ```python
+# file: examples/architecture.py
 class WebSocketInterpreter:
     def __init__(self, connection: WebSocketConnection):
         self._connection = connection
@@ -302,8 +311,8 @@ flowchart TB
 ```mermaid
 flowchart TB
     Main[Main Program]
-    Sub1[Sub-Program 1]
-    Sub2[Sub-Program 2]
+    Sub1[Sub Program 1]
+    Sub2[Sub Program 2]
     Effect1[Effect A]
     Effect2[Effect B]
     Effect3[Effect C]
@@ -321,6 +330,7 @@ flowchart TB
 - **Conditional**: `match result: case Ok(...): yield effect`
 
 ```python
+# file: examples/architecture.py
 def main_workflow(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
     # Delegate to sub-program
     profile = yield from lookup_and_cache_profile(user_id)
@@ -379,24 +389,14 @@ flowchart TB
 ## Effect Execution Flow
 
 ```mermaid
-sequenceDiagram
-    participant Program as Program Generator
-    participant Runner as run_ws_program
-    participant Interpreter as Interpreter
-
-    Runner->>Program: next - get first effect
-    Program-->>Runner: Effect GetUserById
-
-    Runner->>Interpreter: interpret effect
-    alt Effect Success
-        Interpreter-->>Runner: Ok EffectReturn
-        Runner->>Program: send value
-        Program-->>Runner: Next Effect
-    else Effect Failure
-        Interpreter-->>Runner: Err InterpreterError
-    end
-
-    Program-->>Runner: StopIteration final_value
+flowchart TB
+  Start[Start run_ws_program] --> NextEffect[Call next() on program generator]
+  NextEffect --> Yielded{Effect yielded?}
+  Yielded -->|Yes| Interpret[Interpreter interprets effect]
+  Interpret -->|Ok EffectReturn| SendBack[runner.send(effect_return)]
+  SendBack --> NextEffect
+  Interpret -->|Err InterpreterError| FailFast[Return Err immediately]
+  Yielded -->|StopIteration| Finish[Return Ok(final_value)]
 ```
 
 **Key Behavior:**
@@ -533,6 +533,7 @@ flowchart TB
 
 **Before** (imperative, exceptions):
 ```python
+# file: examples/architecture.py
 async def greet_user(websocket: WebSocket, db: AsyncSession, user_id: UUID):
     # Tightly coupled to infrastructure
     user = await db.execute(select(User).where(User.id == user_id))
@@ -544,6 +545,7 @@ async def greet_user(websocket: WebSocket, db: AsyncSession, user_id: UUID):
 
 **After** (functional, effects):
 ```python
+# file: examples/architecture.py
 def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, None]:
     # Pure program, testable without infrastructure
     user_result = yield GetUserById(user_id=user_id)
@@ -604,6 +606,9 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, None]:
 
 **Philosophy**: Correctness first, performance second. Make invalid states unrepresentable.
 
-**Last Updated:** 2025-12-01
-**Supersedes**: none
-**Referenced by**: README.md, CLAUDE.md, code_quality.md, testing.md, ../documentation_standards.md
+## Cross-References
+- [Code Quality](code_quality.md)
+- [Testing](testing.md)
+- [Observability](observability.md)
+- [Docker Workflow](docker_workflow.md)
+- [Effect Patterns](effect_patterns.md)

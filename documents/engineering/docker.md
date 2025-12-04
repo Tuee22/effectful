@@ -1,7 +1,11 @@
 # Docker Workflow (Alias)
 
-**Status**: Redirect  
-**Last Updated**: 2025-12-03  
+**Status**: Reference only  
+**Supersedes**: none  
+**Referenced by**: legacy links
+
+> **Purpose**: Preserve backward compatibility while pointing readers to the Docker workflow SSoT.
+> **📖 Authoritative Reference**: [Docker Workflow](docker_workflow.md)
 
 This page redirects to the authoritative Docker workflow standard:
 

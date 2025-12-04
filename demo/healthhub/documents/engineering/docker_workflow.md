@@ -1,9 +1,12 @@
-# Docker Workflow (HealthHub delta)
+# Docker Workflow
 
-> Extends base [Docker Workflow](../../../../documents/engineering/docker_workflow.md). No HealthHub-specific deltas; use the demo compose file (`demo/healthhub/docker/docker-compose.yml`) and service `healthhub` when running commands.
-
----
-
-**Last Updated**: 2025-12-02  
+**Status**: Reference only  
 **Supersedes**: none  
-**Referenced by**: README.md
+**Referenced by**: demo/healthhub/documents/readme.md
+
+> **Purpose**: HealthHub delta for Docker Workflow. Base: [docker_workflow.md](../../../../documents/engineering/docker_workflow.md).
+> **📖 Authoritative Reference**: [Docker Development Doctrine](../../../../documents/engineering/docker_workflow.md)
+
+## Deltas
+- HealthHub follows the base guidance; no additional deltas are documented here beyond using the HealthHub compose stack and service name (`healthhub`).
+- Refer to the base document for canonical procedures; apply HealthHub-specific ports, credentials, and service names where applicable.

@@ -1,6 +1,10 @@
 # Testing
 
-This is the Single Source of Truth (SSoT) for all testing policy in the Effectful project.
+**Status**: Authoritative source  
+**Supersedes**: none  
+**Referenced by**: engineering/README.md, documents/readme.md
+
+> **Purpose**: Single Source of Truth for all testing policy in the Effectful project.
 
 ## SSoT Link Map
 
@@ -41,6 +45,7 @@ Testing is a gate, not a suggestion. If tests pass, the code should be correct. 
 The `effectful.testing` module exports **6 Result type matchers** as part of the public API:
 
 ```python
+# file: examples/testing.py
 from effectful.testing import (
     assert_ok,           # Assert result is Ok
     assert_err,          # Assert result is Err
@@ -91,10 +96,10 @@ flowchart TB
   AssertOkValue --> UserTests
   AssertErrMessage --> UserTests
 
-  PytestMock[pytest-mock Library] --> UserTests
+  PytestMock[pytest mock library] --> UserTests
 
-  NotExported[NOT EXPORTED - create_test_interpreter] --> X[REMOVED]
-  NotExported2[NOT EXPORTED - Fake Repositories] --> X
+  NotExported[NOT EXPORTED create test interpreter] --> X[REMOVED]
+  NotExported2[NOT EXPORTED Fake Repositories] --> X
 ```
 
 **NOT exported**:
@@ -108,6 +113,7 @@ flowchart TB
 
 **Approach 1: Pattern Matching (Verbose but Explicit)**
 ```python
+# file: examples/testing.py
 from effectful import Ok, Err
 
 match result:
@@ -119,6 +125,7 @@ match result:
 
 **Approach 2: Matchers (Concise)**
 ```python
+# file: examples/testing.py
 from effectful.testing import assert_ok_value
 
 assert_ok_value(result, expected)
@@ -139,6 +146,7 @@ assert_ok_value(result, expected)
 **ALL infrastructure mocking uses pytest-mock**, not library-provided fakes.
 
 ```python
+# file: examples/testing.py
 from pytest_mock import MockerFixture
 from effectful.infrastructure.repositories import UserRepository
 
@@ -175,6 +183,7 @@ See [Docker Workflow](./docker_workflow.md) for complete policy.
 ### Running Tests
 
 ```bash
+# file: scripts/testing.sh
 # All tests
 docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
 
@@ -207,6 +216,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tes
 
 **Required pattern**:
 ```bash
+# file: scripts/testing.sh
 # Run with output redirection
 docker compose -f docker/docker-compose.yml exec effectful poetry run pytest > /tmp/test-output.txt 2>&1
 
@@ -225,6 +235,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest > /
 All `clean_*` fixtures must clean up **before AND after** the test runs:
 
 ```python
+# file: examples/testing.py
 import asyncio
 from collections.abc import AsyncGenerator
 import pytest_asyncio
@@ -267,6 +278,7 @@ async def clean_pulsar(
 **Critical for Pulsar/Kafka/RabbitMQ**: Message brokers finalize operations asynchronously.
 
 ```python
+# file: examples/testing.py
 # Close resources
 pulsar_producer.close_producers()
 
@@ -286,6 +298,7 @@ await asyncio.sleep(0.2)  # 200ms safety margin
 **Correct**: Clean up at the **client adapter level** (close cached connections/producers/consumers)
 
 ```python
+# file: examples/testing.py
 # ✅ CORRECT - Client-level cleanup
 pulsar_producer.close_producers()  # Closes cached producer objects
 pulsar_consumer.close_consumers()  # Closes cached consumer objects
@@ -294,6 +307,7 @@ pulsar_consumer.close_consumers()  # Closes cached consumer objects
 **Wrong**: Attempting to clean up at server level (delete topics/subscriptions)
 
 ```python
+# file: examples/testing.py
 # ❌ WRONG - Server-level cleanup is slow and unreliable
 await pulsar_admin_client.delete_topic(topic)  # 500ms+ per topic
 await pulsar_admin_client.delete_subscription(sub)  # Can fail if consumers exist
@@ -309,6 +323,7 @@ await pulsar_admin_client.delete_subscription(sub)  # Can fail if consumers exis
 **Always use UUID for topics, subscriptions, buckets, cache keys**:
 
 ```python
+# file: examples/testing.py
 from uuid import uuid4
 
 def test_publish_workflow(clean_pulsar) -> None:
@@ -329,6 +344,7 @@ def test_publish_workflow(clean_pulsar) -> None:
 **Use short timeouts in test environments** to detect issues quickly:
 
 ```python
+# file: examples/testing.py
 # Production: Long timeouts for reliability
 producer = client.create_producer(topic, send_timeout_millis=30000)  # 30s
 
@@ -343,6 +359,7 @@ producer = client.create_producer(topic, send_timeout_millis=5000)  # 5s
 
 **Configuration example** (`effectful/adapters/pulsar_messaging.py:113`):
 ```python
+# file: examples/testing.py
 self._producers[topic] = self._client.create_producer(
     topic,
     send_timeout_millis=5000,  # 5-second timeout for integration tests
@@ -359,6 +376,7 @@ PostgreSQL is the most complex infrastructure service in effectful due to its re
 
 **Fixture implementation** (`tests/fixtures/database.py:90`):
 ```python
+# file: examples/testing.py
 @pytest_asyncio.fixture
 async def clean_db(
     postgres_connection: asyncpg.Connection,
@@ -387,6 +405,7 @@ async def clean_db(
 
 **Example from tests** (`tests/integration/test_database_workflow.py:47-52`):
 ```python
+# file: examples/testing.py
 # After clean_db fixture, seed test data
 user_id = uuid4()
 await clean_db.execute(
@@ -399,6 +418,7 @@ await clean_db.execute(
 
 **Anti-pattern**: Using DELETE for cleanup:
 ```python
+# file: examples/testing.py
 # ❌ WRONG - Slow, doesn't reset sequences, manual FK ordering required
 await conn.execute("DELETE FROM chat_messages")  # Must delete children first
 await conn.execute("DELETE FROM users")  # Then parents
@@ -411,6 +431,7 @@ await conn.execute("DELETE FROM users")  # Then parents
 
 **Schema example** (`tests/fixtures/database.py:60-67`):
 ```python
+# file: examples/testing.py
 # chat_messages table has FK to users table
 CREATE TABLE IF NOT EXISTS chat_messages (
     id UUID PRIMARY KEY,
@@ -422,6 +443,7 @@ CREATE TABLE IF NOT EXISTS chat_messages (
 
 **Pattern**: Test that deleting a parent cascades to children:
 ```python
+# file: examples/testing.py
 # Seed user and message (parent + child)
 user_id = uuid4()
 await clean_db.execute("INSERT INTO users (id, email, name) VALUES ($1, $2, $3)", user_id, "user@example.com", "User")
@@ -448,6 +470,7 @@ assert len(messages) == 0  # CASCADE DELETE removed child records
 
 **Pattern**: Test ROLLBACK behavior for failed operations:
 ```python
+# file: examples/testing.py
 async def test_transaction_rollback() -> None:
     """Test that failed operations don't corrupt database state."""
     # Start with clean state
@@ -479,6 +502,7 @@ async def test_transaction_rollback() -> None:
 
 **Anti-pattern**: N+1 query problem:
 ```python
+# file: examples/testing.py
 # ❌ WRONG - N+1 queries (1 query for users + N queries for each user's messages)
 users = await user_repo.list_users()  # 1 query
 for user in users:
@@ -487,6 +511,7 @@ for user in users:
 
 **Correct pattern**: Single query with JOIN:
 ```python
+# file: examples/testing.py
 # ✅ CORRECT - Single query with JOIN
 query = """
 SELECT u.*, m.text
@@ -498,6 +523,7 @@ rows = await clean_db.fetch(query)  # 1 query
 
 **Testing pattern**: Count database queries:
 ```python
+# file: examples/testing.py
 async def test_no_n_plus_1_queries(clean_db) -> None:
     """Test that listing users doesn't cause N+1 queries."""
     # Seed 10 users with messages
@@ -529,6 +555,7 @@ async def test_no_n_plus_1_queries(clean_db) -> None:
 
 **Pattern**: Add column with default value:
 ```python
+# file: examples/testing.py
 async def test_add_column_migration(clean_db) -> None:
     """Test adding password_hash column to users table."""
     # Verify column doesn't exist initially (if testing migration)
@@ -579,6 +606,7 @@ Redis is an in-memory key-value store used in effectful for caching, pub/sub not
 
 **Fixture implementation** (`tests/fixtures/cache.py:48`):
 ```python
+# file: examples/testing.py
 @pytest_asyncio.fixture
 async def clean_redis(redis_client: Redis) -> AsyncGenerator[Redis, None]:
     """Provide a clean Redis instance.
@@ -605,6 +633,7 @@ async def clean_redis(redis_client: Redis) -> AsyncGenerator[Redis, None]:
 
 **Example from tests** (`tests/integration/test_cache_workflow.py:67-70`):
 ```python
+# file: examples/testing.py
 # After clean_redis fixture, put profile in cache
 yield PutCachedProfile(user_id=uid, profile_data=prof, ttl_seconds=300)
 
@@ -614,6 +643,7 @@ cached = yield GetCachedProfile(user_id=uid)
 
 **Anti-pattern**: Using DEL for each key:
 ```python
+# file: examples/testing.py
 # ❌ WRONG - Slow, incomplete, error-prone
 keys = await redis_client.keys("*")  # KEYS is O(N) and blocks Redis!
 for key in keys:
@@ -627,6 +657,7 @@ for key in keys:
 
 **Pattern**: Verify TTL is set correctly:
 ```python
+# file: examples/testing.py
 async def test_cached_profile_has_ttl(clean_redis) -> None:
     """Test that cached profiles expire after TTL."""
     user_id = uuid4()
@@ -649,6 +680,7 @@ async def test_cached_profile_has_ttl(clean_redis) -> None:
 
 **Example from tests** (`tests/integration/test_cache_workflow.py:500-502`):
 ```python
+# file: examples/testing.py
 # Check TTL is set
 ttl = await clean_redis.ttl(key)
 assert ttl > 0
@@ -661,6 +693,7 @@ assert ttl <= 300
 
 **Pattern**: Test cache miss first, then cache hit:
 ```python
+# file: examples/testing.py
 async def test_cache_miss_then_hit(clean_redis) -> None:
     """Test cache miss followed by cache hit after put."""
     user_id = uuid4()  # No profile cached
@@ -695,6 +728,7 @@ async def test_cache_miss_then_hit(clean_redis) -> None:
 
 **Example from tests** (`tests/integration/test_cache_workflow.py:119-129`):
 ```python
+# file: examples/testing.py
 # Cache miss program
 cached = yield GetCachedProfile(user_id=uid)
 
@@ -712,6 +746,7 @@ match cached:
 
 **Pattern**: Multi-step workflow with fallback:
 ```python
+# file: examples/testing.py
 async def test_cache_aside_pattern(clean_db, clean_redis) -> None:
     """Test cache-aside pattern: cache miss → DB lookup → cache population."""
     # Seed user in database (not in cache)
@@ -760,6 +795,7 @@ async def test_cache_aside_pattern(clean_db, clean_redis) -> None:
 
 **Example from tests** (`tests/integration/test_cache_workflow.py:171-201`):
 ```python
+# file: examples/testing.py
 # Cache-aware workflow
 cached = yield GetCachedProfile(user_id=uid)
 
@@ -780,6 +816,7 @@ match cached:
 
 **Pattern**: Put → Verify → Invalidate → Verify gone:
 ```python
+# file: examples/testing.py
 async def test_cache_invalidation(clean_redis) -> None:
     """Test that InvalidateCache removes keys."""
     user_id = uuid4()
@@ -813,6 +850,7 @@ async def test_cache_invalidation(clean_redis) -> None:
 
 **Example from tests** (`tests/integration/test_cache_workflow.py:330-346`):
 ```python
+# file: examples/testing.py
 # Invalidate
 key = f"profile:{uid}"
 deleted = yield InvalidateCache(key=key)
@@ -849,6 +887,7 @@ MinIO is an S3-compatible object storage service used in effectful for file uplo
 **Implementation** (from `tests/fixtures/storage.py:67-73`):
 
 ```python
+# file: examples/testing.py
 # List and delete all objects in bucket
 try:
     response = s3_client.list_objects_v2(Bucket=s3_bucket)
@@ -878,6 +917,7 @@ Unlike relational databases or key-value stores, S3 doesn't have a "delete all" 
 **From `tests/fixtures/storage.py:49-78`**:
 
 ```python
+# file: examples/testing.py
 @pytest.fixture
 def clean_minio(s3_bucket: str) -> str:
     """Provide a clean MinIO bucket.
@@ -912,6 +952,7 @@ def clean_minio(s3_bucket: str) -> str:
 **From `tests/integration/test_storage_workflow.py:35`**:
 
 ```python
+# file: examples/testing.py
 # Each test generates unique key with UUID
 key = f"test/{uuid4()}/data.txt"
 
@@ -933,6 +974,7 @@ yield PutObject(
 **Pattern variations:**
 
 ```python
+# file: examples/testing.py
 # Single file upload
 key = f"test/{uuid4()}/data.txt"
 
@@ -953,6 +995,7 @@ keys = [f"{prefix}/file1.txt", f"{prefix}/file2.txt", f"{prefix}/file3.txt"]
 **From `tests/integration/test_storage_workflow.py:254-310`**:
 
 ```python
+# file: examples/testing.py
 def upload_download_program(
     bucket: str,
     obj_key: str,
@@ -994,6 +1037,7 @@ def upload_download_program(
 **From `tests/integration/test_storage_workflow.py:201-248`**:
 
 ```python
+# file: examples/testing.py
 def list_objects_program(
     bucket: str, obj_keys: list[str], pfx: str
 ) -> Generator[AllEffects, EffectResult, int]:
@@ -1035,6 +1079,7 @@ def list_objects_program(
 **Working Example** (from `tests/integration/test_storage_workflow.py:148-199`):
 
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio
 async def test_delete_object_workflow(
     clean_minio: str,  # Fixture ensures empty bucket
@@ -1080,6 +1125,7 @@ async def test_delete_object_workflow(
 
 **Why it's wrong:**
 ```python
+# file: examples/testing.py
 # ❌ Only test Put and Get, assume Delete works
 def test_storage_workflow(clean_minio: str) -> None:
     key = f"test/{uuid4()}/data.txt"
@@ -1098,6 +1144,7 @@ def test_storage_workflow(clean_minio: str) -> None:
 
 **How to fix:**
 ```python
+# file: examples/testing.py
 # ✅ Test complete lifecycle: Put → Get → Delete → Verify deletion
 def test_storage_lifecycle(clean_minio: str) -> None:
     key = f"test/{uuid4()}/data.txt"
@@ -1174,21 +1221,21 @@ Integration tests achieve **conceptual feature coverage**, not metric-driven cov
 
 ```mermaid
 flowchart TB
-  Philosophy[Minimal API - pytest-mock Only]
+  Philosophy[Minimal API pytest mock only]
   Philosophy --> Pyramid[Test Pyramid]
 
-  Pyramid --> E2E[E2E Tests - Few]
-  Pyramid --> Integration[Integration Tests - Some - 27 tests]
-  Pyramid --> Unit[Unit Tests - Many - 200+ tests]
+  Pyramid --> E2E[E2E Tests Few]
+  Pyramid --> Integration[Integration Tests Some 27 tests]
+  Pyramid --> Unit[Unit Tests Many 200+ tests]
 
-  E2E --> E2EDetail[Real infrastructure - Full stack - WebSocket client]
-  Integration --> IntDetail[Real Postgres Redis MinIO Pulsar - Mocked WebSocket]
-  Unit --> UnitDetail[pytest-mock only - No I/O - Fast under 1 second]
+  E2E --> E2EDetail[Real infrastructure full stack WebSocket client]
+  Integration --> IntDetail[Real Postgres Redis MinIO Pulsar Mocked WebSocket]
+  Unit --> UnitDetail[pytest mock only No IO Fast under 1 second]
 
-  Unit --> Layer1[Layer 1 - Effects]
-  Unit --> Layer2[Layer 2 - Interpreters]
-  Integration --> Layer3[Layer 3 - Programs]
-  Integration --> Layer4[Layer 4 - Workflows]
+  Unit --> Layer1[Layer 1 Effects]
+  Unit --> Layer2[Layer 2 Interpreters]
+  Integration --> Layer3[Layer 3 Programs]
+  Integration --> Layer4[Layer 4 Workflows]
 ```
 
 | Layer | Count | Speed | Infrastructure |
@@ -1220,6 +1267,7 @@ flowchart TB
 **Pattern**: Simple instantiation and assertion.
 
 ```python
+# file: examples/testing.py
 from effectful.effects.database import GetUserById
 
 def test_get_user_by_id_structure() -> None:
@@ -1247,6 +1295,7 @@ def test_get_user_by_id_structure() -> None:
 **Pattern**: Direct interpreter method calls with pytest-mock.
 
 ```python
+# file: examples/testing.py
 from pytest_mock import MockerFixture
 from effectful.interpreters.database import DatabaseInterpreter
 from effectful.infrastructure.repositories import UserRepository
@@ -1296,6 +1345,7 @@ async def test_get_user_by_id_success(mocker: MockerFixture) -> None:
 **Pattern**: Manual generator stepping with `next()` and `gen.send()`.
 
 ```python
+# file: examples/testing.py
 from demo.programs.user_programs import get_user_program
 
 def test_get_user_program_success(mocker: MockerFixture) -> None:
@@ -1347,6 +1397,7 @@ def test_get_user_program_success(mocker: MockerFixture) -> None:
 **Pattern**: `run_ws_program()` with pytest-mock infrastructure.
 
 ```python
+# file: examples/testing.py
 from effectful.programs.runners import run_ws_program
 from effectful.interpreters.composite import CompositeInterpreter
 
@@ -1417,83 +1468,49 @@ async def test_complete_user_workflow(mocker: MockerFixture) -> None:
 flowchart TB
   Start{What are you testing?}
 
-  Start -->|Effect dataclass structure| L1[Layer 1 - Effect Tests]
-  Start -->|Interpreter execution logic| L2[Layer 2 - Interpreter Tests]
-  Start -->|Program effect sequencing| L3[Layer 3 - Program Tests]
-  Start -->|Complete workflow integration| L4[Layer 4 - Workflow Tests]
+  Start -->|Effect dataclass structure| L1[Layer 1 Effect Tests]
+  Start -->|Interpreter execution logic| L2[Layer 2 Interpreter Tests]
+  Start -->|Program effect sequencing| L3[Layer 3 Program Tests]
+  Start -->|Complete workflow integration| L4[Layer 4 Workflow Tests]
 
-  L1 --> L1Pattern[Pattern - Simple instantiation]
-  L1Pattern --> L1Detail[No mocks - No async - No interpreters]
+  L1 --> L1Pattern[Pattern Simple instantiation]
+  L1Pattern --> L1Detail[No mocks No async No interpreters]
 
-  L2 --> L2Pattern[Pattern - await interpreter.interpret]
-  L2Pattern --> L2Detail[pytest-mock for infrastructure - Test return values]
+  L2 --> L2Pattern[Pattern await interpreter.interpret]
+  L2Pattern --> L2Detail[pytest mock for infrastructure Test return values]
 
-  L3 --> L3Pattern[Pattern - Manual generator stepping]
-  L3Pattern --> L3Detail[next and send - NO interpreters - NO run_ws_program]
+  L3 --> L3Pattern[Pattern Manual generator stepping]
+  L3Pattern --> L3Detail[next and send NO interpreters NO run_ws_program]
 
-  L4 --> L4Pattern[Pattern - run_ws_program execution]
-  L4Pattern --> L4Detail[pytest-mock infrastructure - Verify end-to-end flow]
+  L4 --> L4Pattern[Pattern run_ws_program execution]
+  L4Pattern --> L4Detail[pytest mock infrastructure Verify end to end flow]
 ```
 
 ### Generator Testing Flow (Layer 3)
 
 ```mermaid
-sequenceDiagram
-  participant Test as Test Function
-  participant Gen as Program Generator
-  participant Assert as Assertions
-
-  Test->>Gen: gen = program(args)
-  Test->>Gen: effect = next(gen)
-  Gen-->>Test: Returns GetUserById effect
-
-  Test->>Assert: Verify effect.user_id == expected
-  Assert-->>Test: Pass
-
-  Test->>Gen: result = gen.send(mock_user)
-  Gen-->>Test: Returns SendText effect
-
-  Test->>Assert: Verify effect.text contains greeting
-  Assert-->>Test: Pass
-
-  Test->>Gen: gen.send(None)
-  Gen-->>Test: Raises StopIteration with final result
-
-  Test->>Assert: Verify final result == True
-  Assert-->>Test: Pass - Test complete
+flowchart TB
+  Start[Test calls program(...)] --> FirstYield[next(gen)]
+  FirstYield --> AssertEffect[Assert effect type/params]
+  AssertEffect --> SendMock[send(mock_response)]
+  SendMock --> More{More effects?}
+  More -->|Yes| NextEffect[next(gen)]
+  NextEffect --> AssertEffect
+  More -->|No| StopIter[StopIteration → final result]
+  StopIter --> AssertResult[Assert final result]
 ```
 
 ### Integration Testing Flow (Layer 4)
 
 ```mermaid
-sequenceDiagram
-  participant Test as Test Function
-  participant Runner as run_ws_program
-  participant Interp as Composite Interpreter
-  participant Mock as pytest-mock Infrastructure
-
-  Test->>Mock: Configure mock.return_value
-  Mock-->>Test: Mock ready
-
-  Test->>Interp: Create with mocked infrastructure
-  Interp-->>Test: Interpreter configured
-
-  Test->>Runner: await run_ws_program(program, interp)
-
-  Runner->>Interp: Handle GetUserById effect
-  Interp->>Mock: Call get_user_by_id(uuid)
-  Mock-->>Interp: Return mock_user
-  Interp-->>Runner: Ok with EffectReturn
-
-  Runner->>Interp: Handle SendText effect
-  Interp->>Mock: Call send_text(text)
-  Mock-->>Interp: Return None
-  Interp-->>Runner: Ok with EffectReturn
-
-  Runner-->>Test: Ok with final_value
-
-  Test->>Mock: Assert mock.get_user_by_id.called_once
-  Mock-->>Test: Assertion passed
+flowchart TB
+  SetupMocks[Configure pytest-mock fakes] --> BuildInterp[Create CompositeInterpreter with mocks]
+  BuildInterp --> RunProgram[await run_ws_program(program, interpreter)]
+  RunProgram --> HandleEffect[Interpreter handles effect (e.g., GetUserById)]
+  HandleEffect --> MockCall[Underlying mock invoked]
+  MockCall --> NextEffect{More effects?}
+  NextEffect -->|Yes| HandleEffect
+  NextEffect -->|No| AssertOutcome[Assert final Result value and mock calls]
 ```
 
 ### Mock Setup Pattern
@@ -1523,6 +1540,7 @@ Use `mocker.AsyncMock(spec=Protocol)` for type-safe mocks:
 5. Check error message and properties
 
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio
 async def test_user_not_found_error(mocker: MockerFixture) -> None:
     # Arrange - Mock returns None (user not found)
@@ -1551,6 +1569,7 @@ async def test_user_not_found_error(mocker: MockerFixture) -> None:
 **Always use UUID-based names** to ensure test isolation at the broker level:
 
 ```python
+# file: examples/testing.py
 from uuid import uuid4
 
 @pytest.mark.asyncio
@@ -1577,6 +1596,7 @@ async def test_publish_message_workflow(clean_pulsar) -> None:
 **Start simple** - test publishing before consuming:
 
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio
 async def test_publish_returns_message_id(clean_pulsar) -> None:
     """Test successful publish returns message ID."""
@@ -1605,6 +1625,7 @@ async def test_publish_returns_message_id(clean_pulsar) -> None:
 **Test the complete message lifecycle** in integration tests:
 
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio
 async def test_publish_and_consume_workflow(clean_pulsar) -> None:
     """Test message roundtrip through Pulsar."""
@@ -1646,6 +1667,7 @@ async def test_publish_and_consume_workflow(clean_pulsar) -> None:
 **Consume timeouts are expected behavior**, not errors:
 
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio
 async def test_consume_timeout_workflow(clean_pulsar) -> None:
     """Test consume returns timeout when no message available."""
@@ -1675,6 +1697,7 @@ async def test_consume_timeout_workflow(clean_pulsar) -> None:
 **Always use the `clean_pulsar` fixture** for test isolation:
 
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio
 async def test_negative_acknowledge_workflow(
     clean_pulsar: tuple[PulsarMessageProducer, PulsarMessageConsumer],
@@ -1723,6 +1746,7 @@ async def test_negative_acknowledge_workflow(
 **Always use TRUNCATE CASCADE** in fixtures to reset database state:
 
 ```python
+# file: examples/testing.py
 @pytest_asyncio.fixture
 async def clean_db(
     postgres_connection: asyncpg.Connection,
@@ -1753,6 +1777,7 @@ async def clean_db(
 **Explicitly test CASCADE DELETE** and referential integrity:
 
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio
 async def test_delete_user_cascades_to_messages(
     clean_db: asyncpg.Connection,
@@ -1801,6 +1826,7 @@ async def test_delete_user_cascades_to_messages(
 **Use transactions to test error paths** without leaving garbage:
 
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio
 async def test_transaction_rollback_on_error(clean_db: asyncpg.Connection) -> None:
     """Failed operations in transaction should rollback all changes."""
@@ -1846,6 +1872,7 @@ async def test_transaction_rollback_on_error(clean_db: asyncpg.Connection) -> No
 **Count database queries** to catch N+1 query anti-patterns:
 
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio
 async def test_list_users_with_message_counts_avoids_n_plus_1(
     clean_db: asyncpg.Connection,
@@ -1903,6 +1930,7 @@ async def test_list_users_with_message_counts_avoids_n_plus_1(
 **Use direct SQL for test data seeding**, not effect programs:
 
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio
 async def test_chat_workflow_integration(clean_db: asyncpg.Connection) -> None:
     """Test chat workflow with pre-seeded users."""
@@ -1963,6 +1991,7 @@ async def test_chat_workflow_integration(clean_db: asyncpg.Connection) -> None:
 **Always use FLUSHDB** in fixtures to reset Redis state:
 
 ```python
+# file: examples/testing.py
 @pytest_asyncio.fixture
 async def clean_redis(redis_client: Redis) -> AsyncGenerator[Redis, None]:
     """Provide a clean Redis instance."""
@@ -1991,6 +2020,7 @@ async def clean_redis(redis_client: Redis) -> AsyncGenerator[Redis, None]:
 **Verify cache expiration** to prevent memory bloat:
 
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio
 async def test_cached_profile_expires_after_ttl(
     clean_redis: Redis,
@@ -2032,6 +2062,7 @@ async def test_cached_profile_expires_after_ttl(
 **Test both ADT variants** to ensure complete coverage:
 
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio
 async def test_cache_hit_and_miss_semantics(
     clean_redis: Redis,
@@ -2067,6 +2098,7 @@ async def test_cache_hit_and_miss_semantics(
 **Test the complete cache-aside workflow**: cache miss → DB fetch → cache populate:
 
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio
 async def test_cache_aside_pattern_with_database_fallback(
     clean_redis: Redis,
@@ -2143,6 +2175,7 @@ async def test_cache_aside_pattern_with_database_fallback(
 **Explicitly test cache removal** when data changes:
 
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio
 async def test_cache_invalidation_on_user_update(
     clean_redis: Redis,
@@ -2197,6 +2230,7 @@ async def test_cache_invalidation_on_user_update(
 **Use list-then-delete pattern** in fixtures to reset bucket state:
 
 ```python
+# file: examples/testing.py
 @pytest.fixture
 def clean_minio(s3_bucket: str) -> str:
     """Provide a clean MinIO bucket."""
@@ -2232,6 +2266,7 @@ def clean_minio(s3_bucket: str) -> str:
 **Always include UUID in object keys** to prevent test interference:
 
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio
 async def test_put_and_get_object_workflow(
     clean_minio: str,
@@ -2272,6 +2307,7 @@ async def test_put_and_get_object_workflow(
 **Test put → get → delete → verify sequence** to ensure all operations work:
 
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio
 async def test_object_lifecycle(
     clean_minio: str,
@@ -2311,6 +2347,7 @@ async def test_object_lifecycle(
 **Verify metadata survives round-trip** to catch serialization bugs:
 
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio
 async def test_metadata_and_content_type_survival(
     clean_minio: str,
@@ -2357,6 +2394,7 @@ async def test_metadata_and_content_type_survival(
 **Use prefixes to organize and query objects efficiently**:
 
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio
 async def test_list_objects_with_prefix(
     clean_minio: str,
@@ -2411,6 +2449,7 @@ async def test_list_objects_with_prefix(
 
 **Step 1: Effect Test** (`tests/test_effects/test_database_effects.py`)
 ```python
+# file: examples/testing.py
 def test_delete_user_effect() -> None:
     """DeleteUser effect should be immutable."""
     user_id = uuid4()
@@ -2423,6 +2462,7 @@ def test_delete_user_effect() -> None:
 
 **Step 2: Interpreter Test** (`tests/test_interpreters/test_database.py`)
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio()
 async def test_delete_user_success(mocker: MockerFixture) -> None:
     """DeleteUser should return Ok(None) on success."""
@@ -2443,6 +2483,7 @@ async def test_delete_user_success(mocker: MockerFixture) -> None:
 
 **Step 3: Program Test** (`tests/test_demo/test_user_programs.py`)
 ```python
+# file: examples/testing.py
 def test_delete_user_program() -> None:
     """Program should verify user exists before deleting."""
     user_id = uuid4()
@@ -2468,6 +2509,7 @@ def test_delete_user_program() -> None:
 
 **Step 4: Workflow Test** (`tests/test_integration/test_user_workflow.py`)
 ```python
+# file: examples/testing.py
 @pytest.mark.asyncio()
 async def test_delete_user_workflow(mocker: MockerFixture) -> None:
     """Complete delete workflow: verify exists, delete, verify deleted."""
@@ -2502,6 +2544,7 @@ async def test_delete_user_workflow(mocker: MockerFixture) -> None:
 This example demonstrates a complete Pulsar integration test following all best practices:
 
 ```python
+# file: examples/testing.py
 from uuid import UUID, uuid4
 import pytest
 from pytest_mock import MockerFixture
@@ -2618,6 +2661,7 @@ class TestMessagingWorkflowIntegration:
 This example demonstrates a complete PostgreSQL integration test following all best practices from Parts 2 and 5:
 
 ```python
+# file: examples/testing.py
 from uuid import UUID, uuid4
 import pytest
 import asyncpg
@@ -2805,6 +2849,7 @@ class TestDatabaseWorkflowIntegration:
 
 **Fixture Reference** (from `tests/fixtures/database.py:78-91`):
 ```python
+# file: examples/testing.py
 @pytest_asyncio.fixture
 async def clean_db(
     postgres_connection: asyncpg.Connection,
@@ -2824,6 +2869,7 @@ async def clean_db(
 This example demonstrates a complete Redis integration test following all best practices from Parts 2 and 5:
 
 ```python
+# file: examples/testing.py
 from uuid import UUID, uuid4
 import pytest
 import asyncio
@@ -2995,6 +3041,7 @@ class TestCacheWorkflowIntegration:
 
 **Fixture Reference** (from `tests/fixtures/cache.py:38-49`):
 ```python
+# file: examples/testing.py
 @pytest_asyncio.fixture
 async def clean_redis(redis_client: Redis) -> AsyncGenerator[Redis, None]:
     """Provide a clean Redis instance."""
@@ -3009,6 +3056,7 @@ async def clean_redis(redis_client: Redis) -> AsyncGenerator[Redis, None]:
 This example demonstrates a complete MinIO integration test following all best practices from Parts 2 and 5:
 
 ```python
+# file: examples/testing.py
 from uuid import UUID, uuid4
 import pytest
 from pytest_mock import MockerFixture
@@ -3205,6 +3253,7 @@ class TestStorageWorkflowIntegration:
 
 **Fixture Reference** (from `tests/fixtures/storage.py:49-78`):
 ```python
+# file: examples/testing.py
 @pytest.fixture
 def clean_minio(s3_bucket: str) -> str:
     """Provide a clean MinIO bucket."""
@@ -3266,6 +3315,7 @@ def clean_minio(s3_bucket: str) -> str:
 ### 11. Testing with Real Infrastructure in Unit Tests
 
 ```python
+# file: examples/testing.py
 # WRONG - Unit tests depend on PostgreSQL, Redis, etc.
 @pytest.mark.asyncio
 async def test_user_lookup() -> None:
@@ -3300,6 +3350,7 @@ def test_user_lookup() -> None:
 ### 12. Not Testing Error Paths
 
 ```python
+# file: examples/testing.py
 # WRONG - Only testing happy path
 def test_user_lookup() -> None:
     gen = get_user_program(user_id=user_id)
@@ -3333,6 +3384,7 @@ def test_user_lookup_not_found() -> None:
 ### 13. Incomplete Assertions
 
 ```python
+# file: examples/testing.py
 # WRONG - Only checking result succeeded
 result = await run_ws_program(program(), interpreter)
 assert_ok(result)  # Did the program do the right thing?
@@ -3411,6 +3463,7 @@ assert (await message_repo.get_all())[0].text == "Hello Alice"
 
 **Correct Solution (docker-compose.yml):**
 ```yaml
+# file: configs/testing.yaml
 postgres:
   image: postgres:15-alpine
   volumes:
@@ -3435,6 +3488,7 @@ volumes:
 
 **Wrong:**
 ```python
+# file: examples/testing.py
 # ❌ Module no longer exists
 from effectful.testing import create_test_interpreter, FakeUserRepository
 
@@ -3444,6 +3498,7 @@ interpreter = create_test_interpreter(user_repo=fake_repo)  # Deleted
 
 **Right:**
 ```python
+# file: examples/testing.py
 # ✅ Use pytest-mock with explicit interpreter setup
 from pytest_mock import MockerFixture
 from effectful.interpreters.composite import CompositeInterpreter
@@ -3477,6 +3532,7 @@ def test_workflow(mocker: MockerFixture) -> None:
 **Wrong**: Using hardcoded topic names
 
 ```python
+# file: examples/testing.py
 # ❌ WRONG - Tests conflict at broker level
 @pytest.mark.asyncio
 async def test_publish_message(clean_pulsar) -> None:
@@ -3487,6 +3543,7 @@ async def test_publish_message(clean_pulsar) -> None:
 **Right**: UUID-based topic names
 
 ```python
+# file: examples/testing.py
 # ✅ CORRECT - Each test has unique topic
 from uuid import uuid4
 
@@ -3503,6 +3560,7 @@ async def test_publish_message(clean_pulsar) -> None:
 **Wrong**: Only cleaning up after test (post-cleanup)
 
 ```python
+# file: examples/testing.py
 # ❌ WRONG - No pre-cleanup
 @pytest_asyncio.fixture
 async def clean_pulsar(pulsar_producer, pulsar_consumer):
@@ -3516,6 +3574,7 @@ async def clean_pulsar(pulsar_producer, pulsar_consumer):
 **Right**: Pre AND post cleanup
 
 ```python
+# file: examples/testing.py
 # ✅ CORRECT - Clean before AND after
 @pytest_asyncio.fixture
 async def clean_pulsar(pulsar_producer, pulsar_consumer):
@@ -3542,6 +3601,7 @@ async def clean_pulsar(pulsar_producer, pulsar_consumer):
 **Wrong**: Immediately creating resources after close
 
 ```python
+# file: examples/testing.py
 # ❌ WRONG - No sleep after close
 @pytest_asyncio.fixture
 async def clean_pulsar(pulsar_producer, pulsar_consumer):
@@ -3555,6 +3615,7 @@ async def clean_pulsar(pulsar_producer, pulsar_consumer):
 **Right**: Sleep after cleanup for broker finalization
 
 ```python
+# file: examples/testing.py
 # ✅ CORRECT - Sleep allows broker to finalize
 @pytest_asyncio.fixture
 async def clean_pulsar(pulsar_producer, pulsar_consumer):
@@ -3572,6 +3633,7 @@ async def clean_pulsar(pulsar_producer, pulsar_consumer):
 **Wrong**: Using admin API to delete topics/subscriptions
 
 ```python
+# file: examples/testing.py
 # ❌ WRONG - Server-level cleanup is slow and unreliable
 @pytest_asyncio.fixture
 async def clean_pulsar(pulsar_admin, pulsar_producer, pulsar_consumer):
@@ -3586,6 +3648,7 @@ async def clean_pulsar(pulsar_admin, pulsar_producer, pulsar_consumer):
 **Right**: Client-level cleanup (close connections)
 
 ```python
+# file: examples/testing.py
 # ✅ CORRECT - Client-level cleanup is fast and reliable
 @pytest_asyncio.fixture
 async def clean_pulsar(pulsar_producer, pulsar_consumer):
@@ -3604,6 +3667,7 @@ async def clean_pulsar(pulsar_producer, pulsar_consumer):
 **Wrong**: Using production timeouts (30s)
 
 ```python
+# file: examples/testing.py
 # ❌ WRONG - Long timeout hides issues
 producer = client.create_producer(
     topic,
@@ -3616,6 +3680,7 @@ producer = client.create_producer(
 **Right**: Short timeouts for fast feedback (5s)
 
 ```python
+# file: examples/testing.py
 # ✅ CORRECT - Short timeout for fast failure detection
 producer = client.create_producer(
     topic,
@@ -3632,6 +3697,7 @@ producer = client.create_producer(
 **Wrong**: Directly using pulsar_producer/pulsar_consumer fixtures
 
 ```python
+# file: examples/testing.py
 # ❌ WRONG - No cleanup between tests
 @pytest.mark.asyncio
 async def test_publish(pulsar_producer: PulsarMessageProducer) -> None:
@@ -3644,6 +3710,7 @@ async def test_publish(pulsar_producer: PulsarMessageProducer) -> None:
 **Right**: Always use clean_pulsar fixture
 
 ```python
+# file: examples/testing.py
 # ✅ CORRECT - Guaranteed isolation
 @pytest.mark.asyncio
 async def test_publish(
@@ -3678,7 +3745,7 @@ All code changes must meet these requirements:
 ## Part 9: Related Documentation
 
 - **Test Suite Audit:** `documents/testing/test_suite_audit.md` - Current test status and inventory
-- **Tutorial:** `documents/tutorials/04_testing_guide.md` - Step-by-step testing guide
+- **Tutorial:** `documents/tutorials/testing_guide.md` - Step-by-step testing guide
 - **Code Quality:** `documents/engineering/code_quality.md` - Type safety + purity enforcement
 - **Pulsar Fixtures:** `tests/fixtures/messaging.py` - clean_pulsar fixture implementation
 - **Pulsar Adapter:** `effectful/adapters/pulsar_messaging.py` - PulsarMessageProducer/Consumer with cleanup
@@ -3686,6 +3753,9 @@ All code changes must meet these requirements:
 
 ---
 
-**Last Updated:** 2025-12-01
-**Supersedes**: none
-**Referenced by:** README.md, command_reference.md, ../documentation_standards.md, code_quality.md
+## Cross-References
+- [Code Quality](code_quality.md)
+- [Docker Workflow](docker_workflow.md)
+- [Command Reference](command_reference.md)
+- [Documentation Standards](../documentation_standards.md)
+- [Monitoring & Alerting](monitoring_and_alerting.md)

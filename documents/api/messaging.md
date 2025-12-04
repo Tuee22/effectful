@@ -1,6 +1,10 @@
 # Messaging Effects API Reference
 
-This document covers the messaging effect types for pub/sub communication with message brokers like Apache Pulsar.
+**Status**: Authoritative source  
+**Supersedes**: none  
+**Referenced by**: documents/api/README.md
+
+> **Purpose**: Reference for messaging effect types used for pub/sub communication with brokers like Apache Pulsar.
 
 ## Effect Types
 
@@ -9,6 +13,7 @@ This document covers the messaging effect types for pub/sub communication with m
 Publishes a message to a topic.
 
 ```python
+# file: examples/messaging.py
 from effectful import PublishMessage, MessageEnvelope
 
 @dataclass(frozen=True)
@@ -27,6 +32,7 @@ class PublishMessage:
 
 **Example:**
 ```python
+# file: examples/messaging.py
 import json
 from effectful import PublishMessage, PublishSuccess, PublishFailure
 
@@ -55,6 +61,7 @@ def publish_event(
 Consumes a message from a topic with timeout.
 
 ```python
+# file: examples/messaging.py
 @dataclass(frozen=True)
 class ConsumeMessage:
     topic: str
@@ -71,6 +78,7 @@ class ConsumeMessage:
 
 **Example:**
 ```python
+# file: examples/messaging.py
 from effectful import ConsumeMessage, MessageEnvelope, ConsumeTimeout
 
 def process_messages(
@@ -103,6 +111,7 @@ def process_messages(
 Acknowledges successful processing of a message.
 
 ```python
+# file: examples/messaging.py
 @dataclass(frozen=True)
 class AcknowledgeMessage:
     message_id: str
@@ -117,6 +126,7 @@ class AcknowledgeMessage:
 
 **Example:**
 ```python
+# file: examples/messaging.py
 from effectful import AcknowledgeMessage, MessageEnvelope
 
 def handle_message(
@@ -137,6 +147,7 @@ def handle_message(
 Negative acknowledgment - signals processing failure for redelivery.
 
 ```python
+# file: examples/messaging.py
 @dataclass(frozen=True)
 class NegativeAcknowledge:
     message_id: str
@@ -151,6 +162,7 @@ class NegativeAcknowledge:
 
 **Example:**
 ```python
+# file: examples/messaging.py
 from effectful import NegativeAcknowledge, MessageEnvelope
 
 def handle_with_retry(
@@ -186,6 +198,7 @@ def handle_with_retry(
 Container for a consumed message with metadata.
 
 ```python
+# file: examples/messaging.py
 @dataclass(frozen=True)
 class MessageEnvelope:
     message_id: str
@@ -207,6 +220,7 @@ class MessageEnvelope:
 ADT for publish operation outcomes.
 
 ```python
+# file: examples/messaging.py
 type PublishResult = PublishSuccess | PublishFailure
 
 @dataclass(frozen=True)
@@ -220,6 +234,7 @@ class PublishFailure:
 
 **Pattern Matching:**
 ```python
+# file: examples/messaging.py
 result = yield PublishMessage(topic="events", payload=data)
 
 match result:
@@ -236,6 +251,7 @@ match result:
 ADT for consume operation outcomes.
 
 ```python
+# file: examples/messaging.py
 type ConsumeResult = MessageEnvelope | ConsumeTimeout
 
 @dataclass(frozen=True)
@@ -245,6 +261,7 @@ class ConsumeTimeout:
 
 **Pattern Matching:**
 ```python
+# file: examples/messaging.py
 result = yield ConsumeMessage(topic="events", subscription="sub")
 
 match result:
@@ -261,6 +278,7 @@ match result:
 The `MessagingInterpreter` may return `MessagingError` for infrastructure failures:
 
 ```python
+# file: examples/messaging.py
 from effectful import MessagingError
 
 result = await run_ws_program(my_program(), interpreter)
@@ -277,6 +295,7 @@ match result:
 ## Complete Workflow Example
 
 ```python
+# file: examples/messaging.py
 from collections.abc import Generator
 from effectful import (
     AllEffects,
@@ -352,10 +371,10 @@ def event_processor() -> Generator[AllEffects, EffectResult, dict[str, int]]:
 - [Effects Overview](effects.md) - All effect types
 - [Storage Effects](storage.md) - S3/object storage effects
 - [Interpreters](interpreters.md) - MessagingInterpreter details
-- [Tutorial: Messaging Effects](../tutorials/08_messaging_effects.md) - Step-by-step guide
+- [Tutorial: Messaging Effects](../tutorials/messaging_effects.md) - Step-by-step guide
 
 ---
 
-**Last Updated**: 2025-12-01  
-**Supersedes**: none  
-**Referenced by**: documents/api/README.md, ../README.md
+## Cross-References
+- [Documentation Standards](../documentation_standards.md)
+- [Engineering Architecture](../engineering/architecture.md)

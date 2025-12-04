@@ -2,7 +2,7 @@
 
 **Status**: Authoritative source  
 **Supersedes**: N/A  
-**Referenced by**: README.md, CONTRIBUTING.md, documents/engineering/code_quality.md, documents/engineering/testing.md, documents/engineering/docker_workflow.md, documents/engineering/monitoring_and_alerting.md
+**Referenced by**: README.md, contributing.md, documents/engineering/code_quality.md, documents/engineering/testing.md, documents/engineering/docker_workflow.md, documents/engineering/monitoring_and_alerting.md
 
 > **Purpose**: Single Source of Truth (SSoT) for documentation practices across Effectful core and demo projects; aligns with the unified ShipNorth guide while preserving Effectful’s hierarchical/delta structure.
 
@@ -86,7 +86,7 @@ Every doc starts with:
 - Bidirectional links are recommended when documents depend on each other.  
 - Optional callout for clarity:  
   ```markdown
-  > **📖 See**: [Effect Interpreter](engineering/effect_interpreter.md#definitions)
+  > **📖 See**: [Interpreters](engineering/architecture.md#5-interpreters-effect-handlers)
   ```  
 - Overlays must link to the base SSoT first, then list overrides.  
 - Do not leave dead links; run link verification after moves.
@@ -176,7 +176,13 @@ Every doc starts with:
 
 ## 10) Demo Overlay Rules (Effectful-specific)
 
-- Demos inherit all base standards.  
-- Overlay docs live under `demo/<project>/documents/` and use the same filenames as their base documents.  
-- Start with a link to the base SSoT, then list only overrides/deltas; no duplicated procedures, examples, or diagrams.  
+- Demos inherit all base standards.
+- Overlay docs live under `demo/<project>/documents/` and use the same filenames as their base documents.
+- Start with a link to the base SSoT, then list only overrides/deltas; no duplicated procedures, examples, or diagrams.
 - If there are no deltas, state explicitly that the demo follows the base standard without changes.
+
+## Cross-References
+- [Engineering README](engineering/README.md)
+- [Code Quality](engineering/code_quality.md)
+- [Testing](engineering/testing.md)
+- [Docker Development Doctrine](engineering/docker_workflow.md)

@@ -247,7 +247,7 @@ interpreter = create_composite_interpreter(
 )
 ```
 
-See [Tutorial 05: Production Deployment](../documents/tutorials/05_production_deployment.md) for details.
+See [Tutorial 05: Production Deployment](../documents/tutorials/production_deployment.md) for details.
 
 ---
 

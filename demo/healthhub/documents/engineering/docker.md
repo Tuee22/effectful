@@ -1,9 +1,12 @@
-# Docker (HealthHub delta)
+# Docker
 
-> Extends base [Docker](../../../../documents/engineering/docker.md). No HealthHub-specific deltas; container usage is defined in the demo compose file.
-
----
-
-**Last Updated**: 2025-12-02  
+**Status**: Reference only  
 **Supersedes**: none  
-**Referenced by**: README.md
+**Referenced by**: demo/healthhub/documents/readme.md
+
+> **Purpose**: HealthHub delta for Docker. Base: [docker_workflow.md](../../../../documents/engineering/docker_workflow.md).
+> **📖 Authoritative Reference**: [Docker Development Doctrine](../../../../documents/engineering/docker_workflow.md)
+
+## Deltas
+- HealthHub follows the base guidance; no additional deltas are documented here beyond using the HealthHub compose stack and service name (`healthhub`).
+- Refer to the base document for canonical procedures; apply HealthHub-specific ports, credentials, and service names where applicable.

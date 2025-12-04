@@ -11,7 +11,7 @@ Run this example:
 
 SSoT References:
     - documents/engineering/monitoring_and_alerting.md - Histogram bucket guidelines
-    - documents/tutorials/12_metric_types_guide.md - Metric type selection
+    - documents/tutorials/metric_types_guide.md - Metric type selection
 """
 
 import asyncio

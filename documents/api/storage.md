@@ -1,6 +1,10 @@
 # Storage Effects API Reference
 
-This document covers the storage effect types for S3-compatible object storage operations.
+**Status**: Authoritative source  
+**Supersedes**: none  
+**Referenced by**: documents/api/README.md
+
+> **Purpose**: Reference for storage effect types used for S3-compatible object storage operations.
 
 ## Effect Types
 
@@ -9,6 +13,7 @@ This document covers the storage effect types for S3-compatible object storage o
 Retrieves an object from storage.
 
 ```python
+# file: examples/storage.py
 @dataclass(frozen=True)
 class GetObject:
     bucket: str
@@ -23,6 +28,7 @@ class GetObject:
 
 **Example:**
 ```python
+# file: examples/storage.py
 from effectful import GetObject, S3Object, SendText
 
 def download_file(
@@ -44,6 +50,7 @@ def download_file(
 Stores an object in storage.
 
 ```python
+# file: examples/storage.py
 @dataclass(frozen=True)
 class PutObject:
     bucket: str
@@ -62,6 +69,7 @@ class PutObject:
 
 **Example:**
 ```python
+# file: examples/storage.py
 from effectful import PutObject, PutSuccess, PutFailure
 import json
 
@@ -91,6 +99,7 @@ def save_json(
 Deletes an object from storage.
 
 ```python
+# file: examples/storage.py
 @dataclass(frozen=True)
 class DeleteObject:
     bucket: str
@@ -105,6 +114,7 @@ class DeleteObject:
 
 **Example:**
 ```python
+# file: examples/storage.py
 from effectful import DeleteObject
 
 def remove_file(
@@ -125,6 +135,7 @@ def remove_file(
 Lists objects in a bucket with optional prefix filtering.
 
 ```python
+# file: examples/storage.py
 @dataclass(frozen=True)
 class ListObjects:
     bucket: str
@@ -139,6 +150,7 @@ class ListObjects:
 
 **Example:**
 ```python
+# file: examples/storage.py
 from effectful import ListObjects
 
 def list_user_files(
@@ -158,6 +170,7 @@ def list_user_files(
 Container for retrieved object data.
 
 ```python
+# file: examples/storage.py
 @dataclass(frozen=True)
 class S3Object:
     content: bytes
@@ -177,6 +190,7 @@ class S3Object:
 ADT for put operation outcomes.
 
 ```python
+# file: examples/storage.py
 type PutResult = PutSuccess | PutFailure
 
 @dataclass(frozen=True)
@@ -190,6 +204,7 @@ class PutFailure:
 
 **Pattern Matching:**
 ```python
+# file: examples/storage.py
 result = yield PutObject(bucket="data", key="file.txt", content=b"hello")
 
 match result:
@@ -206,6 +221,7 @@ match result:
 The `StorageInterpreter` may return `StorageError` for infrastructure failures:
 
 ```python
+# file: examples/storage.py
 from effectful import StorageError
 
 result = await run_ws_program(my_program(), interpreter)
@@ -222,6 +238,7 @@ match result:
 ## Complete Workflow Example
 
 ```python
+# file: examples/storage.py
 from collections.abc import Generator
 from effectful import (
     AllEffects,
@@ -324,10 +341,10 @@ def generate_presigned_manifest(
 - [Effects Overview](effects.md) - All effect types
 - [Messaging Effects](messaging.md) - Pub/sub messaging effects
 - [Interpreters](interpreters.md) - StorageInterpreter details
-- [Tutorial: Storage Effects](../tutorials/09_storage_effects.md) - Step-by-step guide
+- [Tutorial: Storage Effects](../tutorials/storage_effects.md) - Step-by-step guide
 
 ---
 
-**Last Updated**: 2025-12-01  
-**Supersedes**: none  
-**Referenced by**: documents/api/README.md, ../README.md
+## Cross-References
+- [Documentation Standards](../documentation_standards.md)
+- [Engineering Architecture](../engineering/architecture.md)

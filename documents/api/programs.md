@@ -1,6 +1,10 @@
 # Programs API Reference
 
-This document provides a comprehensive reference for program execution and program types.
+**Status**: Authoritative source  
+**Supersedes**: none  
+**Referenced by**: documents/api/README.md
+
+> **Purpose**: Reference for program execution helpers and program types.
 
 > **Core Doctrine**: For program composition diagrams and execution flow, see [architecture.md](../engineering/architecture.md#program-composition).
 
@@ -16,6 +20,7 @@ Execute an effect program to completion with fail-fast error handling.
 
 **Type Signature**:
 ```python
+# file: examples/programs.py
 async def run_ws_program[T] (
     program: Generator[AllEffects, EffectResult, T],
     interpreter: EffectInterpreter,
@@ -35,6 +40,7 @@ async def run_ws_program[T] (
 
 **Usage**:
 ```python
+# file: examples/programs.py
 from effectful import run_ws_program, SendText, GetUserById, Ok, Err
 
 def greeting_program(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
@@ -69,6 +75,7 @@ match result:
 Effects execute in the order they are yielded:
 
 ```python
+# file: examples/programs.py
 def sequential_program() -> Generator[AllEffects, EffectResult, None]:
     yield SendText(text="Step 1")  # Executes first
     yield SendText(text="Step 2")  # Executes second
@@ -81,6 +88,7 @@ def sequential_program() -> Generator[AllEffects, EffectResult, None]:
 Program stops on first effect failure:
 
 ```python
+# file: examples/programs.py
 def failing_program() -> Generator[AllEffects, EffectResult, str]:
     yield SendText(text="Before error")  # Succeeds
 
@@ -101,6 +109,7 @@ assert result.is_err()
 Generic return types are preserved:
 
 ```python
+# file: examples/programs.py
 def bool_program() -> Generator[AllEffects, EffectResult, bool]:
     user = yield GetUserById(user_id=user_id)
     return user is not None
@@ -125,6 +134,7 @@ match result:
 Union of all effect types.
 
 ```python
+# file: examples/programs.py
 type AllEffects = (
     WebSocketEffect      # SendText, ReceiveText, Close
     | DatabaseEffect     # GetUserById, SaveChatMessage, ListMessagesForUser, ListUsers, CreateUser, UpdateUser, DeleteUser
@@ -138,6 +148,7 @@ type AllEffects = (
 
 **Usage**:
 ```python
+# file: examples/programs.py
 from collections.abc import Generator
 from effectful import AllEffects, EffectResult
 
@@ -155,6 +166,7 @@ def my_program() -> Generator[AllEffects, EffectResult, str]:
 Union of all possible effect return values.
 
 ```python
+# file: examples/programs.py
 type EffectResult = (
     None                      # SendText, Close, PutCachedProfile, AcknowledgeMessage, etc.
     | str                     # ReceiveText, PublishMessage, GenerateToken, RefreshToken, HashPassword
@@ -200,6 +212,7 @@ type EffectResult = (
 Programs must narrow types after yielding effects:
 
 ```python
+# file: examples/programs.py
 def program() -> Generator[AllEffects, EffectResult, str]:
     # EffectResult is a wide union type
     message = yield SaveChatMessage(user_id=user_id, text="Hello")
@@ -214,6 +227,7 @@ def program() -> Generator[AllEffects, EffectResult, str]:
 **Pattern Matching**:
 
 ```python
+# file: examples/programs.py
 def program() -> Generator[AllEffects, EffectResult, str]:
     user_result = yield GetUserById(user_id=user_id)
 
@@ -234,11 +248,13 @@ def program() -> Generator[AllEffects, EffectResult, str]:
 Type alias for WebSocket programs that return None.
 
 ```python
+# file: examples/programs.py
 type WSProgram = Generator[AllEffects, EffectResult, None]
 ```
 
 **Usage**:
 ```python
+# file: examples/programs.py
 def simple_greeting() -> WSProgram:
     yield SendText(text="Hello, client!")
     return None
@@ -247,6 +263,7 @@ def simple_greeting() -> WSProgram:
 Equivalent to:
 
 ```python
+# file: examples/programs.py
 def simple_greeting() -> Generator[AllEffects, EffectResult, None]:
     yield SendText(text="Hello, client!")
     return None
@@ -259,6 +276,7 @@ def simple_greeting() -> Generator[AllEffects, EffectResult, None]:
 ### Basic Program Structure
 
 ```python
+# file: examples/programs.py
 from collections.abc import Generator
 from effectful import AllEffects, EffectResult, SendText
 
@@ -279,6 +297,7 @@ def my_program() -> Generator[AllEffects, EffectResult, str]:
 ### Program with Parameters
 
 ```python
+# file: examples/programs.py
 def parameterized_program(
     user_id: UUID,
     greeting: str,
@@ -298,6 +317,7 @@ def parameterized_program(
 ### Conditional Logic
 
 ```python
+# file: examples/programs.py
 def conditional_program(
     user_id: UUID,
     should_cache: bool,
@@ -322,6 +342,7 @@ def conditional_program(
 ### Loops and Iteration
 
 ```python
+# file: examples/programs.py
 def batch_program(
     user_ids: list[UUID],
 ) -> Generator[AllEffects, EffectResult, dict[str, int]]:
@@ -344,6 +365,7 @@ def batch_program(
 ### Error Handling
 
 ```python
+# file: examples/programs.py
 def error_aware_program(
     user_id: UUID,
 ) -> Generator[AllEffects, EffectResult, str]:
@@ -371,6 +393,7 @@ def error_aware_program(
 Compose programs by delegating to sub-programs:
 
 ```python
+# file: examples/programs.py
 def lookup_and_greet(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
     """Sub-program: lookup user and greet."""
     user = yield GetUserById(user_id=user_id)
@@ -397,6 +420,7 @@ def main_program(user_id: UUID) -> Generator[AllEffects, EffectResult, None]:
 ### Building Reusable Components
 
 ```python
+# file: examples/programs.py
 def cache_user_profile(
     user_id: UUID,
     ttl_seconds: int = 300,
@@ -435,6 +459,7 @@ def workflow_with_caching(
 ### Recursive Programs
 
 ```python
+# file: examples/programs.py
 def retry_with_backoff[T] (
     program_factory: Callable[[], Generator[AllEffects, EffectResult, T]],
     max_retries: int = 3,
@@ -464,6 +489,7 @@ def retry_with_backoff[T] (
 ### Cache-Aside Pattern
 
 ```python
+# file: examples/programs.py
 def get_with_cache_aside(
     user_id: UUID,
 ) -> Generator[AllEffects, EffectResult, ProfileData | None]:
@@ -492,6 +518,7 @@ def get_with_cache_aside(
 ### Request-Response Pattern
 
 ```python
+# file: examples/programs.py
 def request_response_program() -> Generator[AllEffects, EffectResult, None]:
     """Handle WebSocket request-response."""
     # 1. Receive request
@@ -527,6 +554,7 @@ def request_response_program() -> Generator[AllEffects, EffectResult, None]:
 ### Multi-Step Workflow
 
 ```python
+# file: examples/programs.py
 def complete_workflow(
     user_id: UUID,
     message_text: str,
@@ -569,6 +597,7 @@ def complete_workflow(
 Programs execute effects sequentially. Batch independent effects when possible:
 
 ```python
+# file: examples/programs.py
 # ❌ Inefficient - sequential lookups
 def slow_program(user_ids: list[UUID]) -> Generator[AllEffects, EffectResult, list[User]]:
     users = []
@@ -589,6 +618,7 @@ def slow_program(user_ids: list[UUID]) -> Generator[AllEffects, EffectResult, li
 Use cache to reduce database load:
 
 ```python
+# file: examples/programs.py
 def optimized_program(
     user_id: UUID,
 ) -> Generator[AllEffects, EffectResult, str]:
@@ -620,6 +650,7 @@ def optimized_program(
 ### Logging Effect Execution
 
 ```python
+# file: examples/programs.py
 import logging
 
 logger = logging.getLogger(__name__)
@@ -648,6 +679,7 @@ def instrumented_program(
 Access effect names for tracing:
 
 ```python
+# file: examples/programs.py
 # Interpreters return EffectReturn with effect_name
 # Can be used for distributed tracing, metrics, etc.
 ```
@@ -663,6 +695,6 @@ Access effect names for tracing:
 
 ---
 
-**Last Updated**: 2025-12-01  
-**Supersedes**: none  
-**Referenced by**: documents/api/README.md, ../README.md
+## Cross-References
+- [Documentation Standards](../documentation_standards.md)
+- [Engineering Architecture](../engineering/architecture.md)

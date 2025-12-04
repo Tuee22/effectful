@@ -1,6 +1,10 @@
 # Code Quality
 
-> **Single Source of Truth (SSoT)** for type safety, purity, and code quality enforcement in Effectful. This replaces `type_safety_enforcement.md` and `purity.md` to keep all guidance DRY and centrally linked.
+**Status**: Authoritative source  
+**Supersedes**: type_safety_enforcement.md, purity.md  
+**Referenced by**: engineering/README.md, documents/readme.md
+
+> **Purpose**: Single Source of Truth for type safety, purity, and code quality enforcement in Effectful.
 
 ## SSoT Link Map
 
@@ -155,9 +159,3 @@ Code quality = **type safety + purity**. Programs remain pure descriptions, inte
 - **Documentation:** SSoT/DRY rules and mermaid safety in [documentation_standards.md](../documentation_standards.md).
 - **Architecture:** import boundaries and layer rules in [architecture.md](architecture.md).
 - **Effect Patterns:** canonical program and interpreter shapes in [effect_patterns.md](effect_patterns.md).
-
----
-
-**Last Updated**: 2025-12-01  
-**Supersedes**: type_safety_enforcement.md, purity.md  
-**Referenced by**: README.md, ../documentation_standards.md, development_workflow.md, testing.md, architecture.md, observability.md

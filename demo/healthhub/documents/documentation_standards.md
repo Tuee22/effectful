@@ -2,10 +2,10 @@
 
 **Status**: Reference only  
 **Supersedes**: N/A  
-**Referenced by**: demo/healthhub/documents/README.md
+**Referenced by**: demo/healthhub/documents/readme.md
 
 > **Purpose**: Explain how HealthHub documentation follows the delta/SSoT pattern and what belongs where, with compliance-focused engineering alignment.  
-> **📖 Authoritative Reference**: ../../documents/documentation_standards.md
+> **📖 Authoritative Reference**: ../../../documents/documentation_standards.md
 
 ---
 

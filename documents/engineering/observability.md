@@ -1,14 +1,14 @@
 # Observability
 
+**Status**: Authoritative source  
+**Supersedes**: None  
+**Referenced by**: monitoring_and_alerting.md, configuration.md, docker_workflow.md, engineering/README.md
+
+> **Purpose**: Single Source of Truth for the Effectful observability architecture, metrics philosophy, and Prometheus/Grafana integration.
+
 **effectful** - Pure functional observability through type-safe metrics effects.
 
-This is the Single Source of Truth (SSoT) for the Effectful observability architecture, metrics philosophy, and Prometheus/Grafana integration.
-
 ---
-
-**Last Updated**: 2025-12-03
-**Supersedes**: None
-**Referenced by**: monitoring_and_alerting.md, configuration.md, docker_workflow.md, engineering/README.md
 
 ## SSoT Link Map
 
@@ -71,6 +71,7 @@ All metrics are defined upfront in a **frozen, immutable registry**. This preven
 **Example Registry:**
 
 ```python
+# file: examples/observability.py
 from effectful.observability import (
     MetricsRegistry,
     CounterDefinition,
@@ -107,6 +108,7 @@ APP_METRICS = MetricsRegistry(
 ### Compile-Time Validation
 
 ```python
+# file: examples/observability.py
 # ✅ VALID - Metric registered, labels match schema
 yield IncrementCounter(
     metric_name="appointments_created_total",
@@ -152,6 +154,7 @@ Effectful supports the four standard Prometheus metric types, each with distinct
 **Effect:**
 
 ```python
+# file: examples/observability.py
 @dataclass(frozen=True)
 class IncrementCounter:
     """Increment a counter metric by value.
@@ -169,6 +172,7 @@ class IncrementCounter:
 **Example:**
 
 ```python
+# file: examples/observability.py
 def create_appointment_program(
     patient_id: UUID, doctor_id: UUID
 ) -> Generator[AllEffects, EffectResult, Appointment]:
@@ -204,6 +208,7 @@ def create_appointment_program(
 **Effect:**
 
 ```python
+# file: examples/observability.py
 @dataclass(frozen=True)
 class SetGauge:
     """Set a gauge metric to value.
@@ -221,6 +226,7 @@ class SetGauge:
 **Example:**
 
 ```python
+# file: examples/observability.py
 def update_queue_depth_program(
     queue_name: str
 ) -> Generator[AllEffects, EffectResult, int]:
@@ -254,6 +260,7 @@ def update_queue_depth_program(
 **Effect:**
 
 ```python
+# file: examples/observability.py
 @dataclass(frozen=True)
 class ObserveHistogram:
     """Observe a value in a histogram.
@@ -271,6 +278,7 @@ class ObserveHistogram:
 **Example:**
 
 ```python
+# file: examples/observability.py
 import time
 
 def process_lab_result_program(
@@ -296,6 +304,7 @@ def process_lab_result_program(
 **Bucket Configuration:**
 
 ```python
+# file: examples/observability.py
 HistogramDefinition(
     name="http_request_duration_seconds",
     help_text="HTTP request duration",
@@ -309,6 +318,7 @@ HistogramDefinition(
 **PromQL Query (p95 latency):**
 
 ```promql
+# file: examples/observability.promql
 histogram_quantile(0.95,
   sum by (le, endpoint) (
     rate(http_request_duration_seconds_bucket[5m])
@@ -331,6 +341,7 @@ histogram_quantile(0.95,
 **Effect:**
 
 ```python
+# file: examples/observability.py
 @dataclass(frozen=True)
 class RecordSummary:
     """Record a value in a summary.
@@ -368,6 +379,7 @@ Effectful provides two complementary approaches to metrics:
 **Example:**
 
 ```python
+# file: examples/observability.py
 def schedule_appointment_program(
     patient_id: UUID, doctor_id: UUID
 ) -> Generator[AllEffects, EffectResult, Appointment]:
@@ -407,6 +419,7 @@ def schedule_appointment_program(
 **Example Setup:**
 
 ```python
+# file: examples/observability.py
 from effectful.observability import create_instrumented_composite
 
 # Wrap interpreters for automatic metrics
@@ -435,15 +448,15 @@ Metrics integrate seamlessly into effectful's existing architecture:
 
 ```mermaid
 flowchart TB
-    App[Layer 1 - Application<br/>Yields metrics effects explicitly]
-    Runner[Layer 2 - Program Runner<br/>Can be instrumented for automatic metrics]
-    Composite[Layer 3 - Composite Interpreter<br/>Routes metrics effects to MetricsInterpreter]
-    MetricsInterp[Layer 4 - MetricsInterpreter<br/>Handles metrics effects]
-    PrometheusCollector[Layer 5 - PrometheusMetricsCollector<br/>prometheus_client integration]
-    Prometheus[External - Prometheus Server<br/>Scrapes /metrics endpoint]
+    App[Layer 1 Application<br/>Yields metrics effects explicitly]
+    Runner[Layer 2 Program Runner<br/>Can be instrumented for automatic metrics]
+    Composite[Layer 3 Composite Interpreter<br/>Routes metrics effects to MetricsInterpreter]
+    MetricsInterp[Layer 4 MetricsInterpreter<br/>Handles metrics effects]
+    PrometheusCollector[Layer 5 PrometheusMetricsCollector<br/>prometheus_client integration]
+    Prometheus[External Prometheus Server<br/>Scrapes /metrics endpoint]
 
-    App -->|Explicit: yield IncrementCounter| Runner
-    Runner -->|Automatic: wrap with InstrumentedInterpreter| Composite
+    App -->|Explicit metrics| Runner
+    Runner -->|Automatic instrumentation| Composite
     Composite -->|Pattern match MetricsEffect| MetricsInterp
     MetricsInterp -->|Call collector methods| PrometheusCollector
     PrometheusCollector -->|Export metrics| Prometheus
@@ -482,6 +495,7 @@ flowchart TB
 ### Immutable Registry
 
 ```python
+# file: examples/observability.py
 @dataclass(frozen=True)
 class MetricsRegistry:
     """Type-safe registry of all application metrics.
@@ -507,6 +521,7 @@ class MetricsRegistry:
 ### ADT Return Types
 
 ```python
+# file: examples/observability.py
 @dataclass(frozen=True)
 class MetricRecorded:
     """Successful metric recording."""
@@ -536,6 +551,7 @@ type MetricRecordingResult = MetricRecorded | MetricRecordingFailed
 ### Pattern Matching
 
 ```python
+# file: examples/observability.py
 result = yield IncrementCounter(
     metric_name="test_counter",
     labels={"env": "prod"},
@@ -565,6 +581,7 @@ match result:
 All metrics must be registered upfront. No runtime metric creation.
 
 ```python
+# file: examples/observability.py
 # ❌ FORBIDDEN - Runtime metric creation
 metric_name = f"user_{user_id}_requests"  # Unbounded cardinality!
 yield IncrementCounter(metric_name=metric_name, labels={}, value=1.0)
@@ -582,6 +599,7 @@ yield IncrementCounter(
 Label names are fixed per metric at definition time.
 
 ```python
+# file: examples/observability.py
 CounterDefinition(
     name="http_requests_total",
     help_text="Total HTTP requests",
@@ -598,6 +616,7 @@ CounterDefinition(
 Use categorical values with known upper bounds.
 
 ```python
+# file: examples/observability.py
 # ✅ GOOD - Bounded cardinality
 labels = {
     "doctor_specialization": "cardiology",  # ~20-30 specializations
@@ -622,6 +641,7 @@ Example:
 PrometheusMetricsCollector can enforce cardinality limits per metric:
 
 ```python
+# file: examples/observability.py
 result = yield IncrementCounter(metric_name="test", labels=labels, value=1.0)
 
 match result:
@@ -639,6 +659,7 @@ match result:
 ### Unit Testing (Mocked Collector)
 
 ```python
+# file: examples/observability.py
 from pytest_mock import MockerFixture
 from effectful.infrastructure.metrics import MetricsCollector
 
@@ -680,6 +701,7 @@ async def test_appointment_metrics(mocker: MockerFixture) -> None:
 ### Integration Testing (Real Collector)
 
 ```python
+# file: examples/observability.py
 from prometheus_client import CollectorRegistry
 from effectful.adapters.prometheus_adapter import PrometheusMetricsCollector
 
@@ -735,11 +757,4 @@ async def test_metrics_workflow() -> None:
 
 - [Monitoring & Alerting](./monitoring_and_alerting.md) - Metric naming conventions, labeling best practices, and alert rules
 - [Metrics API Reference](../api/metrics.md) - Complete metrics effects API
-- [Metrics Quickstart](../tutorials/11_metrics_quickstart.md) - Get started in 15 minutes
-
----
-
-**Status**: Single Source of Truth (SSoT) for observability architecture
-**Last Updated**: 2025-12-01
-**Supersedes**: none
-**Referenced by**: monitoring_and_alerting.md, README.md
+- [Metrics Quickstart](../tutorials/metrics_quickstart.md) - Get started in 15 minutes

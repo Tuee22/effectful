@@ -1,6 +1,10 @@
 # Development Workflow
 
-> **SSoT** for daily development procedures, adding features, and database management in effectful.
+**Status**: Authoritative source  
+**Supersedes**: none  
+**Referenced by**: engineering/README.md
+
+> **Purpose**: SSoT for daily development procedures, adding features, and database management in effectful.
 
 ## SSoT Link Map
 
@@ -49,6 +53,7 @@ flowchart TB
 
 2. **Add effect to AllEffects union** in `effectful/programs/program_types.py`
    ```python
+   # file: effectful/programs/program_types.py
    type AllEffects = (
        SendText
        | GetUserById
@@ -59,6 +64,7 @@ flowchart TB
 
 3. **Update EffectResult union** if effect returns new type
    ```python
+   # file: effectful/programs/program_types.py
    type EffectResult = (
        User
        | ChatMessage
@@ -107,6 +113,7 @@ flowchart TB
 
 2. **Update EffectResult** if model is returned from effects
    ```python
+   # file: effectful/programs/program_types.py
    type EffectResult = (
        User
        | YourNewDomainModel  # Add here
@@ -148,6 +155,7 @@ flowchart TB
 
 **Fixture pattern**:
 ```python
+# file: examples/development_workflow.py
 @pytest.fixture
 async def seed_database(db_connection):
     # TRUNCATE all tables
@@ -164,6 +172,7 @@ async def seed_database(db_connection):
 
 **Full reset** (removes all data):
 ```bash
+# file: scripts/development_workflow.sh
 docker compose -f docker/docker-compose.yml down -v
 docker compose -f docker/docker-compose.yml up -d
 ```
@@ -201,11 +210,13 @@ docker compose -f docker/docker-compose.yml up -d
 
 **Start all services**:
 ```bash
+# file: scripts/development_workflow.sh
 docker compose -f docker/docker-compose.yml up -d
 ```
 
 **Verify services**:
 ```bash
+# file: scripts/development_workflow.sh
 docker compose -f docker/docker-compose.yml ps
 ```
 
@@ -213,6 +224,7 @@ All services should show "Up" status.
 
 **Run integration tests**:
 ```bash
+# file: scripts/development_workflow.sh
 docker compose -f docker/docker-compose.yml exec effectful poetry run test-integration
 ```
 
@@ -224,11 +236,13 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run test-integ
 
 **Add runtime dependency**:
 ```bash
+# file: scripts/development_workflow.sh
 docker compose -f docker/docker-compose.yml exec effectful poetry add <package>
 ```
 
 **Add dev dependency**:
 ```bash
+# file: scripts/development_workflow.sh
 docker compose -f docker/docker-compose.yml exec effectful poetry add --group dev <package>
 ```
 
@@ -249,6 +263,9 @@ docker compose -f docker/docker-compose.yml exec effectful poetry add --group de
 
 ---
 
-**Last Updated**: 2025-12-01
-**Supersedes**: none
-**Referenced by**: CLAUDE.md, README.md, contributing.md
+## Cross-References
+- [Docker Workflow](docker_workflow.md)
+- [Command Reference](command_reference.md)
+- [Configuration](configuration.md)
+- [Documentation Standards](../documentation_standards.md)
+- [Testing](testing.md)

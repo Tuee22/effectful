@@ -1,0 +1,1 @@
+#!/usr/bin/env bash\n# Placeholder script referenced by documentation.\n# Replace with the canonical command sequence from documents/ when available.\n

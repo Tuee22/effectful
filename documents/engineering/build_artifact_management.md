@@ -1,7 +1,8 @@
 # Build Artifact Management
 
-**Status**: SSoT  
-**Last Updated**: 2025-12-03  
+**Status**: Authoritative source  
+**Supersedes**: none  
+**Referenced by**: engineering/README.md
 
 > **Purpose**: Authoritative rules for what counts as a build artifact, where it lives, and why it must never be versioned or copied out of the container.  
 > **📖 See**: [Documentation Standards](../documentation_standards.md) for SSoT/linking rules.
@@ -60,12 +61,14 @@
 
 Backend (inside container):
 ```bash
+# file: scripts/build_artifact_management.sh
 docker compose -f docker/docker-compose.yml exec effectful poetry install
 docker compose -f docker/docker-compose.yml exec healthhub poetry install
 ```
 
 Frontend (inside container):
 ```bash
+# file: scripts/build_artifact_management.sh
 docker compose -f demo/healthhub/docker/docker-compose.yml exec healthhub npm ci
 docker compose -f demo/healthhub/docker/docker-compose.yml exec healthhub npm run build
 ```
@@ -78,15 +81,18 @@ Artifacts produced in these steps stay under `/opt/**` in the container; do not 
 
 - **Check gitignore**:
   ```bash
+  # file: scripts/build_artifact_management.sh
   git check-ignore -v poetry.lock package-lock.json dist/ build/
   ```
 - **Check docker context**:
   ```bash
+  # file: scripts/build_artifact_management.sh
   docker build --progress=plain . | grep -E "poetry.lock|package-lock.json"
   # Expect: excluded from context
   ```
 - **No artifacts in git**:
   ```bash
+  # file: scripts/build_artifact_management.sh
   git status --short | grep -E "poetry.lock|package-lock.json|dist/|build/" && echo "Artifacts present (fix ignore rules)"
   ```
 
@@ -96,7 +102,6 @@ Artifacts produced in these steps stay under `/opt/**` in the container; do not 
 
 - Upstream doctrine: [Documentation Standards](../documentation_standards.md) — SSoT/link hygiene and ignore file commentary.
 - Build workflows: [Docker Workflow](docker_workflow.md) — container-only development contract.
-- Frontend build: [demo/healthhub/documents/engineering/frontend_architecture.md](/demo/healthhub/documents/engineering/frontend_architecture.md) — build stage copies and `/opt` output rules.
 - Code quality gates: [Code Quality](code_quality.md) — enforcement pipeline that regenerates artifacts.
 
 ---

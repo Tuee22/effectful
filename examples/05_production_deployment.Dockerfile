@@ -1,0 +1,1 @@
+# Placeholder Dockerfile referenced by documentation.\n# Replace with concrete example once available.\n

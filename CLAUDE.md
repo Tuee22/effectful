@@ -113,7 +113,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest > /
 
 ## Contributing
 
-See [documents/CONTRIBUTING.md](documents/CONTRIBUTING.md) for complete contributing guidelines.
+See [documents/contributing.md](documents/contributing.md) for complete contributing guidelines.
 
 **Quick checklist**:
 - [ ] Code quality: `poetry run check-code` exits 0
@@ -140,10 +140,10 @@ See [documents/CONTRIBUTING.md](documents/CONTRIBUTING.md) for complete contribu
 
 ### Documentation
 
-- [Documentation Hub](documents/README.md) - Complete documentation index
+- [Documentation Hub](documents/readme.md) - Complete documentation index
 - [Tutorials](documents/tutorials/) - Step-by-step guides (15 tutorials)
 - [API Reference](documents/api/) - Complete API documentation (9 references)
-- [Contributing Guide](documents/CONTRIBUTING.md) - How to contribute
+- [Contributing Guide](documents/contributing.md) - How to contribute
 
 ### Examples
 

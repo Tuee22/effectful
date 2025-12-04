@@ -51,6 +51,7 @@ Non-goals:
 ### Guard Decision Template
 
 ```python
+# file: examples/authentication.py
 def compute_guard_decision(
     readiness: AuthReadiness,
     required_roles: set[str] | None = None,
@@ -85,6 +86,7 @@ def compute_guard_decision(
 ### Backend Mapping Template
 
 ```python
+# file: examples/authentication.py
 def authenticate_and_authorize(
     request: Request,
     required_roles: set[str] | None,
@@ -144,3 +146,9 @@ def authenticate_and_authorize(
 - Review on auth library or token format changes.
 - Keep frontend/backends synced on guard ADT definitions and reasons.
 - Update anti-patterns as new failure modes are discovered.
+
+## Cross-References
+- [Total Pure Modelling](total_pure_modelling.md)
+- [Code Quality](code_quality.md)
+- [Effect Patterns](effect_patterns.md)
+- [Documentation Standards](../documentation_standards.md)

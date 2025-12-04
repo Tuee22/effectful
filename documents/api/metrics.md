@@ -1,8 +1,14 @@
 # Metrics API Reference
 
+**Status**: Authoritative source  
+**Supersedes**: none  
+**Referenced by**: documents/api/README.md
+
+> **Purpose**: Reference for metrics effects, ADT return types, and observability primitives in effectful.
+
 **effectful** - Complete reference for metrics effects, ADT return types, and observability primitives.
 
-> **Core Doctrine**: For metrics philosophy and architecture, see [observability_doctrine.md](../engineering/observability.md)
+> **Core Doctrine**: For metrics philosophy and architecture, see [observability.md](../engineering/observability.md)
 
 > **Core Doctrine**: For metric naming and labeling standards, see [monitoring_and_alerting.md](../engineering/monitoring_and_alerting.md#monitoring-standards)
 
@@ -37,6 +43,7 @@ The metrics API provides **type-safe, compile-time validated** observability pri
 ### ADT Return Types
 
 ```python
+# file: examples/metrics.py
 from effectful.domain.metrics_result import (
     MetricRecorded,         # Success case with timestamp
     MetricRecordingFailed,  # Failure case with error reason
@@ -60,6 +67,7 @@ type MetricQueryResult = QuerySuccess | QueryFailure
 **Use Cases**: Request counts, error counts, events processed, tasks completed.
 
 ```python
+# file: examples/metrics.py
 from dataclasses import dataclass
 from effectful.effects.metrics import IncrementCounter
 
@@ -80,6 +88,7 @@ class IncrementCounter:
 
 **Example**:
 ```python
+# file: examples/metrics.py
 from collections.abc import Generator
 from effectful import AllEffects, EffectResult
 
@@ -109,6 +118,7 @@ def track_appointment_created(
 
 **Common Errors**:
 ```python
+# file: examples/metrics.py
 # ❌ Metric not registered
 MetricRecordingFailed(reason="metric_not_registered")
 
@@ -134,6 +144,7 @@ MetricRecordingFailed(reason="invalid_value: must be > 0")
 **Use Cases**: Active connections, queue depth, memory usage, temperature.
 
 ```python
+# file: examples/metrics.py
 @dataclass(frozen=True)
 class RecordGauge:
     """Effect: Set a gauge metric to a specific value."""
@@ -151,6 +162,7 @@ class RecordGauge:
 
 **Example**:
 ```python
+# file: examples/metrics.py
 def track_active_websocket_connections(
     connection_count: int
 ) -> Generator[AllEffects, EffectResult, None]:
@@ -184,6 +196,7 @@ def track_active_websocket_connections(
 **Use Cases**: Request duration, response size, database query latency.
 
 ```python
+# file: examples/metrics.py
 @dataclass(frozen=True)
 class ObserveHistogram:
     """Effect: Observe a value in a histogram metric."""
@@ -201,6 +214,7 @@ class ObserveHistogram:
 
 **Example**:
 ```python
+# file: examples/metrics.py
 import time
 
 def measure_effect_duration(
@@ -234,7 +248,8 @@ def measure_effect_duration(
 - Value must be non-negative (>= 0)
 
 **Prometheus Output**:
-```
+```text
+# file: examples/metrics_histogram_output.txt
 effect_duration_seconds_bucket{effect_type="GetUserById",le="0.1"} 45
 effect_duration_seconds_bucket{effect_type="GetUserById",le="0.5"} 89
 effect_duration_seconds_bucket{effect_type="GetUserById",le="1.0"} 95
@@ -252,6 +267,7 @@ effect_duration_seconds_count{effect_type="GetUserById"} 100
 **Use Cases**: Similar to histogram but computes p50/p95/p99 on client side.
 
 ```python
+# file: examples/metrics.py
 @dataclass(frozen=True)
 class RecordSummary:
     """Effect: Record a value in a summary metric."""
@@ -269,6 +285,7 @@ class RecordSummary:
 
 **Example**:
 ```python
+# file: examples/metrics.py
 def track_request_size(
     endpoint: str,
     request_bytes: int
@@ -301,6 +318,7 @@ def track_request_size(
 **Use Cases**: Health checks, admin dashboards, integration tests.
 
 ```python
+# file: examples/metrics.py
 @dataclass(frozen=True)
 class QueryMetrics:
     """Effect: Query current metric values."""
@@ -316,6 +334,7 @@ class QueryMetrics:
 
 **Example**:
 ```python
+# file: examples/metrics.py
 def check_metrics_health() -> Generator[AllEffects, EffectResult, dict[str, float]]:
     result = yield QueryMetrics(
         metric_name="appointments_created_total",
@@ -332,6 +351,7 @@ def check_metrics_health() -> Generator[AllEffects, EffectResult, dict[str, floa
 
 **QuerySuccess Structure**:
 ```python
+# file: examples/metrics.py
 @dataclass(frozen=True)
 class QuerySuccess:
     """Metric query succeeded."""
@@ -341,6 +361,7 @@ class QuerySuccess:
 
 **Example Response**:
 ```python
+# file: examples/metrics.py
 QuerySuccess(
     metrics={
         "appointments_created_total{specialization='cardiology',doctor_id='d1'}": 42.0,
@@ -359,6 +380,7 @@ QuerySuccess(
 **Use Cases**: Integration test isolation, test fixture cleanup.
 
 ```python
+# file: examples/metrics.py
 @dataclass(frozen=True)
 class ResetMetrics:
     """Effect: Reset all metrics (TESTING ONLY)."""
@@ -369,6 +391,7 @@ class ResetMetrics:
 
 **Example**:
 ```python
+# file: examples/metrics.py
 @pytest.fixture
 async def clean_metrics() -> None:
     """Reset metrics before each test."""
@@ -391,6 +414,7 @@ def reset_all_metrics() -> Generator[AllEffects, EffectResult, None]:
 **Purpose**: Success case for metric recording operations.
 
 ```python
+# file: examples/metrics.py
 @dataclass(frozen=True)
 class MetricRecorded:
     """Metric successfully recorded."""
@@ -402,6 +426,7 @@ class MetricRecorded:
 
 **Usage**:
 ```python
+# file: examples/metrics.py
 match result:
     case MetricRecorded(timestamp=ts):
         print(f"Recorded at {datetime.fromtimestamp(ts)}")
@@ -414,6 +439,7 @@ match result:
 **Purpose**: Failure case for metric recording operations.
 
 ```python
+# file: examples/metrics.py
 @dataclass(frozen=True)
 class MetricRecordingFailed:
     """Metric recording failed."""
@@ -433,6 +459,7 @@ class MetricRecordingFailed:
 
 **Usage**:
 ```python
+# file: examples/metrics.py
 match result:
     case MetricRecordingFailed(reason=reason):
         if "metric_not_registered" in reason:
@@ -450,6 +477,7 @@ match result:
 **Purpose**: Success case for metric queries.
 
 ```python
+# file: examples/metrics.py
 @dataclass(frozen=True)
 class QuerySuccess:
     """Metric query succeeded."""
@@ -463,6 +491,7 @@ class QuerySuccess:
 
 **Example**:
 ```python
+# file: examples/metrics.py
 QuerySuccess(
     metrics={
         "requests_total{endpoint='/api/users',method='GET'}": 1523.0,
@@ -479,6 +508,7 @@ QuerySuccess(
 **Purpose**: Failure case for metric queries.
 
 ```python
+# file: examples/metrics.py
 @dataclass(frozen=True)
 class QueryFailure:
     """Metric query failed."""
@@ -502,6 +532,7 @@ class QueryFailure:
 **Purpose**: Type-safe registry preventing metric cardinality explosion.
 
 ```python
+# file: examples/metrics.py
 from dataclasses import dataclass
 from effectful.observability import MetricsRegistry
 
@@ -516,6 +547,7 @@ class MetricsRegistry:
 
 **Example**:
 ```python
+# file: examples/metrics.py
 from effectful.observability import (
     MetricsRegistry,
     CounterDefinition,
@@ -564,6 +596,7 @@ APP_METRICS = MetricsRegistry(
 **Purpose**: Define a monotonically increasing counter metric.
 
 ```python
+# file: examples/metrics.py
 @dataclass(frozen=True)
 class CounterDefinition:
     """Definition of a counter metric."""
@@ -579,6 +612,7 @@ class CounterDefinition:
 
 **Example**:
 ```python
+# file: examples/metrics.py
 CounterDefinition(
     name="http_requests_total",
     help_text="Total HTTP requests received",
@@ -598,6 +632,7 @@ CounterDefinition(
 **Purpose**: Define a gauge metric (value that can increase or decrease).
 
 ```python
+# file: examples/metrics.py
 @dataclass(frozen=True)
 class GaugeDefinition:
     """Definition of a gauge metric."""
@@ -610,6 +645,7 @@ class GaugeDefinition:
 
 **Example**:
 ```python
+# file: examples/metrics.py
 GaugeDefinition(
     name="database_connections_active",
     help_text="Current active database connections",
@@ -624,6 +660,7 @@ GaugeDefinition(
 **Purpose**: Define a histogram metric with buckets.
 
 ```python
+# file: examples/metrics.py
 @dataclass(frozen=True)
 class HistogramDefinition:
     """Definition of a histogram metric."""
@@ -641,6 +678,7 @@ class HistogramDefinition:
 
 **Example**:
 ```python
+# file: examples/metrics.py
 HistogramDefinition(
     name="http_request_duration_seconds",
     help_text="HTTP request duration distribution",
@@ -661,6 +699,7 @@ HistogramDefinition(
 **Purpose**: Define a summary metric with quantiles.
 
 ```python
+# file: examples/metrics.py
 @dataclass(frozen=True)
 class SummaryDefinition:
     """Definition of a summary metric."""
@@ -675,6 +714,7 @@ class SummaryDefinition:
 
 **Example**:
 ```python
+# file: examples/metrics.py
 SummaryDefinition(
     name="response_size_bytes",
     help_text="HTTP response size summary",
@@ -690,6 +730,7 @@ SummaryDefinition(
 **Purpose**: Infrastructure-agnostic interface for metrics collection.
 
 ```python
+# file: examples/metrics.py
 from typing import Protocol
 from effectful.domain.metrics_result import MetricResult, MetricQueryResult
 
@@ -754,6 +795,7 @@ class MetricsCollector(Protocol):
 ## Complete Example
 
 ```python
+# file: examples/metrics.py
 from collections.abc import Generator
 from dataclasses import dataclass
 from uuid import UUID
@@ -858,7 +900,7 @@ async def main() -> None:
 
 ## Cross-References
 
-> **Core Doctrine**: For observability architecture, see [observability_doctrine.md](../engineering/observability.md)
+> **Core Doctrine**: For observability architecture, see [observability.md](../engineering/observability.md)
 
 > **Core Doctrine**: For metric naming standards, see [monitoring_and_alerting.md](../engineering/monitoring_and_alerting.md#monitoring-standards)
 
@@ -868,14 +910,7 @@ async def main() -> None:
 
 ## See Also
 
-- [Metrics Quickstart](../tutorials/11_metrics_quickstart.md) - Get started in 15 minutes
-- [Metric Types Guide](../tutorials/12_metric_types_guide.md) - When to use each metric type
-- [Prometheus Setup](../tutorials/13_prometheus_setup.md) - Docker integration
-- [Testing Guide](../tutorials/04_testing_guide.md) - Testing metrics effects
-
----
-
-**Status**: API Reference for metrics effect system
-**Last Updated**: 2025-01-28  
-**Supersedes**: none  
-**Referenced by**: engineering/observability.md, tutorials/11_metrics_quickstart.md, tutorials/12_metric_types_guide.md, tutorials/13_prometheus_setup.md, tutorials/14_alert_rules.md, tutorials/15_grafana_dashboards.md
+- [Metrics Quickstart](../tutorials/metrics_quickstart.md) - Get started in 15 minutes
+- [Metric Types Guide](../tutorials/metric_types_guide.md) - When to use each metric type
+- [Prometheus Setup](../tutorials/prometheus_setup.md) - Docker integration
+- [Testing Guide](../tutorials/testing_guide.md) - Testing metrics effects

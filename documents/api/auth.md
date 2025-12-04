@@ -1,6 +1,10 @@
 # Auth Effects API Reference
 
-This document covers the authentication effect types for JWT token management and password operations.
+**Status**: Authoritative source  
+**Supersedes**: none  
+**Referenced by**: documents/api/README.md
+
+> **Purpose**: Reference for authentication effect types used for JWT token management and password operations.
 
 ## Effect Types
 
@@ -9,6 +13,7 @@ This document covers the authentication effect types for JWT token management an
 Validates a JWT token and extracts user claims.
 
 ```python
+# file: examples/auth.py
 @dataclass(frozen=True)
 class ValidateToken:
     token: str
@@ -21,6 +26,7 @@ class ValidateToken:
 
 **Example:**
 ```python
+# file: examples/auth.py
 from effectful import ValidateToken, TokenValid, TokenExpired, TokenInvalid
 
 def check_auth(
@@ -44,6 +50,7 @@ def check_auth(
 Generates a new JWT token for a user.
 
 ```python
+# file: examples/auth.py
 @dataclass(frozen=True)
 class GenerateToken:
     user_id: UUID
@@ -60,6 +67,7 @@ class GenerateToken:
 
 **Example:**
 ```python
+# file: examples/auth.py
 from effectful import GenerateToken
 
 def create_access_token(
@@ -81,6 +89,7 @@ def create_access_token(
 Refreshes an existing token to extend validity.
 
 ```python
+# file: examples/auth.py
 @dataclass(frozen=True)
 class RefreshToken:
     refresh_token: str
@@ -93,6 +102,7 @@ class RefreshToken:
 
 **Example:**
 ```python
+# file: examples/auth.py
 from effectful import RefreshToken
 
 def refresh_access(
@@ -112,6 +122,7 @@ def refresh_access(
 Revokes/blacklists a token to prevent further use.
 
 ```python
+# file: examples/auth.py
 @dataclass(frozen=True)
 class RevokeToken:
     token: str
@@ -124,6 +135,7 @@ class RevokeToken:
 
 **Example:**
 ```python
+# file: examples/auth.py
 from effectful import RevokeToken
 
 def logout(token: str) -> Generator[AllEffects, EffectResult, None]:
@@ -137,6 +149,7 @@ def logout(token: str) -> Generator[AllEffects, EffectResult, None]:
 Gets a user by email address.
 
 ```python
+# file: examples/auth.py
 @dataclass(frozen=True)
 class GetUserByEmail:
     email: str
@@ -149,6 +162,7 @@ class GetUserByEmail:
 
 **Example:**
 ```python
+# file: examples/auth.py
 from effectful import GetUserByEmail, User
 
 def find_user(
@@ -168,6 +182,7 @@ def find_user(
 Validates a password against a bcrypt hash.
 
 ```python
+# file: examples/auth.py
 @dataclass(frozen=True)
 class ValidatePassword:
     password: str
@@ -182,6 +197,7 @@ class ValidatePassword:
 
 **Example:**
 ```python
+# file: examples/auth.py
 from effectful import ValidatePassword
 
 def check_password(
@@ -201,6 +217,7 @@ def check_password(
 Hashes a password with bcrypt.
 
 ```python
+# file: examples/auth.py
 @dataclass(frozen=True)
 class HashPassword:
     password: str
@@ -213,6 +230,7 @@ class HashPassword:
 
 **Example:**
 ```python
+# file: examples/auth.py
 from effectful import HashPassword
 
 def hash_new_password(
@@ -231,6 +249,7 @@ def hash_new_password(
 ADT for token validation outcomes.
 
 ```python
+# file: examples/auth.py
 type TokenValidationResult = TokenValid | TokenExpired | TokenInvalid
 
 @dataclass(frozen=True)
@@ -251,6 +270,7 @@ class TokenInvalid:
 
 **Pattern Matching:**
 ```python
+# file: examples/auth.py
 result = yield ValidateToken(token=token)
 
 match result:
@@ -275,6 +295,7 @@ match result:
 The `AuthInterpreter` may return `AuthError` for infrastructure failures:
 
 ```python
+# file: examples/auth.py
 from effectful import AuthError
 
 result = await run_ws_program(my_program(), interpreter)
@@ -291,6 +312,7 @@ match result:
 ## Complete Workflow Example
 
 ```python
+# file: examples/auth.py
 from collections.abc import Generator
 from uuid import UUID
 from effectful import (
@@ -401,12 +423,12 @@ def logout_flow(
 ## See Also
 
 - [Effects Overview](effects.md) - All effect types
-- [Tutorial: Auth Effects](../tutorials/10_auth_effects.md) - Step-by-step guide
+- [Tutorial: Auth Effects](../tutorials/auth_effects.md) - Step-by-step guide
 - [Interpreters](interpreters.md) - AuthInterpreter details
-- [Testing Guide](../tutorials/04_testing_guide.md) - Testing auth programs
+- [Testing Guide](../tutorials/testing_guide.md) - Testing auth programs
 
 ---
 
-**Last Updated**: 2025-12-01  
-**Supersedes**: none  
-**Referenced by**: documents/api/README.md, ../README.md
+## Cross-References
+- [Documentation Standards](../documentation_standards.md)
+- [Engineering Architecture](../engineering/architecture.md)

@@ -1,9 +1,12 @@
-# Configuration (HealthHub delta)
+# Configuration
 
-> Extends base [Configuration](../../../../documents/engineering/configuration.md). No HealthHub-specific deltas; configuration keys are documented in product/environment files.
-
----
-
-**Last Updated**: 2025-12-02  
+**Status**: Reference only  
 **Supersedes**: none  
-**Referenced by**: README.md
+**Referenced by**: demo/healthhub/documents/readme.md
+
+> **Purpose**: HealthHub delta for Configuration. Base: [configuration.md](../../../../documents/engineering/configuration.md).
+> **📖 Authoritative Reference**: [Configuration Standards](../../../../documents/engineering/configuration.md)
+
+## Deltas
+- HealthHub follows the base guidance; no additional deltas are documented here beyond using the HealthHub compose stack and service name (`healthhub`).
+- Refer to the base document for canonical procedures; apply HealthHub-specific ports, credentials, and service names where applicable.

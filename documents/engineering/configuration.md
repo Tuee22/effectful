@@ -1,14 +1,12 @@
 # Configuration Standards
 
-> **SSoT** for all environment variables and service configuration in effectful.
+**Status**: Authoritative source  
+**Supersedes**: None  
+**Referenced by**: docker_workflow.md, development_workflow.md, README.md, monitoring_and_alerting.md
+
+> **Purpose**: SSoT for all environment variables and service configuration in effectful.
 
 Defines environment variables and service wiring for effectful across local development and production.
-
----
-
-**Last Updated**: 2025-12-03
-**Supersedes**: None
-**Referenced by**: docker_workflow.md, development_workflow.md, README.md, monitoring_and_alerting.md
 
 ## SSoT Link Map
 
@@ -61,6 +59,7 @@ flowchart TB
 ### PostgreSQL Configuration
 
 ```bash
+# file: scripts/configuration.sh
 POSTGRES_HOST=postgres
 POSTGRES_PORT=5432
 POSTGRES_DB=effectful_test
@@ -75,6 +74,7 @@ POSTGRES_PASSWORD=effectful_pass
 ### Redis Configuration
 
 ```bash
+# file: scripts/configuration.sh
 REDIS_HOST=redis
 REDIS_PORT=6379
 ```
@@ -86,6 +86,7 @@ REDIS_PORT=6379
 ### MinIO S3 Configuration
 
 ```bash
+# file: scripts/configuration.sh
 MINIO_ENDPOINT=minio:9000
 MINIO_ACCESS_KEY=minioadmin
 MINIO_SECRET_KEY=minioadmin
@@ -99,6 +100,7 @@ MINIO_BUCKET=effectful-test
 ### Apache Pulsar Configuration
 
 ```bash
+# file: scripts/configuration.sh
 PULSAR_URL=pulsar://pulsar:6650
 ```
 
@@ -144,6 +146,7 @@ See [Observability](observability.md) for production monitoring standards.
 
 **PostgreSQL** (asyncpg):
 ```python
+# file: examples/configuration.py
 pool = await asyncpg.create_pool(
     host=os.environ["POSTGRES_HOST"],
     port=int(os.environ["POSTGRES_PORT"]),
@@ -157,6 +160,7 @@ pool = await asyncpg.create_pool(
 
 **Redis** (redis-py):
 ```python
+# file: examples/configuration.py
 pool = redis.ConnectionPool(
     host=os.environ["REDIS_HOST"],
     port=int(os.environ["REDIS_PORT"]),
@@ -172,6 +176,8 @@ pool = redis.ConnectionPool(
 
 ---
 
-**Last Updated**: 2025-12-01
-**Supersedes**: none
-**Referenced by**: CLAUDE.md, docker_workflow.md, development_workflow.md
+## Cross-References
+- [Docker Workflow](docker_workflow.md)
+- [Command Reference](command_reference.md)
+- [Development Workflow](development_workflow.md)
+- [Observability](observability.md)

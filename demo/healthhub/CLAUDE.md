@@ -334,10 +334,10 @@ JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
 
 - **Parent Library**: `../../effectful/` (effectful effect system)
 - **Documentation**: `documents/` (comprehensive 24-document suite)
-- **API Reference**: `documents/product/api_reference.md`
-- **Architecture**: `documents/product/architecture_overview.md`
-- **Authorization**: `documents/product/authorization_system.md`
-- **State Machine**: `documents/product/appointment_state_machine.md`
+- **API Reference**: `documents/api/README.md`
+- **Architecture**: `documents/engineering/architecture.md`
+- **Authorization**: `documents/engineering/authentication.md`
+- **State Machine**: `documents/engineering/effect_patterns.md#state-machines`
 
 ---
 

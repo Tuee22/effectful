@@ -24,7 +24,7 @@ Configure Prometheus to scrape this endpoint by updating:
 SSoT References:
     - documents/core/observability_doctrine.md - Dual-layer metrics
     - documents/engineering/monitoring_and_alerting.md - Metric naming
-    - documents/tutorials/11_metrics_quickstart.md - Setup guide
+    - documents/tutorials/metrics_quickstart.md - Setup guide
 """
 
 from collections.abc import AsyncGenerator, Generator

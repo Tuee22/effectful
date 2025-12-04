@@ -1,12 +1,10 @@
 # API Reference
 
-> Navigation hub for all effectful API reference content.
-
----
-
-**Last Updated**: 2025-12-01  
+**Status**: Authoritative source  
 **Supersedes**: none  
-**Referenced by**: documents/README.md
+**Referenced by**: documents/readme.md
+
+> **Purpose**: Navigation hub for all effectful API reference content.
 
 Complete API documentation for the effectful package.
 
@@ -107,6 +105,7 @@ Testing utilities, matchers, and strategies.
 ### Importing Core Types
 
 ```python
+# file: examples/README.py
 from effectful import (
     # Result type
     Result,
@@ -144,6 +143,7 @@ from effectful import (
 ### Basic Program Pattern
 
 ```python
+# file: examples/README.py
 from collections.abc import Generator
 from effectful import AllEffects, EffectResult, SendText
 from uuid import UUID
@@ -161,6 +161,7 @@ def my_program(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 ### Running Programs
 
 ```python
+# file: examples/README.py
 from effectful import run_ws_program, create_composite_interpreter
 
 # Create interpreter
@@ -196,6 +197,7 @@ All API documentation follows strict type safety guidelines:
 **Example**:
 
 ```python
+# file: examples/README.py
 # ✅ CORRECT: Type-safe program
 def process(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
     user = yield GetUserById(user_id=user_id)
@@ -219,7 +221,11 @@ def process(user_id):  # Missing type hints
 ## See Also
 
 - [Tutorials](../tutorials/) - Step-by-step guides for learning effectful
-- [Examples](/examples/) - Real-world example programs
+- [Examples](../../examples/) - Real-world example programs
 - [Architecture](../engineering/architecture.md) - Design principles and architecture overview
 - [Docker Workflow](../engineering/docker_workflow.md) - Development workflow (SSoT)
-- [CLAUDE.md](/CLAUDE.md) - Complete development reference
+- [CLAUDE.md](../../CLAUDE.md) - Complete development reference
+
+## Cross-References
+- [Documentation Standards](../documentation_standards.md)
+- [Engineering Architecture](../engineering/architecture.md)
