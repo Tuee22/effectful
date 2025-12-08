@@ -13,6 +13,7 @@ from uuid import UUID
 import jwt
 
 from app.config import settings
+from effectful.domain.optional_value import OptionalValue, to_optional_value
 
 
 class TokenType(str, Enum):
@@ -30,8 +31,8 @@ class TokenData:
     email: str
     role: str
     token_type: TokenType
-    patient_id: UUID | None  # NEW: Eliminates DB lookup for patient authorization
-    doctor_id: UUID | None  # NEW: Eliminates DB lookup for doctor authorization
+    patient_id: OptionalValue[UUID]  # NEW: Eliminates DB lookup for patient authorization
+    doctor_id: OptionalValue[UUID]  # NEW: Eliminates DB lookup for doctor authorization
     exp: datetime
     iat: datetime
 
@@ -152,13 +153,16 @@ def verify_token(token: str, expected_type: TokenType) -> TokenValidationResult:
                 detail=f"Expected {expected_type.value} token, got {token_type}",
             )
 
+        patient_id_value = UUID(payload["patient_id"]) if payload.get("patient_id") else None
+        doctor_id_value = UUID(payload["doctor_id"]) if payload.get("doctor_id") else None
+
         token_data = TokenData(
             user_id=UUID(payload["user_id"]),
             email=payload["email"],
             role=payload["role"],
             token_type=TokenType(token_type),
-            patient_id=UUID(payload["patient_id"]) if payload.get("patient_id") else None,
-            doctor_id=UUID(payload["doctor_id"]) if payload.get("doctor_id") else None,
+            patient_id=to_optional_value(patient_id_value, reason="not_included"),
+            doctor_id=to_optional_value(doctor_id_value, reason="not_included"),
             exp=datetime.fromtimestamp(payload["exp"], tz=timezone.utc),
             iat=datetime.fromtimestamp(payload["iat"], tz=timezone.utc),
         )

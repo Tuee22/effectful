@@ -10,6 +10,11 @@ globals:
     - "Run `check-code` (Black + mypy strict) before tests."
     - "Run pytest inside Docker; no skipped tests; coverage threshold ≥ 45% (adapters excluded)."
   command_prefix: "docker compose -f docker/docker-compose.yml exec effectful poetry run"
+  test_execution:
+    per_test_timeout_seconds: 60
+    per_test_timeout_scope: "Applied per test (including fixture setup/teardown); raise limits case by case, never disable globally."
+    codex_runner_timeout_seconds_min: 14400
+    codex_runner_timeout_policy: "Set an explicit Codex timeout for test runs; never below 4 hours and never pre-empt without explicit human approval."
 
 agents:
   - name: architecture

@@ -7,6 +7,7 @@ from collections.abc import Generator
 from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
+from typing_extensions import assert_never
 
 from app.domain.appointment import (
     Appointment,
@@ -16,7 +17,24 @@ from app.domain.appointment import (
     TransitionSuccess,
 )
 from app.domain.doctor import Doctor
+from app.domain.lookup_result import (
+    AppointmentFound,
+    AppointmentMissing,
+    AppointmentLookupResult,
+    DoctorFound,
+    DoctorMissingById,
+    DoctorMissingByUserId,
+    DoctorLookupResult,
+    PatientFound,
+    PatientLookupResult,
+    PatientMissingById,
+    PatientMissingByUserId,
+    is_appointment_lookup_result,
+    is_doctor_lookup_result,
+    is_patient_lookup_result,
+)
 from app.domain.patient import Patient
+from effectful.domain.optional_value import to_optional_value
 from app.effects.healthcare import (
     CreateAppointment,
     GetAppointmentById,
@@ -25,6 +43,7 @@ from app.effects.healthcare import (
     TransitionAppointmentStatus,
 )
 from app.effects.notification import LogAuditEvent, NotificationValue, PublishWebSocketNotification
+from app.effects.observability import IncrementCounter, ObserveHistogram
 from app.interpreters.composite_interpreter import AllEffects
 
 
@@ -81,23 +100,44 @@ def schedule_appointment_program(
         Created appointment or None if validation fails
     """
     # Step 1: Verify patient exists
-    patient = yield GetPatientById(patient_id=patient_id)
-    if not isinstance(patient, Patient):
-        return AppointmentPatientMissing(patient_id=patient_id)
+    patient_result = yield GetPatientById(patient_id=patient_id)
+    assert is_patient_lookup_result(patient_result)
+    match patient_result:
+        case PatientFound():
+            pass
+        case PatientMissingById(patient_id=missing_id):
+            return AppointmentPatientMissing(patient_id=missing_id)
+        case PatientMissingByUserId():
+            return AppointmentPatientMissing(patient_id=patient_id)
+        case _:
+            assert_never(patient_result)
 
     # Step 2: Verify doctor exists
-    doctor = yield GetDoctorById(doctor_id=doctor_id)
-    if not isinstance(doctor, Doctor):
-        return AppointmentDoctorMissing(doctor_id=doctor_id)
+    doctor_result = yield GetDoctorById(doctor_id=doctor_id)
+    assert is_doctor_lookup_result(doctor_result)
+    match doctor_result:
+        case DoctorFound(doctor=doctor):
+            doctor_specialization = doctor.specialization
+        case DoctorMissingById(doctor_id=missing_id):
+            return AppointmentDoctorMissing(doctor_id=missing_id)
+        case DoctorMissingByUserId():
+            return AppointmentDoctorMissing(doctor_id=doctor_id)
+        case _:
+            assert_never(doctor_result)
 
     # Step 3: Create appointment
     appointment = yield CreateAppointment(
         patient_id=patient_id,
         doctor_id=doctor_id,
-        requested_time=requested_time,
+        requested_time=to_optional_value(requested_time, reason="not_requested"),
         reason=reason,
     )
     assert isinstance(appointment, Appointment)
+
+    yield IncrementCounter(
+        metric_name="healthhub_appointments_created_total",
+        labels={"doctor_specialization": doctor_specialization},
+    )
 
     # Step 4: Notify doctor via WebSocket
     notification_channel = f"doctor:{doctor_id}:notifications"
@@ -109,7 +149,7 @@ def schedule_appointment_program(
     yield PublishWebSocketNotification(
         channel=notification_channel,
         message=notification_message,
-        recipient_id=doctor_id,
+        recipient_id=to_optional_value(doctor_id, reason="doctor_recipient"),
     )
 
     yield LogAuditEvent(
@@ -117,9 +157,9 @@ def schedule_appointment_program(
         action="create_appointment",
         resource_type="appointment",
         resource_id=appointment.id,
-        ip_address=None,
-        user_agent=None,
-        metadata={"reason_present": "true"},
+        ip_address=to_optional_value(None, reason="not_provided"),
+        user_agent=to_optional_value(None, reason="not_provided"),
+        metadata=to_optional_value({"reason_present": "true"}),
     )
 
     return AppointmentScheduled(appointment=appointment)
@@ -129,6 +169,7 @@ def transition_appointment_program(
     appointment_id: UUID,
     new_status: AppointmentStatus,
     actor_id: UUID,
+    transition_time: datetime,
 ) -> Generator[AllEffects, object, TransitionResult]:
     """Transition appointment status with validation and notifications.
 
@@ -147,13 +188,19 @@ def transition_appointment_program(
         TransitionResult (Success or Invalid)
     """
     # Step 1: Get current appointment
-    appointment = yield GetAppointmentById(appointment_id=appointment_id)
-    if not isinstance(appointment, Appointment):
-        return TransitionInvalid(
-            current_status="none",
-            attempted_status=type(new_status).__name__,
-            reason=f"Appointment {appointment_id} not found",
-        )
+    appointment_result = yield GetAppointmentById(appointment_id=appointment_id)
+    assert is_appointment_lookup_result(appointment_result)
+    match appointment_result:
+        case AppointmentFound(appointment=appointment):
+            current_appointment = appointment
+        case AppointmentMissing():
+            return TransitionInvalid(
+                current_status="none",
+                attempted_status=type(new_status).__name__,
+                reason=f"Appointment {appointment_id} not found",
+            )
+        case _:
+            assert_never(appointment_result)
 
     # Step 2: Attempt transition
     result = yield TransitionAppointmentStatus(
@@ -165,8 +212,18 @@ def transition_appointment_program(
 
     # Step 3: If successful, send notifications
     if isinstance(result, TransitionSuccess):
+        transition_latency_seconds = (
+            transition_time - current_appointment.created_at
+        ).total_seconds()
+
+        yield ObserveHistogram(
+            metric_name="healthhub_appointment_transition_latency_seconds",
+            labels={"new_status": type(new_status).__name__},
+            value=transition_latency_seconds,
+        )
+
         # Notify patient
-        patient_channel = f"patient:{appointment.patient_id}:notifications"
+        patient_channel = f"patient:{current_appointment.patient_id}:notifications"
         patient_message: dict[str, NotificationValue] = {
             "type": "appointment_status_changed",
             "appointment_id": str(appointment_id),
@@ -176,11 +233,13 @@ def transition_appointment_program(
         yield PublishWebSocketNotification(
             channel=patient_channel,
             message=patient_message,
-            recipient_id=appointment.patient_id,
+            recipient_id=to_optional_value(
+                current_appointment.patient_id, reason="patient_recipient"
+            ),
         )
 
         # Notify doctor
-        doctor_channel = f"doctor:{appointment.doctor_id}:notifications"
+        doctor_channel = f"doctor:{current_appointment.doctor_id}:notifications"
         doctor_message: dict[str, NotificationValue] = {
             "type": "appointment_status_changed",
             "appointment_id": str(appointment_id),
@@ -190,7 +249,9 @@ def transition_appointment_program(
         yield PublishWebSocketNotification(
             channel=doctor_channel,
             message=doctor_message,
-            recipient_id=appointment.doctor_id,
+            recipient_id=to_optional_value(
+                current_appointment.doctor_id, reason="doctor_recipient"
+            ),
         )
 
         yield LogAuditEvent(
@@ -198,9 +259,9 @@ def transition_appointment_program(
             action="transition_appointment_status",
             resource_type="appointment",
             resource_id=appointment_id,
-            ip_address=None,
-            user_agent=None,
-            metadata={"new_status": type(new_status).__name__},
+            ip_address=to_optional_value(None, reason="not_provided"),
+            user_agent=to_optional_value(None, reason="not_provided"),
+            metadata=to_optional_value({"new_status": type(new_status).__name__}),
         )
 
     return result

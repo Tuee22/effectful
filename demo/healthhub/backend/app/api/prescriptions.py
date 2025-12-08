@@ -3,18 +3,34 @@
 Provides prescription creation with medication interaction checking.
 """
 
+from collections.abc import Generator
 from datetime import datetime
 from typing import Annotated
 from uuid import UUID
+from typing_extensions import assert_never
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
-from app.domain.optional_value import from_optional_value
+from app.api.dependencies import (
+    AdminAuthorized,
+    DoctorAuthorized,
+    PatientAuthorized,
+    get_audited_composite_interpreter,
+    require_authenticated,
+    require_doctor_or_admin,
+)
+from app.domain.lookup_result import (
+    PrescriptionFound,
+    PrescriptionMissing,
+    is_prescription_lookup_result,
+)
+from effectful.domain.optional_value import from_optional_value
 from app.domain.prescription import MedicationInteractionWarning, Prescription
-from app.infrastructure import create_redis_client, get_database_manager, rate_limit
-from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
-from app.interpreters.composite_interpreter import CompositeInterpreter
+from app.effects.healthcare import GetPrescriptionById, ListPrescriptions
+from app.infrastructure.rate_limiter import rate_limit
+from app.interpreters.auditing_interpreter import AuditedCompositeInterpreter
+from app.interpreters.composite_interpreter import AllEffects
 from app.programs.prescription_programs import (
     PrescriptionBlocked,
     PrescriptionCreated,
@@ -24,13 +40,6 @@ from app.programs.prescription_programs import (
     create_prescription_program,
 )
 from app.programs.runner import run_program
-from app.api.dependencies import (
-    AdminAuthorized,
-    DoctorAuthorized,
-    PatientAuthorized,
-    require_authenticated,
-    require_doctor_or_admin,
-)
 
 router = APIRouter()
 
@@ -84,10 +93,13 @@ def prescription_to_response(prescription: Prescription) -> PrescriptionResponse
 
 @router.get("/", response_model=list[PrescriptionResponse])
 async def list_prescriptions(
-    request: Request,
     auth: Annotated[
         PatientAuthorized | DoctorAuthorized | AdminAuthorized,
         Depends(require_authenticated),
+    ],
+    interpreter: Annotated[
+        AuditedCompositeInterpreter,
+        Depends(get_audited_composite_interpreter),
     ],
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> list[PrescriptionResponse]:
@@ -100,52 +112,25 @@ async def list_prescriptions(
     Logs all PHI access for HIPAA compliance.
     Rate limit: 100 requests per 60 seconds per IP address.
     """
-    from collections.abc import Generator
-    from app.effects.healthcare import ListPrescriptions
-    from app.interpreters.composite_interpreter import AllEffects
-
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
-
-    # Create Redis client
-    redis_client = create_redis_client()
-
-    # Extract actor ID and determine filters based on role
-    actor_id: UUID
+    # Determine filters based on role
     patient_id: UUID | None = None
     doctor_id: UUID | None = None
 
     match auth:
-        case PatientAuthorized(user_id=uid, patient_id=pid):
-            actor_id = uid
+        case PatientAuthorized(patient_id=pid):
             patient_id = pid
-        case DoctorAuthorized(user_id=uid, doctor_id=did):
-            actor_id = uid
+        case DoctorAuthorized(doctor_id=did):
             doctor_id = did
-        case AdminAuthorized(user_id=uid):
-            actor_id = uid
-
-    # Extract IP and user agent from request
-    ip_address = request.client.host if request.client else None
-    user_agent = request.headers.get("user-agent")
-
-    # Create composite interpreter
-    base_interpreter = CompositeInterpreter(pool, redis_client)
-    interpreter = AuditedCompositeInterpreter(
-        base_interpreter,
-        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
-    )
+        case AdminAuthorized():
+            pass  # No filtering for admins
 
     def list_program() -> Generator[AllEffects, object, list[Prescription]]:
         prescriptions = yield ListPrescriptions(patient_id=patient_id, doctor_id=doctor_id)
         assert isinstance(prescriptions, list)
-
         return prescriptions
 
     # Run effect program
     prescriptions = await run_program(list_program(), interpreter)
-
-    await redis_client.aclose()
 
     return [prescription_to_response(p) for p in prescriptions]
 
@@ -160,6 +145,10 @@ async def create_prescription(
     auth: Annotated[
         DoctorAuthorized | AdminAuthorized,
         Depends(require_doctor_or_admin),
+    ],
+    interpreter: Annotated[
+        AuditedCompositeInterpreter,
+        Depends(get_audited_composite_interpreter),
     ],
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> PrescriptionResponse | dict[str, object]:
@@ -202,12 +191,6 @@ async def create_prescription(
         case AdminAuthorized(user_id=uid):
             actor_id = uid
 
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
-
-    # Create Redis client
-    redis_client = create_redis_client()
-
     program = create_prescription_program(
         patient_id=UUID(request.patient_id),
         doctor_id=UUID(request.doctor_id),
@@ -221,16 +204,7 @@ async def create_prescription(
         existing_medications=request.existing_medications,
     )
 
-    # Create composite interpreter
-    base_interpreter = CompositeInterpreter(pool, redis_client)
-    interpreter: AuditedCompositeInterpreter = AuditedCompositeInterpreter(
-        base_interpreter,
-        AuditContext(user_id=actor_id, ip_address=None, user_agent=None),
-    )
-
     result = await run_program(program, interpreter)
-
-    await redis_client.aclose()
 
     # Handle result
     match result:
@@ -271,10 +245,13 @@ async def create_prescription(
 @router.get("/{prescription_id}", response_model=PrescriptionResponse)
 async def get_prescription(
     prescription_id: str,
-    request: Request,
     auth: Annotated[
         PatientAuthorized | DoctorAuthorized | AdminAuthorized,
         Depends(require_authenticated),
+    ],
+    interpreter: Annotated[
+        AuditedCompositeInterpreter,
+        Depends(get_audited_composite_interpreter),
     ],
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> PrescriptionResponse:
@@ -284,62 +261,37 @@ async def get_prescription(
     Logs all PHI access for HIPAA compliance.
     Rate limit: 100 requests per 60 seconds per IP address.
     """
-    from collections.abc import Generator
-    from app.effects.healthcare import GetPrescriptionById
-    from app.interpreters.composite_interpreter import AllEffects
 
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
-
-    # Create Redis client
-    redis_client = create_redis_client()
-
-    # Extract actor ID from auth state
-    actor_id: UUID
-    match auth:
-        case PatientAuthorized(user_id=uid):
-            actor_id = uid
-        case DoctorAuthorized(user_id=uid):
-            actor_id = uid
-        case AdminAuthorized(user_id=uid):
-            actor_id = uid
-
-    # Extract IP and user agent from request
-    ip_address = request.client.host if request.client else None
-    user_agent = request.headers.get("user-agent")
-
-    # Create composite interpreter
-    base_interpreter = CompositeInterpreter(pool, redis_client)
-    interpreter = AuditedCompositeInterpreter(
-        base_interpreter,
-        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
-    )
-
-    def get_program() -> Generator[AllEffects, object, Prescription | None]:
-        prescription = yield GetPrescriptionById(prescription_id=UUID(prescription_id))
-        return prescription if isinstance(prescription, Prescription) else None
+    def get_program() -> Generator[AllEffects, object, PrescriptionFound | PrescriptionMissing]:
+        result = yield GetPrescriptionById(prescription_id=UUID(prescription_id))
+        assert is_prescription_lookup_result(result)
+        return result
 
     # Run effect program
-    prescription = await run_program(get_program(), interpreter)
+    prescription_result = await run_program(get_program(), interpreter)
 
-    await redis_client.aclose()
-
-    if prescription is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Prescription {prescription_id} not found",
-        )
-
-    return prescription_to_response(prescription)
+    match prescription_result:
+        case PrescriptionFound(prescription=prescription):
+            return prescription_to_response(prescription)
+        case PrescriptionMissing():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Prescription {prescription_id} not found",
+            )
+        case _:
+            assert_never(prescription_result)
 
 
 @router.get("/patient/{patient_id}", response_model=list[PrescriptionResponse])
 async def get_patient_prescriptions(
     patient_id: str,
-    request: Request,
     auth: Annotated[
         PatientAuthorized | DoctorAuthorized | AdminAuthorized,
         Depends(require_authenticated),
+    ],
+    interpreter: Annotated[
+        AuditedCompositeInterpreter,
+        Depends(get_audited_composite_interpreter),
     ],
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> list[PrescriptionResponse]:
@@ -349,46 +301,13 @@ async def get_patient_prescriptions(
     Logs all PHI access for HIPAA compliance.
     Rate limit: 100 requests per 60 seconds per IP address.
     """
-    from collections.abc import Generator
-    from app.effects.healthcare import ListPrescriptions
-    from app.interpreters.composite_interpreter import AllEffects
-
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
-
-    # Create Redis client
-    redis_client = create_redis_client()
-
-    # Extract actor ID from auth state
-    actor_id: UUID
-    match auth:
-        case PatientAuthorized(user_id=uid):
-            actor_id = uid
-        case DoctorAuthorized(user_id=uid):
-            actor_id = uid
-        case AdminAuthorized(user_id=uid):
-            actor_id = uid
-
-    # Extract IP and user agent from request
-    ip_address = request.client.host if request.client else None
-    user_agent = request.headers.get("user-agent")
-
-    # Create composite interpreter
-    base_interpreter = CompositeInterpreter(pool, redis_client)
-    interpreter = AuditedCompositeInterpreter(
-        base_interpreter,
-        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
-    )
 
     def list_program() -> Generator[AllEffects, object, list[Prescription]]:
         prescriptions = yield ListPrescriptions(patient_id=UUID(patient_id), doctor_id=None)
         assert isinstance(prescriptions, list)
-
         return prescriptions
 
     # Run effect program
     prescriptions = await run_program(list_program(), interpreter)
-
-    await redis_client.aclose()
 
     return [prescription_to_response(p) for p in prescriptions]

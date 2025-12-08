@@ -22,6 +22,7 @@ from datetime import UTC, datetime
 import boto3
 from botocore.exceptions import ClientError
 
+from effectful.domain.optional_value import OptionalValue, from_optional_value, to_optional_value
 from effectful.domain.s3_object import ObjectNotFound, PutFailure, PutResult, PutSuccess, S3Object
 from effectful.infrastructure.storage import ObjectStorage
 
@@ -112,9 +113,9 @@ class S3ObjectStorage(ObjectStorage):
                 content=content,
                 last_modified=last_modified.astimezone(UTC) if last_modified else datetime.now(UTC),
                 metadata=metadata,
-                content_type=content_type,
+                content_type=to_optional_value(content_type),
                 size=content_length,
-                version_id=version_id,
+                version_id=to_optional_value(version_id),
             )
         except ClientError as e:
             error_code = e.response.get("Error", {}).get("Code", "")
@@ -131,8 +132,8 @@ class S3ObjectStorage(ObjectStorage):
         bucket: str,
         key: str,
         content: bytes,
-        metadata: dict[str, str] | None = None,
-        content_type: str | None = None,
+        metadata: OptionalValue[dict[str, str]],
+        content_type: OptionalValue[str],
     ) -> PutResult:
         """Store object in S3.
 
@@ -152,28 +153,30 @@ class S3ObjectStorage(ObjectStorage):
             Infrastructure failures (network errors) raise exceptions.
         """
         try:
-            # Put object with conditional parameters
-            if metadata is not None and content_type is not None:
+            metadata_value = from_optional_value(metadata)
+            content_type_value = from_optional_value(content_type)
+
+            if metadata_value is not None and content_type_value is not None:
                 response = self._s3_client.put_object(
                     Bucket=bucket,
                     Key=key,
                     Body=content,
-                    Metadata=metadata,
-                    ContentType=content_type,
+                    Metadata=metadata_value,
+                    ContentType=content_type_value,
                 )
-            elif metadata is not None:
+            elif metadata_value is not None:
                 response = self._s3_client.put_object(
                     Bucket=bucket,
                     Key=key,
                     Body=content,
-                    Metadata=metadata,
+                    Metadata=metadata_value,
                 )
-            elif content_type is not None:
+            elif content_type_value is not None:
                 response = self._s3_client.put_object(
                     Bucket=bucket,
                     Key=key,
                     Body=content,
-                    ContentType=content_type,
+                    ContentType=content_type_value,
                 )
             else:
                 response = self._s3_client.put_object(
@@ -232,7 +235,7 @@ class S3ObjectStorage(ObjectStorage):
                 raise
 
     async def list_objects(
-        self, bucket: str, prefix: str | None = None, max_keys: int = 1000
+        self, bucket: str, prefix: OptionalValue[str], max_keys: int = 1000
     ) -> list[str]:
         """List object keys in S3 bucket.
 
@@ -249,18 +252,19 @@ class S3ObjectStorage(ObjectStorage):
             Exception: For infrastructure failures (network, bucket not found, etc.)
         """
         try:
-            # List objects with conditional prefix
-            if prefix is not None:
-                response = self._s3_client.list_objects_v2(
+            prefix_value = from_optional_value(prefix)
+            response = (
+                self._s3_client.list_objects_v2(
                     Bucket=bucket,
                     MaxKeys=max_keys,
-                    Prefix=prefix,
+                    Prefix=prefix_value,
                 )
-            else:
-                response = self._s3_client.list_objects_v2(
+                if prefix_value is not None
+                else self._s3_client.list_objects_v2(
                     Bucket=bucket,
                     MaxKeys=max_keys,
                 )
+            )
 
             # Extract keys from response
             if "Contents" in response:

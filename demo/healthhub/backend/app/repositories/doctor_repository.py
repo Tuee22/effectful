@@ -7,19 +7,20 @@ from uuid import UUID
 
 import asyncpg
 
+from app.protocols.database import DatabasePool
 from app.database import safe_bool, safe_datetime, safe_optional_str, safe_str, safe_uuid
 from app.domain.doctor import Doctor
-from app.domain.optional_value import to_optional_value
+from effectful.domain.optional_value import to_optional_value
 
 
 class DoctorRepository:
     """Repository for Doctor entity CRUD operations."""
 
-    def __init__(self, pool: asyncpg.Pool[asyncpg.Record]) -> None:
+    def __init__(self, pool: DatabasePool) -> None:
         """Initialize repository with database pool.
 
         Args:
-            pool: asyncpg connection pool
+            pool: Database pool protocol (production or test mock)
         """
         self.pool = pool
 
@@ -118,8 +119,7 @@ class DoctorRepository:
             now,
         )
 
-        if row is None:
-            raise RuntimeError("Failed to create doctor")
+        assert row is not None, "Database insert returned no doctor row"
 
         return self._row_to_doctor(row)
 

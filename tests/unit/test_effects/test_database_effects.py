@@ -11,6 +11,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from effectful.domain.optional_value import Absent, Provided
 from effectful.effects.database import (
     CreateUser,
     DeleteUser,
@@ -95,14 +96,14 @@ class TestListUsers:
     def test_list_users_creates_effect(self) -> None:
         """ListUsers should wrap limit and offset."""
         effect = ListUsers(limit=50, offset=10)
-        assert effect.limit == 50
-        assert effect.offset == 10
+        assert effect.limit == Provided(value=50)
+        assert effect.offset == Provided(value=10)
 
     def test_list_users_has_default_values(self) -> None:
         """ListUsers should have default limit=None and offset=None."""
         effect = ListUsers()
-        assert effect.limit is None
-        assert effect.offset is None
+        assert effect.limit == Absent()
+        assert effect.offset == Absent()
 
     def test_list_users_is_immutable(self) -> None:
         """ListUsers should be frozen (immutable)."""
@@ -154,16 +155,16 @@ class TestUpdateUser:
         user_id = uuid4()
         effect = UpdateUser(user_id=user_id, email="new@example.com", name="New Name")
         assert effect.user_id == user_id
-        assert effect.email == "new@example.com"
-        assert effect.name == "New Name"
+        assert effect.email == Provided(value="new@example.com")
+        assert effect.name == Provided(value="New Name")
 
     def test_update_user_optional_fields(self) -> None:
         """UpdateUser should allow optional email and name."""
         user_id = uuid4()
         effect = UpdateUser(user_id=user_id)
         assert effect.user_id == user_id
-        assert effect.email is None
-        assert effect.name is None
+        assert effect.email == Absent()
+        assert effect.name == Absent()
 
     def test_update_user_is_immutable(self) -> None:
         """UpdateUser should be frozen (immutable)."""

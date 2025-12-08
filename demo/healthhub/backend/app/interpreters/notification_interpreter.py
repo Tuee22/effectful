@@ -12,6 +12,10 @@ from uuid import UUID, uuid4
 import asyncpg
 import redis.asyncio as redis
 
+from app.protocols.database import DatabasePool
+from app.protocols.redis import RedisClient
+from app.protocols.observability import ObservabilityInterpreter as ObservabilityProtocol
+from effectful.domain.optional_value import from_optional_value
 from app.effects.notification import (
     AuditEventLogged,
     LogAuditEvent,
@@ -22,6 +26,7 @@ from app.effects.notification import (
     PublishResult,
     PublishWebSocketNotification,
 )
+from app.effects.observability import IncrementCounter
 
 
 class NotificationInterpreter:
@@ -32,16 +37,21 @@ class NotificationInterpreter:
     """
 
     def __init__(
-        self, pool: asyncpg.Pool[asyncpg.Record], redis_client: redis.Redis[bytes]
+        self,
+        pool: DatabasePool,
+        redis_client: RedisClient,
+        observability: ObservabilityProtocol | None = None,
     ) -> None:
         """Initialize interpreter with database pool and Redis client.
 
         Args:
-            pool: asyncpg connection pool
-            redis_client: Redis client for pub/sub
+            pool: Database pool protocol (production or test mock)
+            redis_client: Redis client protocol (production or test mock)
+            observability: Observability interpreter protocol (production or test mock)
         """
         self.pool = pool
         self.redis_client = redis_client
+        self._observability = observability
 
     async def handle(self, effect: NotificationEffect) -> PublishResult | AuditEventLogged:
         """Handle a notification effect.
@@ -56,7 +66,8 @@ class NotificationInterpreter:
             case PublishWebSocketNotification(
                 channel=channel, message=message, recipient_id=recipient_id
             ):
-                return await self._publish_websocket_notification(channel, message, recipient_id)
+                recipient = from_optional_value(recipient_id)
+                return await self._publish_websocket_notification(channel, message, recipient)
 
             case LogAuditEvent(
                 user_id=user_id,
@@ -72,9 +83,9 @@ class NotificationInterpreter:
                     action,
                     resource_type,
                     resource_id,
-                    ip_address,
-                    user_agent,
-                    metadata,
+                    from_optional_value(ip_address),
+                    from_optional_value(user_agent),
+                    from_optional_value(metadata),
                 )
 
     async def _publish_websocket_notification(
@@ -163,5 +174,13 @@ class NotificationInterpreter:
             metadata_json,
             now,
         )
+
+        if self._observability is not None:
+            await self._observability.handle(
+                IncrementCounter(
+                    metric_name="healthhub_audit_events_total",
+                    labels={"action": action},
+                )
+            )
 
         return AuditEventLogged(event_id=event_id, logged_at=now)

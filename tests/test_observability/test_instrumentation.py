@@ -9,6 +9,7 @@ Tests cover:
 """
 
 from dataclasses import FrozenInstanceError
+from typing import Literal
 
 import pytest
 from pytest_mock import MockerFixture
@@ -30,14 +31,14 @@ from effectful.observability.instrumentation import (
 
 def _recorded(
     metric_name: str,
-    metric_type: str,
+    metric_type: Literal["counter", "gauge", "histogram", "summary"],
     labels: dict[str, str],
     value: float = 1.0,
     timestamp: float = 1.0,
 ) -> MetricRecorded:
     return MetricRecorded(
         metric_name=metric_name,
-        metric_type=metric_type,  # type: ignore[arg-type]
+        metric_type=metric_type,
         labels=labels,
         value=value,
         timestamp=timestamp,

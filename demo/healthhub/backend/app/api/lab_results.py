@@ -7,8 +7,9 @@ from collections.abc import Generator
 from datetime import datetime
 from typing import Annotated
 from uuid import UUID, uuid4
+from typing_extensions import assert_never
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from app.database.converters import (
@@ -18,21 +19,23 @@ from app.database.converters import (
     safe_uuid,
 )
 from app.domain.lab_result import LabResult
-from app.domain.optional_value import from_optional_value, to_optional_value
+from effectful.domain.optional_value import from_optional_value, to_optional_value
+from app.domain.lookup_result import LabResultFound, LabResultMissing, is_lab_result_lookup_result
 from app.effects.healthcare import (
     CreateLabResult,
     GetLabResultById,
     ListLabResults,
     ReviewLabResult,
 )
-from app.infrastructure import create_redis_client, get_database_manager, rate_limit
-from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
-from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
+from app.infrastructure.rate_limiter import rate_limit
+from app.interpreters.auditing_interpreter import AuditedCompositeInterpreter
+from app.interpreters.composite_interpreter import AllEffects
 from app.programs.runner import run_program
 from app.api.dependencies import (
     AdminAuthorized,
     DoctorAuthorized,
     PatientAuthorized,
+    get_audited_composite_interpreter,
     require_authenticated,
     require_doctor_or_admin,
 )
@@ -111,10 +114,13 @@ def lab_result_to_response(lab_result: LabResult) -> LabResultResponse:
 
 @router.get("/", response_model=list[LabResultResponse])
 async def list_lab_results(
-    request: Request,
     auth: Annotated[
         PatientAuthorized | DoctorAuthorized | AdminAuthorized,
         Depends(require_authenticated),
+    ],
+    interpreter: Annotated[
+        AuditedCompositeInterpreter,
+        Depends(get_audited_composite_interpreter),
     ],
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> list[LabResultResponse]:
@@ -126,61 +132,39 @@ async def list_lab_results(
 
     Rate limit: 100 requests per 60 seconds per IP address.
     """
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
+    # Determine filters based on role
+    patient_id: UUID | None = None
+    doctor_id: UUID | None = None
 
-    # Create Redis client
-    redis_client = create_redis_client()
+    match auth:
+        case PatientAuthorized(patient_id=pid):
+            patient_id = pid
+        case DoctorAuthorized(doctor_id=did):
+            doctor_id = did
+        case AdminAuthorized():
+            pass  # No filtering for admins
 
-    try:
-        # Extract actor ID and determine filters based on role
-        actor_id: UUID
-        patient_id: UUID | None = None
-        doctor_id: UUID | None = None
+    def list_program() -> Generator[AllEffects, object, list[LabResult]]:
+        lab_results = yield ListLabResults(patient_id=patient_id, doctor_id=doctor_id)
+        assert isinstance(lab_results, list)
+        return lab_results
 
-        match auth:
-            case PatientAuthorized(user_id=uid, patient_id=pid):
-                actor_id = uid
-                patient_id = pid
-            case DoctorAuthorized(user_id=uid, doctor_id=did):
-                actor_id = uid
-                doctor_id = did
-            case AdminAuthorized(user_id=uid):
-                actor_id = uid
+    # Run effect program
+    lab_results = await run_program(list_program(), interpreter)
 
-        # Extract IP and user agent from request
-        ip_address = request.client.host if request.client else None
-        user_agent = request.headers.get("user-agent")
-
-        # Create composite interpreter
-        base_interpreter = CompositeInterpreter(pool, redis_client)
-        interpreter = AuditedCompositeInterpreter(
-            base_interpreter,
-            AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
-        )
-
-        def list_program() -> Generator[AllEffects, object, list[LabResult]]:
-            lab_results = yield ListLabResults(patient_id=patient_id, doctor_id=doctor_id)
-            assert isinstance(lab_results, list)
-
-            return lab_results
-
-        # Run effect program
-        lab_results = await run_program(list_program(), interpreter)
-
-        return [lab_result_to_response(lr) for lr in lab_results]
-
-    finally:
-        await redis_client.aclose()
+    return [lab_result_to_response(lr) for lr in lab_results]
 
 
 @router.post("/", response_model=LabResultResponse, status_code=status.HTTP_201_CREATED)
 async def create_lab_result(
     request_data: CreateLabResultRequest,
-    http_request: Request,
     auth: Annotated[
         DoctorAuthorized | AdminAuthorized,
         Depends(require_doctor_or_admin),
+    ],
+    interpreter: Annotated[
+        AuditedCompositeInterpreter,
+        Depends(get_audited_composite_interpreter),
     ],
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> LabResultResponse:
@@ -189,62 +173,37 @@ async def create_lab_result(
     Requires: Doctor or Admin role.
     Rate limit: 100 requests per 60 seconds per IP address.
     """
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
 
-    # Extract actor ID from auth state
-    actor_id: UUID
-    match auth:
-        case DoctorAuthorized(user_id=uid):
-            actor_id = uid
-        case AdminAuthorized(user_id=uid):
-            actor_id = uid
-
-    # Extract IP and user agent from request
-    ip_address = http_request.client.host if http_request.client else None
-    user_agent = http_request.headers.get("user-agent")
-
-    # Create Redis client with resource management
-    redis_client = create_redis_client()
-
-    try:
-        # Create composite interpreter
-        base_interpreter = CompositeInterpreter(pool, redis_client)
-        interpreter: AuditedCompositeInterpreter = AuditedCompositeInterpreter(
-            base_interpreter,
-            AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
+    # Create effect program with audit logging
+    def create_program() -> Generator[AllEffects, object, LabResult]:
+        lab_result = yield CreateLabResult(
+            result_id=uuid4(),
+            patient_id=UUID(request_data.patient_id),
+            doctor_id=UUID(request_data.doctor_id),
+            test_type=request_data.test_type,
+            result_data=request_data.result_data,
+            critical=request_data.critical,
+            doctor_notes=to_optional_value(request_data.doctor_notes, reason="not_provided"),
         )
+        assert isinstance(lab_result, LabResult)
+        return lab_result
 
-        # Create effect program with audit logging
-        def create_program() -> Generator[AllEffects, object, LabResult]:
-            lab_result = yield CreateLabResult(
-                result_id=uuid4(),
-                patient_id=UUID(request_data.patient_id),
-                doctor_id=UUID(request_data.doctor_id),
-                test_type=request_data.test_type,
-                result_data=request_data.result_data,
-                critical=request_data.critical,
-                doctor_notes=request_data.doctor_notes,
-            )
-            assert isinstance(lab_result, LabResult)
-            return lab_result
+    # Run effect program
+    lab_result = await run_program(create_program(), interpreter)
 
-        # Run effect program
-        lab_result = await run_program(create_program(), interpreter)
-
-        return lab_result_to_response(lab_result)
-
-    finally:
-        await redis_client.aclose()
+    return lab_result_to_response(lab_result)
 
 
 @router.get("/{lab_result_id}", response_model=LabResultResponse)
 async def get_lab_result(
     lab_result_id: str,
-    request: Request,
     auth: Annotated[
         PatientAuthorized | DoctorAuthorized | AdminAuthorized,
         Depends(require_authenticated),
+    ],
+    interpreter: Annotated[
+        AuditedCompositeInterpreter,
+        Depends(get_audited_composite_interpreter),
     ],
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> LabResultResponse:
@@ -254,53 +213,31 @@ async def get_lab_result(
     Logs all PHI access for HIPAA compliance.
     Rate limit: 100 requests per 60 seconds per IP address.
     """
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
-
-    # Create Redis client
-    redis_client = create_redis_client()
-
-    # Extract actor ID from auth state
-    actor_id: UUID
-    match auth:
-        case PatientAuthorized(user_id=uid):
-            actor_id = uid
-        case DoctorAuthorized(user_id=uid):
-            actor_id = uid
-        case AdminAuthorized(user_id=uid):
-            actor_id = uid
-
-    # Extract IP and user agent from request
-    ip_address = request.client.host if request.client else None
-    user_agent = request.headers.get("user-agent")
-
-    # Create composite interpreter
-    base_interpreter = CompositeInterpreter(pool, redis_client)
-    interpreter = AuditedCompositeInterpreter(
-        base_interpreter,
-        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
-    )
 
     # Create effect program with audit logging
-    def get_program() -> Generator[AllEffects, object, LabResult | None]:
-        lab_result = yield GetLabResultById(result_id=UUID(lab_result_id))
-        return lab_result if isinstance(lab_result, LabResult) else None
+    def get_program() -> Generator[AllEffects, object, LabResultFound | LabResultMissing]:
+        result = yield GetLabResultById(result_id=UUID(lab_result_id))
+        assert is_lab_result_lookup_result(result)
+        return result
 
     # Run effect program
-    lab_result = await run_program(get_program(), interpreter)
+    lab_result_result = await run_program(get_program(), interpreter)
 
-    await redis_client.aclose()
-
-    if lab_result is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Lab result {lab_result_id} not found",
-        )
+    match lab_result_result:
+        case LabResultFound(lab_result=lab_result):
+            current_lab_result = lab_result
+        case LabResultMissing(result_id=missing_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Lab result {missing_id} not found",
+            )
+        case _:
+            assert_never(lab_result_result)
 
     # Authorization check - patient can only see their own results
     match auth:
         case PatientAuthorized(patient_id=patient_id):
-            if lab_result.patient_id != patient_id:
+            if current_lab_result.patient_id != patient_id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Not authorized to view this lab result",
@@ -308,7 +245,7 @@ async def get_lab_result(
         case _:
             pass  # Doctors and admins can view any result
 
-    return lab_result_to_response(lab_result)
+    return lab_result_to_response(current_lab_result)
 
 
 @router.post("/{lab_result_id}/review", response_model=LabResultResponse)
@@ -319,6 +256,10 @@ async def review_lab_result(
         DoctorAuthorized | AdminAuthorized,
         Depends(require_doctor_or_admin),
     ],
+    interpreter: Annotated[
+        AuditedCompositeInterpreter,
+        Depends(get_audited_composite_interpreter),
+    ],
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> LabResultResponse:
     """Mark lab result as reviewed by doctor.
@@ -326,48 +267,41 @@ async def review_lab_result(
     Requires: Doctor or Admin role.
     Rate limit: 100 requests per 60 seconds per IP address.
     """
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
-
-    # Create Redis client
-    redis_client = create_redis_client()
-
-    # Create composite interpreter
-    base_interpreter = CompositeInterpreter(pool, redis_client)
-    interpreter = AuditedCompositeInterpreter(
-        base_interpreter,
-        AuditContext(user_id=auth.user_id, ip_address=None, user_agent=None),
-    )
 
     # Create effect program
-    def review_program() -> Generator[AllEffects, object, LabResult | None]:
-        lab_result = yield ReviewLabResult(
+    def review_program() -> Generator[AllEffects, object, LabResultFound | LabResultMissing]:
+        result = yield ReviewLabResult(
             result_id=UUID(lab_result_id),
             doctor_notes=request.doctor_notes,
         )
-        return lab_result if isinstance(lab_result, LabResult) else None
+        assert is_lab_result_lookup_result(result)
+        return result
 
     # Run effect program
-    lab_result = await run_program(review_program(), interpreter)
+    lab_result_result = await run_program(review_program(), interpreter)
 
-    await redis_client.aclose()
-
-    if lab_result is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Lab result {lab_result_id} not found",
-        )
-
-    return lab_result_to_response(lab_result)
+    match lab_result_result:
+        case LabResultFound(lab_result=lab_result):
+            return lab_result_to_response(lab_result)
+        case LabResultMissing(result_id=missing_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Lab result {missing_id} not found",
+            )
+        case _:
+            assert_never(lab_result_result)
 
 
 @router.get("/patient/{patient_id}", response_model=list[LabResultResponse])
 async def get_patient_lab_results(
     patient_id: str,
-    request: Request,
     auth: Annotated[
         PatientAuthorized | DoctorAuthorized | AdminAuthorized,
         Depends(require_authenticated),
+    ],
+    interpreter: Annotated[
+        AuditedCompositeInterpreter,
+        Depends(get_audited_composite_interpreter),
     ],
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> list[LabResultResponse]:
@@ -388,42 +322,12 @@ async def get_patient_lab_results(
         case _:
             pass  # Doctors and admins can view any patient's results
 
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
-
-    # Create Redis client
-    redis_client = create_redis_client()
-
-    # Extract actor ID from auth state
-    actor_id: UUID
-    match auth:
-        case PatientAuthorized(user_id=uid):
-            actor_id = uid
-        case DoctorAuthorized(user_id=uid):
-            actor_id = uid
-        case AdminAuthorized(user_id=uid):
-            actor_id = uid
-
-    # Extract IP and user agent from request
-    ip_address = request.client.host if request.client else None
-    user_agent = request.headers.get("user-agent")
-
-    # Create composite interpreter
-    base_interpreter = CompositeInterpreter(pool, redis_client)
-    interpreter = AuditedCompositeInterpreter(
-        base_interpreter,
-        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
-    )
-
     def list_program() -> Generator[AllEffects, object, list[LabResult]]:
         lab_results = yield ListLabResults(patient_id=UUID(patient_id), doctor_id=None)
         assert isinstance(lab_results, list)
-
         return lab_results
 
     # Run effect program
     lab_results = await run_program(list_program(), interpreter)
-
-    await redis_client.aclose()
 
     return [lab_result_to_response(lr) for lr in lab_results]

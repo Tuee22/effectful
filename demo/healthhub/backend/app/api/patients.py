@@ -8,12 +8,33 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Annotated
 from uuid import UUID
+from typing_extensions import assert_never
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from app.api.dependencies import (
+    AdminAuthorized,
+    DoctorAuthorized,
+    PatientAuthorized,
+    get_audited_composite_interpreter,
+    require_admin,
+    require_authenticated,
+    require_doctor_or_admin,
+)
+from app.domain.lookup_result import (
+    PatientFound,
+    PatientLookupResult,
+    PatientMissingById,
+    PatientMissingByUserId,
+    PatientUpdateMissing,
+    PatientUpdateResult,
+    PatientUpdated,
+    is_patient_lookup_result,
+    is_patient_update_result,
+)
+from effectful.domain.optional_value import from_optional_value
 from app.domain.patient import Patient
-from app.domain.optional_value import from_optional_value
 from app.effects.healthcare import (
     CreatePatient as CreatePatientEffect,
     DeletePatient,
@@ -22,46 +43,12 @@ from app.effects.healthcare import (
     ListPatients,
     UpdatePatient,
 )
-from app.infrastructure import create_redis_client, get_database_manager, rate_limit
-from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
-from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
+from app.infrastructure.rate_limiter import rate_limit
+from app.interpreters.auditing_interpreter import AuditedCompositeInterpreter
+from app.interpreters.composite_interpreter import AllEffects
 from app.programs.runner import run_program
-from app.api.dependencies import (
-    AdminAuthorized,
-    DoctorAuthorized,
-    PatientAuthorized,
-    require_admin,
-    require_authenticated,
-    require_doctor_or_admin,
-)
 
 router = APIRouter()
-
-
-@dataclass(frozen=True)
-class PatientFound:
-    patient: Patient
-
-
-@dataclass(frozen=True)
-class PatientMissing:
-    patient_id: UUID
-
-
-type PatientLookupResult = PatientFound | PatientMissing
-
-
-@dataclass(frozen=True)
-class PatientUpdated:
-    patient: Patient
-
-
-@dataclass(frozen=True)
-class PatientUpdateMissing:
-    patient_id: UUID
-
-
-type PatientUpdateResult = PatientUpdated | PatientUpdateMissing
 
 
 @dataclass(frozen=True)
@@ -140,44 +127,33 @@ def patient_to_response(patient: Patient) -> PatientResponse:
 
 @router.get("/", response_model=list[PatientResponse])
 async def list_patients(
-    request: Request,
     auth: Annotated[
         DoctorAuthorized | AdminAuthorized,
         Depends(require_doctor_or_admin),
+    ],
+    interpreter: Annotated[
+        AuditedCompositeInterpreter,
+        Depends(get_audited_composite_interpreter),
     ],
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> list[PatientResponse]:
     """List all patients.
 
-    Requires: Doctor or Admin role.
-    Patients cannot view other patients' records.
-    Logs all PHI access for HIPAA compliance.
-    Rate limit: 100 requests per 60 seconds per IP address.
+    Args:
+        auth: Authorization state (doctor or admin).
+        interpreter: Audited composite interpreter (injected).
+        _rate_limit: Rate limit guard (FastAPI dependency).
+
+    Returns:
+        List of patient responses.
+
+    Raises:
+        HTTPException: If authorization fails (via dependency).
+
+    Effects:
+        ListPatients
+        LogAuditEvent (via AuditedCompositeInterpreter)
     """
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
-
-    # Create Redis client
-    redis_client = create_redis_client()
-
-    # Extract actor ID from auth state
-    actor_id: UUID
-    match auth:
-        case DoctorAuthorized(user_id=uid):
-            actor_id = uid
-        case AdminAuthorized(user_id=uid):
-            actor_id = uid
-
-    # Extract IP and user agent from request
-    ip_address = request.client.host if request.client else None
-    user_agent = request.headers.get("user-agent")
-
-    # Create composite interpreter
-    base_interpreter = CompositeInterpreter(pool, redis_client)
-    interpreter = AuditedCompositeInterpreter(
-        base_interpreter,
-        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
-    )
 
     # Create effect program with audit logging
     def list_program() -> Generator[AllEffects, object, list[Patient]]:
@@ -189,8 +165,6 @@ async def list_patients(
     # Run effect program
     patients = await run_program(list_program(), interpreter)
 
-    await redis_client.aclose()
-
     return [patient_to_response(p) for p in patients]
 
 
@@ -198,25 +172,30 @@ async def list_patients(
 async def create_patient(
     request: CreatePatientRequest,
     auth: Annotated[AdminAuthorized, Depends(require_admin)],
+    interpreter: Annotated[
+        AuditedCompositeInterpreter,
+        Depends(get_audited_composite_interpreter),
+    ],
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> PatientResponse:
     """Create a new patient record.
 
-    Requires: Admin role only.
-    Rate limit: 100 requests per 60 seconds per IP address.
+    Args:
+        request: Patient creation payload.
+        auth: Authorization state (admin).
+        interpreter: Audited composite interpreter (injected).
+        _rate_limit: Rate limit guard (FastAPI dependency).
+
+    Returns:
+        Created patient response.
+
+    Raises:
+        HTTPException: If authorization fails (via dependency).
+
+    Effects:
+        CreatePatient
+        LogAuditEvent (via AuditedCompositeInterpreter)
     """
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
-
-    # Create Redis client
-    redis_client = create_redis_client()
-
-    # Create composite interpreter
-    base_interpreter = CompositeInterpreter(pool, redis_client)
-    interpreter = AuditedCompositeInterpreter(
-        base_interpreter,
-        AuditContext(user_id=auth.user_id, ip_address=None, user_agent=None),
-    )
 
     # Create effect program
     def create_program() -> Generator[AllEffects, object, Patient]:
@@ -238,72 +217,54 @@ async def create_patient(
     # Run effect program
     patient = await run_program(create_program(), interpreter)
 
-    await redis_client.aclose()
-
     return patient_to_response(patient)
 
 
 @router.get("/{patient_id}", response_model=PatientResponse)
 async def get_patient(
     patient_id: str,
-    request: Request,
     auth: Annotated[
         PatientAuthorized | DoctorAuthorized | AdminAuthorized,
         Depends(require_authenticated),
+    ],
+    interpreter: Annotated[
+        AuditedCompositeInterpreter,
+        Depends(get_audited_composite_interpreter),
     ],
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> PatientResponse:
     """Get patient by ID.
 
-    Requires: Patient (own record), Doctor, or Admin role.
-    Logs all PHI access for HIPAA compliance.
-    Rate limit: 100 requests per 60 seconds per IP address.
+    Args:
+        patient_id: Patient UUID string.
+        auth: Authorization state (patient self, doctor, or admin).
+        interpreter: Audited composite interpreter (injected).
+        _rate_limit: Rate limit guard (FastAPI dependency).
+
+    Returns:
+        Patient response for the requested patient.
+
+    Raises:
+        HTTPException: If unauthorized or patient is missing.
+
+    Effects:
+        GetPatientById
+        LogAuditEvent (via AuditedCompositeInterpreter)
     """
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
-
-    # Create Redis client
-    redis_client = create_redis_client()
-
-    # Extract actor ID from auth state
-    actor_id: UUID
-    match auth:
-        case PatientAuthorized(user_id=uid):
-            actor_id = uid
-        case DoctorAuthorized(user_id=uid):
-            actor_id = uid
-        case AdminAuthorized(user_id=uid):
-            actor_id = uid
-
-    # Extract IP and user agent from request
-    ip_address = request.client.host if request.client else None
-    user_agent = request.headers.get("user-agent")
-
-    # Create composite interpreter
-    base_interpreter = CompositeInterpreter(pool, redis_client)
-    interpreter = AuditedCompositeInterpreter(
-        base_interpreter,
-        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
-    )
 
     # Create effect program with audit logging
     def get_program() -> Generator[AllEffects, object, PatientLookupResult]:
-        patient = yield GetPatientById(patient_id=UUID(patient_id))
-
-        if patient is None:
-            return PatientMissing(patient_id=UUID(patient_id))
-        assert isinstance(patient, Patient)
-        return PatientFound(patient=patient)
+        result = yield GetPatientById(patient_id=UUID(patient_id))
+        assert is_patient_lookup_result(result)
+        return result
 
     # Run effect program
     lookup_result = await run_program(get_program(), interpreter)
 
-    await redis_client.aclose()
-
     match lookup_result:
         case PatientFound(patient=patient):
             return patient_to_response(patient)
-        case PatientMissing(patient_id=missing_id):
+        case PatientMissingById(patient_id=missing_id):
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Patient {missing_id} not found",
@@ -318,61 +279,57 @@ async def get_patient(
 @router.get("/by-user/{user_id}", response_model=PatientResponse)
 async def get_patient_by_user(
     user_id: str,
-    request: Request,
     auth: Annotated[
         PatientAuthorized | DoctorAuthorized | AdminAuthorized,
         Depends(require_authenticated),
+    ],
+    interpreter: Annotated[
+        AuditedCompositeInterpreter,
+        Depends(get_audited_composite_interpreter),
     ],
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> PatientResponse:
     """Get patient by user ID.
 
-    Requires: Patient (own record), Doctor, or Admin role.
-    Logs all PHI access for HIPAA compliance.
-    Rate limit: 100 requests per 60 seconds per IP address.
+    Args:
+        user_id: User UUID string.
+        auth: Authorization state (patient self, doctor, or admin).
+        interpreter: Audited composite interpreter (injected).
+        _rate_limit: Rate limit guard (FastAPI dependency).
 
-    TODO: Migrate to effect-based implementation (Phase 2 architectural fix)
+    Returns:
+        Patient response for the associated user.
+
+    Raises:
+        HTTPException: If unauthorized or patient is missing.
+
+    Effects:
+        GetPatientByUserId
+        LogAuditEvent (via AuditedCompositeInterpreter)
     """
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
 
-    # Extract actor ID from auth state
-    actor_id: UUID
-    match auth:
-        case PatientAuthorized(user_id=uid):
-            actor_id = uid
-        case DoctorAuthorized(user_id=uid):
-            actor_id = uid
-        case AdminAuthorized(user_id=uid):
-            actor_id = uid
-
-    # Extract IP and user agent from request
-    ip_address = request.client.host if request.client else None
-    user_agent = request.headers.get("user-agent")
-
-    # Create Redis client for audit logging
-    redis_client = create_redis_client()
-    base_interpreter = CompositeInterpreter(pool, redis_client)
-    interpreter: AuditedCompositeInterpreter = AuditedCompositeInterpreter(
-        base_interpreter,
-        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
-    )
-
-    def get_by_user_program() -> Generator[AllEffects, object, Patient | None]:
+    def get_by_user_program() -> Generator[AllEffects, object, PatientLookupResult]:
         result = yield GetPatientByUserId(user_id=UUID(user_id))
-        return result if isinstance(result, Patient) else None
+        assert is_patient_lookup_result(result)
+        return result
 
-    patient = await run_program(get_by_user_program(), interpreter)
+    patient_result = await run_program(get_by_user_program(), interpreter)
 
-    await redis_client.aclose()
-
-    if patient is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Patient for user {user_id} not found",
-        )
-
-    return patient_to_response(patient)
+    match patient_result:
+        case PatientFound(patient=patient):
+            return patient_to_response(patient)
+        case PatientMissingById(patient_id=missing_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Patient {missing_id} not found",
+            )
+        case PatientMissingByUserId(user_id=missing_user_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Patient for user {missing_user_id} not found",
+            )
+        case _:
+            assert_never(patient_result)
 
 
 @router.put("/{patient_id}", response_model=PatientResponse)
@@ -383,16 +340,32 @@ async def update_patient(
         PatientAuthorized | AdminAuthorized,
         Depends(require_authenticated),
     ],
+    interpreter: Annotated[
+        AuditedCompositeInterpreter,
+        Depends(get_audited_composite_interpreter),
+    ],
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> PatientResponse:
     """Update patient record.
 
-    Requires: Patient (own record) or Admin role.
-    Rate limit: 100 requests per 60 seconds per IP address.
-    """
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
+    Args:
+        patient_id: Patient UUID string.
+        request: Patch payload for mutable fields.
+        auth: Authorization state (patient self or admin).
+        interpreter: Audited composite interpreter (injected).
+        _rate_limit: Rate limit guard (FastAPI dependency).
 
+    Returns:
+        Updated patient response.
+
+    Raises:
+        HTTPException: If unauthorized, patient missing, or update fails.
+
+    Effects:
+        GetPatientById
+        UpdatePatient
+        LogAuditEvent (via AuditedCompositeInterpreter)
+    """
     # Authorization check - patient can only update their own record
     match auth:
         case PatientAuthorized(patient_id=auth_patient_id):
@@ -404,28 +377,30 @@ async def update_patient(
         case AdminAuthorized():
             pass  # Admins can update any patient
 
-    # Create Redis client and interpreter for auditing
-    redis_client = create_redis_client()
-    base_interpreter = CompositeInterpreter(pool, redis_client)
-    interpreter: AuditedCompositeInterpreter = AuditedCompositeInterpreter(
-        base_interpreter,
-        AuditContext(user_id=auth.user_id, ip_address=None, user_agent=None),
-    )
-
-    def fetch_program() -> Generator[AllEffects, object, Patient | None]:
+    def fetch_program() -> Generator[AllEffects, object, PatientLookupResult]:
         result = yield GetPatientById(patient_id=UUID(patient_id))
-        return result if isinstance(result, Patient) else None
+        assert is_patient_lookup_result(result)
+        return result
 
-    patient = await run_program(fetch_program(), interpreter)
-    if patient is None:
-        await redis_client.aclose()
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Patient {patient_id} not found",
-        )
+    patient_lookup = await run_program(fetch_program(), interpreter)
+    match patient_lookup:
+        case PatientFound():
+            pass
+        case PatientMissingById(patient_id=missing_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Patient {missing_id} not found",
+            )
+        case PatientMissingByUserId(user_id=missing_user_id):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Patient for user {missing_user_id} not found",
+            )
+        case _:
+            assert_never(patient_lookup)
 
     def update_program() -> Generator[AllEffects, object, PatientUpdateResult]:
-        updated = yield UpdatePatient(
+        result = yield UpdatePatient(
             patient_id=UUID(patient_id),
             first_name=request.first_name,
             last_name=request.last_name,
@@ -436,15 +411,10 @@ async def update_patient(
             phone=request.phone,
             address=request.address,
         )
-        if updated is None:
-            return PatientUpdateMissing(patient_id=UUID(patient_id))
-
-        assert isinstance(updated, Patient)
-        return PatientUpdated(patient=updated)
+        assert is_patient_update_result(result)
+        return result
 
     update_result = await run_program(update_program(), interpreter)
-
-    await redis_client.aclose()
 
     match update_result:
         case PatientUpdated(patient=patient):
@@ -465,23 +435,30 @@ async def update_patient(
 async def delete_patient(
     patient_id: str,
     auth: Annotated[AdminAuthorized, Depends(require_admin)],
+    interpreter: Annotated[
+        AuditedCompositeInterpreter,
+        Depends(get_audited_composite_interpreter),
+    ],
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> None:
     """Delete patient record.
 
-    Requires: Admin role only.
-    Rate limit: 100 requests per 60 seconds per IP address.
+    Args:
+        patient_id: Patient UUID string.
+        auth: Authorization state (admin).
+        interpreter: Audited composite interpreter (injected).
+        _rate_limit: Rate limit guard (FastAPI dependency).
 
-    Note: In production, this should be a soft delete (status update) for HIPAA compliance.
+    Returns:
+        None. Raises on failure.
+
+    Raises:
+        HTTPException: If patient is missing or authorization fails.
+
+    Effects:
+        DeletePatient
+        LogAuditEvent (via AuditedCompositeInterpreter)
     """
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
-    redis_client = create_redis_client()
-    base_interpreter = CompositeInterpreter(pool, redis_client)
-    interpreter = AuditedCompositeInterpreter(
-        base_interpreter,
-        AuditContext(user_id=auth.user_id, ip_address=None, user_agent=None),
-    )
 
     def delete_program() -> Generator[AllEffects, object, PatientDeleteResult]:
         deleted = yield DeletePatient(patient_id=UUID(patient_id))
@@ -491,7 +468,6 @@ async def delete_patient(
         return PatientDeleted(patient_id=UUID(patient_id))
 
     delete_result = await run_program(delete_program(), interpreter)
-    await redis_client.aclose()
 
     match delete_result:
         case PatientDeleted():

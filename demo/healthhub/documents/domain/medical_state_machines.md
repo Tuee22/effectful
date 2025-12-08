@@ -1,18 +1,20 @@
 # Medical State Machines
 
-**Status**: Reference only  
-**Supersedes**: none  
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub domain delta for medical state machines; extends the base SSoT and keeps only HealthHub-specific overrides.
-> **📖 Authoritative Reference**: [Medical State Machines](../../../../documents/domain/medical_state_machines.md)
+> **Purpose**: SSoT for HealthHub healthcare-specific state machines and lifecycle modelling; extends the base effect patterns for long-running workflows.
 
-## Deltas
-- Base SSoT: [Medical State Machines](../../../../documents/domain/medical_state_machines.md); apply all base modelling rules.
-- No additional deltas beyond using the HealthHub compose stack and service name (`healthhub`).
-- Refer to the base document for canonical procedures; apply HealthHub-specific ports, credentials, and service names where applicable.
+## Canonical Guidance
+
+- **Base pattern**: Follow [Effect Patterns — State Machines](../engineering/effect_patterns.md#state-machines) for generator structure, discriminated unions, and transition validation.
+- **Domain invariants first**: Encode patient-safety and compliance rules as state invariants; reject transitions that would violate HIPAA or clinical constraints.
+- **Side effects stay explicit**: All external actions (notifications, storage, audit) remain yielded effects; state transitions are pure and testable.
+- **Observability**: Emit domain metrics at transitions (e.g., escalation counts, triage throughput) using the observability SSoT; prefer counters/histograms with clear labels.
 
 ## Cross-References
-- [HealthHub Documentation Guide](../documentation_standards.md)
-- [HealthHub Documentation Hub](../README.md)
-- [Medical State Machines](../../../../documents/domain/medical_state_machines.md)
+- [Effect Patterns — State Machines](../engineering/effect_patterns.md#state-machines)
+- [Architecture](../engineering/architecture.md)
+- [Code Quality](../engineering/code_quality.md)
+- [Observability](../engineering/observability.md)

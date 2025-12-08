@@ -6,8 +6,21 @@ Effect programs for prescription management.
 from collections.abc import Generator
 from dataclasses import dataclass
 from uuid import UUID
+from typing_extensions import assert_never
 
 from app.domain.doctor import Doctor
+from app.domain.lookup_result import (
+    DoctorFound,
+    DoctorLookupResult,
+    DoctorMissingById,
+    DoctorMissingByUserId,
+    PatientFound,
+    PatientLookupResult,
+    PatientMissingById,
+    PatientMissingByUserId,
+    is_doctor_lookup_result,
+    is_patient_lookup_result,
+)
 from app.domain.patient import Patient
 from app.domain.prescription import (
     MedicationCheckResult,
@@ -15,6 +28,7 @@ from app.domain.prescription import (
     NoInteractions,
     Prescription,
 )
+from effectful.domain.optional_value import to_optional_value
 from app.effects.healthcare import (
     CheckMedicationInteractions,
     CreatePrescription,
@@ -22,6 +36,7 @@ from app.effects.healthcare import (
     GetPatientById,
 )
 from app.effects.notification import LogAuditEvent, NotificationValue, PublishWebSocketNotification
+from app.effects.observability import IncrementCounter
 from app.interpreters.composite_interpreter import AllEffects
 
 
@@ -110,16 +125,33 @@ def create_prescription_program(
         or error string if validation fails
     """
     # Step 1: Verify patient exists
-    patient = yield GetPatientById(patient_id=patient_id)
-    if not isinstance(patient, Patient):
-        return PrescriptionPatientMissing(patient_id=patient_id)
+    patient_result = yield GetPatientById(patient_id=patient_id)
+    assert is_patient_lookup_result(patient_result)
+    match patient_result:
+        case PatientFound():
+            pass
+        case PatientMissingById(patient_id=missing_id):
+            return PrescriptionPatientMissing(patient_id=missing_id)
+        case PatientMissingByUserId():
+            return PrescriptionPatientMissing(patient_id=patient_id)
+        case _:
+            assert_never(patient_result)
 
     # Step 2: Verify doctor exists and can prescribe
-    doctor = yield GetDoctorById(doctor_id=doctor_id)
-    if not isinstance(doctor, Doctor):
-        return PrescriptionDoctorMissing(doctor_id=doctor_id)
+    doctor_result = yield GetDoctorById(doctor_id=doctor_id)
+    assert is_doctor_lookup_result(doctor_result)
+    match doctor_result:
+        case DoctorFound(doctor=doctor):
+            current_doctor = doctor
+            doctor_specialization = doctor.specialization
+        case DoctorMissingById(doctor_id=missing_id):
+            return PrescriptionDoctorMissing(doctor_id=missing_id)
+        case DoctorMissingByUserId():
+            return PrescriptionDoctorMissing(doctor_id=doctor_id)
+        case _:
+            assert_never(doctor_result)
 
-    if not doctor.can_prescribe:
+    if not current_doctor.can_prescribe:
         return PrescriptionDoctorUnauthorized(doctor_id=doctor_id)
 
     # Step 3: Check medication interactions
@@ -136,12 +168,14 @@ def create_prescription_program(
                 action="prescription_blocked_severe_interaction",
                 resource_type="prescription",
                 resource_id=patient_id,
-                ip_address=None,
-                user_agent=None,
-                metadata={
-                    "medication_count": str(len(interaction_result.medications)),
-                    "severity": interaction_result.severity,
-                },
+                ip_address=to_optional_value(None, reason="not_provided"),
+                user_agent=to_optional_value(None, reason="not_provided"),
+                metadata=to_optional_value(
+                    {
+                        "medication_count": str(len(interaction_result.medications)),
+                        "severity": interaction_result.severity,
+                    }
+                ),
             )
             return PrescriptionBlocked(warning=interaction_result)
 
@@ -154,9 +188,21 @@ def create_prescription_program(
         frequency=frequency,
         duration_days=duration_days,
         refills_remaining=refills_remaining,
-        notes=notes,
+        notes=to_optional_value(notes, reason="no_notes"),
     )
     assert isinstance(prescription, Prescription)
+
+    yield IncrementCounter(
+        metric_name="healthhub_prescriptions_created_total",
+        labels={
+            "doctor_specialization": doctor_specialization,
+            "severity": (
+                interaction_result.severity
+                if isinstance(interaction_result, MedicationInteractionWarning)
+                else "none"
+            ),
+        },
+    )
 
     # Step 6: Send notification to patient
     notification_message: dict[str, NotificationValue] = {
@@ -175,7 +221,7 @@ def create_prescription_program(
     yield PublishWebSocketNotification(
         channel=patient_channel,
         message=notification_message,
-        recipient_id=patient_id,
+        recipient_id=to_optional_value(patient_id, reason="patient_recipient"),
     )
 
     yield LogAuditEvent(
@@ -183,9 +229,9 @@ def create_prescription_program(
         action="create_prescription",
         resource_type="prescription",
         resource_id=prescription.id,
-        ip_address=None,
-        user_agent=None,
-        metadata=None,
+        ip_address=to_optional_value(None, reason="not_provided"),
+        user_agent=to_optional_value(None, reason="not_provided"),
+        metadata=to_optional_value(None, reason="not_provided"),
     )
 
     return PrescriptionCreated(prescription=prescription)

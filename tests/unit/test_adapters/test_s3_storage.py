@@ -10,6 +10,7 @@ from botocore.exceptions import ClientError
 from pytest_mock import MockerFixture
 
 from effectful.adapters.s3_storage import S3ObjectStorage
+from effectful.domain.optional_value import Absent, Provided, to_optional_value
 from effectful.domain.s3_object import ObjectNotFound, PutFailure, PutSuccess, S3Object
 
 
@@ -51,8 +52,8 @@ class TestS3ObjectStorageGetObject:
         assert result.bucket == bucket
         assert result.content == content
         assert result.metadata == {"uploaded-by": "user-123"}
-        assert result.content_type == "text/plain"
-        assert result.version_id == "v1"
+        assert result.content_type == Provided(value="text/plain")
+        assert result.version_id == Provided(value="v1")
         assert result.size == len(content)
 
         # Verify S3 call
@@ -115,8 +116,8 @@ class TestS3ObjectStorageGetObject:
         # Assert
         assert isinstance(result, S3Object)
         assert result.metadata == {}
-        assert result.content_type is None
-        assert result.version_id is None
+        assert result.content_type == Absent()
+        assert result.version_id == Absent()
 
 
 class TestS3ObjectStoragePutObject:
@@ -138,13 +139,19 @@ class TestS3ObjectStoragePutObject:
         storage = S3ObjectStorage(mock_client)
 
         # Execute
-        result = await storage.put_object(bucket, key, content, metadata, content_type)
+        result = await storage.put_object(
+            bucket,
+            key,
+            content,
+            to_optional_value(metadata),
+            to_optional_value(content_type),
+        )
 
         # Assert
         assert isinstance(result, PutSuccess)
         assert result.key == key
         assert result.bucket == bucket
-        assert result.version_id == "v2"
+        assert result.version_id == Provided(value="v2")
 
         # Verify S3 call
         mock_client.put_object.assert_called_once_with(
@@ -169,7 +176,7 @@ class TestS3ObjectStoragePutObject:
         storage = S3ObjectStorage(mock_client)
 
         # Execute
-        result = await storage.put_object("bucket", "key", b"data", None, None)
+        result = await storage.put_object("bucket", "key", b"data", Absent(), Absent())
 
         # Assert
         assert isinstance(result, PutFailure)
@@ -191,7 +198,7 @@ class TestS3ObjectStoragePutObject:
         storage = S3ObjectStorage(mock_client)
 
         # Execute
-        result = await storage.put_object("bucket", "key", b"data", None, None)
+        result = await storage.put_object("bucket", "key", b"data", Absent(), Absent())
 
         # Assert
         assert isinstance(result, PutFailure)
@@ -210,7 +217,7 @@ class TestS3ObjectStoragePutObject:
 
         # Execute & Assert
         with pytest.raises(ClientError):
-            await storage.put_object("bucket", "key", b"data", None, None)
+            await storage.put_object("bucket", "key", b"data", Absent(), Absent())
 
 
 class TestS3ObjectStorageDeleteObject:
@@ -280,7 +287,7 @@ class TestS3ObjectStorageListObjects:
         storage = S3ObjectStorage(mock_client)
 
         # Execute
-        result = await storage.list_objects("bucket", prefix="")
+        result = await storage.list_objects("bucket", prefix=Provided(value=""))
 
         # Assert
         assert result == ["file1.txt", "file2.txt", "data/file3.txt"]
@@ -307,7 +314,7 @@ class TestS3ObjectStorageListObjects:
         storage = S3ObjectStorage(mock_client)
 
         # Execute
-        result = await storage.list_objects("bucket", prefix="data/", max_keys=100)
+        result = await storage.list_objects("bucket", prefix=Provided(value="data/"), max_keys=100)
 
         # Assert
         assert result == ["data/file1.txt", "data/file2.txt"]
@@ -331,7 +338,7 @@ class TestS3ObjectStorageListObjects:
         storage = S3ObjectStorage(mock_client)
 
         # Execute
-        result = await storage.list_objects("bucket")
+        result = await storage.list_objects("bucket", prefix=Absent())
 
         # Assert
         assert result == []
@@ -349,4 +356,4 @@ class TestS3ObjectStorageListObjects:
 
         # Execute & Assert
         with pytest.raises(ClientError):
-            await storage.list_objects("nonexistent-bucket")
+            await storage.list_objects("nonexistent-bucket", prefix=Absent())

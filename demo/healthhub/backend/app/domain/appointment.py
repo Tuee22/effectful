@@ -8,6 +8,8 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
+from typing_extensions import assert_never
+
 
 # Appointment Status ADT - makes illegal states unrepresentable
 @dataclass(frozen=True)
@@ -107,27 +109,53 @@ def validate_transition(current: AppointmentStatus, new: AppointmentStatus) -> T
     Returns:
         TransitionSuccess if valid, TransitionInvalid if not
     """
-    match (current, new):
-        # From Requested
-        case (Requested(), Confirmed()):
-            return TransitionSuccess(new_status=new)
-        case (Requested(), Cancelled()):
-            return TransitionSuccess(new_status=new)
+    match current:
+        case Requested():
+            match new:
+                case Confirmed() | Cancelled():
+                    return TransitionSuccess(new_status=new)
+                case Requested() | InProgress() | Completed():
+                    current_name = type(current).__name__
+                    new_name = type(new).__name__
+                    return TransitionInvalid(
+                        current_status=current_name,
+                        attempted_status=new_name,
+                        reason=f"Cannot transition from {current_name} to {new_name}",
+                    )
+                case _:
+                    assert_never(new)
 
-        # From Confirmed
-        case (Confirmed(), InProgress()):
-            return TransitionSuccess(new_status=new)
-        case (Confirmed(), Cancelled()):
-            return TransitionSuccess(new_status=new)
+        case Confirmed():
+            match new:
+                case InProgress() | Cancelled():
+                    return TransitionSuccess(new_status=new)
+                case Requested() | Confirmed() | Completed():
+                    current_name = type(current).__name__
+                    new_name = type(new).__name__
+                    return TransitionInvalid(
+                        current_status=current_name,
+                        attempted_status=new_name,
+                        reason=f"Cannot transition from {current_name} to {new_name}",
+                    )
+                case _:
+                    assert_never(new)
 
-        # From InProgress
-        case (InProgress(), Completed()):
-            return TransitionSuccess(new_status=new)
-        case (InProgress(), Cancelled()):
-            return TransitionSuccess(new_status=new)
+        case InProgress():
+            match new:
+                case Completed() | Cancelled():
+                    return TransitionSuccess(new_status=new)
+                case Requested() | Confirmed() | InProgress():
+                    current_name = type(current).__name__
+                    new_name = type(new).__name__
+                    return TransitionInvalid(
+                        current_status=current_name,
+                        attempted_status=new_name,
+                        reason=f"Cannot transition from {current_name} to {new_name}",
+                    )
+                case _:
+                    assert_never(new)
 
-        # Invalid transitions
-        case _:
+        case Completed() | Cancelled():
             current_name = type(current).__name__
             new_name = type(new).__name__
             return TransitionInvalid(
@@ -135,3 +163,6 @@ def validate_transition(current: AppointmentStatus, new: AppointmentStatus) -> T
                 attempted_status=new_name,
                 reason=f"Cannot transition from {current_name} to {new_name}",
             )
+
+        case _:
+            assert_never(current)

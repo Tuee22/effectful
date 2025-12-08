@@ -133,6 +133,7 @@ Code quality = **type safety + purity**. Programs remain pure descriptions, inte
 | Imperative effect execution | Untestable programs | See [Doctrine 3: Yield Don't Call](#doctrine-3-yield-dont-call) |
 | Impure comprehensions | Side effects in pure layer | See [Doctrine 1: No Loops](#doctrine-1-no-loops) |
 | Global mutable state | Non-determinism | See [Doctrine 5: Immutability by Default](#doctrine-5-immutability-by-default) |
+| Inline interpreter construction | Boilerplate, resource leaks | Use `Depends(get_audited_composite_interpreter)` for API endpoints |
 | Skipped tests (`pytest.skip`) | Masks regressions | See [Testing Anti-Patterns](testing.md#anti-pattern-2-skipped-tests) |
 | Running pytest/poetry on host | Bypasses infra contract | See [Docker Workflow](docker_workflow.md#development-contract) |
 

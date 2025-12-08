@@ -77,7 +77,6 @@ This doctrine applies to:
 All commands follow this structure:
 
 ```bash
-# file: scripts/docker_workflow.sh
 docker compose -f docker/docker-compose.yml exec effectful poetry run <command>
 ```
 
@@ -98,7 +97,6 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run <command>
 For convenience, add to your shell profile:
 
 ```bash
-# file: scripts/docker_workflow.sh
 alias eff='docker compose -f docker/docker-compose.yml exec effectful poetry run'
 ```
 
@@ -109,7 +107,6 @@ Then use: `eff pytest`, `eff check-code`, etc.
 ### NEVER Do This
 
 ```bash
-# file: scripts/docker_workflow.sh
 # FORBIDDEN - Running pytest locally
 pytest tests/
 
@@ -145,7 +142,6 @@ source .venv/bin/activate
 ### Initial Setup
 
 ```bash
-# file: scripts/docker_workflow.sh
 # Start all services (effectful + infrastructure)
 docker compose -f docker/docker-compose.yml up -d
 
@@ -156,7 +152,6 @@ docker compose -f docker/docker-compose.yml ps
 ### Daily Development
 
 ```bash
-# file: scripts/docker_workflow.sh
 # 1. Make code changes in your editor (host machine)
 # 2. Run type checker
 docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
@@ -170,7 +165,6 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
 ### Adding Dependencies
 
 ```bash
-# file: scripts/docker_workflow.sh
 # Runtime dependency
 docker compose -f docker/docker-compose.yml exec effectful poetry add <package>
 
@@ -185,11 +179,10 @@ docker compose -f docker/docker-compose.yml exec effectful poetry add --group de
 Before committing any code, ensure all gates pass:
 
 ```bash
-# file: scripts/docker_workflow.sh
 # 1. Type check (mypy --strict)
 docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
 
-# 2. Run all tests (329 tests, ~1.6s)
+# 2. Run all tests (~750 test functions; containerized)
 docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
 ```
 
@@ -234,7 +227,6 @@ Before submitting a PR:
 ### Viewing Logs
 
 ```bash
-# file: scripts/docker_workflow.sh
 # All services
 docker compose -f docker/docker-compose.yml logs -f
 
@@ -245,7 +237,6 @@ docker compose -f docker/docker-compose.yml logs -f effectful
 ### Stopping Services
 
 ```bash
-# file: scripts/docker_workflow.sh
 # Stop but keep data
 docker compose -f docker/docker-compose.yml stop
 
@@ -282,7 +273,6 @@ in-project = false
 If you see a `.venv` directory in the project root, it should NOT exist:
 
 ```bash
-# file: scripts/docker_workflow.sh
 # Remove it
 rm -rf .venv
 
@@ -325,7 +315,6 @@ The effectful Docker Compose stack includes multiple services that work together
 
 **Environment Variables**:
 ```bash
-# file: scripts/docker_workflow.sh
 POSTGRES_HOST=postgres
 REDIS_HOST=redis
 MINIO_ENDPOINT=minio:9000
@@ -446,7 +435,6 @@ Edit files on host, run commands via Docker exec as shown above.
 ### "Container not running"
 
 ```bash
-# file: scripts/docker_workflow.sh
 # Start the containers
 docker compose -f docker/docker-compose.yml up -d
 ```
@@ -454,7 +442,6 @@ docker compose -f docker/docker-compose.yml up -d
 ### "Permission denied"
 
 ```bash
-# file: scripts/docker_workflow.sh
 # Reset volumes (loses data)
 docker compose -f docker/docker-compose.yml down -v
 docker compose -f docker/docker-compose.yml up -d
@@ -463,7 +450,6 @@ docker compose -f docker/docker-compose.yml up -d
 ### "Poetry install failed"
 
 ```bash
-# file: scripts/docker_workflow.sh
 # Rebuild the container
 docker compose -f docker/docker-compose.yml build --no-cache effectful
 docker compose -f docker/docker-compose.yml up -d
@@ -474,7 +460,6 @@ docker compose -f docker/docker-compose.yml up -d
 Ensure all infrastructure services are running:
 
 ```bash
-# file: scripts/docker_workflow.sh
 docker compose -f docker/docker-compose.yml ps
 # Should show: effectful, postgres, redis, minio, pulsar, prometheus, grafana all "Up"
 ```

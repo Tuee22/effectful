@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 import pytest_asyncio
+import redis.asyncio as redis
 from playwright.async_api import Browser, BrowserContext, Page, async_playwright
 
 from tests.pytest.e2e.helpers.auth_helpers import wait_for_auth_hydration
@@ -73,6 +74,40 @@ CHROMIUM_DOCKER_ARGS: list[str] = [
     "--disable-dbus",  # Critical for Docker!
     "--disable-notifications",
 ]
+
+RATE_LIMIT_PREFIX = "rate_limit:*"
+
+
+async def _clear_rate_limits(client: redis.Redis[bytes]) -> None:
+    """Remove all rate limit keys (pre + post) to avoid cross-test leakage."""
+    cursor: int = 0
+    while True:
+        cursor, keys = await client.scan(cursor=cursor, match=RATE_LIMIT_PREFIX, count=100)
+        if keys:
+            # Keys are bytes; decode to str for delete signature
+            decoded_keys = [
+                k.decode("utf-8") if isinstance(k, (bytes, bytearray)) else str(k) for k in keys
+            ]
+            await client.delete(*decoded_keys)
+        if cursor == 0:
+            break
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def clean_rate_limits() -> AsyncGenerator[None, None]:
+    """Pre/post cleanup for Redis rate limiter state (SSoT isolation rule).
+
+    Ensures login and API rate limit counters don't leak across tests/browsers.
+    """
+    client: redis.Redis[bytes] = redis.Redis(host="redis", port=6379, decode_responses=False)
+    await _clear_rate_limits(client)
+    try:
+        yield
+    finally:
+        try:
+            await _clear_rate_limits(client)
+        finally:
+            await client.aclose()
 
 
 @pytest_asyncio.fixture(scope="function", params=["chromium", "firefox", "webkit"])

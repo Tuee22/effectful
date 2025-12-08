@@ -33,6 +33,13 @@ from effectful.domain.metrics_result import (
     QueryFailure,
     QuerySuccess,
 )
+from effectful.domain.optional_value import (
+    Absent,
+    OptionalValue,
+    Provided,
+    from_optional_value,
+    to_optional_value,
+)
 from effectful.domain.profile import (
     ProfileData,
     ProfileFound,
@@ -89,6 +96,12 @@ __all__ = [
     "QuerySuccess",
     "QueryFailure",
     "MetricQueryResult",
+    # Optional ADT
+    "Provided",
+    "Absent",
+    "OptionalValue",
+    "to_optional_value",
+    "from_optional_value",
     # Errors
     "UserNotFoundError",
     "InvalidMessageError",

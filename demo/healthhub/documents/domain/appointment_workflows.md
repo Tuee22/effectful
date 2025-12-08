@@ -1,18 +1,20 @@
 # Appointment Workflows
 
-**Status**: Reference only  
-**Supersedes**: none  
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub domain delta for appointment workflows; extends the base SSoT and keeps only HealthHub-specific overrides.
-> **📖 Authoritative Reference**: [Appointment Workflows](../../../../documents/domain/appointment_workflows.md)
+> **Purpose**: SSoT for HealthHub appointment lifecycle workflows (scheduling, rescheduling, cancellation, follow-up) using the medical state machine patterns.
 
-## Deltas
-- Base SSoT: [Appointment Workflows](../../../../documents/domain/appointment_workflows.md); apply all base lifecycle and transition rules.
-- No additional deltas beyond using the HealthHub compose stack and service name (`healthhub`).
-- Refer to the base document for canonical procedures; apply HealthHub-specific ports, credentials, and service names where applicable.
+## Canonical Guidance
+
+- **Reuse core machine**: Build appointment flows on top of the [Medical State Machines](medical_state_machines.md) SSoT; apply the same transition validation and invariants.
+- **Explicit states**: Model discrete states (requested, confirmed, rescheduled, completed, no-show) as a closed ADT; avoid optionals for missing data.
+- **Auditability**: Record every transition with user identity and timestamp via yielded audit effects; avoid inline logging or hidden side effects.
+- **Error handling**: Surface scheduling conflicts as domain errors through `Err` results; do not encode failures as terminal states unless they are part of the business process.
 
 ## Cross-References
-- [HealthHub Documentation Guide](../documentation_standards.md)
-- [HealthHub Documentation Hub](../README.md)
-- [Appointment Workflows](../../../../documents/domain/appointment_workflows.md)
+- [Medical State Machines](medical_state_machines.md)
+- [Effect Patterns — State Machines](../engineering/effect_patterns.md#state-machines)
+- [Architecture](../engineering/architecture.md)
+- [Code Quality](../engineering/code_quality.md)

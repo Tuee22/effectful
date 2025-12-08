@@ -167,7 +167,6 @@ services:
 ## Step 3: Restart Prometheus and Verify
 
 ```bash
-# file: scripts/14_alert_rules.sh
 # Restart Prometheus to load alert rules
 docker compose -f docker/docker-compose.yml restart prometheus
 
@@ -406,7 +405,6 @@ Generate some errors, wait for `for` duration, verify alert fires.
 Test PromQL expression before adding to alert rules:
 
 ```bash
-# file: scripts/14_alert_rules.sh
 # In Prometheus UI (Graph tab)
 # Paste expression and click Execute
 
@@ -420,7 +418,6 @@ sum(rate(effectful_effects_total[5m]))
 ### Method 3: Unit Testing with promtool
 
 ```bash
-# file: scripts/14_alert_rules.sh
 # Install promtool (included with Prometheus)
 docker compose -f docker/docker-compose.yml exec prometheus promtool --version
 
@@ -460,7 +457,6 @@ tests:
 ```
 
 ```bash
-# file: scripts/14_alert_rules.sh
 # Run test
 promtool test rules test_alerts.yml
 ```
@@ -561,7 +557,6 @@ receivers:
 ### Test Alertmanager
 
 ```bash
-# file: scripts/14_alert_rules.sh
 # Start Alertmanager
 docker compose -f docker/docker-compose.yml up -d alertmanager
 
@@ -763,7 +758,6 @@ labels:
 
 **Debug**:
 ```bash
-# file: scripts/14_alert_rules.sh
 # Check alert state
 curl http://localhost:9090/api/v1/alerts | jq
 

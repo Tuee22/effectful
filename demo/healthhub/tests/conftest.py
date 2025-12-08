@@ -136,6 +136,19 @@ async def redis_client() -> AsyncIterator[redis.Redis[bytes]]:
     await client.aclose()
 
 
+@pytest.fixture(scope="session")
+def observability_interpreter() -> Iterator[object]:
+    """Create observability interpreter singleton for testing.
+
+    Scope: session - Created once per test session to avoid Prometheus
+    metric duplicate registration errors.
+    """
+    from app.interpreters.observability_interpreter import ObservabilityInterpreter
+
+    interpreter = ObservabilityInterpreter()
+    yield interpreter
+
+
 # Sample data fixtures for testing
 @pytest.fixture
 def sample_user_id() -> UUID:

@@ -50,7 +50,7 @@ flowchart TB
 
 ## Core Standards
 
-**[Architecture](architecture.md)** (569 lines)
+**[Architecture](architecture.md)** (614 lines)
 - 5-layer architecture (Application → Runner → Composite → Interpreters → Infrastructure)
 - Separation of concerns
 - Effect system design decisions
@@ -62,13 +62,13 @@ flowchart TB
 - Generator rules and anti-pattern routing
 - Detection + remediation workflow (check-code, MyPy strict, link verification)
 
-**[Testing](testing.md)** (3,659 lines)
+**[Testing](testing.md)** (3,761 lines)
 - Test pyramid strategy (Unit → Integration → E2E)
 - 22 test anti-patterns with examples
 - Generator testing patterns
 - Zero skipped tests policy
 
-**[Docker Workflow](docker_workflow.md)** (438 lines)
+**[Docker Workflow](docker_workflow.md)** (496 lines)
 - Docker-only development policy
 - Container architecture
 - Named volumes vs bind mounts
@@ -90,10 +90,10 @@ flowchart TB
 - Treats lockfiles (`poetry.lock`, `package-lock.json`) as build artifacts (not versioned)
 - Artifacts remain inside containers under `/opt/**`; never copied back to host/images
 
-**[Command Reference](command_reference.md)** (120 lines)
+**[Command Reference](command_reference.md)** (157 lines)
 - All Docker compose commands
 - Test execution patterns
-- Test statistics (329 tests, ~1.6s execution)
+- Test statistics (current counts from `rg "def test_" tests`)
 - Output capture techniques
 
 **[Code Quality](code_quality.md)** (combined)
@@ -102,21 +102,21 @@ flowchart TB
 - Purity + type safety doctrines and generators
 - Anti-pattern routing and remediation
 
-**[Development Workflow](development_workflow.md)** (150 lines)
+**[Development Workflow](development_workflow.md)** (271 lines)
 - Daily development loop
 - Adding new effects (9-step procedure)
 - Adding new domain models (5-step procedure)
 - Database management
 - Integration test setup
 
-**[Configuration](configuration.md)** (50 lines)
+**[Configuration](configuration.md)** (183 lines)
 - Environment variables for all services
 - PostgreSQL configuration
 - Redis configuration
 - MinIO S3 configuration
 - Apache Pulsar configuration
 
-**[Effect Patterns](effect_patterns.md)** (200 lines)
+**[Effect Patterns](effect_patterns.md)** (373 lines)
 - Generator-based DSL pattern
 - Fail-fast error propagation
 - Composing programs with yield from
@@ -170,8 +170,8 @@ All engineering decisions flow from this principle. Every standard, pattern, and
 
 ## Document Status
 
-**Total**: 16 engineering documents (8 core + 8 guides)
-**Lines of Code**: ~9,000 lines of engineering documentation
+**Total**: 15 engineering documents (8 core + 7 guides)
+**Lines of Code**: ~7,600 lines of engineering documentation
 
 All engineering documents marked with "**SSoT**" are authoritative. When conflicts arise between documents, SSoT documents take precedence.
 
@@ -182,7 +182,7 @@ All engineering documents marked with "**SSoT**" are authoritative. When conflic
 2. Make changes to appropriate SSoT document
 3. Confirm header metadata (Status/Supersedes/Referenced by/Purpose) is correct
 4. Update "Referenced by" list if adding new cross-references
-5. Run link verification: `python tools/verify_links.py`
+5. Run link verification: `docker compose -f docker/docker-compose.yml exec effectful poetry run python tools/verify_links.py`
 6. Create pull request (see [Contributing](../contributing.md))
 
 **Naming convention**: All files lowercase with underscores, descriptive names (e.g., `code_quality.md` not `types.md`)

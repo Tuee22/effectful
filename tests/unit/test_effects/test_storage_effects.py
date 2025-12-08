@@ -8,6 +8,8 @@ Coverage: 100% of storage effects module.
 
 import pytest
 
+from effectful.domain.optional_value import Absent, Provided
+
 from effectful.effects.storage import (
     DeleteObject,
     GetObject,
@@ -84,8 +86,8 @@ class TestPutObject:
         assert effect.bucket == "my-bucket"
         assert effect.key == "data/file.txt"
         assert effect.content == b"test data"
-        assert effect.metadata == {"uploaded-by": "user-123"}
-        assert effect.content_type == "text/plain"
+        assert effect.metadata == Provided(value={"uploaded-by": "user-123"})
+        assert effect.content_type == Provided(value="text/plain")
 
     def test_put_object_minimal(self) -> None:
         """PutObject should work with just required fields."""
@@ -94,15 +96,15 @@ class TestPutObject:
         assert effect.bucket == "my-bucket"
         assert effect.key == "file.txt"
         assert effect.content == b"data"
-        assert effect.metadata is None
-        assert effect.content_type is None
+        assert effect.metadata == Absent()
+        assert effect.content_type == Absent()
 
     def test_put_object_defaults(self) -> None:
         """PutObject should have default None for metadata and content_type."""
         effect = PutObject(bucket="bucket", key="key", content=b"data")
 
-        assert effect.metadata is None
-        assert effect.content_type is None
+        assert effect.metadata == Absent()
+        assert effect.content_type == Absent()
 
     def test_put_object_equality(self) -> None:
         """Equal PutObject instances should be equal."""
@@ -204,7 +206,7 @@ class TestListObjects:
         effect = ListObjects(bucket="my-bucket", prefix="data/")
 
         assert effect.bucket == "my-bucket"
-        assert effect.prefix == "data/"
+        assert effect.prefix == Provided(value="data/")
         assert effect.max_keys == 1000  # Default
 
     def test_list_objects_with_max_keys(self) -> None:
@@ -213,14 +215,14 @@ class TestListObjects:
 
         assert effect.bucket == "my-bucket"
         assert effect.max_keys == 100
-        assert effect.prefix is None  # Default
+        assert effect.prefix == Absent()
 
     def test_list_objects_defaults(self) -> None:
         """ListObjects should have default max_keys=1000, prefix=None."""
         effect = ListObjects(bucket="my-bucket")
 
         assert effect.bucket == "my-bucket"
-        assert effect.prefix is None
+        assert effect.prefix == Absent()
         assert effect.max_keys == 1000
 
     def test_list_objects_all_parameters(self) -> None:
@@ -228,7 +230,7 @@ class TestListObjects:
         effect = ListObjects(bucket="my-bucket", prefix="reports/", max_keys=50)
 
         assert effect.bucket == "my-bucket"
-        assert effect.prefix == "reports/"
+        assert effect.prefix == Provided(value="reports/")
         assert effect.max_keys == 50
 
     def test_list_objects_equality(self) -> None:

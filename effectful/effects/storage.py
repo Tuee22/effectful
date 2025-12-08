@@ -35,6 +35,20 @@ Example:
 """
 
 from dataclasses import dataclass
+from typing import TypeVar
+
+from effectful.domain.optional_value import Absent, OptionalValue, Provided, to_optional_value
+
+T_co = TypeVar("T_co")
+
+
+def _normalize_optional_value(
+    value: T_co | OptionalValue[T_co] | None,
+) -> OptionalValue[T_co]:
+    """Normalize plain optional inputs into OptionalValue ADT."""
+    if isinstance(value, (Provided, Absent)):
+        return value
+    return to_optional_value(value)
 
 
 @dataclass(frozen=True)
@@ -71,7 +85,7 @@ class GetObject:
     key: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class PutObject:
     """Store an object in storage.
 
@@ -107,8 +121,22 @@ class PutObject:
     bucket: str
     key: str
     content: bytes
-    metadata: dict[str, str] | None = None
-    content_type: str | None = None
+    metadata: OptionalValue[dict[str, str]]
+    content_type: OptionalValue[str]
+
+    def __init__(
+        self,
+        bucket: str,
+        key: str,
+        content: bytes,
+        metadata: dict[str, str] | OptionalValue[dict[str, str]] | None = None,
+        content_type: str | OptionalValue[str] | None = None,
+    ) -> None:
+        object.__setattr__(self, "bucket", bucket)
+        object.__setattr__(self, "key", key)
+        object.__setattr__(self, "content", content)
+        object.__setattr__(self, "metadata", _normalize_optional_value(metadata))
+        object.__setattr__(self, "content_type", _normalize_optional_value(content_type))
 
 
 @dataclass(frozen=True)
@@ -139,7 +167,7 @@ class DeleteObject:
     key: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class ListObjects:
     """List objects in a bucket with optional prefix filter.
 
@@ -172,8 +200,18 @@ class ListObjects:
     """
 
     bucket: str
-    prefix: str | None = None
+    prefix: OptionalValue[str]
     max_keys: int = 1000
+
+    def __init__(
+        self,
+        bucket: str,
+        prefix: str | OptionalValue[str] | None = None,
+        max_keys: int = 1000,
+    ) -> None:
+        object.__setattr__(self, "bucket", bucket)
+        object.__setattr__(self, "prefix", _normalize_optional_value(prefix))
+        object.__setattr__(self, "max_keys", max_keys)
 
 
 # Type alias for all storage effects

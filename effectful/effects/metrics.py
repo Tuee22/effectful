@@ -22,6 +22,19 @@ Example:
 """
 
 from dataclasses import dataclass
+from typing import TypeVar
+
+from effectful.domain.optional_value import Absent, OptionalValue, Provided, to_optional_value
+
+T_co = TypeVar("T_co")
+
+
+def _normalize_optional_value(
+    value: T_co | OptionalValue[T_co] | None,
+) -> OptionalValue[T_co]:
+    if isinstance(value, (Provided, Absent)):
+        return value
+    return to_optional_value(value)
 
 
 @dataclass(frozen=True)
@@ -117,7 +130,7 @@ class RecordSummary:
     value: float
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class QueryMetrics:
     """Effect: Retrieve current metric values.
 
@@ -133,8 +146,16 @@ class QueryMetrics:
         QueryFailure: Metric not found or collector unavailable
     """
 
-    metric_name: str | None = None
-    labels: dict[str, str] | None = None
+    metric_name: OptionalValue[str]
+    labels: OptionalValue[dict[str, str]]
+
+    def __init__(
+        self,
+        metric_name: str | OptionalValue[str] | None = None,
+        labels: dict[str, str] | OptionalValue[dict[str, str]] | None = None,
+    ) -> None:
+        object.__setattr__(self, "metric_name", _normalize_optional_value(metric_name))
+        object.__setattr__(self, "labels", _normalize_optional_value(labels))
 
 
 @dataclass(frozen=True)

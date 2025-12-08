@@ -15,7 +15,7 @@
 ## Navigation
 
 - **Engineering Overlays**: [engineering/](engineering/README.md) — HealthHub-specific overrides for architecture, authentication, observability, and operations.
-- **Domain Overlays**: [domain/](domain/hipaa_compliance.md) — HIPAA, appointment workflows, and medical state machines.
+- **Domain Documentation**: [domain/](domain/hipaa_compliance.md) — HealthHub-specific domain models: HIPAA compliance, appointment workflows, and medical state machines.
 - **Tutorial Overlays**: [tutorials/](tutorials/quickstart.md) — HealthHub-specific walkthroughs aligned with base tutorials.
 - **API Overlays**: [api/](api/README.md) — API notes tailored for HealthHub services.
 

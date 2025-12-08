@@ -6,19 +6,35 @@ Uses ADT pattern for authorization state: PatientAuthorized | DoctorAuthorized |
 
 from dataclasses import dataclass
 from typing import Annotated
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from uuid import UUID
+from typing_extensions import assert_never
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.auth import verify_token, TokenData, TokenType
 from app.auth.jwt import TokenValidationSuccess, TokenValidationError
-from app.infrastructure import create_redis_client, get_database_manager
-from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
-from app.programs.runner import run_program
+from app.container import ApplicationContainer
+from app.domain.lookup_result import (
+    DoctorFound,
+    DoctorMissingById,
+    DoctorMissingByUserId,
+    is_doctor_lookup_result,
+)
+from effectful.domain.optional_value import from_optional_value, to_optional_value
 from app.effects.healthcare import GetDoctorById
 from app.effects.notification import LogAuditEvent
+from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
+from app.interpreters.composite_interpreter import (
+    AllEffects,
+    CompositeInterpreter,
+)
+from app.protocols.database import DatabasePool
+from app.protocols.observability import ObservabilityInterpreter
+from app.protocols.redis_factory import RedisClientFactory
+from app.protocols.interpreter_factory import InterpreterFactory
+from app.programs.runner import run_program
 
 
 # Security scheme for JWT Bearer authentication
@@ -73,6 +89,85 @@ type AuthorizationState = PatientAuthorized | DoctorAuthorized | AdminAuthorized
 
 
 # ============================================================================
+# Container and resource dependencies
+# ============================================================================
+
+
+def get_container(request: Request) -> ApplicationContainer:
+    """Get application container from app state.
+
+    Container holds all application-scoped resources (database, metrics).
+    Created once at startup, accessed via dependency injection.
+
+    Testing: Override with app.dependency_overrides[get_container] = lambda r: test_container
+    """
+    container: ApplicationContainer = request.app.state.container
+    return container
+
+
+def get_database_pool(
+    container: Annotated[ApplicationContainer, Depends(get_container)],
+) -> DatabasePool:
+    """Get database pool from container.
+
+    Returns protocol type (DatabasePool), not concrete implementation.
+
+    Testing: Container holds pytest-mock mock when using dependency overrides
+    """
+    return container.database_pool
+
+
+def get_observability_interpreter(
+    container: Annotated[ApplicationContainer, Depends(get_container)],
+) -> ObservabilityInterpreter:
+    """Get observability interpreter from container.
+
+    Returns protocol type, lifecycle invisible to consumers.
+
+    Testing: Container holds pytest-mock mock when using dependency overrides
+    """
+    return container.observability_interpreter
+
+
+def get_redis_factory(
+    container: Annotated[ApplicationContainer, Depends(get_container)],
+) -> RedisClientFactory:
+    """Get Redis client factory from container.
+
+    Returns protocol type (RedisClientFactory), used for creating per-request Redis clients.
+
+    Testing: Container holds pytest-mock mock when using dependency overrides
+    """
+    return container.redis_factory
+
+
+def get_interpreter_factory(
+    container: Annotated[ApplicationContainer, Depends(get_container)],
+) -> InterpreterFactory:
+    """Get interpreter factory from container.
+
+    Returns protocol type (InterpreterFactory), used for creating interpreters with managed Redis lifecycle.
+
+    Testing: Container holds pytest-mock mock when using dependency overrides
+    """
+    return container.interpreter_factory
+
+
+async def get_composite_interpreter(
+    interpreter_factory: Annotated[InterpreterFactory, Depends(get_interpreter_factory)],
+) -> AsyncGenerator[CompositeInterpreter, None]:
+    """Create CompositeInterpreter with automatic Redis cleanup.
+
+    Uses interpreter factory from container to create interpreter with managed Redis lifecycle.
+    Factory handles Redis client creation and cleanup automatically.
+
+    Testing: interpreter_factory is pytest-mock mock from container override
+    """
+    async with interpreter_factory.create_composite() as interpreter:
+        yield interpreter
+
+
+# ============================================================================
 # Token validation dependency
 # ============================================================================
 
@@ -82,7 +177,17 @@ def get_token_data(
 ) -> TokenData:
     """Validate JWT access token and return token data.
 
-    Raises HTTPException 401 if token is invalid or expired.
+    Args:
+        credentials: Parsed bearer credentials from the Authorization header.
+
+    Returns:
+        Decoded token payload.
+
+    Raises:
+        HTTPException: When the token is missing, expired, or invalid.
+
+    Effects:
+        verify_token (JWT validation)
     """
     token = credentials.credentials
     result = verify_token(token, TokenType.ACCESS)
@@ -106,6 +211,7 @@ def get_token_data(
 async def get_current_user(
     request: Request,
     token_data: Annotated[TokenData, Depends(get_token_data)],
+    interpreter_factory: Annotated[InterpreterFactory, Depends(get_interpreter_factory)],
 ) -> AuthorizationState:
     """Get current user authorization state from JWT token.
 
@@ -117,17 +223,28 @@ async def get_current_user(
 
     Performance optimization: Uses patient_id/doctor_id from JWT payload.
     Eliminates 1 DB query for patients, reduces to 1 query for doctors (can_prescribe only).
-    """
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
-    redis_client = create_redis_client()
-    interpreter = CompositeInterpreter(pool, redis_client)
 
-    try:
+    Args:
+        request: FastAPI request for capturing audit context.
+        token_data: Validated JWT payload from `get_token_data`.
+        interpreter_factory: Injected interpreter factory from container.
+
+    Returns:
+        AuthorizationState ADT variant representing the caller.
+
+    Raises:
+        HTTPException: If the token is invalid (propagated from dependencies).
+
+    Effects:
+        GetDoctorById
+        LogAuditEvent
+    """
+    async with interpreter_factory.create_composite() as interpreter:
         match token_data.role:
             case "patient":
                 # Use patient_id from JWT (no DB query)
-                if token_data.patient_id is None:
+                patient_id_value = from_optional_value(token_data.patient_id)
+                if patient_id_value is None:
                     return Unauthorized(
                         reason="no_profile",
                         detail="Patient profile not found. Complete profile setup first.",
@@ -135,40 +252,49 @@ async def get_current_user(
 
                 auth_state: AuthorizationState = PatientAuthorized(
                     user_id=token_data.user_id,
-                    patient_id=token_data.patient_id,
+                    patient_id=patient_id_value,
                     email=token_data.email,
                 )
 
             case "doctor":
                 # Use doctor_id from JWT, but query for can_prescribe capability
-                if token_data.doctor_id is None:
+                doctor_id_value = from_optional_value(token_data.doctor_id)
+                if doctor_id_value is None:
                     return Unauthorized(
                         reason="no_profile",
                         detail="Doctor profile not found. Complete profile setup first.",
                     )
 
-                doctor_id = token_data.doctor_id
+                doctor_id = doctor_id_value
 
                 # Query only for can_prescribe and specialization (capabilities can change)
-                def doctor_program() -> Generator[AllEffects, object, object | None]:
-                    return (yield GetDoctorById(doctor_id=doctor_id))
+                def doctor_program() -> (
+                    Generator[
+                        AllEffects, object, DoctorFound | DoctorMissingById | DoctorMissingByUserId
+                    ]
+                ):
+                    result = yield GetDoctorById(doctor_id=doctor_id)
+                    assert is_doctor_lookup_result(result)
+                    return result
 
-                doctor = await run_program(doctor_program(), interpreter)
+                doctor_result = await run_program(doctor_program(), interpreter)
 
-                if doctor is None:
-                    return Unauthorized(
-                        reason="no_profile",
-                        detail="Doctor profile not found or was deleted.",
-                    )
-
-                assert hasattr(doctor, "specialization") and hasattr(doctor, "can_prescribe")
-                auth_state = DoctorAuthorized(
-                    user_id=token_data.user_id,
-                    doctor_id=token_data.doctor_id,
-                    email=token_data.email,
-                    specialization=doctor.specialization,
-                    can_prescribe=doctor.can_prescribe,
-                )
+                match doctor_result:
+                    case DoctorFound(doctor=doctor):
+                        auth_state = DoctorAuthorized(
+                            user_id=token_data.user_id,
+                            doctor_id=doctor_id_value,
+                            email=token_data.email,
+                            specialization=doctor.specialization,
+                            can_prescribe=doctor.can_prescribe,
+                        )
+                    case DoctorMissingById() | DoctorMissingByUserId():
+                        return Unauthorized(
+                            reason="no_profile",
+                            detail="Doctor profile not found or was deleted.",
+                        )
+                    case _:
+                        assert_never(doctor_result)
 
             case "admin":
                 auth_state = AdminAuthorized(
@@ -187,17 +313,61 @@ async def get_current_user(
                 action="authorize_user",
                 resource_type="auth",
                 resource_id=token_data.user_id,
-                ip_address=request.client.host if request.client else None,
-                user_agent=request.headers.get("user-agent"),
-                metadata={"role": token_data.role},
+                ip_address=to_optional_value(
+                    request.client.host if request.client else None,
+                    reason="not_provided",
+                ),
+                user_agent=to_optional_value(
+                    request.headers.get("user-agent"), reason="not_provided"
+                ),
+                metadata=to_optional_value({"role": token_data.role}),
             )
             return True
 
         await run_program(audit_program(), interpreter)
 
         return auth_state
-    finally:
-        await redis_client.aclose()
+
+
+async def get_audited_composite_interpreter(
+    request: Request,
+    interpreter_factory: Annotated[InterpreterFactory, Depends(get_interpreter_factory)],
+    auth: Annotated[AuthorizationState, Depends(get_current_user)],
+) -> AsyncGenerator[AuditedCompositeInterpreter, None]:
+    """Create AuditedCompositeInterpreter with audit context + Redis cleanup.
+
+    Uses interpreter factory from container to create audited interpreter with managed Redis lifecycle.
+    Factory handles Redis client creation and cleanup automatically.
+
+    Testing: interpreter_factory is pytest-mock mock from container override
+    """
+    # Extract request metadata for audit context
+    ip_address = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
+
+    # Extract user_id from authorized state (auth is always authorized at this point)
+    user_id: UUID
+    match auth:
+        case (
+            PatientAuthorized(user_id=uid)
+            | DoctorAuthorized(user_id=uid)
+            | AdminAuthorized(user_id=uid)
+        ):
+            user_id = uid
+        case Unauthorized():
+            # This should never happen - get_current_user raises HTTPException for unauthorized
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+
+    # Create audit context
+    audit_context = AuditContext(
+        user_id=user_id,
+        ip_address=ip_address,
+        user_agent=user_agent,
+    )
+
+    # Use factory to create audited interpreter with automatic Redis cleanup
+    async with interpreter_factory.create_audited(audit_context) as interpreter:
+        yield interpreter
 
 
 # ============================================================================
@@ -210,7 +380,14 @@ async def require_patient(
 ) -> PatientAuthorized:
     """Require patient authorization.
 
-    Raises HTTPException 403 if not a patient.
+    Args:
+        auth: Authorization state provided by `get_current_user`.
+
+    Returns:
+        PatientAuthorized state when the caller is a patient.
+
+    Raises:
+        HTTPException: If the caller is not a patient or is unauthorized.
     """
     match auth:
         case PatientAuthorized() as patient:
@@ -232,7 +409,14 @@ async def require_doctor(
 ) -> DoctorAuthorized:
     """Require doctor authorization.
 
-    Raises HTTPException 403 if not a doctor.
+    Args:
+        auth: Authorization state provided by `get_current_user`.
+
+    Returns:
+        DoctorAuthorized state when the caller is a doctor.
+
+    Raises:
+        HTTPException: If the caller is not a doctor or is unauthorized.
     """
     match auth:
         case DoctorAuthorized() as doctor:
@@ -254,7 +438,14 @@ async def require_admin(
 ) -> AdminAuthorized:
     """Require admin authorization.
 
-    Raises HTTPException 403 if not an admin.
+    Args:
+        auth: Authorization state provided by `get_current_user`.
+
+    Returns:
+        AdminAuthorized state when the caller is an admin.
+
+    Raises:
+        HTTPException: If the caller is not an admin or is unauthorized.
     """
     match auth:
         case AdminAuthorized() as admin:
@@ -276,7 +467,14 @@ async def require_doctor_or_admin(
 ) -> DoctorAuthorized | AdminAuthorized:
     """Require doctor or admin authorization.
 
-    Raises HTTPException 403 if neither doctor nor admin.
+    Args:
+        auth: Authorization state provided by `get_current_user`.
+
+    Returns:
+        DoctorAuthorized or AdminAuthorized state when the caller has privileges.
+
+    Raises:
+        HTTPException: If the caller is neither doctor nor admin or is unauthorized.
     """
     match auth:
         case DoctorAuthorized() as doctor:
@@ -300,7 +498,14 @@ async def require_authenticated(
 ) -> PatientAuthorized | DoctorAuthorized | AdminAuthorized:
     """Require any authenticated user (not Unauthorized).
 
-    Raises HTTPException 403 if authorization failed.
+    Args:
+        auth: Authorization state provided by `get_current_user`.
+
+    Returns:
+        PatientAuthorized, DoctorAuthorized, or AdminAuthorized state.
+
+    Raises:
+        HTTPException: If authorization failed.
     """
     match auth:
         case Unauthorized(detail=detail):

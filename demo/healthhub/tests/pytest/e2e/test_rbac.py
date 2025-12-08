@@ -119,9 +119,9 @@ class TestPatientAccess:
         await authenticated_patient_page.goto(make_url("/lab-results"))
         await expect(authenticated_patient_page).to_have_url(make_url("/lab-results"))
 
-        # Page should load
-        lab_results_content = authenticated_patient_page.locator(
-            "[data-testid='lab-result-list'], " "[data-testid='empty-state'], " ".lab-results-page"
+        # Page should load (list or empty)
+        lab_results_content = authenticated_patient_page.get_by_test_id("lab-result-list").or_(
+            authenticated_patient_page.get_by_test_id("lab-result-empty")
         )
         await expect(lab_results_content).to_be_visible(timeout=10000)
 
@@ -208,8 +208,8 @@ class TestDoctorAccess:
         await authenticated_doctor_page.goto(make_url("/lab-results"))
         await expect(authenticated_doctor_page).to_have_url(make_url("/lab-results"))
 
-        lab_results_content = authenticated_doctor_page.locator(
-            "[data-testid='lab-result-list'], " "[data-testid='empty-state'], " ".lab-results-page"
+        lab_results_content = authenticated_doctor_page.get_by_test_id("lab-result-list").or_(
+            authenticated_doctor_page.get_by_test_id("lab-result-empty")
         )
         await expect(lab_results_content).to_be_visible(timeout=10000)
 

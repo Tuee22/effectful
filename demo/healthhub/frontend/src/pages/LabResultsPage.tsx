@@ -19,11 +19,21 @@ export const LabResultsPage = () => {
       <RemoteDataRenderer
         data={labResultList}
         notAsked={() => (
-          <p className="page-empty">
-            No lab results loaded. Refresh the page to load lab results.
+          <p className="page-empty" data-testid="lab-result-empty">
+            Loading lab results...
+          </p>
+        )}
+        loading={() => (
+          <p className="page-empty" data-testid="lab-result-empty">
+            Loading lab results...
           </p>
         )}
         success={(labResults) => <LabResultList labResults={labResults} />}
+        failure={() => (
+          <p className="page-empty" data-testid="lab-result-empty">
+            Unable to load lab results right now.
+          </p>
+        )}
       />
     </div>
   )

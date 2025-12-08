@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from app.domain.optional_value import OptionalValue
+from effectful.domain.optional_value import OptionalValue
 
 
 @dataclass(frozen=True)

@@ -41,14 +41,14 @@ const ReviewedBadge = ({ reviewed }: ReviewedBadgeProps) => {
 export const LabResultList = ({ labResults }: LabResultListProps) => {
   if (labResults.length === 0) {
     return (
-      <div className="lab-result-list-empty">
+      <div className="lab-result-list-empty" data-testid="lab-result-empty">
         <p>No lab results found.</p>
       </div>
     )
   }
 
   return (
-    <div className="lab-result-list">
+    <div className="lab-result-list" data-testid="lab-result-list">
       <table className="lab-result-table">
         <thead>
           <tr>

@@ -6,10 +6,28 @@ Effect programs for lab result processing and notifications.
 from collections.abc import Generator
 from dataclasses import dataclass
 from uuid import UUID
+from typing_extensions import assert_never
 
 from app.domain.doctor import Doctor
+from app.domain.lookup_result import (
+    DoctorFound,
+    DoctorLookupResult,
+    DoctorMissingById,
+    DoctorMissingByUserId,
+    LabResultFound,
+    LabResultLookupResult,
+    LabResultMissing as LabResultLookupMissing,
+    PatientFound,
+    PatientLookupResult,
+    PatientMissingById,
+    PatientMissingByUserId,
+    is_doctor_lookup_result,
+    is_lab_result_lookup_result,
+    is_patient_lookup_result,
+)
 from app.domain.lab_result import LabResult
 from app.domain.patient import Patient
+from effectful.domain.optional_value import to_optional_value
 from app.effects.healthcare import (
     CreateLabResult,
     GetDoctorById,
@@ -17,6 +35,7 @@ from app.effects.healthcare import (
     GetPatientById,
 )
 from app.effects.notification import LogAuditEvent, NotificationValue, PublishWebSocketNotification
+from app.effects.observability import IncrementCounter
 from app.interpreters.composite_interpreter import AllEffects
 
 
@@ -95,14 +114,30 @@ def process_lab_result_program(
         LabResult if successful, error string if validation fails
     """
     # Step 1: Verify patient exists
-    patient = yield GetPatientById(patient_id=patient_id)
-    if not isinstance(patient, Patient):
-        return LabResultPatientMissing(patient_id=patient_id)
+    patient_result = yield GetPatientById(patient_id=patient_id)
+    assert is_patient_lookup_result(patient_result)
+    match patient_result:
+        case PatientFound():
+            pass
+        case PatientMissingById(patient_id=missing_id):
+            return LabResultPatientMissing(patient_id=missing_id)
+        case PatientMissingByUserId():
+            return LabResultPatientMissing(patient_id=patient_id)
+        case _:
+            assert_never(patient_result)
 
     # Step 2: Verify doctor exists
-    doctor = yield GetDoctorById(doctor_id=doctor_id)
-    if not isinstance(doctor, Doctor):
-        return LabResultDoctorMissing(doctor_id=doctor_id)
+    doctor_result = yield GetDoctorById(doctor_id=doctor_id)
+    assert is_doctor_lookup_result(doctor_result)
+    match doctor_result:
+        case DoctorFound(doctor=doctor):
+            doctor_specialization = doctor.specialization
+        case DoctorMissingById(doctor_id=missing_id):
+            return LabResultDoctorMissing(doctor_id=missing_id)
+        case DoctorMissingByUserId():
+            return LabResultDoctorMissing(doctor_id=doctor_id)
+        case _:
+            assert_never(doctor_result)
 
     # Step 3: Store lab result
     lab_result = yield CreateLabResult(
@@ -112,9 +147,17 @@ def process_lab_result_program(
         test_type=test_type,
         result_data=result_data,
         critical=critical,
-        doctor_notes=None,
+        doctor_notes=to_optional_value(None, reason="not_provided"),
     )
     assert isinstance(lab_result, LabResult)
+
+    yield IncrementCounter(
+        metric_name="healthhub_lab_results_created_total",
+        labels={
+            "doctor_specialization": doctor_specialization,
+            "critical": "true" if critical else "false",
+        },
+    )
 
     # Step 4: Send notification to patient
     patient_message: dict[str, NotificationValue] = {
@@ -127,7 +170,7 @@ def process_lab_result_program(
     yield PublishWebSocketNotification(
         channel=patient_channel,
         message=patient_message,
-        recipient_id=patient_id,
+        recipient_id=to_optional_value(patient_id, reason="patient_recipient"),
     )
 
     # Step 5: If critical, send urgent notification to doctor
@@ -142,7 +185,7 @@ def process_lab_result_program(
         yield PublishWebSocketNotification(
             channel=doctor_channel,
             message=doctor_message,
-            recipient_id=doctor_id,
+            recipient_id=to_optional_value(doctor_id, reason="doctor_recipient"),
         )
 
     yield LogAuditEvent(
@@ -150,9 +193,9 @@ def process_lab_result_program(
         action="create_lab_result",
         resource_type="lab_result",
         resource_id=result_id,
-        ip_address=None,
-        user_agent=None,
-        metadata={"critical": str(critical)},
+        ip_address=to_optional_value(None, reason="not_provided"),
+        user_agent=to_optional_value(None, reason="not_provided"),
+        metadata=to_optional_value({"critical": str(critical)}),
     )
 
     return LabResultProcessed(lab_result=lab_result)
@@ -175,9 +218,13 @@ def view_lab_result_program(
         LabResult if found, None otherwise
     """
     # Step 1: Fetch lab result
-    lab_result = yield GetLabResultById(result_id=result_id)
+    lab_result_result = yield GetLabResultById(result_id=result_id)
+    assert is_lab_result_lookup_result(lab_result_result)
 
-    if isinstance(lab_result, LabResult):
-        return LabResultViewed(lab_result=lab_result)
-
-    return LabResultMissing(result_id=result_id)
+    match lab_result_result:
+        case LabResultFound(lab_result=lab_result):
+            return LabResultViewed(lab_result=lab_result)
+        case LabResultLookupMissing(result_id=missing_id):
+            return LabResultMissing(result_id=missing_id)
+        case _:
+            assert_never(lab_result_result)

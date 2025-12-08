@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import Enum
 from uuid import UUID
 
-from app.domain.optional_value import OptionalValue
+from effectful.domain.optional_value import OptionalValue
 
 
 class UserRole(str, Enum):

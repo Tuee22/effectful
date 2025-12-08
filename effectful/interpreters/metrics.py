@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok, Result
+from effectful.domain.optional_value import OptionalValue, from_optional_value
 from effectful.domain.metrics_result import (
     MetricQueryResult,
     MetricRecorded,
@@ -132,15 +133,15 @@ class MetricsInterpreter:
         return Ok(EffectReturn(value=result, effect_name="RecordSummary"))
 
     async def _handle_query_metrics(
-        self, metric_name: str | None, labels: dict[str, str] | None
+        self, metric_name: OptionalValue[str], labels: OptionalValue[dict[str, str]]
     ) -> Result[EffectReturn[EffectResult], InterpreterError]:
         """Handle QueryMetrics effect.
 
         Returns QuerySuccess with metrics dict, or QueryFailure if not found.
         """
         result: MetricQueryResult = await self.collector.query_metrics(
-            metric_name=metric_name,
-            labels=labels,
+            metric_name=from_optional_value(metric_name),
+            labels=from_optional_value(labels),
         )
         return Ok(EffectReturn(value=result, effect_name="QueryMetrics"))
 

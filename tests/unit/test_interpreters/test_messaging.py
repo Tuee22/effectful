@@ -69,7 +69,7 @@ class TestPublishMessage:
 
         # Verify mock was called correctly
         mock_producer.publish.assert_called_once_with(
-            "events", b'{"event": "test"}', {"source": "test"}
+            "events", b'{"event": "test"}', properties={"source": "test"}
         )
 
     @pytest.mark.asyncio()
@@ -177,7 +177,7 @@ class TestPublishMessage:
                 pytest.fail(f"Expected Ok, got {result}")
 
         # Verify mock was called with None
-        mock_producer.publish.assert_called_once_with("events", b"data", None)
+        mock_producer.publish.assert_called_once_with("events", b"data", properties=None)
 
 
 class TestConsumeMessage:

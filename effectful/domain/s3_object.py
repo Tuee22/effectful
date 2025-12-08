@@ -36,8 +36,22 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal
 
+from effectful.domain.optional_value import (
+    Absent,
+    OptionalValue,
+    Provided,
+    to_optional_value,
+)
 
-@dataclass(frozen=True)
+
+def _normalize_optional_value(value: str | OptionalValue[str] | None) -> OptionalValue[str]:
+    """Convert plain values into OptionalValue ADT without escape hatches."""
+    if isinstance(value, (Provided, Absent)):
+        return value
+    return to_optional_value(value)
+
+
+@dataclass(frozen=True, init=False)
 class S3Object:
     """Object retrieved from S3 storage.
 
@@ -79,9 +93,29 @@ class S3Object:
     content: bytes
     last_modified: datetime
     metadata: dict[str, str]
-    content_type: str | None
+    content_type: OptionalValue[str]
     size: int
-    version_id: str | None = None
+    version_id: OptionalValue[str]
+
+    def __init__(
+        self,
+        key: str,
+        bucket: str,
+        content: bytes,
+        last_modified: datetime,
+        metadata: dict[str, str] | None = None,
+        content_type: str | OptionalValue[str] | None = None,
+        size: int = 0,
+        version_id: str | OptionalValue[str] | None = None,
+    ) -> None:
+        object.__setattr__(self, "key", key)
+        object.__setattr__(self, "bucket", bucket)
+        object.__setattr__(self, "content", content)
+        object.__setattr__(self, "last_modified", last_modified)
+        object.__setattr__(self, "metadata", metadata or {})
+        object.__setattr__(self, "content_type", _normalize_optional_value(content_type))
+        object.__setattr__(self, "size", size)
+        object.__setattr__(self, "version_id", _normalize_optional_value(version_id))
 
 
 @dataclass(frozen=True)
@@ -100,7 +134,7 @@ class ObjectNotFound:
     key: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class PutSuccess:
     """Successful object storage operation.
 
@@ -126,7 +160,17 @@ class PutSuccess:
 
     key: str
     bucket: str
-    version_id: str | None = None
+    version_id: OptionalValue[str]
+
+    def __init__(
+        self,
+        key: str,
+        bucket: str,
+        version_id: str | OptionalValue[str] | None = None,
+    ) -> None:
+        object.__setattr__(self, "key", key)
+        object.__setattr__(self, "bucket", bucket)
+        object.__setattr__(self, "version_id", _normalize_optional_value(version_id))
 
 
 @dataclass(frozen=True)

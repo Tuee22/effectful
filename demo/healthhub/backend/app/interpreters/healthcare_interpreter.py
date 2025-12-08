@@ -14,6 +14,7 @@ from uuid import UUID, uuid4
 import asyncpg
 from typing_extensions import assert_never
 
+from app.protocols.database import DatabasePool
 from app.database.converters import (
     safe_bool,
     safe_date,
@@ -52,7 +53,35 @@ from app.domain.prescription import (
     NoInteractions,
     Prescription,
 )
-from app.domain.optional_value import from_optional_value, to_optional_value
+from app.domain.lookup_result import (
+    AppointmentFound,
+    AppointmentLookupResult,
+    AppointmentMissing,
+    DoctorFound,
+    DoctorLookupResult,
+    DoctorMissingById,
+    DoctorMissingByUserId,
+    InvoiceFound,
+    InvoiceLookupResult,
+    InvoiceMissing,
+    LabResultFound,
+    LabResultLookupResult,
+    LabResultMissing,
+    PatientFound,
+    PatientLookupResult,
+    PatientMissingById,
+    PatientMissingByUserId,
+    PatientUpdateMissing,
+    PatientUpdateResult,
+    PatientUpdated,
+    PrescriptionFound,
+    PrescriptionLookupResult,
+    PrescriptionMissing,
+    UserFound,
+    UserLookupResult,
+    UserMissingByEmail,
+)
+from effectful.domain.optional_value import from_optional_value, to_optional_value
 from app.domain.user import User, UserRole
 from app.effects.healthcare import (
     AddInvoiceLineItem,
@@ -98,11 +127,11 @@ class HealthcareInterpreter:
     Delegates to repositories and domain services to execute healthcare operations.
     """
 
-    def __init__(self, pool: asyncpg.Pool[asyncpg.Record]) -> None:
+    def __init__(self, pool: DatabasePool) -> None:
         """Initialize interpreter with database pool.
 
         Args:
-            pool: asyncpg connection pool
+            pool: Database pool protocol (production or test mock)
         """
         self.pool = pool
         self.patient_repo = PatientRepository(pool)
@@ -201,7 +230,9 @@ class HealthcareInterpreter:
                 requested_time=requested_time,
                 reason=reason,
             ):
-                return await self._create_appointment(patient_id, doctor_id, requested_time, reason)
+                return await self._create_appointment(
+                    patient_id, doctor_id, from_optional_value(requested_time), reason
+                )
 
             case GetAppointmentById(appointment_id=appointment_id):
                 return await self._get_appointment_by_id(appointment_id)
@@ -234,7 +265,7 @@ class HealthcareInterpreter:
                     frequency,
                     duration_days,
                     refills_remaining,
-                    notes,
+                    from_optional_value(notes),
                 )
 
             case GetPrescriptionById(prescription_id=prescription_id):
@@ -262,7 +293,7 @@ class HealthcareInterpreter:
                     test_type,
                     result_data,
                     critical,
-                    doctor_notes,
+                    from_optional_value(doctor_notes),
                 )
 
             case GetLabResultById(result_id=result_id):
@@ -280,7 +311,12 @@ class HealthcareInterpreter:
                 line_items=line_items,
                 due_date=due_date,
             ):
-                return await self._create_invoice(patient_id, appointment_id, line_items, due_date)
+                return await self._create_invoice(
+                    patient_id,
+                    from_optional_value(appointment_id),
+                    line_items,
+                    from_optional_value(due_date),
+                )
 
             case AddInvoiceLineItem(
                 invoice_id=invoice_id,
@@ -306,14 +342,17 @@ class HealthcareInterpreter:
 
             case CheckDatabaseHealth():
                 return await self._check_database_health()
-        raise RuntimeError(f"Unhandled healthcare effect: {effect}")
+        assert_never(effect)
 
     # Patient operations
-    async def _get_patient_by_id(self, patient_id: UUID) -> Patient | None:
+    async def _get_patient_by_id(self, patient_id: UUID) -> PatientLookupResult:
         """Get patient by ID."""
-        return await self.patient_repo.get_by_id(patient_id)
+        patient = await self.patient_repo.get_by_id(patient_id)
+        if patient is None:
+            return PatientMissingById(patient_id=patient_id)
+        return PatientFound(patient=patient)
 
-    async def _get_patient_by_user_id(self, user_id: UUID) -> Patient | None:
+    async def _get_patient_by_user_id(self, user_id: UUID) -> PatientLookupResult:
         """Get patient by user ID."""
         row = await self.pool.fetchrow(
             """
@@ -327,9 +366,9 @@ class HealthcareInterpreter:
         )
 
         if row is None:
-            return None
+            return PatientMissingByUserId(user_id=user_id)
 
-        return self._row_to_patient(row)
+        return PatientFound(patient=self._row_to_patient(row))
 
     async def _list_patients(self) -> list[Patient]:
         """List all patients (admin only - authorization handled in API layer)."""
@@ -390,8 +429,7 @@ class HealthcareInterpreter:
             now,
         )
 
-        if row is None:
-            raise RuntimeError("Failed to create patient")
+        assert row is not None, "Database insert returned no patient row"
 
         return self._row_to_patient(row)
 
@@ -406,19 +444,21 @@ class HealthcareInterpreter:
         emergency_contact: str | None,
         phone: str | None,
         address: str | None,
-    ) -> Patient | None:
+    ) -> PatientUpdateResult:
         """Update patient record."""
         existing = await self._get_patient_by_id(patient_id)
-        if existing is None:
-            return None
+        if isinstance(existing, (PatientMissingById, PatientMissingByUserId)):
+            return PatientUpdateMissing(patient_id=patient_id)
 
-        new_allergies = allergies if allergies is not None else existing.allergies
+        assert isinstance(existing, PatientFound)
+
+        new_allergies = allergies if allergies is not None else existing.patient.allergies
         allergies_json = json.dumps(new_allergies)
         now = datetime.now(timezone.utc)
-        current_blood_type = from_optional_value(existing.blood_type)
-        current_insurance_id = from_optional_value(existing.insurance_id)
-        current_phone = from_optional_value(existing.phone)
-        current_address = from_optional_value(existing.address)
+        current_blood_type = from_optional_value(existing.patient.blood_type)
+        current_insurance_id = from_optional_value(existing.patient.insurance_id)
+        current_phone = from_optional_value(existing.patient.phone)
+        current_address = from_optional_value(existing.patient.address)
 
         row = await self.pool.fetchrow(
             """
@@ -438,21 +478,25 @@ class HealthcareInterpreter:
                       phone, address, created_at, updated_at
             """,
             patient_id,
-            first_name if first_name is not None else existing.first_name,
-            last_name if last_name is not None else existing.last_name,
+            first_name if first_name is not None else existing.patient.first_name,
+            last_name if last_name is not None else existing.patient.last_name,
             blood_type if blood_type is not None else current_blood_type,
             allergies_json,
             insurance_id if insurance_id is not None else current_insurance_id,
-            emergency_contact if emergency_contact is not None else existing.emergency_contact,
+            (
+                emergency_contact
+                if emergency_contact is not None
+                else existing.patient.emergency_contact
+            ),
             phone if phone is not None else current_phone,
             address if address is not None else current_address,
             now,
         )
 
         if row is None:
-            return None
+            return PatientUpdateMissing(patient_id=patient_id)
 
-        return self._row_to_patient(row)
+        return PatientUpdated(patient=self._row_to_patient(row))
 
     async def _delete_patient(self, patient_id: UUID) -> bool:
         """Delete patient record."""
@@ -491,17 +535,26 @@ class HealthcareInterpreter:
         )
 
     # Doctor operations
-    async def _get_doctor_by_id(self, doctor_id: UUID) -> Doctor | None:
+    async def _get_doctor_by_id(self, doctor_id: UUID) -> DoctorLookupResult:
         """Get doctor by ID."""
-        return await self.doctor_repo.get_by_id(doctor_id)
+        doctor = await self.doctor_repo.get_by_id(doctor_id)
+        if doctor is None:
+            return DoctorMissingById(doctor_id=doctor_id)
+        return DoctorFound(doctor=doctor)
 
-    async def _get_doctor_by_user_id(self, user_id: UUID) -> Doctor | None:
+    async def _get_doctor_by_user_id(self, user_id: UUID) -> DoctorLookupResult:
         """Get doctor by user ID."""
-        return await self.doctor_repo.get_by_user_id(user_id)
+        doctor = await self.doctor_repo.get_by_user_id(user_id)
+        if doctor is None:
+            return DoctorMissingByUserId(user_id=user_id)
+        return DoctorFound(doctor=doctor)
 
-    async def _get_user_by_email(self, email: str) -> User | None:
+    async def _get_user_by_email(self, email: str) -> UserLookupResult:
         """Get user by email."""
-        return await self.user_repo.get_by_email(email)
+        user = await self.user_repo.get_by_email(email)
+        if user is None:
+            return UserMissingByEmail(email=email)
+        return UserFound(user=user)
 
     async def _create_user(self, email: str, password_hash: str, role: str) -> User:
         """Create a new user."""
@@ -548,12 +601,11 @@ class HealthcareInterpreter:
             now,
         )
 
-        if row is None:
-            raise RuntimeError("Failed to create appointment")
+        assert row is not None, "Database insert returned no appointment row"
 
         return self._row_to_appointment(row)
 
-    async def _get_appointment_by_id(self, appointment_id: UUID) -> Appointment | None:
+    async def _get_appointment_by_id(self, appointment_id: UUID) -> AppointmentLookupResult:
         """Get appointment by ID."""
         row = await self.pool.fetchrow(
             """
@@ -566,9 +618,9 @@ class HealthcareInterpreter:
         )
 
         if row is None:
-            return None
+            return AppointmentMissing(appointment_id=appointment_id)
 
-        return self._row_to_appointment(row)
+        return AppointmentFound(appointment=self._row_to_appointment(row))
 
     async def _list_appointments(
         self,
@@ -607,16 +659,21 @@ class HealthcareInterpreter:
     ) -> TransitionResult:
         """Transition appointment status."""
         # Get current appointment
-        appointment = await self._get_appointment_by_id(appointment_id)
-        if appointment is None:
-            return TransitionInvalid(
-                current_status="none",
-                attempted_status=type(new_status).__name__,
-                reason=f"Appointment {appointment_id} not found",
-            )
+        appointment_lookup = await self._get_appointment_by_id(appointment_id)
+        match appointment_lookup:
+            case AppointmentMissing():
+                return TransitionInvalid(
+                    current_status="none",
+                    attempted_status=type(new_status).__name__,
+                    reason=f"Appointment {appointment_id} not found",
+                )
+            case AppointmentFound(appointment=appointment):
+                current_appointment = appointment
+            case _:
+                assert_never(appointment_lookup)
 
         # Validate transition
-        result = validate_transition(appointment.status, new_status)
+        result = validate_transition(current_appointment.status, new_status)
 
         if isinstance(result, TransitionInvalid):
             return result
@@ -701,12 +758,11 @@ class HealthcareInterpreter:
             expires_at,
         )
 
-        if row is None:
-            raise RuntimeError("Failed to create prescription")
+        assert row is not None, "Database insert returned no prescription row"
 
         return self._row_to_prescription(row)
 
-    async def _get_prescription_by_id(self, prescription_id: UUID) -> Prescription | None:
+    async def _get_prescription_by_id(self, prescription_id: UUID) -> PrescriptionLookupResult:
         """Get prescription by ID."""
         row = await self.pool.fetchrow(
             """
@@ -720,9 +776,9 @@ class HealthcareInterpreter:
         )
 
         if row is None:
-            return None
+            return PrescriptionMissing(prescription_id=prescription_id)
 
-        return self._row_to_prescription(row)
+        return PrescriptionFound(prescription=self._row_to_prescription(row))
 
     async def _list_prescriptions(
         self, patient_id: UUID | None, doctor_id: UUID | None
@@ -830,12 +886,11 @@ class HealthcareInterpreter:
             now,
         )
 
-        if row is None:
-            raise RuntimeError("Failed to create lab result")
+        assert row is not None, "Database insert returned no lab result row"
 
         return self._row_to_lab_result(row)
 
-    async def _get_lab_result_by_id(self, result_id: UUID) -> LabResult | None:
+    async def _get_lab_result_by_id(self, result_id: UUID) -> LabResultLookupResult:
         """Get lab result by ID."""
         row = await self.pool.fetchrow(
             """
@@ -848,9 +903,9 @@ class HealthcareInterpreter:
         )
 
         if row is None:
-            return None
+            return LabResultMissing(result_id=result_id)
 
-        return self._row_to_lab_result(row)
+        return LabResultFound(lab_result=self._row_to_lab_result(row))
 
     async def _list_lab_results(
         self, patient_id: UUID | None, doctor_id: UUID | None
@@ -877,7 +932,9 @@ class HealthcareInterpreter:
         rows = await self.pool.fetch(query, *params)
         return [self._row_to_lab_result(row) for row in rows]
 
-    async def _review_lab_result(self, result_id: UUID, doctor_notes: str | None) -> LabResult:
+    async def _review_lab_result(
+        self, result_id: UUID, doctor_notes: str | None
+    ) -> LabResultLookupResult:
         """Mark lab result as reviewed by doctor."""
         row = await self.pool.fetchrow(
             """
@@ -892,9 +949,9 @@ class HealthcareInterpreter:
         )
 
         if row is None:
-            raise RuntimeError(f"Lab result {result_id} not found")
+            return LabResultMissing(result_id=result_id)
 
-        return self._row_to_lab_result(row)
+        return LabResultFound(lab_result=self._row_to_lab_result(row))
 
     # Invoice operations
     async def _create_invoice(
@@ -939,8 +996,7 @@ class HealthcareInterpreter:
             now,
         )
 
-        if invoice_row is None:
-            raise RuntimeError("Failed to create invoice")
+        assert invoice_row is not None, "Database insert returned no invoice row"
 
         # Insert line items
         for item in line_items:
@@ -963,7 +1019,7 @@ class HealthcareInterpreter:
 
         return self._row_to_invoice(invoice_row)
 
-    async def _get_invoice_by_id(self, invoice_id: UUID) -> Invoice | None:
+    async def _get_invoice_by_id(self, invoice_id: UUID) -> InvoiceLookupResult:
         """Get invoice by ID."""
         row = await self.pool.fetchrow(
             """
@@ -977,9 +1033,9 @@ class HealthcareInterpreter:
         )
 
         if row is None:
-            return None
+            return InvoiceMissing(invoice_id=invoice_id)
 
-        return self._row_to_invoice(row)
+        return InvoiceFound(invoice=self._row_to_invoice(row))
 
     async def _list_invoices(self, patient_id: UUID | None) -> list[Invoice]:
         """List invoices with optional patient filter."""
@@ -1062,8 +1118,7 @@ class HealthcareInterpreter:
             now,
         )
 
-        if row is None:
-            raise RuntimeError("Failed to create line item")
+        assert row is not None, "Database insert returned no invoice line item row"
 
         # Update invoice totals
         await self._recalculate_invoice_totals(invoice_id)
@@ -1080,7 +1135,7 @@ class HealthcareInterpreter:
 
     async def _update_invoice_status(
         self, invoice_id: UUID, status: Literal["draft", "sent", "paid", "overdue"]
-    ) -> Invoice:
+    ) -> InvoiceLookupResult:
         """Update invoice payment status."""
         now = datetime.now(timezone.utc)
         paid_at = now if status == "paid" else None
@@ -1101,9 +1156,9 @@ class HealthcareInterpreter:
         )
 
         if row is None:
-            raise RuntimeError(f"Invoice not found: {invoice_id}")
+            return InvoiceMissing(invoice_id=invoice_id)
 
-        return self._row_to_invoice(row)
+        return InvoiceFound(invoice=self._row_to_invoice(row))
 
     async def _recalculate_invoice_totals(self, invoice_id: UUID) -> None:
         """Recalculate invoice totals after adding line items."""

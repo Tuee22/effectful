@@ -14,6 +14,7 @@ from uuid import UUID, uuid4
 import asyncpg
 import pytest
 import redis.asyncio as redis
+from typing import Protocol, runtime_checkable, TypeGuard
 
 from app.domain.appointment import (
     Appointment,
@@ -29,11 +30,21 @@ from app.domain.invoice import Invoice, LineItem
 from app.domain.lab_result import LabResult
 from app.domain.doctor import Doctor
 from app.domain.patient import Patient
+from app.domain.lookup_result import (
+    AppointmentFound,
+    DoctorFound,
+    DoctorMissingById,
+    InvoiceFound,
+    LabResultFound,
+    PatientFound,
+    PatientMissingById,
+)
 from app.domain.prescription import (
     MedicationInteractionWarning,
     NoInteractions,
     Prescription,
 )
+from effectful.domain.optional_value import from_optional_value, to_optional_value
 from app.effects.healthcare import (
     AddInvoiceLineItem,
     CheckMedicationInteractions,
@@ -57,6 +68,21 @@ from app.effects.notification import (
 )
 from app.interpreters.healthcare_interpreter import HealthcareInterpreter
 from app.interpreters.notification_interpreter import NotificationInterpreter
+from app.programs.runner import run_program
+
+
+@runtime_checkable
+class SupportsAclose(Protocol):
+    async def aclose(self) -> None: ...
+
+
+def has_aclose(pubsub: object) -> TypeGuard[SupportsAclose]:
+    return hasattr(pubsub, "aclose")
+
+
+async def close_pubsub(pubsub: redis.client.PubSub | SupportsAclose) -> None:
+    assert has_aclose(pubsub), "Redis PubSub missing aclose()"
+    await pubsub.aclose()
 
 
 @pytest.mark.asyncio
@@ -72,11 +98,11 @@ class TestHealthcareInterpreterIntegration:
         interpreter = HealthcareInterpreter(db_pool)
 
         result = await interpreter.handle(GetPatientById(patient_id=seed_test_patient))
-        assert isinstance(result, Patient)
-        assert result.id == seed_test_patient
+        assert isinstance(result, PatientFound)
+        assert result.patient.id == seed_test_patient
 
         missing = await interpreter.handle(GetPatientById(patient_id=uuid4()))
-        assert missing is None
+        assert isinstance(missing, PatientMissingById)
 
     async def test_get_doctor_by_id_round_trip(
         self,
@@ -87,11 +113,11 @@ class TestHealthcareInterpreterIntegration:
         interpreter = HealthcareInterpreter(db_pool)
 
         result = await interpreter.handle(GetDoctorById(doctor_id=seed_test_doctor))
-        assert isinstance(result, Doctor)
-        assert result.id == seed_test_doctor
+        assert isinstance(result, DoctorFound)
+        assert result.doctor.id == seed_test_doctor
 
         missing = await interpreter.handle(GetDoctorById(doctor_id=uuid4()))
-        assert missing is None
+        assert isinstance(missing, DoctorMissingById)
 
     async def test_create_and_fetch_appointment(
         self,
@@ -109,7 +135,7 @@ class TestHealthcareInterpreterIntegration:
             CreateAppointment(
                 patient_id=seed_test_patient,
                 doctor_id=seed_test_doctor,
-                requested_time=requested_time,
+                requested_time=to_optional_value(requested_time, reason="not_requested"),
                 reason=reason,
             )
         )
@@ -119,9 +145,9 @@ class TestHealthcareInterpreterIntegration:
         assert created.reason == reason
 
         fetched = await interpreter.handle(GetAppointmentById(appointment_id=created.id))
-        assert isinstance(fetched, Appointment)
-        assert fetched.id == created.id
-        assert isinstance(fetched.status, Requested)
+        assert isinstance(fetched, AppointmentFound)
+        assert fetched.appointment.id == created.id
+        assert isinstance(fetched.appointment.status, Requested)
 
         async with db_pool.acquire() as conn:
             row = await conn.fetchrow("SELECT status FROM appointments WHERE id = $1", created.id)
@@ -141,7 +167,9 @@ class TestHealthcareInterpreterIntegration:
             CreateAppointment(
                 patient_id=seed_test_patient,
                 doctor_id=seed_test_doctor,
-                requested_time=datetime.now(timezone.utc),
+                requested_time=to_optional_value(
+                    datetime.now(timezone.utc), reason="not_requested"
+                ),
                 reason="Follow up",
             )
         )
@@ -217,7 +245,7 @@ class TestHealthcareInterpreterIntegration:
                 frequency="once daily",
                 duration_days=30,
                 refills_remaining=2,
-                notes="Monitor BP",
+                notes=to_optional_value("Monitor BP", reason="provided"),
             )
         )
         assert isinstance(prescription, Prescription)
@@ -261,7 +289,7 @@ class TestHealthcareInterpreterIntegration:
                 test_type="CBC",
                 result_data={"wbc": "7.5", "rbc": "4.8"},
                 critical=False,
-                doctor_notes=None,
+                doctor_notes=to_optional_value(None, reason="not_provided"),
             )
         )
         assert isinstance(created, LabResult)
@@ -269,8 +297,8 @@ class TestHealthcareInterpreterIntegration:
         assert created.test_type == "CBC"
 
         fetched = await interpreter.handle(GetLabResultById(result_id=result_id))
-        assert isinstance(fetched, LabResult)
-        assert fetched.id == result_id
+        assert isinstance(fetched, LabResultFound)
+        assert fetched.lab_result.id == result_id
 
     async def test_invoice_lifecycle_with_real_db(
         self,
@@ -283,9 +311,9 @@ class TestHealthcareInterpreterIntegration:
         invoice = await interpreter.handle(
             CreateInvoice(
                 patient_id=seed_test_patient,
-                appointment_id=None,
+                appointment_id=to_optional_value(None, reason="not_linked"),
                 line_items=[],
-                due_date=date(2025, 1, 31),
+                due_date=to_optional_value(date(2025, 1, 31), reason="provided"),
             )
         )
         assert isinstance(invoice, Invoice)
@@ -302,14 +330,14 @@ class TestHealthcareInterpreterIntegration:
         assert isinstance(line_item, LineItem)
         assert line_item.invoice_id == invoice.id
 
-        paid = await interpreter.handle(
+        paid_result = await interpreter.handle(
             UpdateInvoiceStatus(
                 invoice_id=invoice.id,
                 status="paid",
             )
         )
-        assert isinstance(paid, Invoice)
-        assert paid.status == "paid"
+        assert isinstance(paid_result, InvoiceFound)
+        assert paid_result.invoice.status == "paid"
 
         async with db_pool.acquire() as conn:
             invoice_row = await conn.fetchrow(
@@ -352,7 +380,7 @@ class TestNotificationInterpreterIntegration:
             PublishWebSocketNotification(
                 channel=channel,
                 message=message,
-                recipient_id=uuid4(),
+                recipient_id=to_optional_value(uuid4(), reason="recipient"),
             )
         )
 
@@ -370,7 +398,7 @@ class TestNotificationInterpreterIntegration:
         assert parsed["content"] == "hello"
 
         await pubsub.unsubscribe(channel)
-        await pubsub.close()
+        await close_pubsub(pubsub)
 
     async def test_log_audit_event_persists_to_db(
         self,
@@ -389,9 +417,9 @@ class TestNotificationInterpreterIntegration:
                 action="view_record",
                 resource_type="patient",
                 resource_id=resource_id,
-                ip_address="10.0.0.1",
-                user_agent="pytest",
-                metadata={"context": "integration"},
+                ip_address=to_optional_value("10.0.0.1"),
+                user_agent=to_optional_value("pytest"),
+                metadata=to_optional_value({"context": "integration"}),
             )
         )
         assert isinstance(result, AuditEventLogged)

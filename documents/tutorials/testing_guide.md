@@ -23,7 +23,6 @@
 > **Important**: ALL test commands run inside Docker. Never run pytest locally.
 
 ```bash
-# file: scripts/04_testing_guide.sh
 # Run all tests
 docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
 
@@ -80,7 +79,6 @@ See [Docker Workflow](../engineering/docker_workflow.md) for development workflo
 If you're using effectful in your own project:
 
 ```bash
-# file: scripts/04_testing_guide.sh
 # Install in YOUR project (not effectful)
 poetry add --group dev pytest pytest-asyncio pytest-mock pytest-cov
 ```
@@ -1141,7 +1139,7 @@ result = await interpreter.interpret(
 ## Next Steps
 
 - Explore the demo application in `/demo` for complete working examples
-- Read [HealthHub demo docs](../../demo/healthhub/documents/readme.md) for comprehensive documentation
+- Read [HealthHub demo docs](/demo/healthhub/documents/readme.md) for comprehensive documentation
 - Study real tests in `tests/test_demo/` (35 tests with 100% pass rate)
 - Review [architecture.md](../engineering/architecture.md) for system design
 

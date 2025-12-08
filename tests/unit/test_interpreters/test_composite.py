@@ -24,6 +24,7 @@ from effectful.domain.message import ChatMessage
 from effectful.domain.profile import ProfileData
 from effectful.domain.user import User, UserFound
 from effectful.domain.message_envelope import MessageEnvelope, PublishSuccess
+from effectful.domain.optional_value import Absent
 from effectful.domain.s3_object import PutSuccess, S3Object
 from effectful.domain.token_result import TokenValid
 from effectful.effects.auth import ValidateToken
@@ -431,7 +432,7 @@ class TestCompositeInterpreter:
                 pytest.fail(f"Expected Ok with PublishMessage, got {result}")
 
         # Verify producer was used
-        mock_producer.publish.assert_called_once_with("test-topic", b"test data", None)
+        mock_producer.publish.assert_called_once_with("test-topic", b"test data", properties=None)
 
     @pytest.mark.asyncio()
     async def test_interpret_storage_effect(self, mocker: MockerFixture) -> None:
@@ -468,7 +469,7 @@ class TestCompositeInterpreter:
 
         # Verify storage was used
         mock_storage.put_object.assert_called_once_with(
-            "test-bucket", "test-key", b"test content", None, None
+            "test-bucket", "test-key", b"test content", Absent(), Absent()
         )
 
     @pytest.mark.asyncio()

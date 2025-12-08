@@ -59,7 +59,6 @@ flowchart TB
 ### PostgreSQL Configuration
 
 ```bash
-# file: scripts/configuration.sh
 POSTGRES_HOST=postgres
 POSTGRES_PORT=5432
 POSTGRES_DB=effectful_test
@@ -74,7 +73,6 @@ POSTGRES_PASSWORD=effectful_pass
 ### Redis Configuration
 
 ```bash
-# file: scripts/configuration.sh
 REDIS_HOST=redis
 REDIS_PORT=6379
 ```
@@ -86,7 +84,6 @@ REDIS_PORT=6379
 ### MinIO S3 Configuration
 
 ```bash
-# file: scripts/configuration.sh
 MINIO_ENDPOINT=minio:9000
 MINIO_ACCESS_KEY=minioadmin
 MINIO_SECRET_KEY=minioadmin
@@ -100,7 +97,6 @@ MINIO_BUCKET=effectful-test
 ### Apache Pulsar Configuration
 
 ```bash
-# file: scripts/configuration.sh
 PULSAR_URL=pulsar://pulsar:6650
 ```
 

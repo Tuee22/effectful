@@ -11,6 +11,7 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
+from effectful.domain.optional_value import Absent, Provided
 from effectful.effects.metrics import (
     IncrementCounter,
     MetricsEffect,
@@ -124,15 +125,15 @@ def test_record_summary_is_frozen() -> None:
 def test_query_metrics_all() -> None:
     """QueryMetrics with None parameters queries all metrics."""
     effect = QueryMetrics()
-    assert effect.metric_name is None
-    assert effect.labels is None
+    assert effect.metric_name == Absent()
+    assert effect.labels == Absent()
 
 
 def test_query_metrics_specific_metric() -> None:
     """QueryMetrics can query specific metric by name."""
     effect = QueryMetrics(metric_name="requests_total")
-    assert effect.metric_name == "requests_total"
-    assert effect.labels is None
+    assert effect.metric_name == Provided(value="requests_total")
+    assert effect.labels == Absent()
 
 
 def test_query_metrics_with_labels() -> None:
@@ -141,8 +142,8 @@ def test_query_metrics_with_labels() -> None:
         metric_name="requests_total",
         labels={"method": "GET"},
     )
-    assert effect.metric_name == "requests_total"
-    assert effect.labels == {"method": "GET"}
+    assert effect.metric_name == Provided(value="requests_total")
+    assert effect.labels == Provided(value={"method": "GET"})
 
 
 def test_query_metrics_is_frozen() -> None:
@@ -224,9 +225,8 @@ def test_pattern_matching_query_metrics() -> None:
     """MetricsEffect pattern matching works for QueryMetrics."""
     effect: MetricsEffect = QueryMetrics(metric_name="test_total")
     match effect:
-        case QueryMetrics(metric_name=name, labels=labels):
+        case QueryMetrics(metric_name=Provided(value=name), labels=Absent()):
             assert name == "test_total"
-            assert labels is None
         case _:
             pytest.fail("Should match QueryMetrics")
 

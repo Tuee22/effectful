@@ -221,10 +221,10 @@ def process(user_id):  # Missing type hints
 ## See Also
 
 - [Tutorials](../tutorials/) - Step-by-step guides for learning effectful
-- [Examples](../../examples/) - Real-world example programs
+- [Examples](/examples/) - Real-world example programs
 - [Architecture](../engineering/architecture.md) - Design principles and architecture overview
 - [Docker Workflow](../engineering/docker_workflow.md) - Development workflow (SSoT)
-- [CLAUDE.md](../../CLAUDE.md) - Complete development reference
+- [CLAUDE.md](/CLAUDE.md) - Complete development reference
 
 ## Cross-References
 - [Documentation Standards](../documentation_standards.md)

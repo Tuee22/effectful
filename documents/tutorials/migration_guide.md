@@ -845,7 +845,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 ## Next Steps
 
 - Review [API Reference](../api/) for complete effectful API
-- Study [examples/](../../examples/) for real-world migration examples
+- Study [examples/](/examples/) for real-world migration examples
 - Read [architecture.md](../engineering/architecture.md) for design principles
 
 ## Summary

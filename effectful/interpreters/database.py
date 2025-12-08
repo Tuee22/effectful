@@ -8,6 +8,7 @@ from uuid import UUID
 
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok, Result
+from effectful.domain.optional_value import OptionalValue, from_optional_value
 from effectful.domain.user import User, UserFound, UserNotFound
 from effectful.effects.base import Effect
 from effectful.effects.database import (
@@ -145,11 +146,14 @@ class DatabaseInterpreter:
             )
 
     async def _handle_list_users(
-        self, limit: int | None, offset: int | None, effect: Effect
+        self, limit: OptionalValue[int], offset: OptionalValue[int], effect: Effect
     ) -> Result[EffectReturn[EffectResult], InterpreterError]:
         """Handle ListUsers effect."""
         try:
-            users = await self.user_repo.list_users(limit, offset)
+            users = await self.user_repo.list_users(
+                from_optional_value(limit),
+                from_optional_value(offset),
+            )
             return Ok(EffectReturn(value=users, effect_name="ListUsers"))
         except Exception as e:
             return Err(
@@ -177,14 +181,18 @@ class DatabaseInterpreter:
             )
 
     async def _handle_update_user(
-        self, user_id: UUID, email: str | None, name: str | None, effect: Effect
+        self, user_id: UUID, email: OptionalValue[str], name: OptionalValue[str], effect: Effect
     ) -> Result[EffectReturn[EffectResult], InterpreterError]:
         """Handle UpdateUser effect.
 
         Returns the updated User if found, UserNotFound ADT if not found.
         """
         try:
-            lookup_result = await self.user_repo.update_user(user_id, email, name)
+            lookup_result = await self.user_repo.update_user(
+                user_id,
+                from_optional_value(email),
+                from_optional_value(name),
+            )
             match lookup_result:  # pragma: no branch
                 case UserFound(user=user, source=_):
                     return Ok(EffectReturn(value=user, effect_name="UpdateUser"))

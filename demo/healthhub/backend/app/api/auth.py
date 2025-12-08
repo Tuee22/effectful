@@ -8,24 +8,39 @@ Implements JWT dual-token authentication pattern:
 from collections.abc import Generator
 from dataclasses import dataclass
 from typing import Annotated
+from uuid import UUID
+from typing_extensions import assert_never
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, EmailStr
 
 from app.auth import (
+    TokenType,
+    TokenValidationError,
+    TokenValidationSuccess,
     create_access_token,
     create_refresh_token,
     hash_password,
     verify_password,
     verify_token,
-    TokenType,
-    TokenValidationSuccess,
-    TokenValidationError,
 )
-from app.infrastructure import create_redis_client, get_database_manager, rate_limit
-from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
-from app.programs.runner import run_program
-from app.effects.notification import LogAuditEvent
+from app.domain.doctor import Doctor
+from app.domain.lookup_result import (
+    DoctorFound,
+    DoctorMissingById,
+    DoctorMissingByUserId,
+    PatientFound,
+    PatientMissingById,
+    PatientMissingByUserId,
+    UserFound,
+    UserMissingByEmail,
+    is_doctor_lookup_result,
+    is_patient_lookup_result,
+    is_user_lookup_result,
+)
+from effectful.domain.optional_value import from_optional_value, to_optional_value
+from app.domain.patient import Patient
+from app.domain.user import User, UserRole
 from app.effects.healthcare import (
     CreateUser,
     GetDoctorByUserId,
@@ -33,9 +48,11 @@ from app.effects.healthcare import (
     GetUserByEmail,
     UpdateUserLastLogin,
 )
-from app.domain.user import User, UserRole
-from app.domain.patient import Patient
-from app.domain.doctor import Doctor
+from app.api.dependencies import get_composite_interpreter
+from app.effects.notification import LogAuditEvent
+from app.infrastructure.rate_limiter import rate_limit
+from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
+from app.programs.runner import run_program
 
 
 router = APIRouter()
@@ -86,10 +103,9 @@ class RefreshResponse(BaseModel):
 
 
 @dataclass(frozen=True)
-class LoginSuccess:
+class PatientLoginSuccess:
     user: User
-    patient: Patient | None
-    doctor: Doctor | None
+    patient: Patient
 
 
 @dataclass(frozen=True)
@@ -102,7 +118,36 @@ class LoginInactiveAccount:
     status: str
 
 
-type LoginResult = LoginSuccess | LoginInvalidCredentials | LoginInactiveAccount
+@dataclass(frozen=True)
+class DoctorLoginSuccess:
+    user: User
+    doctor: Doctor
+
+
+@dataclass(frozen=True)
+class AdminLoginSuccess:
+    user: User
+
+
+@dataclass(frozen=True)
+class PatientProfileMissing:
+    user: User
+
+
+@dataclass(frozen=True)
+class DoctorProfileMissing:
+    user: User
+
+
+type LoginResult = (
+    PatientLoginSuccess
+    | DoctorLoginSuccess
+    | AdminLoginSuccess
+    | PatientProfileMissing
+    | DoctorProfileMissing
+    | LoginInvalidCredentials
+    | LoginInactiveAccount
+)
 
 
 @dataclass(frozen=True)
@@ -123,137 +168,203 @@ async def login(
     request: LoginRequest,
     http_request: Request,
     response: Response,
+    interpreter: Annotated[CompositeInterpreter, Depends(get_composite_interpreter)],
     _rate_limit: Annotated[None, Depends(rate_limit(5, 60))],
 ) -> LoginResponse:
     """Authenticate user and return JWT tokens.
 
-    Returns access token in response body.
-    Sets refresh token in HttpOnly cookie with strict SameSite policy.
+    Args:
+        request: Login payload containing email and password.
+        http_request: Request object for audit metadata.
+        response: Response used to set refresh token cookie.
+        interpreter: Injected composite interpreter.
+        _rate_limit: Rate limit guard (FastAPI dependency).
 
-    Rate limit: 5 requests per 60 seconds per IP address.
+    Returns:
+        LoginResponse with access token and user identity fields.
+
+    Raises:
+        HTTPException: For invalid credentials, inactive accounts, or unexpected errors.
+
+    Effects:
+        GetUserByEmail
+        UpdateUserLastLogin
+        GetPatientByUserId | GetDoctorByUserId
+        LogAuditEvent
     """
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
-
-    redis_client = create_redis_client()
-    interpreter = CompositeInterpreter(pool, redis_client)
 
     def login_program() -> Generator[AllEffects, object, LoginResult]:
-        user = yield GetUserByEmail(email=request.email)
-        if user is None:
+        user_result = yield GetUserByEmail(email=request.email)
+        assert is_user_lookup_result(user_result)
+        match user_result:
+            case UserMissingByEmail():
+                return LoginInvalidCredentials(reason="Invalid email or password")
+            case UserFound(user=user):
+                current_user = user
+            case _:
+                assert_never(user_result)
+
+        if not verify_password(request.password, current_user.password_hash):
             return LoginInvalidCredentials(reason="Invalid email or password")
 
-        assert isinstance(user, User)
+        if current_user.status.value != "active":
+            return LoginInactiveAccount(status=current_user.status.value)
 
-        if not verify_password(request.password, user.password_hash):
-            return LoginInvalidCredentials(reason="Invalid email or password")
+        yield UpdateUserLastLogin(user_id=current_user.id)
 
-        if user.status.value != "active":
-            return LoginInactiveAccount(status=user.status.value)
-
-        yield UpdateUserLastLogin(user_id=user.id)
-
-        patient: Patient | None = None
-        doctor: Doctor | None = None
-
-        if user.role.value == "patient":
-            found_patient = yield GetPatientByUserId(user_id=user.id)
-            patient = found_patient if isinstance(found_patient, Patient) else None
-        elif user.role.value == "doctor":
-            found_doctor = yield GetDoctorByUserId(user_id=user.id)
-            doctor = found_doctor if isinstance(found_doctor, Doctor) else None
+        if current_user.role.value == "patient":
+            patient_result = yield GetPatientByUserId(user_id=current_user.id)
+            assert is_patient_lookup_result(patient_result)
+            match patient_result:
+                case PatientFound(patient=found_patient):
+                    result: LoginResult = PatientLoginSuccess(
+                        user=current_user, patient=found_patient
+                    )
+                case PatientMissingByUserId() | PatientMissingById():
+                    result = PatientProfileMissing(user=current_user)
+                case _:
+                    assert_never(patient_result)
+        elif current_user.role.value == "doctor":
+            doctor_result = yield GetDoctorByUserId(user_id=current_user.id)
+            assert is_doctor_lookup_result(doctor_result)
+            match doctor_result:
+                case DoctorFound(doctor=found_doctor):
+                    result = DoctorLoginSuccess(user=current_user, doctor=found_doctor)
+                case DoctorMissingByUserId() | DoctorMissingById():
+                    result = DoctorProfileMissing(user=current_user)
+                case _:
+                    assert_never(doctor_result)
+        else:
+            result = AdminLoginSuccess(user=current_user)
 
         yield LogAuditEvent(
-            user_id=user.id,
+            user_id=current_user.id,
             action="login_success",
             resource_type="auth",
-            resource_id=user.id,
-            ip_address=http_request.client.host if http_request.client else None,
-            user_agent=http_request.headers.get("user-agent"),
-            metadata=None,
+            resource_id=current_user.id,
+            ip_address=to_optional_value(
+                http_request.client.host if http_request.client else None,
+                reason="not_provided",
+            ),
+            user_agent=to_optional_value(
+                http_request.headers.get("user-agent"), reason="not_provided"
+            ),
+            metadata=to_optional_value(None, reason="not_provided"),
         )
 
-        return LoginSuccess(user=user, patient=patient, doctor=doctor)
+        return result
 
-    try:
-        login_result = await run_program(login_program(), interpreter)
+    login_result = await run_program(login_program(), interpreter)
 
-        match login_result:
-            case LoginInvalidCredentials(reason=reason):
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail=reason,
-                )
-            case LoginInactiveAccount(status=acct_status):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Account is {acct_status}",
-                )
-            case LoginSuccess(user=user, patient=patient, doctor=doctor):
-                pass
-            case _:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Unexpected login result",
-                )
+    patient_id_for_token: UUID | None = None
+    doctor_id_for_token: UUID | None = None
 
-        # Set refresh token in HttpOnly cookie (7 days)
-        refresh_token = create_refresh_token(
-            user.id,
-            user.email,
-            user.role.value,
-            patient_id=patient.id if patient else None,
-            doctor_id=doctor.id if doctor else None,
-        )
-        response.set_cookie(
-            key="refresh_token",
-            value=refresh_token,
-            httponly=True,
-            secure=True,
-            samesite="strict",
-            max_age=7 * 24 * 60 * 60,
-        )
+    match login_result:
+        case LoginInvalidCredentials(reason=reason):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=reason,
+            )
+        case LoginInactiveAccount(status=acct_status):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Account is {acct_status}",
+            )
+        case PatientProfileMissing(user=user):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Patient profile not found. Complete profile setup first.",
+            )
+        case DoctorProfileMissing(user=user):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Doctor profile not found. Complete profile setup first.",
+            )
+        case PatientLoginSuccess(user=user, patient=patient):
+            patient_id_for_token = patient.id
+            authed_user = user
+        case DoctorLoginSuccess(user=user, doctor=doctor):
+            doctor_id_for_token = doctor.id
+            authed_user = user
+        case AdminLoginSuccess(user=user):
+            authed_user = user
+        case _:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Unexpected login result",
+            )
 
-        access_token = create_access_token(
-            user.id,
-            user.email,
-            user.role.value,
-            patient_id=patient.id if patient else None,
-            doctor_id=doctor.id if doctor else None,
-        )
+    # Set refresh token in HttpOnly cookie (7 days)
+    refresh_token = create_refresh_token(
+        authed_user.id,
+        authed_user.email,
+        authed_user.role.value,
+        patient_id=patient_id_for_token,
+        doctor_id=doctor_id_for_token,
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=True,
+        samesite="strict",
+        max_age=7 * 24 * 60 * 60,
+    )
 
-        return LoginResponse(
-            access_token=access_token,
-            token_type="Bearer",
-            user_id=str(user.id),
-            email=user.email,
-            role=user.role.value,
-        )
-    finally:
-        await redis_client.aclose()
+    access_token = create_access_token(
+        authed_user.id,
+        authed_user.email,
+        authed_user.role.value,
+        patient_id=patient_id_for_token,
+        doctor_id=doctor_id_for_token,
+    )
+
+    return LoginResponse(
+        access_token=access_token,
+        token_type="Bearer",
+        user_id=str(authed_user.id),
+        email=authed_user.email,
+        role=authed_user.role.value,
+    )
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
 async def register(
     request: RegisterRequest,
     http_request: Request,
+    interpreter: Annotated[CompositeInterpreter, Depends(get_composite_interpreter)],
     _rate_limit: Annotated[None, Depends(rate_limit(3, 300))],
 ) -> RegisterResponse:
     """Register a new user account.
 
-    Creates user with hashed password. Does NOT create patient/doctor profile.
+    Args:
+        request: Registration payload with email, password, and role.
+        http_request: Request object for audit metadata.
+        interpreter: Injected composite interpreter.
+        _rate_limit: Rate limit guard (FastAPI dependency).
 
-    Rate limit: 3 requests per 300 seconds (5 minutes) per IP address.
+    Returns:
+        RegisterResponse describing the created account.
+
+    Raises:
+        HTTPException: If the email already exists or an unexpected result occurs.
+
+    Effects:
+        GetUserByEmail
+        CreateUser
+        LogAuditEvent
     """
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
-    redis_client = create_redis_client()
-    interpreter = CompositeInterpreter(pool, redis_client)
 
     def register_program() -> Generator[AllEffects, object, RegisterResult]:
-        existing_user = yield GetUserByEmail(email=request.email)
-        if existing_user is not None:
-            return RegisterEmailExists(email=request.email)
+        existing_user_result = yield GetUserByEmail(email=request.email)
+        assert is_user_lookup_result(existing_user_result)
+        match existing_user_result:
+            case UserMissingByEmail():
+                pass
+            case UserFound():
+                return RegisterEmailExists(email=request.email)
+            case _:
+                assert_never(existing_user_result)
 
         password_hash = hash_password(request.password)
         created_user = yield CreateUser(
@@ -267,38 +378,40 @@ async def register(
             action="register_user",
             resource_type="auth",
             resource_id=created_user.id,
-            ip_address=http_request.client.host if http_request.client else None,
-            user_agent=http_request.headers.get("user-agent"),
-            metadata=None,
+            ip_address=to_optional_value(
+                http_request.client.host if http_request.client else None,
+                reason="not_provided",
+            ),
+            user_agent=to_optional_value(
+                http_request.headers.get("user-agent"), reason="not_provided"
+            ),
+            metadata=to_optional_value(None, reason="not_provided"),
         )
         return RegisterSuccess(user=created_user)
 
-    try:
-        register_result = await run_program(register_program(), interpreter)
+    register_result = await run_program(register_program(), interpreter)
 
-        match register_result:
-            case RegisterEmailExists(email=email):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Email already registered",
-                    headers={"X-Existing-Email": email},
-                )
-            case RegisterSuccess(user=user):
-                pass
-            case _:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Unexpected register result",
-                )
+    match register_result:
+        case RegisterEmailExists(email=email):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered",
+                headers={"X-Existing-Email": email},
+            )
+        case RegisterSuccess(user=user):
+            pass
+        case _:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Unexpected register result",
+            )
 
-        return RegisterResponse(
-            user_id=str(user.id),
-            email=user.email,
-            role=user.role.value,
-            message="User registered successfully. Complete profile setup in the next step.",
-        )
-    finally:
-        await redis_client.aclose()
+    return RegisterResponse(
+        user_id=str(user.id),
+        email=user.email,
+        role=user.role.value,
+        message="User registered successfully. Complete profile setup in the next step.",
+    )
 
 
 @router.post("/refresh", response_model=RefreshResponse)
@@ -309,10 +422,19 @@ async def refresh(
 ) -> RefreshResponse:
     """Refresh access token using refresh token from HttpOnly cookie.
 
-    Implements token rotation: generates new access token AND new refresh token.
-    Sets new refresh token in HttpOnly cookie with strict SameSite policy.
+    Args:
+        response: Response used to set the rotated refresh token.
+        refresh_token: Refresh token from HttpOnly cookie.
+        _rate_limit: Rate limit guard (FastAPI dependency).
 
-    Rate limit: 10 requests per 60 seconds per IP address.
+    Returns:
+        RefreshResponse containing a new access token.
+
+    Raises:
+        HTTPException: If the refresh token is missing or invalid.
+
+    Effects:
+        verify_token
     """
     # Check if refresh token exists in cookie
     if refresh_token is None:
@@ -336,15 +458,15 @@ async def refresh(
                 token_data.user_id,
                 token_data.email,
                 token_data.role,
-                patient_id=token_data.patient_id,
-                doctor_id=token_data.doctor_id,
+                patient_id=from_optional_value(token_data.patient_id),
+                doctor_id=from_optional_value(token_data.doctor_id),
             )
             new_refresh_token = create_refresh_token(
                 token_data.user_id,
                 token_data.email,
                 token_data.role,
-                patient_id=token_data.patient_id,
-                doctor_id=token_data.doctor_id,
+                patient_id=from_optional_value(token_data.patient_id),
+                doctor_id=from_optional_value(token_data.doctor_id),
             )
 
             # Set new refresh token in HttpOnly cookie (7 days)
@@ -379,10 +501,15 @@ async def logout(
 ) -> dict[str, str]:
     """Logout user by clearing refresh token cookie.
 
-    Clears the refresh token HttpOnly cookie by setting max_age=0.
-    Client should also discard the access token.
+    Args:
+        response: Response used to clear the cookie.
+        _rate_limit: Rate limit guard (FastAPI dependency).
 
-    Rate limit: 10 requests per 60 seconds per IP address.
+    Returns:
+        Confirmation message.
+
+    Effects:
+        delete_cookie (response mutation)
     """
     # Clear refresh token cookie
     response.delete_cookie(key="refresh_token", httponly=True, secure=True, samesite="strict")

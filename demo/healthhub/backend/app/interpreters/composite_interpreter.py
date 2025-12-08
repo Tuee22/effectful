@@ -5,8 +5,12 @@ Routes effects to specialized interpreters based on effect type.
 
 from __future__ import annotations
 
-import asyncpg
-import redis.asyncio as redis
+from typing import TypeGuard
+from typing_extensions import assert_never
+
+from app.protocols.database import DatabasePool
+from app.protocols.observability import ObservabilityInterpreter as ObservabilityProtocol
+from app.protocols.redis import RedisClient
 
 from app.effects.healthcare import (
     AddInvoiceLineItem,
@@ -46,14 +50,15 @@ from app.effects.notification import (
     PublishWebSocketNotification,
     LogAuditEvent,
 )
+from app.effects.observability import IncrementCounter, ObserveHistogram, ObservabilityEffect
 from app.interpreters.healthcare_interpreter import HealthcareInterpreter
 from app.interpreters.notification_interpreter import NotificationInterpreter
 
 
-type AllEffects = HealthcareEffect | NotificationEffect
+type AllEffects = HealthcareEffect | NotificationEffect | ObservabilityEffect
 
 # Type for healthcare effect classes (for isinstance check)
-_HEALTHCARE_EFFECTS = (
+_HEALTHCARE_EFFECTS: tuple[type[object], ...] = (
     GetPatientById,
     GetDoctorById,
     GetDoctorByUserId,
@@ -86,6 +91,21 @@ _HEALTHCARE_EFFECTS = (
     CheckDatabaseHealth,
 )
 
+_NOTIFICATION_EFFECTS = (PublishWebSocketNotification, LogAuditEvent)
+_OBSERVABILITY_EFFECTS = (IncrementCounter, ObserveHistogram)
+
+
+def _is_healthcare_effect(effect: AllEffects) -> TypeGuard[HealthcareEffect]:
+    return isinstance(effect, _HEALTHCARE_EFFECTS)
+
+
+def _is_notification_effect(effect: AllEffects) -> TypeGuard[NotificationEffect]:
+    return isinstance(effect, _NOTIFICATION_EFFECTS)
+
+
+def _is_observability_effect(effect: AllEffects) -> TypeGuard[ObservabilityEffect]:
+    return isinstance(effect, _OBSERVABILITY_EFFECTS)
+
 
 class CompositeInterpreter:
     """Composite interpreter that routes effects to specialized interpreters.
@@ -94,21 +114,33 @@ class CompositeInterpreter:
     - Receives effects from the program runner
     - Routes to specialized interpreters (Layer 4)
     - Returns results back to the program
+
+    Accepts protocol dependencies, making lifecycle invisible to consumers.
+    Zero awareness of whether dependencies are singletons, per-request, or test mocks.
     """
 
     def __init__(
-        self, pool: asyncpg.Pool[asyncpg.Record], redis_client: redis.Redis[bytes]
+        self,
+        pool: DatabasePool,
+        redis_client: RedisClient,
+        observability_interpreter: ObservabilityProtocol,
     ) -> None:
-        """Initialize composite interpreter with infrastructure connections.
+        """Initialize composite interpreter with protocol implementations.
 
         Args:
-            pool: asyncpg connection pool
-            redis_client: Redis client for pub/sub
+            pool: Database pool protocol (production or test mock)
+            redis_client: Redis client protocol (production or test mock)
+            observability_interpreter: Observability interpreter protocol (production or test mock)
+
+        Testing: Inject pytest-mock mocks with spec=Protocol
         """
         self.healthcare_interpreter = HealthcareInterpreter(pool)
-        self.notification_interpreter = NotificationInterpreter(pool, redis_client)
+        self.observability_interpreter = observability_interpreter
+        self.notification_interpreter = NotificationInterpreter(
+            pool, redis_client, self.observability_interpreter
+        )
 
-    async def handle(self, effect: AllEffects) -> object:
+    async def handle(self, effect: AllEffects) -> object | None:
         """Route effect to appropriate specialized interpreter.
 
         Args:
@@ -118,8 +150,10 @@ class CompositeInterpreter:
             Result from specialized interpreter
         """
         # Route based on effect type using isinstance (avoids type alias pattern matching issues)
-        if isinstance(effect, _HEALTHCARE_EFFECTS):
+        if _is_healthcare_effect(effect):
             return await self.healthcare_interpreter.handle(effect)
-        else:
-            # Must be NotificationEffect (PublishWebSocketNotification | LogAuditEvent)
+        if _is_notification_effect(effect):
             return await self.notification_interpreter.handle(effect)
+        if _is_observability_effect(effect):
+            return await self.observability_interpreter.handle(effect)
+        raise AssertionError(f"Unhandled effect type: {type(effect).__name__}")

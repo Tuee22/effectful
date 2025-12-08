@@ -19,6 +19,7 @@ from pytest_mock import MockerFixture
 
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok
+from effectful.domain.optional_value import Absent, Provided
 from effectful.domain.s3_object import ObjectNotFound, PutFailure, PutSuccess, S3Object
 from effectful.effects.storage import DeleteObject, GetObject, ListObjects, PutObject
 from effectful.effects.websocket import SendText
@@ -146,8 +147,8 @@ class TestPutObject:
             "my-bucket",
             "data/file.txt",
             b"Hello World",
-            {"author": "test"},
-            "text/plain",
+            Provided(value={"author": "test"}),
+            Provided(value="text/plain"),
         )
 
     @pytest.mark.asyncio()
@@ -177,7 +178,7 @@ class TestPutObject:
 
         # Verify mock was called with None
         mock_storage.put_object.assert_called_once_with(
-            "my-bucket", "data/file.txt", b"data", None, None
+            "my-bucket", "data/file.txt", b"data", Absent(), Absent()
         )
 
     @pytest.mark.asyncio()
@@ -354,7 +355,7 @@ class TestListObjects:
                 pytest.fail(f"Expected Ok with keys, got {result}")
 
         # Verify mock was called correctly
-        mock_storage.list_objects.assert_called_once_with("my-bucket", "data/", 100)
+        mock_storage.list_objects.assert_called_once_with("my-bucket", Provided(value="data/"), 100)
 
     @pytest.mark.asyncio()
     async def test_list_objects_empty_result(self, mocker: MockerFixture) -> None:
@@ -396,7 +397,7 @@ class TestListObjects:
                 pytest.fail(f"Expected Ok, got {result}")
 
         # Verify mock was called with None prefix
-        mock_storage.list_objects.assert_called_once_with("my-bucket", None, 1000)
+        mock_storage.list_objects.assert_called_once_with("my-bucket", Absent(), 1000)
 
     @pytest.mark.asyncio()
     async def test_list_objects_infrastructure_error(self, mocker: MockerFixture) -> None:

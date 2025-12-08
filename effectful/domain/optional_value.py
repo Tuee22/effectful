@@ -1,4 +1,9 @@
-"""Optional value ADT to avoid bare Optional sentinel use."""
+"""Optional value algebraic data type to avoid bare Optional usage.
+
+This module provides a small ADT that encodes whether a value is present or
+absent with an explicit reason. It replaces `Optional[T]` sentinels while still
+allowing concise construction via helper functions.
+"""
 
 from dataclasses import dataclass
 from typing import Generic, TypeVar
@@ -31,7 +36,7 @@ def to_optional_value(value: T_co | None, *, reason: str = "not_provided") -> Op
 
 
 def from_optional_value(optional_value: OptionalValue[T_co]) -> T_co | None:
-    """Convert the OptionalValue ADT back to a plain optional for boundaries."""
+    """Convert OptionalValue back to an optional sentinel for boundary calls."""
     if isinstance(optional_value, Provided):
         return optional_value.value
     return None

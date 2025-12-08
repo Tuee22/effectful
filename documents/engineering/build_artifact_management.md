@@ -61,14 +61,12 @@
 
 Backend (inside container):
 ```bash
-# file: scripts/build_artifact_management.sh
 docker compose -f docker/docker-compose.yml exec effectful poetry install
 docker compose -f docker/docker-compose.yml exec healthhub poetry install
 ```
 
 Frontend (inside container):
 ```bash
-# file: scripts/build_artifact_management.sh
 docker compose -f demo/healthhub/docker/docker-compose.yml exec healthhub npm ci
 docker compose -f demo/healthhub/docker/docker-compose.yml exec healthhub npm run build
 ```
@@ -81,18 +79,15 @@ Artifacts produced in these steps stay under `/opt/**` in the container; do not 
 
 - **Check gitignore**:
   ```bash
-  # file: scripts/build_artifact_management.sh
   git check-ignore -v poetry.lock package-lock.json dist/ build/
   ```
 - **Check docker context**:
   ```bash
-  # file: scripts/build_artifact_management.sh
   docker build --progress=plain . | grep -E "poetry.lock|package-lock.json"
   # Expect: excluded from context
   ```
 - **No artifacts in git**:
   ```bash
-  # file: scripts/build_artifact_management.sh
   git status --short | grep -E "poetry.lock|package-lock.json|dist/|build/" && echo "Artifacts present (fix ignore rules)"
   ```
 

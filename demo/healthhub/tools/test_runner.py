@@ -90,16 +90,20 @@ def reseed_database() -> int:
     """
     print("Reseeding database for E2E tests...")
     env = os.environ.copy()
-    env["PGPASSWORD"] = "healthhub_secure_pass"
+    db_host = env.get("POSTGRES_HOST", "postgres")
+    db_user = env.get("POSTGRES_USER", "healthhub")
+    db_name = env.get("POSTGRES_DB", "healthhub_db")
+    db_password = env.get("POSTGRES_PASSWORD", "healthhub_secure_pass")
+    env["PGPASSWORD"] = db_password
     result = subprocess.run(
         [
             "psql",
             "-h",
-            "postgres",
+            db_host,
             "-U",
-            "healthhub",
+            db_user,
             "-d",
-            "healthhub_db",
+            db_name,
             "-f",
             "/app/healthhub/backend/scripts/seed_data.sql",
         ],

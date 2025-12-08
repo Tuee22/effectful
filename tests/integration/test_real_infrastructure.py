@@ -21,6 +21,7 @@ import boto3
 from effectful.adapters.postgres import PostgresChatMessageRepository, PostgresUserRepository
 from effectful.adapters.redis_cache import RedisProfileCache
 from effectful.adapters.s3_storage import S3ObjectStorage
+from effectful.domain.optional_value import Absent, Provided, to_optional_value
 from effectful.domain.cache_result import CacheHit, CacheMiss
 from effectful.domain.profile import ProfileData
 from effectful.domain.s3_object import ObjectNotFound, PutSuccess, S3Object
@@ -200,8 +201,8 @@ class TestS3ObjectStorage:
             bucket=s3_bucket,
             key=key,
             content=content,
-            metadata=metadata,
-            content_type="text/plain",
+            metadata=to_optional_value(metadata),
+            content_type=to_optional_value("text/plain"),
         )
 
         match put_result:
@@ -218,7 +219,7 @@ class TestS3ObjectStorage:
         assert obj.key == key
         assert obj.bucket == s3_bucket
         assert obj.metadata.get("uploaded-by") == "test-suite"
-        assert obj.content_type == "text/plain"
+        assert obj.content_type == Provided(value="text/plain")
         assert obj.size == len(content)
 
     @pytest.mark.asyncio
@@ -227,7 +228,7 @@ class TestS3ObjectStorage:
         key = f"test/{uuid4()}/to-delete.txt"
 
         # Put object first
-        await object_storage.put_object(s3_bucket, key, b"delete me")
+        await object_storage.put_object(s3_bucket, key, b"delete me", Absent(), Absent())
 
         # Verify it exists
         obj = await object_storage.get_object(s3_bucket, key)
@@ -257,10 +258,10 @@ class TestS3ObjectStorage:
         # Put multiple objects
         keys = [f"{prefix}/file1.txt", f"{prefix}/file2.txt", f"{prefix}/sub/file3.txt"]
         for key in keys:
-            await object_storage.put_object(s3_bucket, key, b"content")
+            await object_storage.put_object(s3_bucket, key, b"content", Absent(), Absent())
 
         # List with prefix
-        result = await object_storage.list_objects(s3_bucket, prefix=prefix)
+        result = await object_storage.list_objects(s3_bucket, prefix=to_optional_value(prefix))
         assert len(result) == 3
         for key in keys:
             assert key in result
@@ -270,7 +271,9 @@ class TestS3ObjectStorage:
         self, object_storage: S3ObjectStorage, s3_bucket: str
     ) -> None:
         """list_objects returns empty list for no matches."""
-        result = await object_storage.list_objects(s3_bucket, prefix="nonexistent/")
+        result = await object_storage.list_objects(
+            s3_bucket, prefix=to_optional_value("nonexistent/")
+        )
         assert result == []
 
     @pytest.mark.asyncio
@@ -282,8 +285,12 @@ class TestS3ObjectStorage:
 
         # Put 5 objects
         for i in range(5):
-            await object_storage.put_object(s3_bucket, f"{prefix}/file{i}.txt", b"x")
+            await object_storage.put_object(
+                s3_bucket, f"{prefix}/file{i}.txt", b"x", Absent(), Absent()
+            )
 
         # List with max_keys=3
-        result = await object_storage.list_objects(s3_bucket, prefix=prefix, max_keys=3)
+        result = await object_storage.list_objects(
+            s3_bucket, prefix=to_optional_value(prefix), max_keys=3
+        )
         assert len(result) == 3

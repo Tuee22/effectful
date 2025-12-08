@@ -13,6 +13,7 @@ from pytest_mock import MockerFixture
 
 from effectful.adapters.s3_storage import S3ObjectStorage
 from effectful.algebraic.result import Err, Ok
+from effectful.domain.optional_value import Provided
 from effectful.domain.s3_object import ObjectNotFound, PutSuccess, S3Object
 from effectful.effects.storage import DeleteObject, GetObject, ListObjects, PutObject
 from effectful.effects.websocket import SendText
@@ -308,7 +309,7 @@ class TestStorageWorkflowIntegration:
                     # Verify content
                     assert retrieved == data
                     assert obj_meta.get("user-id") == str(user_id)
-                    assert ct == "application/pdf"
+                    assert ct == Provided(value="application/pdf")
                     yield SendText(text="Download complete")
                     return True
                 case _:

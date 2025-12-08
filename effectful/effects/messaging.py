@@ -30,8 +30,23 @@ Type Safety:
 
 from dataclasses import dataclass
 
+from effectful.domain.optional_value import (
+    Absent,
+    OptionalValue,
+    Provided,
+    to_optional_value,
+)
 
-@dataclass(frozen=True)
+
+def _normalize_optional_properties(
+    properties: dict[str, str] | OptionalValue[dict[str, str]] | None,
+) -> OptionalValue[dict[str, str]]:
+    if isinstance(properties, (Provided, Absent)):
+        return properties
+    return to_optional_value(properties)
+
+
+@dataclass(frozen=True, init=False)
 class PublishMessage:
     """Effect: Publish message to Pulsar topic.
 
@@ -59,7 +74,17 @@ class PublishMessage:
 
     topic: str
     payload: bytes
-    properties: dict[str, str] | None = None
+    properties: OptionalValue[dict[str, str]]
+
+    def __init__(
+        self,
+        topic: str,
+        payload: bytes,
+        properties: dict[str, str] | OptionalValue[dict[str, str]] | None = None,
+    ) -> None:
+        object.__setattr__(self, "topic", topic)
+        object.__setattr__(self, "payload", payload)
+        object.__setattr__(self, "properties", _normalize_optional_properties(properties))
 
 
 @dataclass(frozen=True)

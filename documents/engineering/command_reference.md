@@ -91,20 +91,21 @@ See [Docker Workflow](docker_workflow.md) for complete policy.
 
 ## Test Statistics
 
-| Category | Test Count | Duration | Infrastructure |
-|----------|-----------|----------|----------------|
-| Unit Tests | 200+ tests | ~0.5s | pytest-mock only |
-| Integration | 27+ tests | ~1.1s | Real PostgreSQL/Redis/MinIO |
-| Full suite | **329 tests** | **~1.6s** | Mixed |
+| Category | Test Count (via `rg "def test_"`) | Duration | Infrastructure |
+|----------|-----------------------------------|----------|----------------|
+| Unit tests | ~479 | Varies by host/container; run in Docker | pytest-mock only |
+| Integration | ~84 | Varies; requires Docker services | PostgreSQL/Redis/MinIO/Pulsar |
+| Full suite | ~750 | Varies; run containerized | Mixed |
 | Coverage | 69% overall | - | Adapters/infrastructure excluded from measurement |
 
 **Test Organization**:
-- `tests/test_algebraic/` - Result, EffectReturn type tests
-- `tests/test_domain/` - Domain model tests
-- `tests/test_effects/` - Effect definition tests
-- `tests/test_interpreters/` - Individual interpreter tests (pytest-mock)
-- `tests/test_programs/` - Program runner tests
-- `tests/test_integration/` - Multi-effect workflows (real infrastructure)
+- `tests/unit/` - Pure logic and interpreter/unit coverage
+- `tests/integration/` - Multi-effect workflows against real infrastructure
+- `tests/e2e/` - End-to-end chat workflow
+- `tests/test_effects.py` - Effect definition tests
+- `tests/test_domain.py` - Domain model tests
+- `tests/test_observability.py` - Observability surface tests
+- `tests/test_adapters.py` - Adapter-focused tests
 
 ## Test Output Management
 
@@ -113,7 +114,6 @@ See [Docker Workflow](docker_workflow.md) for complete policy.
 **REQUIRED Pattern**:
 
 ```bash
-# file: scripts/command_reference.sh
 # Step 1: Run tests with output redirection
 docker compose -f docker/docker-compose.yml exec effectful poetry run pytest > /tmp/test-output.txt 2>&1
 

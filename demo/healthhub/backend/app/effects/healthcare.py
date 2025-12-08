@@ -12,13 +12,18 @@ from uuid import UUID
 
 from app.domain.appointment import AppointmentStatus
 from app.domain.invoice import LineItem
+from effectful.domain.optional_value import OptionalValue
 
 
 @dataclass(frozen=True)
 class GetPatientById:
     """Effect: Fetch patient by ID.
 
-    Returns: Patient | None
+    Args:
+        patient_id: Patient identifier.
+
+    Returns:
+        PatientLookupResult
     """
 
     patient_id: UUID
@@ -28,7 +33,11 @@ class GetPatientById:
 class GetDoctorById:
     """Effect: Fetch doctor by ID.
 
-    Returns: Doctor | None
+    Args:
+        doctor_id: Doctor identifier.
+
+    Returns:
+        DoctorLookupResult
     """
 
     doctor_id: UUID
@@ -38,7 +47,11 @@ class GetDoctorById:
 class GetDoctorByUserId:
     """Effect: Fetch doctor by user ID.
 
-    Returns: Doctor | None
+    Args:
+        user_id: User identifier.
+
+    Returns:
+        DoctorLookupResult
     """
 
     user_id: UUID
@@ -48,7 +61,11 @@ class GetDoctorByUserId:
 class GetUserByEmail:
     """Effect: Fetch user by email.
 
-    Returns: User | None
+    Args:
+        email: User email address.
+
+    Returns:
+        UserLookupResult
     """
 
     email: str
@@ -58,7 +75,13 @@ class GetUserByEmail:
 class CreateUser:
     """Effect: Create user with hashed password.
 
-    Returns: User
+    Args:
+        email: User email address.
+        password_hash: Hashed password value.
+        role: Role string to assign.
+
+    Returns:
+        User
     """
 
     email: str
@@ -70,7 +93,11 @@ class CreateUser:
 class UpdateUserLastLogin:
     """Effect: Update user's last login timestamp.
 
-    Returns: None
+    Args:
+        user_id: User identifier.
+
+    Returns:
+        None
     """
 
     user_id: UUID
@@ -80,7 +107,11 @@ class UpdateUserLastLogin:
 class GetPatientByUserId:
     """Effect: Fetch patient by user ID.
 
-    Returns: Patient | None
+    Args:
+        user_id: User identifier.
+
+    Returns:
+        PatientLookupResult
     """
 
     user_id: UUID
@@ -92,12 +123,19 @@ class CreateAppointment:
 
     Creates appointment in Requested status awaiting doctor confirmation.
 
-    Returns: Appointment
+    Args:
+        patient_id: Patient identifier.
+        doctor_id: Doctor identifier.
+        requested_time: Optional requested start time.
+        reason: Appointment reason.
+
+    Returns:
+        Appointment
     """
 
     patient_id: UUID
     doctor_id: UUID
-    requested_time: datetime | None
+    requested_time: OptionalValue[datetime]
     reason: str
 
 
@@ -105,7 +143,11 @@ class CreateAppointment:
 class GetAppointmentById:
     """Effect: Fetch appointment by ID.
 
-    Returns: Appointment | None
+    Args:
+        appointment_id: Appointment identifier.
+
+    Returns:
+        AppointmentLookupResult
     """
 
     appointment_id: UUID
@@ -118,7 +160,13 @@ class TransitionAppointmentStatus:
     Validates state machine transitions before updating.
     Uses validate_transition() from domain model.
 
-    Returns: TransitionSuccess | TransitionInvalid
+    Args:
+        appointment_id: Appointment identifier.
+        new_status: Target status ADT value.
+        actor_id: User performing the transition.
+
+    Returns:
+        TransitionResult
     """
 
     appointment_id: UUID
@@ -132,7 +180,18 @@ class CreatePrescription:
 
     Only doctors with can_prescribe=True should be allowed.
 
-    Returns: Prescription
+    Args:
+        patient_id: Patient identifier.
+        doctor_id: Doctor identifier.
+        medication: Medication name.
+        dosage: Dosage instructions.
+        frequency: Frequency text.
+        duration_days: Duration in days.
+        refills_remaining: Remaining refill count.
+        notes: Optional notes.
+
+    Returns:
+        Prescription
     """
 
     patient_id: UUID
@@ -142,14 +201,18 @@ class CreatePrescription:
     frequency: str
     duration_days: int
     refills_remaining: int
-    notes: str | None
+    notes: OptionalValue[str]
 
 
 @dataclass(frozen=True)
 class CheckMedicationInteractions:
     """Effect: Check for drug interactions.
 
-    Returns: NoInteractions | MedicationInteractionWarning
+    Args:
+        medications: Medication names to check.
+
+    Returns:
+        NoInteractions | MedicationInteractionWarning
     """
 
     medications: list[str]
@@ -159,7 +222,17 @@ class CheckMedicationInteractions:
 class CreateLabResult:
     """Effect: Store lab result.
 
-    Returns: LabResult
+    Args:
+        result_id: Lab result identifier.
+        patient_id: Patient identifier.
+        doctor_id: Doctor identifier.
+        test_type: Test type name.
+        result_data: Result payload.
+        critical: Whether the result is critical.
+        doctor_notes: Optional notes from doctor.
+
+    Returns:
+        LabResult
     """
 
     result_id: UUID
@@ -168,14 +241,18 @@ class CreateLabResult:
     test_type: str
     result_data: dict[str, str]
     critical: bool
-    doctor_notes: str | None
+    doctor_notes: OptionalValue[str]
 
 
 @dataclass(frozen=True)
 class GetLabResultById:
     """Effect: Fetch lab result by ID.
 
-    Returns: LabResult | None
+    Args:
+        result_id: Lab result identifier.
+
+    Returns:
+        LabResultLookupResult
     """
 
     result_id: UUID
@@ -185,20 +262,34 @@ class GetLabResultById:
 class CreateInvoice:
     """Effect: Generate invoice.
 
-    Returns: Invoice
+    Args:
+        patient_id: Patient identifier.
+        appointment_id: Optional appointment identifier.
+        line_items: Line items to include.
+        due_date: Optional due date.
+
+    Returns:
+        Invoice
     """
 
     patient_id: UUID
-    appointment_id: UUID | None
+    appointment_id: OptionalValue[UUID]
     line_items: list[LineItem]
-    due_date: date | None
+    due_date: OptionalValue[date]
 
 
 @dataclass(frozen=True)
 class AddInvoiceLineItem:
     """Effect: Add line item to existing invoice.
 
-    Returns: LineItem
+    Args:
+        invoice_id: Invoice identifier.
+        description: Description of the line item.
+        quantity: Item quantity.
+        unit_price: Price per unit.
+
+    Returns:
+        LineItem
     """
 
     invoice_id: UUID
@@ -211,7 +302,12 @@ class AddInvoiceLineItem:
 class UpdateInvoiceStatus:
     """Effect: Update invoice payment status.
 
-    Returns: Invoice
+    Args:
+        invoice_id: Invoice identifier.
+        status: New invoice status literal value.
+
+    Returns:
+        Invoice
     """
 
     invoice_id: UUID
@@ -222,7 +318,13 @@ class UpdateInvoiceStatus:
 class ListAppointments:
     """Effect: List appointments with optional filtering.
 
-    Returns: list[Appointment]
+    Args:
+        patient_id: Optional patient filter.
+        doctor_id: Optional doctor filter.
+        status: Optional status filter.
+
+    Returns:
+        list[Appointment]
     """
 
     patient_id: UUID | None = None
@@ -234,7 +336,11 @@ class ListAppointments:
 class GetPrescriptionById:
     """Effect: Fetch prescription by ID.
 
-    Returns: Prescription | None
+    Args:
+        prescription_id: Prescription identifier.
+
+    Returns:
+        PrescriptionLookupResult
     """
 
     prescription_id: UUID
@@ -244,7 +350,12 @@ class GetPrescriptionById:
 class ListPrescriptions:
     """Effect: List prescriptions with optional filtering.
 
-    Returns: list[Prescription]
+    Args:
+        patient_id: Optional patient filter.
+        doctor_id: Optional doctor filter.
+
+    Returns:
+        list[Prescription]
     """
 
     patient_id: UUID | None = None
@@ -255,7 +366,12 @@ class ListPrescriptions:
 class ListLabResults:
     """Effect: List lab results with optional filtering.
 
-    Returns: list[LabResult]
+    Args:
+        patient_id: Optional patient filter.
+        doctor_id: Optional doctor filter.
+
+    Returns:
+        list[LabResult]
     """
 
     patient_id: UUID | None = None
@@ -266,7 +382,12 @@ class ListLabResults:
 class ReviewLabResult:
     """Effect: Mark lab result as reviewed by doctor.
 
-    Returns: LabResult
+    Args:
+        result_id: Lab result identifier.
+        doctor_notes: Optional notes to attach.
+
+    Returns:
+        LabResult
     """
 
     result_id: UUID
@@ -277,7 +398,11 @@ class ReviewLabResult:
 class GetInvoiceById:
     """Effect: Fetch invoice by ID.
 
-    Returns: Invoice | None
+    Args:
+        invoice_id: Invoice identifier.
+
+    Returns:
+        InvoiceLookupResult
     """
 
     invoice_id: UUID
@@ -287,7 +412,11 @@ class GetInvoiceById:
 class ListInvoices:
     """Effect: List invoices with optional filtering.
 
-    Returns: list[Invoice]
+    Args:
+        patient_id: Optional patient filter.
+
+    Returns:
+        list[Invoice]
     """
 
     patient_id: UUID | None = None
@@ -297,7 +426,20 @@ class ListInvoices:
 class CreatePatient:
     """Effect: Create new patient record.
 
-    Returns: Patient
+    Args:
+        user_id: Associated user identifier.
+        first_name: First name.
+        last_name: Last name.
+        date_of_birth: Date of birth.
+        blood_type: Blood type (optional).
+        allergies: Recorded allergies.
+        insurance_id: Insurance identifier (optional).
+        emergency_contact: Emergency contact details.
+        phone: Phone number (optional).
+        address: Address (optional).
+
+    Returns:
+        Patient
     """
 
     user_id: UUID
@@ -316,7 +458,19 @@ class CreatePatient:
 class UpdatePatient:
     """Effect: Update patient record.
 
-    Returns: Patient | None
+    Args:
+        patient_id: Patient identifier.
+        first_name: Optional updated first name.
+        last_name: Optional updated last name.
+        blood_type: Optional blood type update.
+        allergies: Optional allergy updates.
+        insurance_id: Optional insurance identifier update.
+        emergency_contact: Optional emergency contact update.
+        phone: Optional phone update.
+        address: Optional address update.
+
+    Returns:
+        Patient | None
     """
 
     patient_id: UUID
@@ -334,7 +488,11 @@ class UpdatePatient:
 class DeletePatient:
     """Effect: Delete patient record.
 
-    Returns: bool (True if deleted)
+    Args:
+        patient_id: Patient identifier.
+
+    Returns:
+        bool (True if deleted)
     """
 
     patient_id: UUID
@@ -344,7 +502,8 @@ class DeletePatient:
 class ListPatients:
     """Effect: List all patients (admin only).
 
-    Returns: list[Patient]
+    Returns:
+        list[Patient]
     """
 
     pass
@@ -354,7 +513,11 @@ class ListPatients:
 class ListInvoiceLineItems:
     """Effect: List line items for an invoice.
 
-    Returns: list[LineItem]
+    Args:
+        invoice_id: Invoice identifier.
+
+    Returns:
+        list[LineItem]
     """
 
     invoice_id: UUID
@@ -362,7 +525,11 @@ class ListInvoiceLineItems:
 
 @dataclass(frozen=True)
 class CheckDatabaseHealth:
-    """Effect: Verify database connectivity."""
+    """Effect: Verify database connectivity.
+
+    Returns:
+        None
+    """
 
     pass
 

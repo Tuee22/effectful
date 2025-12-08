@@ -20,6 +20,7 @@ from typing import Literal
 
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok, Result
+from effectful.domain.optional_value import OptionalValue
 from effectful.domain.s3_object import GetObjectResult, ObjectNotFound, PutFailure, PutSuccess
 from effectful.effects.base import Effect
 from effectful.effects.storage import DeleteObject, GetObject, ListObjects, PutObject
@@ -132,8 +133,8 @@ class StorageInterpreter:
         bucket: str,
         key: str,
         content: bytes,
-        metadata: dict[str, str] | None,
-        content_type: str | None,
+        metadata: OptionalValue[dict[str, str]],
+        content_type: OptionalValue[str],
         effect: Effect,
     ) -> Result[EffectReturn[EffectResult], InterpreterError]:
         """Handle PutObject effect.
@@ -193,7 +194,7 @@ class StorageInterpreter:
             )
 
     async def _handle_list(
-        self, bucket: str, prefix: str | None, max_keys: int, effect: Effect
+        self, bucket: str, prefix: OptionalValue[str], max_keys: int, effect: Effect
     ) -> Result[EffectReturn[EffectResult], InterpreterError]:
         """Handle ListObjects effect.
 

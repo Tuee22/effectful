@@ -6,7 +6,7 @@ from types import MappingProxyType
 from typing import Mapping
 from uuid import UUID
 
-from app.domain.optional_value import OptionalValue
+from effectful.domain.optional_value import OptionalValue
 
 
 @dataclass(frozen=True)

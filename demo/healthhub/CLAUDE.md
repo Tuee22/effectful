@@ -227,6 +227,10 @@ Must meet Universal Success Criteria.
 15. **Missing Transition Validation** - ❌ Allowing invalid state changes | ✅ validate_transition()
 16. **Blocking on Notification Failure** - ❌ Failing workflow on notification error | ✅ Fire-and-forget
 
+### API Layer Anti-Patterns
+
+17. **Inline Interpreter Construction** - ❌ Manually creating db_manager, pool, redis_client, observability_interpreter, base_interpreter, and AuditedCompositeInterpreter in each endpoint | ✅ Use `Depends(get_audited_composite_interpreter)` dependency injection
+
 ## 🛡️ Type Safety
 
 **Core Rules**:
@@ -322,11 +326,12 @@ JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
 - [ ] `poetry run check-code` exits 0
 - [ ] Tests for all features (unit + integration)
 - [ ] No forbidden constructs (Any/cast/type:ignore)
-- [ ] No anti-patterns (1-16)
+- [ ] No anti-patterns (1-17)
 - [ ] All dataclasses frozen (`frozen=True`)
 - [ ] ADTs used instead of Optional for domain logic
 - [ ] Result type used for all fallible operations
 - [ ] Effect programs yield effects, don't call infrastructure
+- [ ] API endpoints use dependency injection for interpreters
 - [ ] HIPAA audit logging for PHI access
 - [ ] Changes left uncommitted
 

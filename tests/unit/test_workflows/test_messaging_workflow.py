@@ -98,7 +98,7 @@ class TestMessagingWorkflowIntegration:
                 assert outcome == "Processed message msg-123"
                 # Verify publish called
                 mock_producer.publish.assert_called_once_with(
-                    "test-topic", b"test data", {"source": "test"}
+                    "test-topic", b"test data", properties={"source": "test"}
                 )
                 # Verify consume called
                 mock_consumer.receive.assert_called_once_with("test-subscription", 1000)
@@ -352,9 +352,9 @@ class TestMessagingWorkflowIntegration:
                 assert count == 3
                 # Verify all publishes called
                 assert mock_producer.publish.call_count == 3
-                mock_producer.publish.assert_any_call("events", b"event-1", None)
-                mock_producer.publish.assert_any_call("events", b"event-2", None)
-                mock_producer.publish.assert_any_call("events", b"event-3", None)
+                mock_producer.publish.assert_any_call("events", b"event-1", properties=None)
+                mock_producer.publish.assert_any_call("events", b"event-2", properties=None)
+                mock_producer.publish.assert_any_call("events", b"event-3", properties=None)
             case Err(error):
                 pytest.fail(f"Expected Ok(3), got Err({error})")
 

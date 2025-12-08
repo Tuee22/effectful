@@ -1,18 +1,20 @@
 # HIPAA Compliance
 
-**Status**: Reference only  
-**Supersedes**: none  
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub domain delta for HIPAA compliance posture; extends the base SSoT and keeps only HealthHub-specific overrides.
-> **📖 Authoritative Reference**: [HIPAA Compliance](../../../../documents/domain/hipaa_compliance.md)
+> **Purpose**: SSoT for HIPAA-aligned documentation and controls for HealthHub healthcare workflows; ties code quality standards to PHI/PII handling requirements.
 
-## Deltas
-- Base SSoT: [HIPAA Compliance](../../../../documents/domain/hipaa_compliance.md) for PHI/PII handling and purity requirements.
-- No additional deltas beyond using the HealthHub compose stack and service name (`healthhub`).
-- Refer to the base document for canonical procedures; apply HealthHub-specific ports, credentials, and service names where applicable.
+## Canonical Guidance
+
+- **Data handling**: Apply [Code Quality](../engineering/code_quality.md) purity and PHI handling rules; all PHI access and mutation go through typed effects with explicit audit trails.
+- **Minimum necessary**: Model domain types to carry only required identifiers; prefer opaque identifiers over raw PHI in logs, metrics, and messages.
+- **Storage + transport**: Enforce encryption-at-rest and in-transit via configuration SSoTs; never embed secrets or PHI in URLs or logs.
+- **Auditing**: Emit structured audit events for all PHI access paths; route to observability pipelines defined in the observability SSoT.
 
 ## Cross-References
-- [HealthHub Documentation Guide](../documentation_standards.md)
-- [HealthHub Documentation Hub](../README.md)
-- [HIPAA Compliance](../../../../documents/domain/hipaa_compliance.md)
+- [Code Quality](../engineering/code_quality.md)
+- [Configuration](../engineering/configuration.md)
+- [Observability](../engineering/observability.md)
+- [Monitoring & Alerting](../engineering/monitoring_and_alerting.md)

@@ -6,6 +6,7 @@ Layer 2 in 5-layer architecture: Executes generator-based effect programs.
 from collections.abc import Generator
 from typing import TypeVar
 
+from app.domain.lookup_result import PatientFound, PatientMissingById, PatientMissingByUserId
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
 from typing import Protocol
 
@@ -38,10 +39,14 @@ async def run_program(
     Example:
         ```python
         def greet_patient(patient_id: UUID) -> Generator[AllEffects, object, str]:
-            patient = yield GetPatientById(patient_id=patient_id)
-            if patient is None:
-                return "Patient not found"
-            return f"Hello {patient.first_name}!"
+            patient_result = yield GetPatientById(patient_id=patient_id)
+            match patient_result:
+                case PatientFound(patient=patient):
+                    return f"Hello {patient.first_name}!"
+                case PatientMissingById():
+                    return "Patient not found"
+                case PatientMissingByUserId():
+                    return "Patient not found"
 
         result = await run_program(greet_patient(patient_id), interpreter)
         ```

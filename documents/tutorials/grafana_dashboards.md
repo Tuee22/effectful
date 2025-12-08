@@ -63,7 +63,6 @@ flowchart TB
 ## Step 1: Access Grafana
 
 ```bash
-# file: scripts/15_grafana_dashboards.sh
 # Ensure Grafana is running
 docker compose -f docker/docker-compose.yml ps grafana
 
@@ -477,7 +476,6 @@ Condition: WHEN last() OF query(A) IS ABOVE 0.05
 
 **Version Control**:
 ```bash
-# file: scripts/15_grafana_dashboards.sh
 # Add to git
 git add docker/grafana/dashboards/effectful.json
 git commit -m "Add Effectful metrics dashboard"
@@ -696,7 +694,6 @@ Row 3: Resources (CPU, memory, connections)
 
 **Debug**:
 ```bash
-# file: scripts/15_grafana_dashboards.sh
 # Query Prometheus directly
 curl 'http://localhost:9090/api/v1/query?query=effectful_effects_total'
 ```

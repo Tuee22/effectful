@@ -30,15 +30,11 @@ class TestLabResultsList:
 
         await expect(authenticated_doctor_page).to_have_url(make_url("/lab-results"))
 
-        # Should show lab results list or empty state
-        content = authenticated_doctor_page.locator(
-            "[data-testid='lab-result-list'], "
-            "[data-testid='empty-state'], "
-            ".lab-results-page, "
-            "table, "
-            ".lab-result-card"
+        # Should show lab results list or empty state (unique test IDs)
+        list_or_empty = authenticated_doctor_page.get_by_test_id("lab-result-list").or_(
+            authenticated_doctor_page.get_by_test_id("lab-result-empty")
         )
-        await expect(content).to_be_visible(timeout=10000)
+        await expect(list_or_empty).to_be_visible(timeout=10000)
 
     async def test_patient_can_view_own_lab_results(
         self, authenticated_patient_page: Page, make_url: Callable[[str], str]
@@ -49,10 +45,10 @@ class TestLabResultsList:
         await expect(authenticated_patient_page).to_have_url(make_url("/lab-results"))
 
         # Page should load
-        content = authenticated_patient_page.locator(
-            "[data-testid='lab-result-list'], " "[data-testid='empty-state'], " ".lab-results-page"
+        list_or_empty = authenticated_patient_page.get_by_test_id("lab-result-list").or_(
+            authenticated_patient_page.get_by_test_id("lab-result-empty")
         )
-        await expect(content).to_be_visible(timeout=10000)
+        await expect(list_or_empty).to_be_visible(timeout=10000)
 
 
 @pytest.mark.e2e

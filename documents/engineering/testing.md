@@ -183,7 +183,6 @@ See [Docker Workflow](./docker_workflow.md) for complete policy.
 ### Running Tests
 
 ```bash
-# file: scripts/testing.sh
 # All tests
 docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
 
@@ -216,7 +215,6 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tes
 
 **Required pattern**:
 ```bash
-# file: scripts/testing.sh
 # Run with output redirection
 docker compose -f docker/docker-compose.yml exec effectful poetry run pytest > /tmp/test-output.txt 2>&1
 

@@ -31,7 +31,6 @@ Welcome to **effectful**! This guide will get you writing effect programs in 10 
 Install effectful in your application:
 
 ```bash
-# file: scripts/01_quickstart.sh
 pip install effectful
 # or
 poetry add effectful
@@ -44,7 +43,6 @@ poetry add effectful
 > See [Docker Workflow](../engineering/docker_workflow.md) for complete setup.
 
 ```bash
-# file: scripts/01_quickstart.sh
 # Start development environment
 docker compose -f docker/docker-compose.yml up -d
 

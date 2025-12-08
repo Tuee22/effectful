@@ -13,6 +13,21 @@ All effects are immutable (frozen dataclasses).
 """
 
 from dataclasses import dataclass
+from typing import TypeVar
+
+from effectful.domain.optional_value import Absent, OptionalValue, Provided, to_optional_value
+
+T_co = TypeVar("T_co")
+
+
+def _normalize_optional_value(
+    value: T_co | OptionalValue[T_co] | None,
+) -> OptionalValue[T_co]:
+    if isinstance(value, (Provided, Absent)):
+        return value
+    return to_optional_value(value)
+
+
 from uuid import UUID
 
 
@@ -61,7 +76,7 @@ class GetChatMessages:
     user_id: UUID
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class ListUsers:
     """Effect: List all users with optional pagination.
 
@@ -70,8 +85,16 @@ class ListUsers:
         offset: Number of users to skip
     """
 
-    limit: int | None = None
-    offset: int | None = None
+    limit: OptionalValue[int]
+    offset: OptionalValue[int]
+
+    def __init__(
+        self,
+        limit: int | OptionalValue[int] | None = None,
+        offset: int | OptionalValue[int] | None = None,
+    ) -> None:
+        object.__setattr__(self, "limit", _normalize_optional_value(limit))
+        object.__setattr__(self, "offset", _normalize_optional_value(offset))
 
 
 @dataclass(frozen=True)
@@ -89,7 +112,7 @@ class CreateUser:
     password_hash: str
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class UpdateUser:
     """Effect: Update user fields.
 
@@ -100,8 +123,18 @@ class UpdateUser:
     """
 
     user_id: UUID
-    email: str | None = None
-    name: str | None = None
+    email: OptionalValue[str]
+    name: OptionalValue[str]
+
+    def __init__(
+        self,
+        user_id: UUID,
+        email: str | OptionalValue[str] | None = None,
+        name: str | OptionalValue[str] | None = None,
+    ) -> None:
+        object.__setattr__(self, "user_id", user_id)
+        object.__setattr__(self, "email", _normalize_optional_value(email))
+        object.__setattr__(self, "name", _normalize_optional_value(name))
 
 
 @dataclass(frozen=True)

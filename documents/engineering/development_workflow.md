@@ -38,8 +38,8 @@ flowchart TB
 
 1. `docker compose -f docker/docker-compose.yml up -d`
 2. Make code changes
-3. `poetry run check-code` (Black → MyPy → doc link verification; see [Code Quality](code_quality.md))
-4. `poetry run pytest` (see [Command Reference](command_reference.md))
+3. `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code` (Black → MyPy → doc link verification; see [Code Quality](code_quality.md))
+4. `docker compose -f docker/docker-compose.yml exec effectful poetry run pytest` (see [Command Reference](command_reference.md))
 5. Leave changes uncommitted (see Git Workflow Policy below)
 
 ## Adding New Effects
@@ -140,12 +140,12 @@ flowchart TB
 
 ### Schema Migrations
 
-**Integration tests use real PostgreSQL** with schema migrations.
+**Integration tests use real PostgreSQL** with schema creation defined in fixtures rather than a static `schema.sql`.
 
-**Schema location**: `effectful/infrastructure/schema.sql` (or similar)
+**Schema definition**: created dynamically in `tests/fixtures/database.py` inside the `postgres_connection` fixture.
 
 **Migration process**:
-1. Update schema file
+1. Update the fixture DDL (or add explicit migrations if introduced)
 2. Restart containers: `docker compose -f docker/docker-compose.yml down -v && docker compose -f docker/docker-compose.yml up -d`
 3. Run integration tests to verify schema
 
@@ -172,7 +172,6 @@ async def seed_database(db_connection):
 
 **Full reset** (removes all data):
 ```bash
-# file: scripts/development_workflow.sh
 docker compose -f docker/docker-compose.yml down -v
 docker compose -f docker/docker-compose.yml up -d
 ```
@@ -210,13 +209,11 @@ docker compose -f docker/docker-compose.yml up -d
 
 **Start all services**:
 ```bash
-# file: scripts/development_workflow.sh
 docker compose -f docker/docker-compose.yml up -d
 ```
 
 **Verify services**:
 ```bash
-# file: scripts/development_workflow.sh
 docker compose -f docker/docker-compose.yml ps
 ```
 
@@ -224,7 +221,6 @@ All services should show "Up" status.
 
 **Run integration tests**:
 ```bash
-# file: scripts/development_workflow.sh
 docker compose -f docker/docker-compose.yml exec effectful poetry run test-integration
 ```
 
@@ -236,13 +232,11 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run test-integ
 
 **Add runtime dependency**:
 ```bash
-# file: scripts/development_workflow.sh
 docker compose -f docker/docker-compose.yml exec effectful poetry add <package>
 ```
 
 **Add dev dependency**:
 ```bash
-# file: scripts/development_workflow.sh
 docker compose -f docker/docker-compose.yml exec effectful poetry add --group dev <package>
 ```
 

@@ -11,6 +11,7 @@ import pytest
 
 from app.domain.appointment import Confirmed
 from app.domain.invoice import LineItem
+from effectful.domain.optional_value import from_optional_value, to_optional_value
 from app.effects.healthcare import (
     AddInvoiceLineItem,
     CheckMedicationInteractions,
@@ -61,7 +62,7 @@ class TestHealthcareEffects:
         effect = CreateAppointment(
             patient_id=uuid4(),
             doctor_id=uuid4(),
-            requested_time=datetime.now(timezone.utc),
+            requested_time=to_optional_value(datetime.now(timezone.utc), reason="not_requested"),
             reason="Annual checkup",
         )
         assert_frozen(effect, "reason", "Different reason")
@@ -76,13 +77,13 @@ class TestHealthcareEffects:
         effect = CreateAppointment(
             patient_id=patient_id,
             doctor_id=doctor_id,
-            requested_time=requested_time,
+            requested_time=to_optional_value(requested_time, reason="not_requested"),
             reason=reason,
         )
 
         assert effect.patient_id == patient_id
         assert effect.doctor_id == doctor_id
-        assert effect.requested_time == requested_time
+        assert from_optional_value(effect.requested_time) == requested_time
         assert effect.reason == reason
 
     def test_transition_appointment_status_immutable(self) -> None:
@@ -107,7 +108,7 @@ class TestHealthcareEffects:
             frequency="once daily",
             duration_days=30,
             refills_remaining=3,
-            notes="Monitor blood pressure",
+            notes=to_optional_value("Monitor blood pressure"),
         )
         assert_frozen(effect, "dosage", "20mg")
 
@@ -125,7 +126,7 @@ class TestHealthcareEffects:
             test_type="CBC",
             result_data={"wbc": "7.5", "rbc": "4.8"},
             critical=False,
-            doctor_notes=None,
+            doctor_notes=to_optional_value(None, reason="not_provided"),
         )
         assert_frozen(effect, "critical", True)
 
@@ -143,9 +144,9 @@ class TestHealthcareEffects:
 
         effect = CreateInvoice(
             patient_id=uuid4(),
-            appointment_id=uuid4(),
+            appointment_id=to_optional_value(uuid4(), reason="linked_appointment"),
             line_items=[line_item],
-            due_date=None,
+            due_date=to_optional_value(None, reason="not_provided"),
         )
         assert_frozen(effect, "patient_id", uuid4())
 
@@ -176,7 +177,7 @@ class TestNotificationEffects:
         effect = PublishWebSocketNotification(
             channel="patient:123:notifications",
             message={"type": "test", "data": "value"},
-            recipient_id=uuid4(),
+            recipient_id=to_optional_value(uuid4(), reason="recipient"),
         )
         assert_frozen(effect, "channel", "different")
 
@@ -189,12 +190,12 @@ class TestNotificationEffects:
         effect = PublishWebSocketNotification(
             channel=channel,
             message=message,
-            recipient_id=recipient_id,
+            recipient_id=to_optional_value(recipient_id, reason="recipient"),
         )
 
         assert effect.channel == channel
         assert effect.message == message
-        assert effect.recipient_id == recipient_id
+        assert from_optional_value(effect.recipient_id) == recipient_id
 
     def test_log_audit_event_immutable(self) -> None:
         """LogAuditEvent should be immutable."""
@@ -203,9 +204,9 @@ class TestNotificationEffects:
             action="view_patient",
             resource_type="patient",
             resource_id=uuid4(),
-            ip_address="192.168.1.1",
-            user_agent="Test Browser",
-            metadata={"key": "value"},
+            ip_address=to_optional_value("192.168.1.1"),
+            user_agent=to_optional_value("Test Browser"),
+            metadata=to_optional_value({"key": "value"}),
         )
         assert_frozen(effect, "action", "different")
 
@@ -221,13 +222,13 @@ class TestNotificationEffects:
             action=action,
             resource_type=resource_type,
             resource_id=resource_id,
-            ip_address=None,
-            user_agent=None,
-            metadata=None,
+            ip_address=to_optional_value(None, reason="not_provided"),
+            user_agent=to_optional_value(None, reason="not_provided"),
+            metadata=to_optional_value(None, reason="not_provided"),
         )
 
         assert effect.user_id == user_id
         assert effect.action == action
         assert effect.resource_type == resource_type
         assert effect.resource_id == resource_id
-        assert effect.ip_address is None
+        assert from_optional_value(effect.ip_address) is None

@@ -370,7 +370,6 @@ effectful_effect_duration_seconds_count{effect_type="GetUserById"} 145.0
 ## Step 6: Start Services
 
 ```bash
-# file: scripts/13_prometheus_setup.sh
 # Build and start all services
 docker compose -f docker/docker-compose.yml up -d
 
@@ -386,7 +385,6 @@ docker compose -f docker/docker-compose.yml logs grafana
 
 **Expected Output**:
 ```text
-# file: scripts/13_prometheus_setup.sh
 NAME         IMAGE                    STATUS    PORTS
 effectful    effectful:latest         Up        0.0.0.0:8000->8000/tcp
 prometheus   prom/prometheus:latest   Up        0.0.0.0:9090->9090/tcp
@@ -576,7 +574,6 @@ if __name__ == "__main__":
 
 **Solution**:
 ```bash
-# file: scripts/13_prometheus_setup.sh
 # Check /metrics endpoint directly
 curl http://localhost:8000/metrics
 
@@ -612,7 +609,6 @@ url: http://localhost:9090   # ❌ Wrong (from Grafana container)
 
 **Solution**:
 ```bash
-# file: scripts/13_prometheus_setup.sh
 # Check volume size
 docker volume inspect prometheusdata
 

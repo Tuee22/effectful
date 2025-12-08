@@ -1,5 +1,7 @@
 """Rate limiting infrastructure using Redis sliding window algorithm."""
 
+from __future__ import annotations
+
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 from typing import Annotated
@@ -7,11 +9,13 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Request, status
 import redis.asyncio as redis
 
+from app.infrastructure.redis_client import create_redis_client
+
 
 class RedisWrapper:
     """Minimal wrapper to provide typed Redis commands used by the rate limiter."""
 
-    def __init__(self, client: object) -> None:
+    def __init__(self, client: redis.Redis[bytes]) -> None:
         self._client = client
 
     async def zremrangebyscore(self, *args: object, **kwargs: object) -> int:
@@ -27,6 +31,10 @@ class RedisWrapper:
     async def expire(self, *args: object, **kwargs: object) -> bool:
         result = await getattr(self._client, "expire")(*args, **kwargs)
         return bool(result)
+
+    async def close(self) -> None:
+        """Close underlying Redis connection."""
+        await self._client.aclose()
 
 
 class RateLimiter:
@@ -61,11 +69,7 @@ class RateLimiter:
 
 def get_rate_limiter() -> RateLimiter:
     """Dependency to get rate limiter instance."""
-    redis_client: object = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
+    redis_client = create_redis_client()
     return RateLimiter(RedisWrapper(redis_client))
 
 
@@ -86,17 +90,20 @@ def rate_limit(
         request: Request,
         limiter: Annotated[RateLimiter, Depends(get_rate_limiter)],
     ) -> None:
-        # Use IP address as rate limit key
-        ip_address = request.client.host if request.client else "unknown"
-        endpoint = request.url.path
-        key = f"rate_limit:{endpoint}:{ip_address}"
+        try:
+            # Use IP address as rate limit key
+            ip_address = request.client.host if request.client else "unknown"
+            endpoint = request.url.path
+            key = f"rate_limit:{endpoint}:{ip_address}"
 
-        allowed = await limiter.check_rate_limit(key, max_requests, window_seconds)
+            allowed = await limiter.check_rate_limit(key, max_requests, window_seconds)
 
-        if not allowed:
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail=f"Rate limit exceeded. Max {max_requests} requests per {window_seconds} seconds.",
-            )
+            if not allowed:
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail=f"Rate limit exceeded. Max {max_requests} requests per {window_seconds} seconds.",
+                )
+        finally:
+            await limiter.redis_client.close()
 
     return rate_limit_dependency

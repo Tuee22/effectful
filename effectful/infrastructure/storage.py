@@ -48,6 +48,8 @@ Example:
 
 from typing import Protocol
 
+from effectful.domain.optional_value import OptionalValue
+
 from effectful.domain.s3_object import GetObjectResult, PutResult, S3Object
 
 
@@ -93,8 +95,8 @@ class ObjectStorage(Protocol):
         bucket: str,
         key: str,
         content: bytes,
-        metadata: dict[str, str] | None = None,
-        content_type: str | None = None,
+        metadata: OptionalValue[dict[str, str]],
+        content_type: OptionalValue[str],
     ) -> PutResult:
         """Store object in storage.
 
@@ -138,7 +140,7 @@ class ObjectStorage(Protocol):
         ...
 
     async def list_objects(
-        self, bucket: str, prefix: str | None = None, max_keys: int = 1000
+        self, bucket: str, prefix: OptionalValue[str], max_keys: int = 1000
     ) -> list[str]:
         """List object keys in bucket.
 

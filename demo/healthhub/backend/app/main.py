@@ -9,11 +9,20 @@ from typing import AsyncIterator
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
+from prometheus_client import CONTENT_TYPE_LATEST, REGISTRY, generate_latest
 
 from app.config import settings
-from app.infrastructure import get_database_manager
+from app.container import ApplicationContainer
+from app.adapters.asyncpg_pool import AsyncPgPoolAdapter
+from app.adapters.prometheus_observability import PrometheusObservabilityAdapter
+from app.adapters.redis_factory import ProductionRedisClientFactory
+from app.adapters.interpreter_factory import ProductionInterpreterFactory
+from app.interpreters.observability_interpreter import (
+    ObservabilityInterpreter as ConcreteObservabilityInterpreter,
+)
+from app.infrastructure.database import DatabaseManager
 from app.api import (
     auth_router,
     health_router,
@@ -29,16 +38,41 @@ from app.api import (
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application lifespan manager.
 
-    Handles startup and shutdown tasks using AsyncExitStack pattern.
+    Creates ApplicationContainer with protocol implementations,
+    stores in app.state for dependency injection.
     """
-    # Startup
-    db_manager = get_database_manager()
+    # Startup: Create database pool
+    db_manager = DatabaseManager()
     await db_manager.setup()
+    pool = db_manager.get_pool()
+
+    # Create protocol adapters
+    database_pool_adapter = AsyncPgPoolAdapter(pool)
+    observability_adapter = PrometheusObservabilityAdapter(ConcreteObservabilityInterpreter())
+
+    # Create factories
+    redis_factory = ProductionRedisClientFactory()
+    interpreter_factory = ProductionInterpreterFactory(
+        database_pool=database_pool_adapter,
+        redis_factory=redis_factory,
+        observability_interpreter=observability_adapter,
+    )
+
+    # Create container with protocol implementations
+    container = ApplicationContainer(
+        database_pool=database_pool_adapter,
+        observability_interpreter=observability_adapter,
+        redis_factory=redis_factory,
+        interpreter_factory=interpreter_factory,
+    )
+
+    # Store in app.state (replaces global singletons)
+    app.state.container = container
 
     yield
 
     # Shutdown
-    await db_manager.teardown()
+    await database_pool_adapter.close()
 
 
 # Create FastAPI application
@@ -100,6 +134,13 @@ async def favicon() -> FileResponse | JSONResponse:
     if favicon_path.exists():
         return FileResponse(str(favicon_path))
     return JSONResponse({"error": "favicon not available"}, status_code=404)
+
+
+@app.get("/metrics", include_in_schema=False, response_model=None)
+async def metrics() -> Response:
+    """Expose Prometheus metrics for scraping."""
+    data = generate_latest(REGISTRY)
+    return Response(content=data, media_type=CONTENT_TYPE_LATEST)
 
 
 @app.get("/{full_path:path}", response_model=None)

@@ -32,7 +32,6 @@ By the end of this tutorial, you will:
 
 **Install Dependencies**:
 ```bash
-# file: scripts/05_production_deployment.sh
 # For library users adding effectful to YOUR application
 poetry add asyncpg
 
@@ -84,7 +83,6 @@ async def get_db_connection() -> AsyncIterator[asyncpg.Connection]:
 
 **Install Dependencies**:
 ```bash
-# file: scripts/05_production_deployment.sh
 # For library users adding effectful to YOUR application
 poetry add redis[hiredis]
 
@@ -246,7 +244,6 @@ def setup_logging(level: str = "INFO") -> None:
 
 **Install Dependencies**:
 ```bash
-# file: scripts/05_production_deployment.sh
 poetry add sentry-sdk
 ```
 
@@ -329,7 +326,6 @@ settings = Settings()
 
 **Environment File (.env)**:
 ```bash
-# file: scripts/05_production_deployment.sh
 # Database
 DATABASE_URL=postgresql://user:password@db:5432/mydb
 DATABASE_POOL_MIN_SIZE=5
@@ -427,7 +423,6 @@ volumes:
 
 **Start Services**:
 ```bash
-# file: scripts/05_production_deployment.sh
 docker-compose up -d
 ```
 

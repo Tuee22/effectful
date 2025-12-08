@@ -20,9 +20,17 @@ from app.domain.appointment import (
     TransitionSuccess,
 )
 from app.domain.doctor import Doctor
+from app.domain.lookup_result import (
+    AppointmentFound,
+    AppointmentMissing,
+    DoctorFound,
+    DoctorMissingById,
+    PatientFound,
+    PatientMissingById,
+)
 from app.domain.patient import Patient
+from effectful.domain.optional_value import from_optional_value, to_optional_value
 from app.domain.prescription import MedicationInteractionWarning, NoInteractions, Prescription
-from app.domain.optional_value import to_optional_value
 from app.effects.healthcare import (
     CheckMedicationInteractions,
     CreateAppointment,
@@ -33,6 +41,7 @@ from app.effects.healthcare import (
     TransitionAppointmentStatus,
 )
 from app.effects.notification import LogAuditEvent, PublishWebSocketNotification
+from app.effects.observability import IncrementCounter, MetricRecorded, ObserveHistogram
 from app.programs.appointment_programs import (
     AppointmentDoctorMissing,
     AppointmentPatientMissing,
@@ -116,31 +125,44 @@ class TestScheduleAppointmentProgram:
         assert effect1.patient_id == patient_id
 
         # Step 2: Send patient, should yield GetDoctorById
-        effect2 = program.send(mock_patient)
+        effect2 = program.send(PatientFound(patient=mock_patient))
         assert isinstance(effect2, GetDoctorById)
         assert effect2.doctor_id == doctor_id
 
         # Step 3: Send doctor, should yield CreateAppointment
-        effect3 = program.send(mock_doctor)
+        effect3 = program.send(DoctorFound(doctor=mock_doctor))
         assert isinstance(effect3, CreateAppointment)
         assert effect3.patient_id == patient_id
         assert effect3.doctor_id == doctor_id
         assert effect3.reason == reason
 
-        # Step 4: Send appointment, should yield PublishWebSocketNotification
+        # Step 4: Send appointment, should yield IncrementCounter
         effect4 = program.send(mock_appointment)
-        assert isinstance(effect4, PublishWebSocketNotification)
-        assert effect4.channel == f"doctor:{doctor_id}:notifications"
-        assert effect4.message["type"] == "appointment_requested"
-        assert effect4.recipient_id == doctor_id
+        assert isinstance(effect4, IncrementCounter)
+        assert effect4.metric_name == "healthhub_appointments_created_total"
+        assert effect4.labels["doctor_specialization"] == "Cardiology"
 
-        # Step 5: Send notification result, should yield LogAuditEvent
-        effect5 = program.send(None)
-        assert isinstance(effect5, LogAuditEvent)
-        assert effect5.action == "create_appointment"
-        assert effect5.resource_type == "appointment"
+        # Step 5: Send counter result, should yield PublishWebSocketNotification
+        effect5 = program.send(
+            MetricRecorded(
+                metric_name=effect4.metric_name,
+                metric_type="counter",
+                labels=effect4.labels,
+                value=1.0,
+            )
+        )
+        assert isinstance(effect5, PublishWebSocketNotification)
+        assert effect5.channel == f"doctor:{doctor_id}:notifications"
+        assert effect5.message["type"] == "appointment_requested"
+        assert from_optional_value(effect5.recipient_id) == doctor_id
 
-        # Step 6: Send audit result, should return appointment
+        # Step 6: Send notification result, should yield LogAuditEvent
+        effect6 = program.send(None)
+        assert isinstance(effect6, LogAuditEvent)
+        assert effect6.action == "create_appointment"
+        assert effect6.resource_type == "appointment"
+
+        # Step 7: Send audit result, should return appointment
         with pytest.raises(StopIteration) as exc_info:
             program.send(None)
 
@@ -167,9 +189,9 @@ class TestScheduleAppointmentProgram:
         effect1 = next(program)
         assert isinstance(effect1, GetPatientById)
 
-        # Step 2: Send None (patient not found), should return patient-missing ADT
+        # Step 2: Send missing patient ADT, should return patient-missing ADT
         with pytest.raises(StopIteration) as exc_info:
-            program.send(None)
+            program.send(PatientMissingById(patient_id=patient_id))
 
         result = exc_info.value.value
         assert isinstance(result, AppointmentPatientMissing)
@@ -211,12 +233,12 @@ class TestScheduleAppointmentProgram:
         assert isinstance(effect1, GetPatientById)
 
         # Step 2: Send patient, should yield GetDoctorById
-        effect2 = program.send(mock_patient)
+        effect2 = program.send(PatientFound(patient=mock_patient))
         assert isinstance(effect2, GetDoctorById)
 
         # Step 3: Send None (doctor not found), should return doctor-missing ADT
         with pytest.raises(StopIteration) as exc_info:
-            program.send(None)
+            program.send(DoctorMissingById(doctor_id=doctor_id))
 
         result = exc_info.value.value
         assert isinstance(result, AppointmentDoctorMissing)
@@ -247,6 +269,8 @@ class TestTransitionAppointmentProgram:
             confirmed_at=datetime.now(timezone.utc),
             scheduled_time=datetime.now(timezone.utc),
         )
+        transition_time = datetime.now(timezone.utc)
+        transition_latency_seconds = (transition_time - mock_appointment.created_at).total_seconds()
 
         mock_transition_result = TransitionSuccess(new_status=new_status)
 
@@ -255,6 +279,7 @@ class TestTransitionAppointmentProgram:
             appointment_id=appointment_id,
             new_status=new_status,
             actor_id=actor_id,
+            transition_time=transition_time,
         )
 
         # Step 1: Should yield GetAppointmentById
@@ -263,28 +288,40 @@ class TestTransitionAppointmentProgram:
         assert effect1.appointment_id == appointment_id
 
         # Step 2: Send appointment, should yield TransitionAppointmentStatus
-        effect2 = program.send(mock_appointment)
+        effect2 = program.send(AppointmentFound(appointment=mock_appointment))
         assert isinstance(effect2, TransitionAppointmentStatus)
         assert effect2.appointment_id == appointment_id
         assert effect2.new_status == new_status
 
-        # Step 3: Send success result, should yield patient notification
+        # Step 3: Send success result, should yield observability histogram
         effect3 = program.send(mock_transition_result)
-        assert isinstance(effect3, PublishWebSocketNotification)
-        assert effect3.channel == f"patient:{patient_id}:notifications"
-        assert effect3.message["type"] == "appointment_status_changed"
+        assert isinstance(effect3, ObserveHistogram)
+        assert effect3.metric_name == "healthhub_appointment_transition_latency_seconds"
 
-        # Step 4: Send notification result, should yield doctor notification
-        effect4 = program.send(None)
+        # Step 4: Send histogram result, should yield patient notification
+        effect4 = program.send(
+            MetricRecorded(
+                metric_name=effect3.metric_name,
+                metric_type="histogram",
+                labels=effect3.labels,
+                value=transition_latency_seconds,
+            )
+        )
         assert isinstance(effect4, PublishWebSocketNotification)
-        assert effect4.channel == f"doctor:{doctor_id}:notifications"
+        assert effect4.channel == f"patient:{patient_id}:notifications"
+        assert effect4.message["type"] == "appointment_status_changed"
 
-        # Step 5: Send notification result, should yield LogAuditEvent
+        # Step 5: Send notification result, should yield doctor notification
         effect5 = program.send(None)
-        assert isinstance(effect5, LogAuditEvent)
-        assert effect5.action == "transition_appointment_status"
+        assert isinstance(effect5, PublishWebSocketNotification)
+        assert effect5.channel == f"doctor:{doctor_id}:notifications"
 
-        # Step 6: Send audit result, should return TransitionSuccess
+        # Step 6: Send notification result, should yield LogAuditEvent
+        effect6 = program.send(None)
+        assert isinstance(effect6, LogAuditEvent)
+        assert effect6.action == "transition_appointment_status"
+
+        # Step 7: Send audit result, should return TransitionSuccess
         with pytest.raises(StopIteration) as exc_info:
             program.send(None)
 
@@ -300,21 +337,23 @@ class TestTransitionAppointmentProgram:
             confirmed_at=datetime.now(timezone.utc),
             scheduled_time=datetime.now(timezone.utc),
         )
+        transition_time = datetime.now(timezone.utc)
 
         # Initialize generator
         program = transition_appointment_program(
             appointment_id=appointment_id,
             new_status=new_status,
             actor_id=actor_id,
+            transition_time=transition_time,
         )
 
         # Step 1: Yield GetAppointmentById
         effect1 = next(program)
         assert isinstance(effect1, GetAppointmentById)
 
-        # Step 2: Send None (not found), should return TransitionInvalid
+        # Step 2: Send missing appointment ADT, should return TransitionInvalid
         with pytest.raises(StopIteration) as exc_info:
-            program.send(None)
+            program.send(AppointmentMissing(appointment_id=appointment_id))
 
         result = exc_info.value.value
         assert isinstance(result, TransitionInvalid)
@@ -348,12 +387,14 @@ class TestTransitionAppointmentProgram:
             attempted_status=str(new_status),
             reason="Invalid transition from Completed to Requested",
         )
+        transition_time = datetime.now(timezone.utc)
 
         # Initialize generator
         program = transition_appointment_program(
             appointment_id=appointment_id,
             new_status=new_status,
             actor_id=actor_id,
+            transition_time=transition_time,
         )
 
         # Step 1: Yield GetAppointmentById
@@ -361,7 +402,7 @@ class TestTransitionAppointmentProgram:
         assert isinstance(effect1, GetAppointmentById)
 
         # Step 2: Send appointment, should yield TransitionAppointmentStatus
-        effect2 = program.send(mock_appointment)
+        effect2 = program.send(AppointmentFound(appointment=mock_appointment))
         assert isinstance(effect2, TransitionAppointmentStatus)
 
         # Step 3: Send failure result, should return immediately (no notifications)
@@ -445,11 +486,11 @@ class TestCreatePrescriptionProgram:
         assert isinstance(effect1, GetPatientById)
 
         # Step 2: Send patient, should yield GetDoctorById
-        effect2 = program.send(mock_patient)
+        effect2 = program.send(PatientFound(patient=mock_patient))
         assert isinstance(effect2, GetDoctorById)
 
         # Step 3: Send doctor, should yield CheckMedicationInteractions
-        effect3 = program.send(mock_doctor)
+        effect3 = program.send(DoctorFound(doctor=mock_doctor))
         assert isinstance(effect3, CheckMedicationInteractions)
         assert "Metformin" in effect3.medications
         assert "Lisinopril" in effect3.medications
@@ -459,16 +500,32 @@ class TestCreatePrescriptionProgram:
         assert isinstance(effect4, CreatePrescription)
         assert effect4.medication == "Lisinopril"
 
-        # Step 5: Send prescription, should yield PublishWebSocketNotification
+        # Step 5: Send prescription, should yield IncrementCounter
         effect5 = program.send(mock_prescription)
-        assert isinstance(effect5, PublishWebSocketNotification)
-        assert effect5.channel == f"patient:{patient_id}:notifications"
-        assert effect5.message["type"] == "prescription_created"
+        assert isinstance(effect5, IncrementCounter)
+        assert effect5.metric_name == "healthhub_prescriptions_created_total"
+        assert effect5.labels["doctor_specialization"] == "Cardiology"
+        assert effect5.labels["severity"] == "none"
+        assert effect5.labels["doctor_specialization"] == "Cardiology"
+        assert effect5.labels["severity"] == "none"
 
-        # Step 6: Send notification result, should yield LogAuditEvent
-        effect6 = program.send(None)
-        assert isinstance(effect6, LogAuditEvent)
-        assert effect6.action == "create_prescription"
+        # Step 6: Send counter result, should yield PublishWebSocketNotification
+        effect6 = program.send(
+            MetricRecorded(
+                metric_name=effect5.metric_name,
+                metric_type="counter",
+                labels=effect5.labels,
+                value=1.0,
+            )
+        )
+        assert isinstance(effect6, PublishWebSocketNotification)
+        assert effect6.channel == f"patient:{patient_id}:notifications"
+        assert effect6.message["type"] == "prescription_created"
+
+        # Step 7: Send notification result, should yield LogAuditEvent
+        effect7 = program.send(None)
+        assert isinstance(effect7, LogAuditEvent)
+        assert effect7.action == "create_prescription"
 
         # Step 7: Send audit result, should return prescription
         with pytest.raises(StopIteration) as exc_info:
@@ -502,9 +559,9 @@ class TestCreatePrescriptionProgram:
         effect1 = next(program)
         assert isinstance(effect1, GetPatientById)
 
-        # Step 2: Send None (not found), should return patient-missing ADT
+        # Step 2: Send missing patient ADT, should return patient-missing ADT
         with pytest.raises(StopIteration) as exc_info:
-            program.send(None)
+            program.send(PatientMissingById(patient_id=patient_id))
 
         result = exc_info.value.value
         assert isinstance(result, PrescriptionPatientMissing)
@@ -551,12 +608,12 @@ class TestCreatePrescriptionProgram:
         assert isinstance(effect1, GetPatientById)
 
         # Step 2: Send patient, should yield GetDoctorById
-        effect2 = program.send(mock_patient)
+        effect2 = program.send(PatientFound(patient=mock_patient))
         assert isinstance(effect2, GetDoctorById)
 
         # Step 3: Send None (doctor not found), should return doctor-missing ADT
         with pytest.raises(StopIteration) as exc_info:
-            program.send(None)
+            program.send(DoctorMissingById(doctor_id=doctor_id))
 
         result = exc_info.value.value
         assert isinstance(result, PrescriptionDoctorMissing)
@@ -617,12 +674,12 @@ class TestCreatePrescriptionProgram:
         assert isinstance(effect1, GetPatientById)
 
         # Step 2: Send patient, should yield GetDoctorById
-        effect2 = program.send(mock_patient)
+        effect2 = program.send(PatientFound(patient=mock_patient))
         assert isinstance(effect2, GetDoctorById)
 
         # Step 3: Send doctor without authority, should return unauthorized ADT
         with pytest.raises(StopIteration) as exc_info:
-            program.send(mock_doctor)
+            program.send(DoctorFound(doctor=mock_doctor))
 
         result = exc_info.value.value
         assert isinstance(result, PrescriptionDoctorUnauthorized)
@@ -688,11 +745,11 @@ class TestCreatePrescriptionProgram:
         assert isinstance(effect1, GetPatientById)
 
         # Step 2: Send patient, should yield GetDoctorById
-        effect2 = program.send(mock_patient)
+        effect2 = program.send(PatientFound(patient=mock_patient))
         assert isinstance(effect2, GetDoctorById)
 
         # Step 3: Send doctor, should yield CheckMedicationInteractions
-        effect3 = program.send(mock_doctor)
+        effect3 = program.send(DoctorFound(doctor=mock_doctor))
         assert isinstance(effect3, CheckMedicationInteractions)
 
         # Step 4: Send severe warning, should yield LogAuditEvent (blocked)
@@ -782,32 +839,37 @@ class TestCreatePrescriptionProgram:
         assert isinstance(effect1, GetPatientById)
 
         # Step 2: Send patient, should yield GetDoctorById
-        effect2 = program.send(mock_patient)
+        effect2 = program.send(PatientFound(patient=mock_patient))
         assert isinstance(effect2, GetDoctorById)
 
         # Step 3: Send doctor, should yield CheckMedicationInteractions
-        effect3 = program.send(mock_doctor)
+        effect3 = program.send(DoctorFound(doctor=mock_doctor))
         assert isinstance(effect3, CheckMedicationInteractions)
 
         # Step 4: Send moderate warning, should yield CreatePrescription (allowed)
         effect4 = program.send(mock_interaction_warning)
         assert isinstance(effect4, CreatePrescription)
 
-        # Step 5: Send prescription, should yield PublishWebSocketNotification with warning
+        # Step 5: Send prescription, should yield IncrementCounter
         effect5 = program.send(mock_prescription)
-        assert isinstance(effect5, PublishWebSocketNotification)
+        assert isinstance(effect5, IncrementCounter)
+        assert effect5.metric_name == "healthhub_prescriptions_created_total"
+
+        # Step 6: Send counter result, should yield PublishWebSocketNotification with warning
+        effect6 = program.send(None)
+        assert isinstance(effect6, PublishWebSocketNotification)
         # Check new nested dict format for interaction_warning
-        assert "interaction_warning" in effect5.message
-        warning = effect5.message["interaction_warning"]
+        assert "interaction_warning" in effect6.message
+        warning = effect6.message["interaction_warning"]
         assert isinstance(warning, dict)
         assert warning["severity"] == "moderate"
         assert "description" in warning
 
-        # Step 6: Send notification result, should yield LogAuditEvent
-        effect6 = program.send(None)
-        assert isinstance(effect6, LogAuditEvent)
+        # Step 7: Send notification result, should yield LogAuditEvent
+        effect7 = program.send(None)
+        assert isinstance(effect7, LogAuditEvent)
 
-        # Step 7: Send audit result, should return prescription
+        # Step 8: Send audit result, should return prescription
         with pytest.raises(StopIteration) as exc_info:
             program.send(None)
 

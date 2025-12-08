@@ -8,6 +8,7 @@ Coverage: 100% of messaging effects module.
 
 import pytest
 
+from effectful.domain.optional_value import Absent, Provided
 from effectful.effects.messaging import (
     AcknowledgeMessage,
     ConsumeMessage,
@@ -36,7 +37,7 @@ class TestPublishMessage:
 
         assert effect.topic == "test-topic"
         assert effect.payload == b"test data"
-        assert effect.properties == {"key": "value"}
+        assert effect.properties == Provided(value={"key": "value"})
 
     def test_publish_message_without_properties(self) -> None:
         """PublishMessage should work without properties (defaults to None)."""
@@ -44,7 +45,7 @@ class TestPublishMessage:
 
         assert effect.topic == "test-topic"
         assert effect.payload == b"test data"
-        assert effect.properties is None
+        assert effect.properties == Absent()
 
     def test_publish_message_equality(self) -> None:
         """Equal PublishMessage instances should be equal."""

@@ -20,6 +20,7 @@ from uuid import UUID
 import asyncpg
 import pytest
 import redis.asyncio as redis
+from typing import Protocol, runtime_checkable, TypeGuard
 
 from app.domain.appointment import (
     Appointment,
@@ -45,6 +46,20 @@ from app.programs.appointment_programs import (
 from app.programs.runner import run_program
 
 
+@runtime_checkable
+class SupportsAclose(Protocol):
+    async def aclose(self) -> None: ...
+
+
+def has_aclose(pubsub: object) -> TypeGuard[SupportsAclose]:
+    return hasattr(pubsub, "aclose")
+
+
+async def close_pubsub(pubsub: redis.client.PubSub | SupportsAclose) -> None:
+    assert has_aclose(pubsub), "Redis PubSub missing aclose()"
+    await pubsub.aclose()
+
+
 def expect_scheduled(result: ScheduleAppointmentResult) -> Appointment:
     assert isinstance(result, AppointmentScheduled)
     return result.appointment
@@ -58,6 +73,7 @@ class TestAppointmentScheduling:
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
         redis_client: redis.Redis[bytes],
+        observability_interpreter: object,
         seed_test_patient: UUID,
         seed_test_doctor: UUID,
         sample_user_id: UUID,
@@ -70,10 +86,15 @@ class TestAppointmentScheduling:
         - Reason stored properly
         - DB record persisted (antipattern #4)
         """
+        from app.interpreters.observability_interpreter import ObservabilityInterpreter
+
+        assert isinstance(observability_interpreter, ObservabilityInterpreter)
+
         # Setup interpreter
         interpreter = CompositeInterpreter(
             pool=db_pool,
             redis_client=redis_client,
+            observability_interpreter=observability_interpreter,
         )
 
         # Execute appointment scheduling program
@@ -118,6 +139,7 @@ class TestAppointmentScheduling:
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
         redis_client: redis.Redis[bytes],
+        observability_interpreter: object,
         seed_test_patient: UUID,
         seed_test_doctor: UUID,
         sample_user_id: UUID,
@@ -130,10 +152,15 @@ class TestAppointmentScheduling:
         - Resource ID and type correct
         - Side effect validated (antipattern #13)
         """
+        from app.interpreters.observability_interpreter import ObservabilityInterpreter
+
+        assert isinstance(observability_interpreter, ObservabilityInterpreter)
+
         # Setup interpreter
         interpreter = CompositeInterpreter(
             pool=db_pool,
             redis_client=redis_client,
+            observability_interpreter=observability_interpreter,
         )
 
         # Execute
@@ -175,6 +202,7 @@ class TestAppointmentStateTransitions:
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
         redis_client: redis.Redis[bytes],
+        observability_interpreter: object,
         seed_test_patient: UUID,
         seed_test_doctor: UUID,
         sample_user_id: UUID,
@@ -187,10 +215,15 @@ class TestAppointmentStateTransitions:
         - Status metadata includes timestamps
         - State machine invariants maintained (antipattern #5)
         """
+        from app.interpreters.observability_interpreter import ObservabilityInterpreter
+
+        assert isinstance(observability_interpreter, ObservabilityInterpreter)
+
         # Setup interpreter
         interpreter = CompositeInterpreter(
             pool=db_pool,
             redis_client=redis_client,
+            observability_interpreter=observability_interpreter,
         )
 
         # Create appointment in Requested status
@@ -216,12 +249,14 @@ class TestAppointmentStateTransitions:
             confirmed_at=datetime.now(timezone.utc),
             scheduled_time=scheduled_time,
         )
+        transition_time = datetime.now(timezone.utc)
 
         result = await run_program(
             transition_appointment_program(
                 appointment_id=appointment.id,
                 new_status=new_status,
                 actor_id=sample_user_id,
+                transition_time=transition_time,
             ),
             interpreter,
         )
@@ -253,6 +288,7 @@ class TestAppointmentStateTransitions:
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
         redis_client: redis.Redis[bytes],
+        observability_interpreter: object,
         seed_test_patient: UUID,
         seed_test_doctor: UUID,
         sample_user_id: UUID,
@@ -265,10 +301,15 @@ class TestAppointmentStateTransitions:
         - DB status unchanged
         - Domain invariants maintained (antipattern #5)
         """
+        from app.interpreters.observability_interpreter import ObservabilityInterpreter
+
+        assert isinstance(observability_interpreter, ObservabilityInterpreter)
+
         # Setup interpreter
         interpreter = CompositeInterpreter(
             pool=db_pool,
             redis_client=redis_client,
+            observability_interpreter=observability_interpreter,
         )
 
         # Create appointment and manually set to Completed (bypass validation)
@@ -310,12 +351,14 @@ class TestAppointmentStateTransitions:
 
         # Attempt invalid transition: Completed → Requested
         new_status = Requested(requested_at=datetime.now(timezone.utc))
+        transition_time = datetime.now(timezone.utc)
 
         result = await run_program(
             transition_appointment_program(
                 appointment_id=appointment.id,
                 new_status=new_status,
                 actor_id=sample_user_id,
+                transition_time=transition_time,
             ),
             interpreter,
         )
@@ -339,6 +382,7 @@ class TestAppointmentStateTransitions:
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
         redis_client: redis.Redis[bytes],
+        observability_interpreter: object,
         seed_test_patient: UUID,
         seed_test_doctor: UUID,
         sample_user_id: UUID,
@@ -351,10 +395,15 @@ class TestAppointmentStateTransitions:
         - State machine invariants maintained throughout
         - Exhaustive validation (antipattern #5)
         """
+        from app.interpreters.observability_interpreter import ObservabilityInterpreter
+
+        assert isinstance(observability_interpreter, ObservabilityInterpreter)
+
         # Setup interpreter
         interpreter = CompositeInterpreter(
             pool=db_pool,
             redis_client=redis_client,
+            observability_interpreter=observability_interpreter,
         )
 
         # Create appointment (Requested)
@@ -381,6 +430,7 @@ class TestAppointmentStateTransitions:
                     scheduled_time=datetime(2024, 12, 25, 10, 0, 0, tzinfo=timezone.utc),
                 ),
                 actor_id=sample_user_id,
+                transition_time=datetime.now(timezone.utc),
             ),
             interpreter,
         )
@@ -401,6 +451,7 @@ class TestAppointmentStateTransitions:
                 appointment_id=appointment.id,
                 new_status=InProgress(started_at=datetime.now(timezone.utc)),
                 actor_id=sample_user_id,
+                transition_time=datetime.now(timezone.utc),
             ),
             interpreter,
         )
@@ -424,6 +475,7 @@ class TestAppointmentStateTransitions:
                     notes="Patient examined, no issues found",
                 ),
                 actor_id=sample_user_id,
+                transition_time=datetime.now(timezone.utc),
             ),
             interpreter,
         )
@@ -443,6 +495,7 @@ class TestAppointmentStateTransitions:
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
         redis_client: redis.Redis[bytes],
+        observability_interpreter: object,
         seed_test_patient: UUID,
         seed_test_doctor: UUID,
         sample_user_id: UUID,
@@ -455,10 +508,15 @@ class TestAppointmentStateTransitions:
         - DB persists cancellation metadata
         - State machine branching validated (antipattern #5)
         """
+        from app.interpreters.observability_interpreter import ObservabilityInterpreter
+
+        assert isinstance(observability_interpreter, ObservabilityInterpreter)
+
         # Setup interpreter
         interpreter = CompositeInterpreter(
             pool=db_pool,
             redis_client=redis_client,
+            observability_interpreter=observability_interpreter,
         )
 
         # Test cancellation from Requested
@@ -484,6 +542,7 @@ class TestAppointmentStateTransitions:
                     reason="Patient conflict",
                 ),
                 actor_id=sample_user_id,
+                transition_time=datetime.now(timezone.utc),
             ),
             interpreter,
         )
@@ -517,6 +576,7 @@ class TestAppointmentNotifications:
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
         redis_client: redis.Redis[bytes],
+        observability_interpreter: object,
         seed_test_patient: UUID,
         seed_test_doctor: UUID,
         sample_user_id: UUID,
@@ -532,10 +592,15 @@ class TestAppointmentNotifications:
         Note: This is ephemeral messaging (Redis pub/sub), not durable (Pulsar).
         If no subscriber listening, message is lost (acceptable).
         """
+        from app.interpreters.observability_interpreter import ObservabilityInterpreter
+
+        assert isinstance(observability_interpreter, ObservabilityInterpreter)
+
         # Setup interpreter
         interpreter = CompositeInterpreter(
             pool=db_pool,
             redis_client=redis_client,
+            observability_interpreter=observability_interpreter,
         )
 
         # Subscribe to doctor notification channel before executing
@@ -578,4 +643,4 @@ class TestAppointmentNotifications:
         assert payload.get("reason") is None
 
         await pubsub.unsubscribe(doctor_channel)
-        await pubsub.close()
+        await close_pubsub(pubsub)

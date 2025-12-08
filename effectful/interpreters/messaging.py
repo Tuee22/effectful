@@ -30,6 +30,7 @@ from effectful.domain.message_envelope import (
     PublishFailure,
     PublishSuccess,
 )
+from effectful.domain.optional_value import OptionalValue, from_optional_value
 from effectful.effects.base import Effect
 from effectful.effects.messaging import (
     AcknowledgeMessage,
@@ -122,7 +123,7 @@ class MessagingInterpreter:
         self,
         topic: str,
         payload: bytes,
-        properties: dict[str, str] | None,
+        properties: OptionalValue[dict[str, str]],
         effect: Effect,
     ) -> Result[EffectReturn[EffectResult], InterpreterError]:
         """Handle PublishMessage effect.
@@ -133,7 +134,11 @@ class MessagingInterpreter:
             Err(MessagingError) on infrastructure failure.
         """
         try:
-            publish_result = await self.producer.publish(topic, payload, properties)
+            publish_result = await self.producer.publish(
+                topic,
+                payload,
+                properties=from_optional_value(properties),
+            )
 
             # Pattern match on PublishResult ADT
             match publish_result:  # pragma: no branch

@@ -4,13 +4,21 @@ Provides appointment scheduling and state management.
 """
 
 from collections.abc import Generator
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Annotated, Literal
 from uuid import UUID
+from typing_extensions import assert_never
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
+from app.api.dependencies import (
+    AdminAuthorized,
+    DoctorAuthorized,
+    PatientAuthorized,
+    get_audited_composite_interpreter,
+    require_authenticated,
+)
 from app.domain.appointment import (
     Appointment,
     AppointmentStatus,
@@ -22,10 +30,15 @@ from app.domain.appointment import (
     TransitionInvalid,
     TransitionSuccess,
 )
+from app.domain.lookup_result import (
+    AppointmentFound,
+    AppointmentMissing,
+    is_appointment_lookup_result,
+)
 from app.effects.healthcare import GetAppointmentById
-from app.infrastructure import create_redis_client, get_database_manager, rate_limit
-from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
-from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
+from app.infrastructure.rate_limiter import rate_limit
+from app.interpreters.auditing_interpreter import AuditedCompositeInterpreter
+from app.interpreters.composite_interpreter import AllEffects
 from app.programs.appointment_programs import (
     AppointmentDoctorMissing,
     AppointmentPatientMissing,
@@ -35,12 +48,6 @@ from app.programs.appointment_programs import (
     transition_appointment_program,
 )
 from app.programs.runner import run_program
-from app.api.dependencies import (
-    PatientAuthorized,
-    DoctorAuthorized,
-    AdminAuthorized,
-    require_authenticated,
-)
 
 router = APIRouter()
 StatusFilter = Literal["requested", "confirmed", "in_progress", "completed", "cancelled"]
@@ -75,7 +82,17 @@ class TransitionStatusRequest(BaseModel):
 
 
 def _parse_status_filter(raw_value: str | None) -> StatusFilter | None:
-    """Validate and narrow status filter to the literal type."""
+    """Validate and narrow status filter to the literal type.
+
+    Args:
+        raw_value: Raw status query parameter from request.
+
+    Returns:
+        A narrowed literal status filter or None when not provided.
+
+    Raises:
+        HTTPException: If the raw value is not a supported status.
+    """
     match raw_value:
         case None:
             return None
@@ -118,62 +135,50 @@ def appointment_to_response(appointment: Appointment) -> AppointmentResponse:
 
 @router.get("/", response_model=list[AppointmentResponse])
 async def list_appointments(
-    request: Request,
     auth: Annotated[
         PatientAuthorized | DoctorAuthorized | AdminAuthorized,
         Depends(require_authenticated),
     ],
+    interpreter: Annotated[AuditedCompositeInterpreter, Depends(get_audited_composite_interpreter)],
     status_filter: str | None = None,
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))] = None,
 ) -> list[AppointmentResponse]:
     """List appointments with role-based filtering.
 
-    - Patient: sees only their own appointments
-    - Doctor: sees only their own appointments
-    - Admin: sees all appointments
+    Args:
+        auth: Authorization state narrowed by dependency injection.
+        interpreter: Injected audited composite interpreter.
+        status_filter: Optional status filter string.
+        _rate_limit: Rate limit guard (FastAPI dependency).
 
-    Optional status_filter to filter by status.
-    Logs all PHI access for HIPAA compliance.
-    Rate limit: 100 requests per 60 seconds per IP address.
+    Returns:
+        List of appointments visible to the actor.
+
+    Raises:
+        HTTPException: If status_filter is invalid.
+
+    Effects:
+        ListAppointments
+        LogAuditEvent (via AuditedCompositeInterpreter)
     """
     from collections.abc import Generator
     from app.effects.healthcare import ListAppointments
-    from app.interpreters.composite_interpreter import AllEffects
 
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
-
-    # Create Redis client
-    redis_client = create_redis_client()
-
-    # Extract actor ID from auth state
-    actor_id: UUID
+    # Extract patient/doctor IDs from auth state for filtering
+    patient_id: UUID | None
+    doctor_id: UUID | None
     match auth:
-        case PatientAuthorized(user_id=uid, patient_id=pid):
-            actor_id = uid
-            patient_id: UUID | None = pid
-            doctor_id: UUID | None = None
-        case DoctorAuthorized(user_id=uid, doctor_id=did):
-            actor_id = uid
+        case PatientAuthorized(patient_id=pid):
+            patient_id = pid
+            doctor_id = None
+        case DoctorAuthorized(doctor_id=did):
             patient_id = None
             doctor_id = did
-        case AdminAuthorized(user_id=uid):
-            actor_id = uid
+        case AdminAuthorized():
             patient_id = None
             doctor_id = None
 
-    # Extract IP and user agent from request
-    ip_address = request.client.host if request.client else None
-    user_agent = request.headers.get("user-agent")
-
     status_value = _parse_status_filter(status_filter)
-
-    # Create composite interpreter with audit wrapper
-    base_interpreter = CompositeInterpreter(pool, redis_client)
-    interpreter: AuditedCompositeInterpreter = AuditedCompositeInterpreter(
-        base_interpreter,
-        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
-    )
 
     # Create effect program with audit logging
     def list_program() -> Generator[AllEffects, object, list[Appointment]]:
@@ -187,8 +192,6 @@ async def list_appointments(
     # Run effect program
     appointments = await run_program(list_program(), interpreter)
 
-    await redis_client.aclose()
-
     return [appointment_to_response(a) for a in appointments]
 
 
@@ -199,15 +202,28 @@ async def create_appointment(
         PatientAuthorized | AdminAuthorized,
         Depends(require_authenticated),
     ],
+    interpreter: Annotated[
+        AuditedCompositeInterpreter,
+        Depends(get_audited_composite_interpreter),
+    ],
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> AppointmentResponse:
     """Create new appointment request.
 
-    Uses effect program: schedule_appointment_program
-    Sends notification to doctor via Redis pub/sub.
+    Args:
+        request: Appointment creation payload.
+        auth: Authorization state (patient for self, or admin).
+        interpreter: Audited composite interpreter (injected).
+        _rate_limit: Rate limit guard (FastAPI dependency).
 
-    Requires: Patient (own appointment) or Admin role.
-    Rate limit: 100 requests per 60 seconds per IP address.
+    Returns:
+        Created appointment in response format.
+
+    Raises:
+        HTTPException: If caller is not authorized or dependencies fail.
+
+    Effects:
+        schedule_appointment_program (CreateAppointment, LogAuditEvent, notifications)
     """
     # Authorization check - patient can only create for themselves
     match auth:
@@ -220,25 +236,13 @@ async def create_appointment(
         case AdminAuthorized():
             pass  # Admins can create for any patient
 
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
-
+    # Extract actor_id from auth state
     actor_id: UUID
     match auth:
         case PatientAuthorized(user_id=uid):
             actor_id = uid
         case AdminAuthorized(user_id=uid):
             actor_id = uid
-
-    # Create Redis client
-    redis_client = create_redis_client()
-
-    # Create composite interpreter
-    base_interpreter = CompositeInterpreter(pool, redis_client)
-    interpreter: AuditedCompositeInterpreter = AuditedCompositeInterpreter(
-        base_interpreter,
-        AuditContext(user_id=actor_id, ip_address=None, user_agent=None),
-    )
 
     # Run effect program
     program = schedule_appointment_program(
@@ -250,8 +254,6 @@ async def create_appointment(
     )
 
     result: ScheduleAppointmentResult = await run_program(program, interpreter)
-
-    await redis_client.aclose()
 
     match result:
         case AppointmentScheduled(appointment=appointment):
@@ -276,67 +278,57 @@ async def create_appointment(
 @router.get("/{appointment_id}", response_model=AppointmentResponse)
 async def get_appointment(
     appointment_id: str,
-    request: Request,
     auth: Annotated[
         PatientAuthorized | DoctorAuthorized | AdminAuthorized,
         Depends(require_authenticated),
+    ],
+    interpreter: Annotated[
+        AuditedCompositeInterpreter,
+        Depends(get_audited_composite_interpreter),
     ],
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> AppointmentResponse:
     """Get appointment by ID.
 
-    Requires: Patient (own appointment), Doctor (own appointment), or Admin.
-    Logs all PHI access for HIPAA compliance.
-    Rate limit: 100 requests per 60 seconds per IP address.
+    Args:
+        appointment_id: Appointment UUID string.
+        auth: Authorization state (patient, doctor, or admin).
+        interpreter: Audited composite interpreter (injected).
+        _rate_limit: Rate limit guard (FastAPI dependency).
+
+    Returns:
+        Appointment response for the requested appointment.
+
+    Raises:
+        HTTPException: When not found or caller is unauthorized.
+
+    Effects:
+        GetAppointmentById
+        LogAuditEvent (via AuditedCompositeInterpreter)
     """
     from collections.abc import Generator
     from app.effects.healthcare import GetAppointmentById
     from app.interpreters.composite_interpreter import AllEffects
 
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
-
-    # Create Redis client
-    redis_client = create_redis_client()
-
-    # Extract actor ID from auth state
-    actor_id: UUID
-    match auth:
-        case PatientAuthorized(user_id=uid):
-            actor_id = uid
-        case DoctorAuthorized(user_id=uid):
-            actor_id = uid
-        case AdminAuthorized(user_id=uid):
-            actor_id = uid
-
-    # Extract IP and user agent from request
-    ip_address = request.client.host if request.client else None
-    user_agent = request.headers.get("user-agent")
-
-    # Create composite interpreter
-    base_interpreter = CompositeInterpreter(pool, redis_client)
-    interpreter: AuditedCompositeInterpreter = AuditedCompositeInterpreter(
-        base_interpreter,
-        AuditContext(user_id=actor_id, ip_address=ip_address, user_agent=user_agent),
-    )
-
     # Create effect program with audit logging
-    def get_program() -> Generator[AllEffects, object, Appointment | None]:
-        appointment = yield GetAppointmentById(appointment_id=UUID(appointment_id))
-        return appointment if isinstance(appointment, Appointment) else None
+    def get_program() -> Generator[AllEffects, object, AppointmentFound | AppointmentMissing]:
+        result = yield GetAppointmentById(appointment_id=UUID(appointment_id))
+        assert is_appointment_lookup_result(result)
+        return result
 
     # Run effect program
-    appointment = await run_program(get_program(), interpreter)
+    appointment_result = await run_program(get_program(), interpreter)
 
-    await redis_client.aclose()
-
-    if appointment is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Appointment {appointment_id} not found",
-        )
-
-    return appointment_to_response(appointment)
+    match appointment_result:
+        case AppointmentFound(appointment=appointment):
+            return appointment_to_response(appointment)
+        case AppointmentMissing():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Appointment {appointment_id} not found",
+            )
+        case _:
+            assert_never(appointment_result)
 
 
 @router.post("/{appointment_id}/transition", response_model=dict[str, str])
@@ -347,48 +339,53 @@ async def transition_status(
         PatientAuthorized | DoctorAuthorized | AdminAuthorized,
         Depends(require_authenticated),
     ],
+    interpreter: Annotated[
+        AuditedCompositeInterpreter,
+        Depends(get_audited_composite_interpreter),
+    ],
     _rate_limit: Annotated[None, Depends(rate_limit(100, 60))],
 ) -> dict[str, str]:
     """Transition appointment status.
 
-    Uses effect program: transition_appointment_program
-    Validates state machine transitions.
+    Args:
+        appointment_id: Appointment UUID string.
+        request: New status payload and actor identifier.
+        auth: Authorization state (patient, doctor, or admin).
+        interpreter: Audited composite interpreter (injected).
+        _rate_limit: Rate limit guard (FastAPI dependency).
 
-    Requires: Patient/Doctor (own appointment) or Admin role.
-    Authorization validated based on transition type:
-    - Patients can: cancel
-    - Doctors can: confirm, start, complete, cancel
-    - Admins can: all transitions
-    Rate limit: 100 requests per 60 seconds per IP address.
+    Returns:
+        Success message when transition succeeds.
+
+    Raises:
+        HTTPException: If unauthorized, appointment missing, invalid status, or transition invalid.
+
+    Effects:
+        GetAppointmentById
+        transition_appointment_program (TransitionAppointmentStatus, LogAuditEvent)
     """
-    db_manager = get_database_manager()
-    pool = db_manager.get_pool()
 
-    # Authorization check based on role and transition
-    redis_client = create_redis_client()
+    def get_program() -> Generator[AllEffects, object, AppointmentFound | AppointmentMissing]:
+        result = yield GetAppointmentById(appointment_id=UUID(appointment_id))
+        assert is_appointment_lookup_result(result)
+        return result
 
-    base_interpreter = CompositeInterpreter(pool, redis_client)
-    interpreter = AuditedCompositeInterpreter(
-        base_interpreter,
-        AuditContext(user_id=auth.user_id, ip_address=None, user_agent=None),
-    )
+    appointment_result = await run_program(get_program(), interpreter)
 
-    def get_program() -> Generator[AllEffects, object, Appointment | None]:
-        appointment = yield GetAppointmentById(appointment_id=UUID(appointment_id))
-        return appointment if isinstance(appointment, Appointment) else None
-
-    appointment = await run_program(get_program(), interpreter)
-
-    if appointment is None:
-        await redis_client.aclose()
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Appointment {appointment_id} not found",
-        )
+    match appointment_result:
+        case AppointmentFound(appointment=appointment):
+            current_appointment = appointment
+        case AppointmentMissing():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Appointment {appointment_id} not found",
+            )
+        case _:
+            assert_never(appointment_result)
 
     match auth:
         case PatientAuthorized(patient_id=auth_patient_id):
-            if appointment.patient_id != auth_patient_id:
+            if current_appointment.patient_id != auth_patient_id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Not authorized to modify this appointment",
@@ -401,7 +398,7 @@ async def transition_status(
                 )
 
         case DoctorAuthorized(doctor_id=auth_doctor_id):
-            if appointment.doctor_id != auth_doctor_id:
+            if current_appointment.doctor_id != auth_doctor_id:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Not authorized to modify this appointment",
@@ -415,16 +412,21 @@ async def transition_status(
     new_status: AppointmentStatus
     match request.new_status:
         case "requested":
-            new_status = Requested(requested_at=datetime.now())
+            new_status = Requested(requested_at=datetime.now(timezone.utc))
         case "confirmed":
-            new_status = Confirmed(confirmed_at=datetime.now(), scheduled_time=datetime.now())
+            new_status = Confirmed(
+                confirmed_at=datetime.now(timezone.utc),
+                scheduled_time=datetime.now(timezone.utc),
+            )
         case "in_progress":
-            new_status = InProgress(started_at=datetime.now())
+            new_status = InProgress(started_at=datetime.now(timezone.utc))
         case "completed":
-            new_status = Completed(completed_at=datetime.now(), notes="Appointment completed")
+            new_status = Completed(
+                completed_at=datetime.now(timezone.utc), notes="Appointment completed"
+            )
         case "cancelled":
             new_status = Cancelled(
-                cancelled_at=datetime.now(),
+                cancelled_at=datetime.now(timezone.utc),
                 cancelled_by="patient",
                 reason="User requested cancellation",
             )
@@ -439,11 +441,10 @@ async def transition_status(
         appointment_id=UUID(appointment_id),
         new_status=new_status,
         actor_id=auth.user_id,
+        transition_time=datetime.now(timezone.utc),
     )
 
     result = await run_program(program, interpreter)
-
-    await redis_client.aclose()
 
     # Handle result
     match result:
