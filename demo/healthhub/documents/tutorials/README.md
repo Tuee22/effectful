@@ -6,7 +6,7 @@
 
 > **Purpose**: Navigation hub for HealthHub tutorials demonstrating real-world healthcare workflows using the Effectful library.
 
-> **📖 Base Tutorials**: [Effectful Tutorials](../../../../documents/tutorials/) - Learn core Effectful patterns first, then apply them to HealthHub healthcare domain.
+> **📖 Authoritative Reference**: [Effectful Tutorials](../../../../documents/tutorials/) - Learn core Effectful patterns first, then apply them to HealthHub healthcare domain.
 
 ---
 
@@ -165,8 +165,6 @@ Every tutorial workflow has corresponding e2e tests verifying correctness:
 - Code examples → Verified in integration tests
 - State machines → All transitions tested
 - RBAC → All role restrictions enforced
-
-**See**: Tutorial-to-test mapping in [Phase 6 Implementation Plan](/Users/matthewnowak/.claude/plans/hazy-frolicking-engelbart.md#tutorial-to-test-mapping-matrix)
 
 ---
 

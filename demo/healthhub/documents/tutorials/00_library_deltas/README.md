@@ -6,7 +6,7 @@
 
 > **Purpose**: HealthHub-specific deltas for base Effectful tutorials. Document only differences in compose stack, service configuration, and credentials.
 
-> **📖 Base Tutorials**: [Effectful Tutorials](../../../../../documents/tutorials/) - These are the authoritative source. Read base tutorials first, then reference deltas for HealthHub-specific configuration.
+> **📖 Authoritative Reference**: [Effectful Tutorials](../../../../../documents/tutorials/) - These are the authoritative source. Read base tutorials first, then reference deltas for HealthHub-specific configuration.
 
 ---
 
