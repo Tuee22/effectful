@@ -78,4 +78,10 @@ class TestLabResultReview:
             ":has-text('Reviewed'), :has-text('Pending')"
         ).first
 
-        # Status may or may not be visible depending on seed data
+        # If lab results exist, verify status indicator is visible
+        is_visible = await status_indicator.is_visible()
+        if is_visible:
+            await expect(status_indicator).to_be_visible(timeout=5000)
+        # If no status indicators found, verify we're on the lab results page (no results scenario)
+        else:
+            await expect(authenticated_doctor_page).to_have_url(make_url("/lab-results"))

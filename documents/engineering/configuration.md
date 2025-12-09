@@ -1,7 +1,7 @@
 # Configuration Standards
 
-**Status**: Authoritative source  
-**Supersedes**: None  
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: docker_workflow.md, development_workflow.md, README.md, monitoring_and_alerting.md
 
 > **Purpose**: SSoT for all environment variables and service configuration in effectful.

@@ -1,7 +1,7 @@
 # Total Pure Modelling
 
-**Status**: Authoritative source  
-**Supersedes**: N/A  
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: [engineering/testing.md](testing.md#philosophy), [engineering/code_quality.md](code_quality.md#tldr)
 
 > **Purpose**: A friendly, practical guide for modelling domain state with total, pure ADTs and state machines that match reality. Illegal states must be impossible to represent, and timing tricks or env toggles are off-limits. By separating pure decisions from side effects, we keep frontend and backend in lockstep, avoid ghost states, and stay resilient when real networks and devices misbehave.

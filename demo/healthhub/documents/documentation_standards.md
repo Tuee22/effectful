@@ -1,7 +1,7 @@
 # Documentation Guide (HealthHub)
 
-**Status**: Reference only  
-**Supersedes**: N/A  
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
 > **Purpose**: Explain how HealthHub documentation follows the delta/SSoT pattern and what belongs where, with compliance-focused engineering alignment.  

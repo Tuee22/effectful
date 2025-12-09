@@ -1,7 +1,7 @@
 # Command Reference
 
-**Status**: Authoritative source  
-**Supersedes**: None  
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: docker_workflow.md, development_workflow.md, testing.md, README.md
 
 > **Purpose**: SSoT for all Docker commands, test execution patterns, and output management in effectful.

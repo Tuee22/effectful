@@ -1,7 +1,7 @@
 # Documentation Standards
 
-**Status**: Authoritative source  
-**Supersedes**: N/A  
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: README.md, contributing.md, documents/engineering/code_quality.md, documents/engineering/testing.md, documents/engineering/docker_workflow.md, documents/engineering/monitoring_and_alerting.md
 
 > **Purpose**: Single Source of Truth (SSoT) for documentation practices across Effectful core and demo projects; aligns with the unified ShipNorth guide while preserving Effectful’s hierarchical/delta structure.

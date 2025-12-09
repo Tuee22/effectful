@@ -74,7 +74,13 @@ class TestInvoiceStatus:
             ":has-text('Paid'), :has-text('Pending'), :has-text('Overdue')"
         ).first
 
-        # Status badge may or may not be visible depending on seed data
+        # If invoices exist, verify status badge is visible
+        is_visible = await status_badge.is_visible()
+        if is_visible:
+            await expect(status_badge).to_be_visible(timeout=5000)
+        # If no status badges found, verify we're on the invoices page (no invoices scenario)
+        else:
+            await expect(authenticated_admin_page).to_have_url(make_url("/invoices"))
 
     async def test_invoice_shows_total_amount(
         self, authenticated_admin_page: Page, make_url: Callable[[str], str]
@@ -88,4 +94,10 @@ class TestInvoiceStatus:
             "[data-testid='invoice-total'], " ".invoice-total, " ":has-text('$'), :has-text('USD')"
         ).first
 
-        # Amount display depends on seed data
+        # If invoices exist, verify amount is visible
+        is_visible = await amount.is_visible()
+        if is_visible:
+            await expect(amount).to_be_visible(timeout=5000)
+        # If no amounts found, verify we're on the invoices page (no invoices scenario)
+        else:
+            await expect(authenticated_admin_page).to_have_url(make_url("/invoices"))

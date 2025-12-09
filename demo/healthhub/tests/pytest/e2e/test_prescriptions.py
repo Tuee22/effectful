@@ -90,5 +90,18 @@ class TestPrescriptionCreation:
             await create_button.click()
             await authenticated_doctor_page.wait_for_timeout(1000)
 
+            # Verify form fields are present
             # Form should have medication name, dosage, duration fields
-            # These depend on actual form implementation
+            form_fields = authenticated_doctor_page.locator(
+                "input[name*='medication'], input[name*='drug'], "
+                "input[name*='dosage'], input[name*='dose'], "
+                "input[name*='duration'], select, textarea, "
+                "[data-testid='prescription-form'], form"
+            )
+            # Assert at least one form element is visible
+            count = await form_fields.count()
+            assert count > 0, "Expected prescription form fields to be visible after clicking create"
+            # Verify we navigated to a form page or modal appeared
+            await expect(
+                authenticated_doctor_page.locator("form, [role='dialog'], [data-testid='prescription-form']").first
+            ).to_be_visible(timeout=5000)

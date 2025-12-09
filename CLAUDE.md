@@ -31,101 +31,28 @@ Quick links to key standards:
 ### Start Development
 
 > **📖 SSoT**: [Command Reference](documents/engineering/command_reference.md)
->
-> _This section duplicates commands for AI agent context. Humans should consult the SSoT._
 
-```bash
-# Start services
-docker compose -f docker/docker-compose.yml up -d
-
-# Run tests
-docker compose -f docker/docker-compose.yml exec effectful poetry run test-all
-
-# Check code quality
-docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
-```
-
-**See**: [Command Reference](documents/engineering/command_reference.md) for complete command table.
+All Docker commands follow the pattern `docker compose -f docker/docker-compose.yml exec effectful poetry run <command>`. For the complete command table including test execution, code quality checks, and service management, see [Command Reference](documents/engineering/command_reference.md).
 
 ### Universal Success Criteria
 
 > **📖 SSoT**: [Code Quality - Universal Success Criteria](documents/engineering/code_quality.md#universal-success-criteria)
->
-> _This section duplicates criteria for AI agent context. Humans should consult the SSoT._
 
-All code changes must meet these requirements:
-
-- ✅ Exit code 0 (all operations complete successfully)
-- ✅ **Zero MyPy errors** (mypy --strict mandatory)
-- ✅ Zero stderr output
-- ✅ Zero console warnings/errors
-- ✅ **Zero skipped tests** (pytest.skip() forbidden)
-- ✅ 100% test pass rate
-- ✅ **Zero `Any`, `cast()`, or `# type: ignore`** (escape hatches forbidden)
-- ✅ **Integration tests cover all features** (conceptual coverage)
-
-**See**: [Code Quality](documents/engineering/code_quality.md) for complete standards.
+All code changes must achieve exit code 0 with zero MyPy errors, zero skipped tests, and zero escape hatches (Any/cast/type:ignore). See [Code Quality](documents/engineering/code_quality.md#universal-success-criteria) for the complete criteria list.
 
 ## Claude Code-Specific Patterns
 
 ### Test Output Management Pattern
 
 > **📖 SSoT**: [Command Reference - Test Output Management](documents/engineering/command_reference.md#test-output-management)
->
-> _This section duplicates the test pattern for AI agent context. Humans should consult the SSoT._
 
-**CRITICAL - Output Truncation**: Bash tool truncates at 30,000 characters. Large test suites can exceed this.
-
-**REQUIRED Pattern for Claude Code**:
-
-```bash
-# Step 1: Run tests with output redirection
-docker compose -f docker/docker-compose.yml exec effectful poetry run pytest > /tmp/test-output.txt 2>&1
-
-# Step 2: Read complete output using Read tool on /tmp/test-output.txt
-
-# Step 3: Analyze ALL failures, not just visible ones
-```
-
-**Why This Matters**: Truncated output hides failures, making diagnosis impossible. File-based approach ensures complete output is always available. Read tool has no size limits.
-
-**Forbidden Practices**:
-- ❌ `Bash(command="...pytest...", timeout=60000)` - Kills tests mid-run, truncates output
-- ❌ `Bash(command="...pytest...", run_in_background=True)` - Loses real-time failure visibility
-- ❌ Reading partial output with `head -n 100` or similar truncation
-- ❌ Drawing conclusions without seeing complete output
-
-**Required Practices**:
-- ✅ Always redirect to /tmp/, then read complete output
-- ✅ Verify you have seen ALL test results before creating fix plans
-- ✅ Let tests complete naturally (integration tests may take 1-2 seconds)
-
-**See**: [Command Reference](documents/engineering/command_reference.md) for complete test execution patterns.
+**CRITICAL**: Bash tool truncates at 30,000 characters. Always redirect test output to `/tmp/test-output.txt 2>&1`, then read the complete file using the Read tool to see ALL failures. See [Command Reference](documents/engineering/command_reference.md#test-output-management) for complete pattern and forbidden practices.
 
 ### Git Workflow Policy
 
 > **📖 SSoT**: [Development Workflow - Git Workflow Policy](documents/engineering/development_workflow.md#git-workflow-policy)
->
-> _This section duplicates the Git policy for AI agent context. Humans should consult the SSoT._
 
-**Critical Rule**: Claude Code is NOT authorized to commit or push changes.
-
-**Forbidden Git Operations**:
-- ❌ **NEVER** run `git commit` (including `--amend`, `--no-verify`, etc.)
-- ❌ **NEVER** run `git push` (including `--force`, `--force-with-lease`, etc.)
-- ❌ **NEVER** run `git add` followed by commit operations
-- ❌ **NEVER** create commits under any circumstances
-
-**Required Workflow**:
-- ✅ Make all code changes as requested
-- ✅ Run tests and validation
-- ✅ Leave ALL changes as **uncommitted** working directory changes
-- ✅ User reviews changes using `git status` and `git diff`
-- ✅ User manually commits and pushes when satisfied
-
-**Rationale**: All changes must be human-reviewed before entering version control.
-
-**See**: [Development Workflow](documents/engineering/development_workflow.md) for complete daily workflow.
+**Critical Rule**: Claude Code is NOT authorized to commit or push changes. Make all code changes and run tests, but leave ALL changes as uncommitted working directory changes for user review. See [Development Workflow](documents/engineering/development_workflow.md#git-workflow-policy) for complete policy and forbidden operations.
 
 ## Contributing
 

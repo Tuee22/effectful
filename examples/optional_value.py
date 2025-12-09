@@ -434,7 +434,8 @@ def example5_generator_programs() -> None:
     print(f"  Effect 1: {type(effect1).__name__}")
 
     effect2 = program1.send(patient)  # SendNotification
-    print(f"  Effect 2: {type(effect2).__name__} - {effect2.message}")  # type: ignore
+    assert isinstance(effect2, SendNotification), f"Expected SendNotification, got {type(effect2)}"
+    print(f"  Effect 2: {type(effect2).__name__} - {effect2.message}")
 
     # Example 2: Program with optionals absent
     print("\nProgram 2: Optionals absent")
@@ -446,7 +447,8 @@ def example5_generator_programs() -> None:
     print(f"  Effect 1: {type(effect1).__name__}")
 
     effect2 = program2.send(patient)  # SendNotification
-    print(f"  Effect 2: {type(effect2).__name__} - {effect2.message}")  # type: ignore
+    assert isinstance(effect2, SendNotification), f"Expected SendNotification, got {type(effect2)}"
+    print(f"  Effect 2: {type(effect2).__name__} - {effect2.message}")
 
     print("\nKey takeaway: OptionalValue flows seamlessly through generator programs")
 

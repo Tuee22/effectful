@@ -85,6 +85,10 @@ class TestAppointmentListDisplay:
             await appointment_link.click()
             # Should navigate to detail page
             await authenticated_doctor_page.wait_for_timeout(1000)
+            # Verify navigation occurred - URL should change to detail page
+            await expect(authenticated_doctor_page).to_have_url(
+                lambda url: "/appointments/" in url, timeout=5000
+            )
 
 
 @pytest.mark.e2e
@@ -118,7 +122,15 @@ class TestAppointmentStateMachine:
         ).first
 
         # If there's a requested appointment, it should have a confirm option
-        # This test validates the UI shows appropriate actions
+        is_visible = await requested_appointment.is_visible()
+        if is_visible:
+            # Verify confirm action button is visible
+            confirm_button = authenticated_doctor_page.locator(
+                "button:has-text('Confirm'), "
+                "[data-action='confirm'], "
+                "[data-testid='confirm-appointment']"
+            ).first
+            await expect(confirm_button).to_be_visible(timeout=5000)
 
     async def test_confirmed_appointment_shows_start_option(
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
@@ -132,7 +144,16 @@ class TestAppointmentStateMachine:
             "[data-status='confirmed'], " ":has-text('Confirmed'):not(button)"
         ).first
 
-        # Verify page loads correctly
+        # If there's a confirmed appointment, it should have a start option
+        is_visible = await confirmed_appointment.is_visible()
+        if is_visible:
+            # Verify start action button is visible
+            start_button = authenticated_doctor_page.locator(
+                "button:has-text('Start'), "
+                "[data-action='start'], "
+                "[data-testid='start-appointment']"
+            ).first
+            await expect(start_button).to_be_visible(timeout=5000)
 
     async def test_in_progress_appointment_shows_complete_option(
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
@@ -147,7 +168,16 @@ class TestAppointmentStateMachine:
             ":has-text('In Progress'):not(button)"
         ).first
 
-        # Verify page loads correctly
+        # If there's an in-progress appointment, it should have a complete option
+        is_visible = await in_progress_appointment.is_visible()
+        if is_visible:
+            # Verify complete action button is visible
+            complete_button = authenticated_doctor_page.locator(
+                "button:has-text('Complete'), "
+                "[data-action='complete'], "
+                "[data-testid='complete-appointment']"
+            ).first
+            await expect(complete_button).to_be_visible(timeout=5000)
 
     async def test_completed_appointment_has_no_transition_buttons(
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
@@ -163,9 +193,19 @@ class TestAppointmentStateMachine:
 
         is_visible = await completed_appointment.is_visible()
         if is_visible:
-            # Completed appointments should not have action buttons
-            # (This depends on UI implementation)
-            pass
+            # Completed appointments should not have transition action buttons
+            # (terminal state - no further transitions allowed)
+            action_buttons = authenticated_doctor_page.locator(
+                "button[data-action='confirm'], "
+                "button[data-action='start'], "
+                "button[data-action='complete'], "
+                "button:has-text('Confirm'):not([disabled]), "
+                "button:has-text('Start'):not([disabled]), "
+                "button:has-text('Complete'):not([disabled])"
+            )
+            # Assert no transition buttons are visible for completed appointments
+            count = await action_buttons.count()
+            assert count == 0, f"Expected no transition buttons for completed appointment, found {count}"
 
     async def test_cancelled_appointment_has_no_transition_buttons(
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
@@ -181,5 +221,16 @@ class TestAppointmentStateMachine:
 
         is_visible = await cancelled_appointment.is_visible()
         if is_visible:
-            # Cancelled appointments should not have action buttons
-            pass
+            # Cancelled appointments should not have transition action buttons
+            # (terminal state - no further transitions allowed)
+            action_buttons = authenticated_doctor_page.locator(
+                "button[data-action='confirm'], "
+                "button[data-action='start'], "
+                "button[data-action='complete'], "
+                "button:has-text('Confirm'):not([disabled]), "
+                "button:has-text('Start'):not([disabled]), "
+                "button:has-text('Complete'):not([disabled])"
+            )
+            # Assert no transition buttons are visible for cancelled appointments
+            count = await action_buttons.count()
+            assert count == 0, f"Expected no transition buttons for cancelled appointment, found {count}"

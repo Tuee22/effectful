@@ -347,7 +347,9 @@ class ListAppointments:
 
     patient_id: OptionalValue[UUID]
     doctor_id: OptionalValue[UUID]
-    status: OptionalValue[Literal["requested", "confirmed", "in_progress", "completed", "cancelled"]]
+    status: OptionalValue[
+        Literal["requested", "confirmed", "in_progress", "completed", "cancelled"]
+    ]
 
     def __init__(
         self,
@@ -355,7 +357,9 @@ class ListAppointments:
         doctor_id: UUID | OptionalValue[UUID] | None = None,
         status: (
             Literal["requested", "confirmed", "in_progress", "completed", "cancelled"]
-            | OptionalValue[Literal["requested", "confirmed", "in_progress", "completed", "cancelled"]]
+            | OptionalValue[
+                Literal["requested", "confirmed", "in_progress", "completed", "cancelled"]
+            ]
             | None
         ) = None,
     ) -> None:

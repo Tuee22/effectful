@@ -187,6 +187,6 @@ All engineering documents marked with "**SSoT**" are authoritative. When conflic
 
 ## See Also
 
-- **[Documentation Hub](../README.md)** - Complete documentation index (tutorials + API + engineering)
+- **[Documentation Hub](../readme.md)** - Complete documentation index (tutorials + API + engineering)
 - **[Contributing Guide](../contributing.md)** - How to contribute to effectful
 - **[Main README](../../README.md)** - Project overview and quickstart

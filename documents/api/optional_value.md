@@ -1,7 +1,7 @@
 # OptionalValue API
 
 **Status**: Authoritative source
-**Supersedes**: N/A
+**Supersedes**: none
 **Referenced by**: tutorials/adts_and_results.md, engineering/architecture.md, engineering/code_quality.md, engineering/effect_patterns.md
 
 > **Purpose**: Core ADT for representing optional values using functional algebraic data types instead of Python's Optional; provides explicit absence reasons and type-safe pattern matching.

@@ -1,7 +1,7 @@
 # Observability
 
-**Status**: Authoritative source  
-**Supersedes**: None  
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: monitoring_and_alerting.md, configuration.md, docker_workflow.md, engineering/README.md
 
 > **Purpose**: Single Source of Truth for the Effectful observability architecture, metrics philosophy, and Prometheus/Grafana integration.

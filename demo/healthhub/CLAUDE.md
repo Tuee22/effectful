@@ -8,31 +8,20 @@
 
 ## 🏗️ Architecture
 
-> **📖 SSoT**: [Architecture](../../documents/engineering/architecture.md)
->
-> _This section duplicates architecture for AI agent context. Humans should consult the SSoT._
+> **📖 Base**: [Effectful CLAUDE.md](../../CLAUDE.md) | [Architecture SSoT](../../documents/engineering/architecture.md)
 
-**Stack**: Python 3.12 | FastAPI | PostgreSQL | Redis | Apache Pulsar | MinIO S3 | Effectful Effect System
+HealthHub follows the base effectful 5-layer architecture with healthcare-specific additions:
 
-**5-Layer Architecture**:
-```
-Layer 1: Application (FastAPI routes, request handling)
-    ↓
-Layer 2: Program Runner (effect execution loop, generator protocol)
-    ↓
-Layer 3: Composite Interpreter (effect routing via pattern matching)
-    ↓
-Layer 4: Specialized Interpreters (HealthcareInterpreter, NotificationInterpreter)
-    ↓
-Layer 5: Infrastructure (PostgreSQL, Redis, Pulsar, MinIO)
-```
+**HealthHub-Specific Stack**: FastAPI + PostgreSQL + Redis + Apache Pulsar + MinIO S3
 
-**Key Patterns**:
-- ✅ **Effect Programs**: Business logic as generators yielding immutable effect descriptions
-- ✅ **ADT Authorization**: `PatientAuthorized | DoctorAuthorized | AdminAuthorized | Unauthorized`
-- ✅ **State Machine**: Appointment status (Requested → Confirmed → InProgress → Completed)
-- ✅ **Result Types**: Explicit error handling with `Ok[T] | Err[E]`
-- ✅ **Immutability**: All domain models are frozen dataclasses
+**Specialized Layer 4 Interpreters**:
+- `HealthcareInterpreter` - Patient/doctor/appointment/prescription operations
+- `NotificationInterpreter` - HIPAA-compliant audit logging and notifications
+
+**Healthcare Domain Patterns**:
+- ADT Authorization: `PatientAuthorized | DoctorAuthorized | AdminAuthorized | Unauthorized`
+- State Machine: Appointment status transitions (Requested → Confirmed → InProgress → Completed)
+- HIPAA Compliance: Audit logging for all PHI access
 
 **Structure**:
 - `backend/app/`: Main application
@@ -51,40 +40,15 @@ Layer 5: Infrastructure (PostgreSQL, Redis, Pulsar, MinIO)
 
 ## 📋 Command Reference
 
-> **📖 SSoT**: [Command Reference](../../documents/engineering/command_reference.md)
->
-> _This section duplicates commands for AI agent context. Humans should consult the SSoT._
+> **📖 Base**: [Effectful CLAUDE.md](../../CLAUDE.md#quick-reference) | [Command Reference SSoT](../../documents/engineering/command_reference.md)
 
-**Base pattern**: `docker compose -f docker/docker-compose.yml exec healthhub poetry run <command>`
-
-| Task | Command |
-|------|---------|
-| Start services | `docker compose -f docker/docker-compose.yml up -d` |
-| View logs | `docker compose -f docker/docker-compose.yml logs -f healthhub` |
-| Check code quality | `docker compose -f docker/docker-compose.yml exec healthhub poetry run check-code` |
-| Test all | `docker compose -f docker/docker-compose.yml exec healthhub poetry run test-all` |
-| Test backend | `docker compose -f docker/docker-compose.yml exec healthhub poetry run test-backend` |
-| Test integration | `docker compose -f docker/docker-compose.yml exec healthhub poetry run test-integration` |
-| API server (dev) | `docker compose -f docker/docker-compose.yml exec healthhub poetry run api-dev` |
-| Python shell | `docker compose -f docker/docker-compose.yml exec healthhub poetry run python` |
-| Rebuild with frontend | `docker compose -f docker/docker-compose.yml build healthhub && docker compose -f docker/docker-compose.yml up -d` |
-
-**With output capture**: Add `> /tmp/test-output.txt 2>&1` to any test command.
+HealthHub commands follow the base pattern `docker compose -f docker/docker-compose.yml exec healthhub poetry run <command>`. HealthHub-specific additions: `test-backend`, `test-integration`, `api-dev` (FastAPI development server), and frontend rebuild. See [Command Reference](../../documents/engineering/command_reference.md) for complete table.
 
 ## 🐳 Docker Development Policy
 
-**CRITICAL**: All development happens inside Docker containers. Poetry is configured to NOT create virtual environments via `poetry.toml`.
+> **📖 Base**: [Effectful CLAUDE.md](../../CLAUDE.md) | [Docker Workflow SSoT](../../documents/engineering/docker_workflow.md)
 
-**Do NOT run `poetry install` locally** - it will fail.
-
-See parent [Docker Doctrine](../../documents/core/docker_doctrine.md) for complete policy.
-
-**Why Docker-Only**:
-- Consistent environment (Python 3.12, PostgreSQL 15, Redis 7)
-- Access to real infrastructure for integration tests
-- Matches production environment
-- No local Python version conflicts
-- No virtualenv mismatches (enforced by `poetry.toml`)
+HealthHub follows base Docker-only policy. HealthHub-specific: requires real infrastructure services (PostgreSQL, Redis, Pulsar, MinIO) for integration tests. See [Docker Workflow](../../documents/engineering/docker_workflow.md) for complete policy.
 
 ## 📊 Test Statistics
 
@@ -100,18 +64,9 @@ See parent [Docker Doctrine](../../documents/core/docker_doctrine.md) for comple
 
 ## ✅ Universal Success Criteria
 
-> **📖 SSoT**: [Code Quality - Universal Success Criteria](../../documents/engineering/code_quality.md#universal-success-criteria)
->
-> _This section duplicates criteria for AI agent context. Humans should consult the SSoT._
+> **📖 Base**: [Effectful CLAUDE.md](../../CLAUDE.md#universal-success-criteria) | [Code Quality SSoT](../../documents/engineering/code_quality.md#universal-success-criteria)
 
-All code changes must meet:
-- ✅ Exit code 0 (all operations complete successfully)
-- ✅ **Zero MyPy errors** (mypy --strict mandatory)
-- ✅ Zero stderr output
-- ✅ Zero console warnings/errors
-- ✅ **Zero skipped tests** (pytest.skip() forbidden)
-- ✅ 100% test pass rate
-- ✅ **Zero `Any`, `cast()`, or `# type: ignore`** (escape hatches forbidden)
+HealthHub follows base Universal Success Criteria with no additional requirements. See [Code Quality](../../documents/engineering/code_quality.md#universal-success-criteria) for complete list.
 
 ## 🐳 Docker Development
 
@@ -180,17 +135,9 @@ from effectful.effects.database import GetUserById
 
 ### Test Output Management
 
-> **📖 SSoT**: [Command Reference - Test Output Management](../../documents/engineering/command_reference.md#test-output-management)
->
-> _This section duplicates the test pattern for AI agent context. Humans should consult the SSoT._
+> **📖 Base**: [Effectful CLAUDE.md](../../CLAUDE.md#test-output-management-pattern) | [Command Reference SSoT](../../documents/engineering/command_reference.md#test-output-management)
 
-**CRITICAL**: Bash tool truncates at 30,000 chars.
-
-**Required Pattern**:
-```bash
-docker compose -f docker/docker-compose.yml exec healthhub poetry run test-all > /tmp/test-output.txt 2>&1
-# Then read /tmp/test-output.txt with Read tool
-```
+HealthHub follows base test output management pattern. Always redirect to `/tmp/test-output.txt 2>&1` and read complete file. See [Command Reference](../../documents/engineering/command_reference.md#test-output-management) for complete pattern.
 
 ### Generator Testing Pattern
 
@@ -298,15 +245,9 @@ Requested → Confirmed → InProgress → Completed
 
 ## 🔒 Git Workflow Policy
 
-> **📖 SSoT**: [Development Workflow - Git Workflow Policy](../../documents/engineering/development_workflow.md#git-workflow-policy)
->
-> _This section duplicates the Git policy for AI agent context. Humans should consult the SSoT._
+> **📖 Base**: [Effectful CLAUDE.md](../../CLAUDE.md#git-workflow-policy) | [Development Workflow SSoT](../../documents/engineering/development_workflow.md#git-workflow-policy)
 
-**Critical Rule**: Claude Code is NOT authorized to commit or push changes.
-
-- ❌ **NEVER** run `git commit`, `git push`, or `git add` followed by commit
-- ✅ Make code changes, run tests, leave changes **uncommitted**
-- ✅ User reviews with `git status`/`git diff`, then commits manually
+HealthHub follows base Git workflow policy with no exceptions. See [Development Workflow](../../documents/engineering/development_workflow.md#git-workflow-policy) for complete policy.
 
 ## 🔧 Development Workflow
 

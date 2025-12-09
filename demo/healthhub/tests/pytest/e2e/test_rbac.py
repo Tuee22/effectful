@@ -196,10 +196,12 @@ class TestDoctorAccess:
             '[data-testid="create-prescription"]'
         )
 
-        # At least one create mechanism should be available
-        # (button might have different text)
+        # At least one create mechanism should be available for doctors
+        # (button might have different text depending on UI implementation)
         is_visible = await create_button.is_visible()
-        # Note: This may need adjustment based on actual UI
+        # Assert the create button is visible for doctor role
+        assert is_visible, "Expected doctor to have access to prescription create button"
+        await expect(create_button.first).to_be_visible(timeout=5000)
 
     async def test_doctor_can_view_lab_results(
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]

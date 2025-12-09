@@ -102,22 +102,32 @@ class ConsumeMessage:
         When yielded in a program, returns MessageEnvelope on success, ConsumeTimeout on timeout.
 
     Example:
-        >>> def process_events() -> Generator[AllEffects, EffectResult, int]:
-        ...     processed = 0
-        ...     while True:
-        ...         consume_result = yield ConsumeMessage(
-        ...             subscription="my-subscription",
-        ...             timeout_ms=1000,
-        ...         )
-        ...         match consume_result:
-        ...             case ConsumeTimeout():
-        ...                 break  # Timeout - no more messages
-        ...             case MessageEnvelope():
-        ...                 # Process message...
-        ...                 processed += 1
-        ...             case ConsumeFailure():
-        ...                 raise RuntimeError("Failed to consume message")
-        ...     return processed
+        >>> from effectful.algebraic.result import Result, Ok, Err
+        >>> from effectful.domain.message_envelope import MessageEnvelope, ConsumeTimeout
+        >>>
+        >>> def process_events() -> Generator[AllEffects, EffectResult, Result[int, str]]:
+        ...     # Process messages using recursive pattern (functional style)
+        ...     consume_result = yield ConsumeMessage(
+        ...         subscription="my-subscription",
+        ...         timeout_ms=1000,
+        ...     )
+        ...
+        ...     match consume_result:
+        ...         case ConsumeTimeout():
+        ...             # Base case: no more messages
+        ...             return Ok(0)
+        ...         case MessageEnvelope(message_id=msg_id, payload=payload):
+        ...             # Process message...
+        ...             # Recursive call to process next message
+        ...             rest_result = yield from process_events()
+        ...             match rest_result:
+        ...                 case Ok(count):
+        ...                     return Ok(count + 1)
+        ...                 case Err(error):
+        ...                     return Err(error)
+        ...         case _:
+        ...             # Error case: return Result instead of raising
+        ...             return Err("Failed to consume message")
     """
 
     subscription: str
