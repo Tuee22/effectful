@@ -5,14 +5,14 @@
 **Referenced by**: demo/healthhub/documents/readme.md
 
 > **Purpose**: HealthHub delta for the Advanced Composition tutorial.
-> **📖 Authoritative Reference**: [advanced_composition.md](../../../../documents/tutorials/advanced_composition.md)
+> **📖 Authoritative Reference**: [advanced_composition.md](../../../../../documents/tutorials/advanced_composition.md)
 
 ## Deltas
-- Base SSoT: [advanced_composition.md](../../../../documents/tutorials/advanced_composition.md); apply all base steps and patterns.
+- Base SSoT: [advanced_composition.md](../../../../../documents/tutorials/advanced_composition.md); apply all base steps and patterns.
 - No additional deltas beyond using the HealthHub compose stack and service name (`healthhub`).
 - Refer to the base document for canonical procedures; apply HealthHub-specific ports, credentials, and service names where applicable.
 
 ## Cross-References
-- [HealthHub Documentation Guide](../documentation_standards.md)
+- [HealthHub Documentation Guide](../../../../../documents/readme.md)
 - [HealthHub Documentation Hub](../readme.md)
-- [Effectful Advanced Composition Tutorial](../../../../documents/tutorials/advanced_composition.md)
+- [Effectful Advanced Composition Tutorial](../../../../../documents/tutorials/advanced_composition.md)

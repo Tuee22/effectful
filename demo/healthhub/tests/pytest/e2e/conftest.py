@@ -75,39 +75,8 @@ CHROMIUM_DOCKER_ARGS: list[str] = [
     "--disable-notifications",
 ]
 
-RATE_LIMIT_PREFIX = "rate_limit:*"
-
-
-async def _clear_rate_limits(client: redis.Redis[bytes]) -> None:
-    """Remove all rate limit keys (pre + post) to avoid cross-test leakage."""
-    cursor: int = 0
-    while True:
-        cursor, keys = await client.scan(cursor=cursor, match=RATE_LIMIT_PREFIX, count=100)
-        if keys:
-            # Keys are bytes; decode to str for delete signature
-            decoded_keys = [
-                k.decode("utf-8") if isinstance(k, (bytes, bytearray)) else str(k) for k in keys
-            ]
-            await client.delete(*decoded_keys)
-        if cursor == 0:
-            break
-
-
-@pytest_asyncio.fixture(autouse=True)
-async def clean_rate_limits() -> AsyncGenerator[None, None]:
-    """Pre/post cleanup for Redis rate limiter state (SSoT isolation rule).
-
-    Ensures login and API rate limit counters don't leak across tests/browsers.
-    """
-    client: redis.Redis[bytes] = redis.Redis(host="redis", port=6379, decode_responses=False)
-    await _clear_rate_limits(client)
-    try:
-        yield
-    finally:
-        try:
-            await _clear_rate_limits(client)
-        finally:
-            await client.aclose()
+# NOTE: Redis cleanup (including rate limits) is handled by clean_healthhub_state
+# fixture in parent conftest.py. No need for separate autouse fixture here.
 
 
 @pytest_asyncio.fixture(scope="function", params=["chromium", "firefox", "webkit"])
@@ -301,7 +270,27 @@ async def authenticated_admin_page(
 # Test Data Isolation (ShipNorth Pattern)
 # =============================================================================
 
+# NOTE: Test data isolation is provided by the clean_healthhub_state fixture
+# in parent conftest.py. This fixture ensures every test starts with the same
+# deterministic state by:
+#   1. Truncating all PostgreSQL tables
+#   2. Loading seed_data.sql (2 admins, 4 doctors, 5 patients + sample data)
+#   3. Clearing all Redis keys (cache, rate limits, notifications)
+#
+# The auto_clean_healthhub_state fixture below automatically applies this
+# to all e2e tests via autouse=True.
 
-# NOTE: Database reset fixture would go here if needed.
-# For now, we rely on the seed data being consistent.
-# In a full implementation, this would TRUNCATE + seed before each test.
+
+@pytest_asyncio.fixture(autouse=True)
+async def auto_clean_healthhub_state(
+    clean_healthhub_state: None,
+) -> AsyncGenerator[None, None]:
+    """Automatically apply clean_healthhub_state to all e2e tests.
+
+    This autouse fixture ensures every e2e test starts with idempotent base state
+    without requiring manual fixture injection in each test function signature.
+
+    The fixture simply depends on clean_healthhub_state from parent conftest.py,
+    which handles all the actual cleanup and seeding logic.
+    """
+    yield

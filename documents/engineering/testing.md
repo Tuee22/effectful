@@ -364,6 +364,189 @@ self._producers[topic] = self._client.create_producer(
 )
 ```
 
+#### Pattern 6: Fixture-Level Isolation (DRY Doctrine)
+
+**Core Principle**: Test isolation and reproducibility should be enforced at the **fixture level** with a single idempotent base state across **all microservices**, rather than scattered across individual test files.
+
+**Problem**: Without centralized isolation, every test file must implement its own cleanup logic, leading to:
+- **Code duplication**: Same cleanup code copied across 10+ test files
+- **Inconsistent state**: Tests may start with different base states
+- **Maintenance burden**: Changing cleanup logic requires updating many files
+- **Hard-to-debug failures**: Flaky tests from incomplete cleanup
+
+**Solution**: Single `clean_<project>_state` fixture that resets ALL infrastructure to idempotent base state.
+
+**HealthHub Implementation** (`demo/healthhub/tests/conftest.py:154`):
+```python
+# file: demo/healthhub/tests/conftest.py
+@pytest.fixture
+async def clean_healthhub_state(
+    db_pool: asyncpg.Pool[asyncpg.Record],
+) -> AsyncIterator[None]:
+    """Fixture-level isolation: Idempotent base state across all microservices.
+
+    Ensures every test starts with the SAME deterministic state by:
+    1. Truncating all PostgreSQL tables
+    2. Loading seed_data.sql (2 admins, 4 doctors, 5 patients + sample data)
+    3. Clearing all Redis keys (cache, rate limits, notifications)
+    4. (MinIO/Pulsar cleanup would go here if actively used)
+
+    This fixture enforces the DRY principle: isolation and reproducibility
+    managed in ONE place rather than scattered across test files.
+    """
+    # 1. Clean PostgreSQL: Truncate all tables
+    async with db_pool.acquire() as conn:
+        await conn.execute("TRUNCATE TABLE audit_log CASCADE")
+        await conn.execute("TRUNCATE TABLE invoice_line_items CASCADE")
+        await conn.execute("TRUNCATE TABLE invoices CASCADE")
+        await conn.execute("TRUNCATE TABLE lab_results CASCADE")
+        await conn.execute("TRUNCATE TABLE prescriptions CASCADE")
+        await conn.execute("TRUNCATE TABLE appointments CASCADE")
+        await conn.execute("TRUNCATE TABLE doctors CASCADE")
+        await conn.execute("TRUNCATE TABLE patients CASCADE")
+        await conn.execute("TRUNCATE TABLE users CASCADE")
+
+    # 2. Load deterministic seed data from seed_data.sql
+    import subprocess
+    from pathlib import Path
+
+    seed_file = Path(__file__).parent.parent / "backend" / "scripts" / "seed_data.sql"
+    result = subprocess.run(
+        [
+            "psql",
+            "-h", "postgres",
+            "-p", "5432",
+            "-U", "healthhub",
+            "-d", "healthhub_db",
+            "-f", str(seed_file),
+        ],
+        env={**subprocess.os.environ, "PGPASSWORD": "healthhub_secure_pass"},
+        capture_output=True,
+        text=True,
+    )
+
+    if result.returncode != 0:
+        pytest.fail(f"Failed to load seed data: {result.stderr}")
+
+    # 3. Clean Redis: Clear all keys
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
+    )
+    try:
+        cursor: int = 0
+        while True:
+            cursor, keys = await redis_client.scan(cursor=cursor, match="*", count=1000)
+            if keys:
+                decoded_keys = [k.decode("utf-8") if isinstance(k, (bytes, bytearray)) else str(k) for k in keys]
+                await redis_client.delete(*decoded_keys)
+            if cursor == 0:
+                break
+    finally:
+        await redis_client.aclose()
+
+    # 4. (Future) MinIO cleanup would go here:
+    # - Delete all buckets and objects
+    # - Recreate default buckets if needed
+
+    # 5. (Future) Pulsar cleanup would go here:
+    # - Delete topics or clear messages
+    # - Reset consumer positions
+
+    yield
+
+    # Post-test cleanup (optional, but ensures no leakage)
+    redis_client_post: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
+    )
+    try:
+        cursor = 0
+        while True:
+            cursor, keys = await redis_client_post.scan(cursor=cursor, match="*", count=1000)
+            if keys:
+                decoded_keys = [k.decode("utf-8") if isinstance(k, (bytes, bytearray)) else str(k) for k in keys]
+                await redis_client_post.delete(*decoded_keys)
+            if cursor == 0:
+                break
+    finally:
+        await redis_client_post.aclose()
+```
+
+**E2E Test Integration** (`demo/healthhub/tests/pytest/e2e/conftest.py:284`):
+```python
+# file: demo/healthhub/tests/pytest/e2e/conftest.py
+@pytest_asyncio.fixture(autouse=True)
+async def auto_clean_healthhub_state(
+    clean_healthhub_state: None,
+) -> AsyncGenerator[None, None]:
+    """Automatically apply clean_healthhub_state to all e2e tests.
+
+    This autouse fixture ensures every e2e test starts with idempotent base state
+    without requiring manual fixture injection in each test function signature.
+    """
+    yield
+```
+
+**Benefits**:
+1. **DRY**: One fixture, not 10+ cleanup implementations
+2. **Idempotent**: Every test starts with identical state
+3. **Maintainable**: Change cleanup logic in one place
+4. **Debuggable**: Consistent state makes failures reproducible
+5. **Fast**: Pre-loaded seed data faster than per-test inserts
+6. **Comprehensive**: Resets ALL infrastructure, not just database
+
+**Seed Data Pattern**:
+```sql
+-- file: demo/healthhub/backend/scripts/seed_data.sql
+-- Clear existing data
+TRUNCATE TABLE audit_log, invoice_line_items, invoices, lab_results,
+    prescriptions, appointments, doctors, patients, users CASCADE;
+
+-- Load deterministic test data
+INSERT INTO users (id, email, password_hash, role, status) VALUES
+('00000000-0000-0000-0000-000000000001', 'admin@healthhub.com', '$2b$12$...', 'admin', 'active'),
+('10000000-0000-0000-0000-000000000001', 'dr.smith@healthhub.com', '$2b$12$...', 'doctor', 'active'),
+('20000000-0000-0000-0000-000000000001', 'alice.patient@example.com', '$2b$12$...', 'patient', 'active');
+-- ... more seed data
+```
+
+**Usage in Tests**:
+```python
+# file: demo/healthhub/tests/pytest/e2e/test_patient_workflows.py
+@pytest.mark.e2e
+@pytest.mark.asyncio
+async def test_patient_can_view_prescriptions(
+    authenticated_patient_page: Page, make_url: Callable[[str], str]
+) -> None:
+    """Test patient viewing prescriptions.
+
+    Test starts with clean_healthhub_state (via autouse fixture):
+    - 2 admins, 4 doctors, 5 patients loaded from seed_data.sql
+    - Alice has one prescription: Lisinopril 10mg
+    - All Redis keys cleared
+    """
+    page = authenticated_patient_page
+
+    await page.goto(make_url("/prescriptions"))
+    await page.wait_for_timeout(1000)
+
+    # Seed data guarantees Alice has Lisinopril prescription
+    prescriptions_section = page.locator('text=Lisinopril')
+    has_prescriptions = await prescriptions_section.count() > 0
+```
+
+**Why NOT Autouse for All Tests**:
+- **Unit tests**: Don't need infrastructure, shouldn't pay setup cost
+- **Integration tests**: Need infrastructure but may use different seeds
+- **E2E tests**: Always need full state, autouse is appropriate
+
+**See Also**:
+- [Demo HealthHub Tests](../../demo/healthhub/tests/) - Reference implementation
+- [Tutorial: Patient Workflows](../../demo/healthhub/documents/tutorials/04_workflows/patient_onboarding.md) - E2E tutorial validated by tests
+
 ### PostgreSQL Testing Patterns
 
 PostgreSQL is the most complex infrastructure service in effectful due to its relational model, transactional semantics, and foreign key constraints. This section documents patterns specific to testing PostgreSQL database effects.

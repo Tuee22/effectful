@@ -136,6 +136,111 @@ async def redis_client() -> AsyncIterator[redis.Redis[bytes]]:
     await client.aclose()
 
 
+async def _clear_all_redis_keys(client: redis.Redis[bytes]) -> None:
+    """Clear all Redis keys to ensure clean state."""
+    cursor: int = 0
+    while True:
+        cursor, keys = await client.scan(cursor=cursor, match="*", count=1000)
+        if keys:
+            # Keys are bytes; decode to str for delete signature
+            decoded_keys = [
+                k.decode("utf-8") if isinstance(k, (bytes, bytearray)) else str(k) for k in keys
+            ]
+            await client.delete(*decoded_keys)
+        if cursor == 0:
+            break
+
+
+@pytest.fixture
+async def clean_healthhub_state(
+    db_pool: asyncpg.Pool[asyncpg.Record],
+) -> AsyncIterator[None]:
+    """Fixture-level isolation: Idempotent base state across all microservices.
+
+    Ensures every test starts with the SAME deterministic state by:
+    1. Truncating all PostgreSQL tables
+    2. Loading seed_data.sql (2 admins, 4 doctors, 5 patients + sample data)
+    3. Clearing all Redis keys (cache, rate limits, notifications)
+    4. (MinIO/Pulsar cleanup would go here if actively used)
+
+    This fixture enforces the DRY principle: isolation and reproducibility
+    managed in ONE place rather than scattered across test files.
+
+    Usage in e2e tests:
+        @pytest.mark.asyncio
+        async def test_something(clean_healthhub_state, page):
+            # Test starts with known seed data state
+            ...
+
+    SSoT: Phase 6 of tutorial refactor plan (fixture-level isolation doctrine).
+    """
+    # 1. Clean PostgreSQL: Truncate all tables
+    async with db_pool.acquire() as conn:
+        await conn.execute("TRUNCATE TABLE audit_log CASCADE")
+        await conn.execute("TRUNCATE TABLE invoice_line_items CASCADE")
+        await conn.execute("TRUNCATE TABLE invoices CASCADE")
+        await conn.execute("TRUNCATE TABLE lab_results CASCADE")
+        await conn.execute("TRUNCATE TABLE prescriptions CASCADE")
+        await conn.execute("TRUNCATE TABLE appointments CASCADE")
+        await conn.execute("TRUNCATE TABLE doctors CASCADE")
+        await conn.execute("TRUNCATE TABLE patients CASCADE")
+        await conn.execute("TRUNCATE TABLE users CASCADE")
+
+    # 2. Load deterministic seed data from seed_data.sql
+    import subprocess
+    from pathlib import Path
+
+    seed_file = Path(__file__).parent.parent / "backend" / "scripts" / "seed_data.sql"
+    result = subprocess.run(
+        [
+            "psql",
+            "-h", "postgres",
+            "-p", "5432",
+            "-U", "healthhub",
+            "-d", "healthhub_db",
+            "-f", str(seed_file),
+        ],
+        env={**subprocess.os.environ, "PGPASSWORD": "healthhub_secure_pass"},
+        capture_output=True,
+        text=True,
+    )
+
+    if result.returncode != 0:
+        pytest.fail(f"Failed to load seed data: {result.stderr}")
+
+    # 3. Clean Redis: Clear all keys
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
+    )
+    try:
+        await _clear_all_redis_keys(redis_client)
+    finally:
+        await redis_client.aclose()
+
+    # 4. (Future) MinIO cleanup would go here:
+    # - Delete all buckets and objects
+    # - Recreate default buckets if needed
+
+    # 5. (Future) Pulsar cleanup would go here:
+    # - Delete topics or clear messages
+    # - Reset consumer positions
+
+    yield
+
+    # Post-test cleanup (optional, but ensures no leakage)
+    redis_client_post: redis.Redis[bytes] = redis.Redis(
+        host="redis",
+        port=6379,
+        decode_responses=False,
+    )
+    try:
+        await _clear_all_redis_keys(redis_client_post)
+    finally:
+        await redis_client_post.aclose()
+
+
 @pytest.fixture(scope="session")
 def observability_interpreter() -> Iterator[object]:
     """Create observability interpreter singleton for testing.

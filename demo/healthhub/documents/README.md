@@ -16,7 +16,7 @@
 
 - **Engineering Overlays**: [engineering/](engineering/README.md) — HealthHub-specific overrides for architecture, authentication, observability, and operations.
 - **Domain Documentation**: [domain/](domain/hipaa_compliance.md) — HealthHub-specific domain models: HIPAA compliance, appointment workflows, and medical state machines.
-- **Tutorial Overlays**: [tutorials/](tutorials/quickstart.md) — HealthHub-specific walkthroughs aligned with base tutorials.
+- **Tutorials**: [tutorials/](tutorials/README.md) — Progressive learning paths (Journey/Role/Feature/Workflow-based), plus library deltas for base Effectful tutorials.
 - **API Overlays**: [api/](api/README.md) — API notes tailored for HealthHub services.
 
 ## Obligations
