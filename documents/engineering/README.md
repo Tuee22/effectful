@@ -7,8 +7,6 @@
 > **Purpose**: Navigation hub for engineering practices, coding standards, and development workflows.
 > **📖 Authoritative Reference**: [Documentation Standards](../documentation_standards.md)
 
-## Purpose
-
 The **engineering/** directory contains **effectful-specific engineering standards** for building pure functional effect programs in Python. These documents define **HOW to implement** features following type safety, purity, and testing doctrines.
 
 ## SSoT Link Map

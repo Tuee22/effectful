@@ -13,6 +13,19 @@ class Prescription:
     """Prescription entity.
 
     Immutable domain model following Effectful patterns.
+
+    Attributes:
+        id: Unique prescription identifier
+        patient_id: Patient UUID reference
+        doctor_id: Prescribing doctor UUID reference
+        medication: Medication name
+        dosage: Dosage instructions
+        frequency: Frequency text (e.g., "twice daily")
+        duration_days: Prescription duration in days
+        refills_remaining: Number of refills allowed
+        notes: Optional prescription notes
+        created_at: Timestamp when prescription was created
+        expires_at: Prescription expiration timestamp
     """
 
     id: UUID
@@ -31,7 +44,11 @@ class Prescription:
 # Medication Interaction Check ADT
 @dataclass(frozen=True)
 class NoInteractions:
-    """No medication interactions detected."""
+    """No medication interactions detected.
+
+    Attributes:
+        medications_checked: Tuple of medication names that were checked
+    """
 
     medications_checked: tuple[str, ...]
 
@@ -47,6 +64,11 @@ class MedicationInteractionWarning:
     - minor: Low clinical significance
     - moderate: May require monitoring
     - severe: Contraindicated, should not be prescribed together
+
+    Attributes:
+        medications: Tuple of interacting medication names
+        severity: Severity level of the interaction
+        description: Human-readable description of the interaction
     """
 
     medications: tuple[str, ...]
@@ -58,3 +80,9 @@ class MedicationInteractionWarning:
 
 
 type MedicationCheckResult = NoInteractions | MedicationInteractionWarning
+"""Medication interaction check result ADT.
+
+Variants:
+    NoInteractions: No interactions detected among checked medications
+    MedicationInteractionWarning: Interactions detected with severity level
+"""

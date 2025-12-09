@@ -14,6 +14,15 @@ class LineItem:
     """Invoice line item.
 
     Immutable domain model following Effectful patterns.
+
+    Attributes:
+        id: Unique line item identifier
+        invoice_id: Parent invoice UUID reference
+        description: Line item description
+        quantity: Item quantity
+        unit_price: Price per unit
+        total: Total line item price (quantity * unit_price)
+        created_at: Timestamp when line item was created
     """
 
     id: UUID
@@ -30,6 +39,19 @@ class Invoice:
     """Healthcare invoice entity.
 
     Immutable domain model following Effectful patterns.
+
+    Attributes:
+        id: Unique invoice identifier
+        patient_id: Patient UUID reference
+        appointment_id: Optional associated appointment UUID
+        status: Invoice payment status
+        subtotal: Subtotal before tax
+        tax_amount: Tax amount
+        total_amount: Total amount including tax
+        due_date: Optional payment due date
+        paid_at: Optional payment completion timestamp
+        created_at: Timestamp when invoice was created
+        updated_at: Timestamp of last update
     """
 
     id: UUID
@@ -48,7 +70,12 @@ class Invoice:
 # Invoice with line items (aggregate)
 @dataclass(frozen=True)
 class InvoiceWithLineItems:
-    """Invoice aggregate with its line items."""
+    """Invoice aggregate with its line items.
+
+    Attributes:
+        invoice: The invoice entity
+        line_items: Tuple of associated line items
+    """
 
     invoice: Invoice
     line_items: tuple[LineItem, ...]

@@ -42,35 +42,55 @@ from app.interpreters.composite_interpreter import AllEffects
 
 @dataclass(frozen=True)
 class PrescriptionCreated:
-    """Prescription created successfully."""
+    """Prescription created successfully.
+
+    Attributes:
+        prescription: The created prescription entity
+    """
 
     prescription: Prescription
 
 
 @dataclass(frozen=True)
 class PrescriptionPatientMissing:
-    """Patient not found."""
+    """Patient not found.
+
+    Attributes:
+        patient_id: UUID of patient that was not found
+    """
 
     patient_id: UUID
 
 
 @dataclass(frozen=True)
 class PrescriptionDoctorMissing:
-    """Doctor not found."""
+    """Doctor not found.
+
+    Attributes:
+        doctor_id: UUID of doctor that was not found
+    """
 
     doctor_id: UUID
 
 
 @dataclass(frozen=True)
 class PrescriptionDoctorUnauthorized:
-    """Doctor cannot prescribe."""
+    """Doctor cannot prescribe.
+
+    Attributes:
+        doctor_id: UUID of doctor without prescribing authorization
+    """
 
     doctor_id: UUID
 
 
 @dataclass(frozen=True)
 class PrescriptionBlocked:
-    """Prescription blocked due to severe interaction."""
+    """Prescription blocked due to severe interaction.
+
+    Attributes:
+        warning: Medication interaction warning with severity details
+    """
 
     warning: MedicationInteractionWarning
 
@@ -82,6 +102,15 @@ type PrescriptionCreationResult = (
     | PrescriptionDoctorUnauthorized
     | PrescriptionBlocked
 )
+"""Prescription creation result ADT.
+
+Variants:
+    PrescriptionCreated: Prescription created successfully
+    PrescriptionPatientMissing: Patient not found
+    PrescriptionDoctorMissing: Doctor not found
+    PrescriptionDoctorUnauthorized: Doctor lacks prescribing authorization
+    PrescriptionBlocked: Severe medication interaction detected
+"""
 
 
 def create_prescription_program(
@@ -123,6 +152,15 @@ def create_prescription_program(
     Returns:
         Prescription if successful, MedicationInteractionWarning if severe interaction,
         or error string if validation fails
+
+    Effects:
+        GetPatientById: Verify patient exists
+        GetDoctorById: Verify doctor exists and retrieve prescribing authorization
+        CheckMedicationInteractions: Check for drug interactions with existing medications
+        CreatePrescription: Create prescription record if no severe interactions
+        IncrementCounter: Track prescription creation metrics
+        PublishWebSocketNotification: Notify patient of new prescription
+        LogAuditEvent: Log prescription creation for HIPAA compliance
     """
     # Step 1: Verify patient exists
     patient_result = yield GetPatientById(patient_id=patient_id)

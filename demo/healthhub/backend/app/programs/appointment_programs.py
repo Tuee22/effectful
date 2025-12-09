@@ -49,21 +49,33 @@ from app.interpreters.composite_interpreter import AllEffects
 
 @dataclass(frozen=True)
 class AppointmentScheduled:
-    """Appointment created successfully."""
+    """Appointment created successfully.
+
+    Attributes:
+        appointment: The created appointment entity
+    """
 
     appointment: Appointment
 
 
 @dataclass(frozen=True)
 class AppointmentPatientMissing:
-    """Patient not found when scheduling."""
+    """Patient not found when scheduling.
+
+    Attributes:
+        patient_id: UUID of patient that was not found
+    """
 
     patient_id: UUID
 
 
 @dataclass(frozen=True)
 class AppointmentDoctorMissing:
-    """Doctor not found when scheduling."""
+    """Doctor not found when scheduling.
+
+    Attributes:
+        doctor_id: UUID of doctor that was not found
+    """
 
     doctor_id: UUID
 
@@ -71,6 +83,13 @@ class AppointmentDoctorMissing:
 type ScheduleAppointmentResult = (
     AppointmentScheduled | AppointmentPatientMissing | AppointmentDoctorMissing
 )
+"""Appointment scheduling result ADT.
+
+Variants:
+    AppointmentScheduled: Appointment created successfully
+    AppointmentPatientMissing: Patient not found
+    AppointmentDoctorMissing: Doctor not found
+"""
 
 
 def schedule_appointment_program(
@@ -98,6 +117,14 @@ def schedule_appointment_program(
 
     Returns:
         Created appointment or None if validation fails
+
+    Effects:
+        GetPatientById: Verify patient exists
+        GetDoctorById: Verify doctor exists
+        CreateAppointment: Create appointment in Requested status
+        IncrementCounter: Track appointment creation metric
+        PublishWebSocketNotification: Notify doctor of new appointment request
+        LogAuditEvent: Log appointment creation for HIPAA compliance
     """
     # Step 1: Verify patient exists
     patient_result = yield GetPatientById(patient_id=patient_id)
@@ -183,9 +210,16 @@ def transition_appointment_program(
         appointment_id: Appointment to transition
         new_status: New status to transition to
         actor_id: User performing the transition
+        transition_time: Timestamp of the transition
 
     Returns:
         TransitionResult (Success or Invalid)
+
+    Effects:
+        GetAppointmentById: Retrieve current appointment
+        TransitionAppointmentStatus: Validate and execute state transition
+        PublishWebSocketNotification: Notify patient and doctor of status change
+        LogAuditEvent: Log status transition for HIPAA compliance
     """
     # Step 1: Get current appointment
     appointment_result = yield GetAppointmentById(appointment_id=appointment_id)

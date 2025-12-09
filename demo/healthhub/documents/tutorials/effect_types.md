@@ -14,4 +14,5 @@
 
 ## Cross-References
 - [HealthHub Documentation Guide](../documentation_standards.md)
-- [HealthHub Documentation Hub](../README.md)
+- [HealthHub Documentation Hub](../readme.md)
+- [Effectful Effect Types Tutorial](../../../../documents/tutorials/effect_types.md)

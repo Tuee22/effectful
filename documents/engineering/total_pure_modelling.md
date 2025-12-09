@@ -137,7 +137,6 @@ flowchart TB
 ### Hydration (frontend)
 ```ts
 // file: examples/total_pure_modelling.ts
-// File: documents/engineering/total_pure_modelling.md
 // WRONG: can stick in Hydrating with no exit
 if (readiness.type === 'Hydrating') return <Spinner />;
 
@@ -150,7 +149,6 @@ const toReady = persistedUser
 ### Guard (frontend)
 ```ts
 // file: examples/total_pure_modelling.ts
-// File: documents/engineering/total_pure_modelling.md
 // WRONG: implicit access via truthy roles
 if (!user.roles) return true;
 
@@ -164,7 +162,6 @@ return <Admin />;
 ### Backend AuthZ
 ```python
 # file: examples/total_pure_modelling.py
-# File: documents/engineering/total_pure_modelling.md
 # WRONG: truthy/None role checks
 if user and (user.roles or user.role == "admin"):
     return True
@@ -180,7 +177,6 @@ match decision:
 ### WS Connection
 ```ts
 // file: examples/total_pure_modelling.ts
-// File: documents/engineering/total_pure_modelling.md
 // WRONG: connect regardless of guard
 ws.connect();
 

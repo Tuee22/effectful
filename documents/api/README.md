@@ -52,6 +52,33 @@ The `Result[T, E]` type for explicit error handling.
 
 ---
 
+### [OptionalValue API](./optional_value.md)
+
+The `OptionalValue[T]` type for representing optional values with explicit reasons for absence.
+
+**Topics Covered**:
+- `Provided[T]` and `Absent[T]` variants
+- Helper functions (`to_optional_value`, `from_optional_value`)
+- Canonical patterns (domain models, effect parameters, boundary conversion)
+- Decision tree (Optional vs OptionalValue vs Custom ADT)
+- Local normalization pattern for effects
+- Testing patterns
+- Common mistakes and anti-patterns
+
+**When to use**:
+- Generic optional fields in domain models
+- Effect parameters that may be absent
+- Any field with "present or absent" semantics (no domain-specific reasons)
+
+**When NOT to use**:
+- Domain-specific absence reasons (use custom ADT instead)
+- Always-present fields (use concrete type)
+- External API boundaries (convert to Optional with `from_optional_value`)
+
+**Start Here If**: You need to represent optional values with more semantics than `None`, but don't need a full custom ADT.
+
+---
+
 ### [Interpreters API](./interpreters.md)
 
 Interpreter types, error types, and production configuration.

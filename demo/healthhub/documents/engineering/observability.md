@@ -13,5 +13,5 @@
 
 ## Cross-References
 - [HealthHub Documentation Guide](../documentation_standards.md)
-- [HealthHub Documentation Hub](../README.md)
+- [HealthHub Documentation Hub](../readme.md)
 - [Effectful Observability](../../../../documents/engineering/observability.md)

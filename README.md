@@ -384,37 +384,11 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
 
 ### Running Tests
 
-All test commands run inside Docker:
-
-```bash
-# All tests
-docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
-
-# With coverage
-docker compose -f docker/docker-compose.yml exec effectful poetry run pytest --cov=effectful --cov-report=term-missing
-
-# Specific file
-docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tests/test_programs/test_runners.py
-```
-
-See [Testing](documents/engineering/testing.md) for comprehensive guide.
+All test commands run inside Docker. See [Testing](documents/engineering/testing.md) for comprehensive guide and [Command Reference](documents/engineering/command_reference.md) for all test commands and patterns.
 
 ### Code Quality
 
-All quality checks run inside Docker:
-
-```bash
-# Code quality (Black + MyPy + doc link verification)
-docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
-
-# Format code
-docker compose -f docker/docker-compose.yml exec effectful poetry run black effectful tests
-
-# Lint
-docker compose -f docker/docker-compose.yml exec effectful poetry run ruff check effectful tests
-```
-
-See [Docker Workflow](documents/engineering/docker_workflow.md) for complete command reference.
+All quality checks run inside Docker. See [Code Quality](documents/engineering/code_quality.md) for standards and [Command Reference](documents/engineering/command_reference.md) for all validation commands.
 
 ## Project Structure
 

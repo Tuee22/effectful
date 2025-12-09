@@ -7,19 +7,37 @@ Effects are descriptions of operations, not execution.
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Literal, TypeVar
 from uuid import UUID
 
 from app.domain.appointment import AppointmentStatus
 from app.domain.invoice import LineItem
-from effectful.domain.optional_value import OptionalValue
+from effectful.domain.optional_value import Absent, OptionalValue, Provided, to_optional_value
+
+T_co = TypeVar("T_co")
+
+
+def _normalize_optional_value(
+    value: T_co | OptionalValue[T_co] | None,
+) -> OptionalValue[T_co]:
+    """Normalize value to OptionalValue for effect parameters.
+
+    Args:
+        value: Value to normalize (can be T, OptionalValue[T], or None)
+
+    Returns:
+        OptionalValue[T] (either Provided[T] or Absent)
+    """
+    if isinstance(value, (Provided, Absent)):
+        return value
+    return to_optional_value(value)
 
 
 @dataclass(frozen=True)
 class GetPatientById:
     """Effect: Fetch patient by ID.
 
-    Args:
+    Attributes:
         patient_id: Patient identifier.
 
     Returns:
@@ -33,7 +51,7 @@ class GetPatientById:
 class GetDoctorById:
     """Effect: Fetch doctor by ID.
 
-    Args:
+    Attributes:
         doctor_id: Doctor identifier.
 
     Returns:
@@ -47,7 +65,7 @@ class GetDoctorById:
 class GetDoctorByUserId:
     """Effect: Fetch doctor by user ID.
 
-    Args:
+    Attributes:
         user_id: User identifier.
 
     Returns:
@@ -61,7 +79,7 @@ class GetDoctorByUserId:
 class GetUserByEmail:
     """Effect: Fetch user by email.
 
-    Args:
+    Attributes:
         email: User email address.
 
     Returns:
@@ -75,7 +93,7 @@ class GetUserByEmail:
 class CreateUser:
     """Effect: Create user with hashed password.
 
-    Args:
+    Attributes:
         email: User email address.
         password_hash: Hashed password value.
         role: Role string to assign.
@@ -93,7 +111,7 @@ class CreateUser:
 class UpdateUserLastLogin:
     """Effect: Update user's last login timestamp.
 
-    Args:
+    Attributes:
         user_id: User identifier.
 
     Returns:
@@ -107,7 +125,7 @@ class UpdateUserLastLogin:
 class GetPatientByUserId:
     """Effect: Fetch patient by user ID.
 
-    Args:
+    Attributes:
         user_id: User identifier.
 
     Returns:
@@ -123,7 +141,7 @@ class CreateAppointment:
 
     Creates appointment in Requested status awaiting doctor confirmation.
 
-    Args:
+    Attributes:
         patient_id: Patient identifier.
         doctor_id: Doctor identifier.
         requested_time: Optional requested start time.
@@ -143,7 +161,7 @@ class CreateAppointment:
 class GetAppointmentById:
     """Effect: Fetch appointment by ID.
 
-    Args:
+    Attributes:
         appointment_id: Appointment identifier.
 
     Returns:
@@ -160,7 +178,7 @@ class TransitionAppointmentStatus:
     Validates state machine transitions before updating.
     Uses validate_transition() from domain model.
 
-    Args:
+    Attributes:
         appointment_id: Appointment identifier.
         new_status: Target status ADT value.
         actor_id: User performing the transition.
@@ -180,7 +198,7 @@ class CreatePrescription:
 
     Only doctors with can_prescribe=True should be allowed.
 
-    Args:
+    Attributes:
         patient_id: Patient identifier.
         doctor_id: Doctor identifier.
         medication: Medication name.
@@ -208,7 +226,7 @@ class CreatePrescription:
 class CheckMedicationInteractions:
     """Effect: Check for drug interactions.
 
-    Args:
+    Attributes:
         medications: Medication names to check.
 
     Returns:
@@ -222,7 +240,7 @@ class CheckMedicationInteractions:
 class CreateLabResult:
     """Effect: Store lab result.
 
-    Args:
+    Attributes:
         result_id: Lab result identifier.
         patient_id: Patient identifier.
         doctor_id: Doctor identifier.
@@ -248,7 +266,7 @@ class CreateLabResult:
 class GetLabResultById:
     """Effect: Fetch lab result by ID.
 
-    Args:
+    Attributes:
         result_id: Lab result identifier.
 
     Returns:
@@ -262,7 +280,7 @@ class GetLabResultById:
 class CreateInvoice:
     """Effect: Generate invoice.
 
-    Args:
+    Attributes:
         patient_id: Patient identifier.
         appointment_id: Optional appointment identifier.
         line_items: Line items to include.
@@ -282,7 +300,7 @@ class CreateInvoice:
 class AddInvoiceLineItem:
     """Effect: Add line item to existing invoice.
 
-    Args:
+    Attributes:
         invoice_id: Invoice identifier.
         description: Description of the line item.
         quantity: Item quantity.
@@ -302,7 +320,7 @@ class AddInvoiceLineItem:
 class UpdateInvoiceStatus:
     """Effect: Update invoice payment status.
 
-    Args:
+    Attributes:
         invoice_id: Invoice identifier.
         status: New invoice status literal value.
 
@@ -314,11 +332,11 @@ class UpdateInvoiceStatus:
     status: Literal["draft", "sent", "paid", "overdue"]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class ListAppointments:
     """Effect: List appointments with optional filtering.
 
-    Args:
+    Attributes:
         patient_id: Optional patient filter.
         doctor_id: Optional doctor filter.
         status: Optional status filter.
@@ -327,16 +345,30 @@ class ListAppointments:
         list[Appointment]
     """
 
-    patient_id: UUID | None = None
-    doctor_id: UUID | None = None
-    status: Literal["requested", "confirmed", "in_progress", "completed", "cancelled"] | None = None
+    patient_id: OptionalValue[UUID]
+    doctor_id: OptionalValue[UUID]
+    status: OptionalValue[Literal["requested", "confirmed", "in_progress", "completed", "cancelled"]]
+
+    def __init__(
+        self,
+        patient_id: UUID | OptionalValue[UUID] | None = None,
+        doctor_id: UUID | OptionalValue[UUID] | None = None,
+        status: (
+            Literal["requested", "confirmed", "in_progress", "completed", "cancelled"]
+            | OptionalValue[Literal["requested", "confirmed", "in_progress", "completed", "cancelled"]]
+            | None
+        ) = None,
+    ) -> None:
+        object.__setattr__(self, "patient_id", _normalize_optional_value(patient_id))
+        object.__setattr__(self, "doctor_id", _normalize_optional_value(doctor_id))
+        object.__setattr__(self, "status", _normalize_optional_value(status))
 
 
 @dataclass(frozen=True)
 class GetPrescriptionById:
     """Effect: Fetch prescription by ID.
 
-    Args:
+    Attributes:
         prescription_id: Prescription identifier.
 
     Returns:
@@ -346,11 +378,11 @@ class GetPrescriptionById:
     prescription_id: UUID
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class ListPrescriptions:
     """Effect: List prescriptions with optional filtering.
 
-    Args:
+    Attributes:
         patient_id: Optional patient filter.
         doctor_id: Optional doctor filter.
 
@@ -358,15 +390,23 @@ class ListPrescriptions:
         list[Prescription]
     """
 
-    patient_id: UUID | None = None
-    doctor_id: UUID | None = None
+    patient_id: OptionalValue[UUID]
+    doctor_id: OptionalValue[UUID]
+
+    def __init__(
+        self,
+        patient_id: UUID | OptionalValue[UUID] | None = None,
+        doctor_id: UUID | OptionalValue[UUID] | None = None,
+    ) -> None:
+        object.__setattr__(self, "patient_id", _normalize_optional_value(patient_id))
+        object.__setattr__(self, "doctor_id", _normalize_optional_value(doctor_id))
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class ListLabResults:
     """Effect: List lab results with optional filtering.
 
-    Args:
+    Attributes:
         patient_id: Optional patient filter.
         doctor_id: Optional doctor filter.
 
@@ -374,15 +414,23 @@ class ListLabResults:
         list[LabResult]
     """
 
-    patient_id: UUID | None = None
-    doctor_id: UUID | None = None
+    patient_id: OptionalValue[UUID]
+    doctor_id: OptionalValue[UUID]
+
+    def __init__(
+        self,
+        patient_id: UUID | OptionalValue[UUID] | None = None,
+        doctor_id: UUID | OptionalValue[UUID] | None = None,
+    ) -> None:
+        object.__setattr__(self, "patient_id", _normalize_optional_value(patient_id))
+        object.__setattr__(self, "doctor_id", _normalize_optional_value(doctor_id))
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class ReviewLabResult:
     """Effect: Mark lab result as reviewed by doctor.
 
-    Args:
+    Attributes:
         result_id: Lab result identifier.
         doctor_notes: Optional notes to attach.
 
@@ -391,14 +439,22 @@ class ReviewLabResult:
     """
 
     result_id: UUID
-    doctor_notes: str | None
+    doctor_notes: OptionalValue[str]
+
+    def __init__(
+        self,
+        result_id: UUID,
+        doctor_notes: str | OptionalValue[str] | None = None,
+    ) -> None:
+        object.__setattr__(self, "result_id", result_id)
+        object.__setattr__(self, "doctor_notes", _normalize_optional_value(doctor_notes))
 
 
 @dataclass(frozen=True)
 class GetInvoiceById:
     """Effect: Fetch invoice by ID.
 
-    Args:
+    Attributes:
         invoice_id: Invoice identifier.
 
     Returns:
@@ -408,25 +464,31 @@ class GetInvoiceById:
     invoice_id: UUID
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, init=False)
 class ListInvoices:
     """Effect: List invoices with optional filtering.
 
-    Args:
+    Attributes:
         patient_id: Optional patient filter.
 
     Returns:
         list[Invoice]
     """
 
-    patient_id: UUID | None = None
+    patient_id: OptionalValue[UUID]
+
+    def __init__(
+        self,
+        patient_id: UUID | OptionalValue[UUID] | None = None,
+    ) -> None:
+        object.__setattr__(self, "patient_id", _normalize_optional_value(patient_id))
 
 
 @dataclass(frozen=True)
 class CreatePatient:
     """Effect: Create new patient record.
 
-    Args:
+    Attributes:
         user_id: Associated user identifier.
         first_name: First name.
         last_name: Last name.
@@ -458,7 +520,7 @@ class CreatePatient:
 class UpdatePatient:
     """Effect: Update patient record.
 
-    Args:
+    Attributes:
         patient_id: Patient identifier.
         first_name: Optional updated first name.
         last_name: Optional updated last name.
@@ -488,7 +550,7 @@ class UpdatePatient:
 class DeletePatient:
     """Effect: Delete patient record.
 
-    Args:
+    Attributes:
         patient_id: Patient identifier.
 
     Returns:
@@ -513,7 +575,7 @@ class ListPatients:
 class ListInvoiceLineItems:
     """Effect: List line items for an invoice.
 
-    Args:
+    Attributes:
         invoice_id: Invoice identifier.
 
     Returns:

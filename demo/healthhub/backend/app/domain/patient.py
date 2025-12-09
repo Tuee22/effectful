@@ -12,6 +12,21 @@ class Patient:
     """Patient entity with medical demographics.
 
     Immutable domain model following Effectful patterns.
+
+    Attributes:
+        id: Unique patient identifier
+        user_id: Associated user account UUID
+        first_name: Patient's first name
+        last_name: Patient's last name
+        date_of_birth: Patient's date of birth
+        blood_type: Optional blood type
+        allergies: Tuple of known allergies
+        insurance_id: Optional insurance identifier
+        emergency_contact: Emergency contact information
+        phone: Optional phone number
+        address: Optional address
+        created_at: Timestamp when patient record was created
+        updated_at: Timestamp of last update
     """
 
     id: UUID

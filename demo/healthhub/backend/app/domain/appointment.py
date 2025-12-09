@@ -14,14 +14,23 @@ from typing_extensions import assert_never
 # Appointment Status ADT - makes illegal states unrepresentable
 @dataclass(frozen=True)
 class Requested:
-    """Patient requested appointment, awaiting doctor confirmation."""
+    """Patient requested appointment, awaiting doctor confirmation.
+
+    Attributes:
+        requested_at: Timestamp when appointment was requested
+    """
 
     requested_at: datetime
 
 
 @dataclass(frozen=True)
 class Confirmed:
-    """Doctor confirmed appointment with scheduled time."""
+    """Doctor confirmed appointment with scheduled time.
+
+    Attributes:
+        confirmed_at: Timestamp when doctor confirmed the appointment
+        scheduled_time: Scheduled appointment start time
+    """
 
     confirmed_at: datetime
     scheduled_time: datetime
@@ -29,14 +38,23 @@ class Confirmed:
 
 @dataclass(frozen=True)
 class InProgress:
-    """Appointment currently happening."""
+    """Appointment currently happening.
+
+    Attributes:
+        started_at: Timestamp when appointment began
+    """
 
     started_at: datetime
 
 
 @dataclass(frozen=True)
 class Completed:
-    """Appointment finished with notes."""
+    """Appointment finished with notes.
+
+    Attributes:
+        completed_at: Timestamp when appointment was completed
+        notes: Doctor's notes from the completed appointment
+    """
 
     completed_at: datetime
     notes: str
@@ -44,7 +62,13 @@ class Completed:
 
 @dataclass(frozen=True)
 class Cancelled:
-    """Appointment cancelled by patient, doctor, or system."""
+    """Appointment cancelled by patient, doctor, or system.
+
+    Attributes:
+        cancelled_at: Timestamp when appointment was cancelled
+        cancelled_by: Actor who cancelled the appointment
+        reason: Cancellation reason text
+    """
 
     cancelled_at: datetime
     cancelled_by: Literal["patient", "doctor", "system"]
@@ -52,6 +76,15 @@ class Cancelled:
 
 
 type AppointmentStatus = Requested | Confirmed | InProgress | Completed | Cancelled
+"""Appointment status ADT with state machine transitions.
+
+Variants:
+    Requested: Initial state, awaiting doctor confirmation
+    Confirmed: Doctor confirmed with scheduled time
+    InProgress: Appointment currently happening
+    Completed: Appointment finished (terminal state)
+    Cancelled: Appointment cancelled (terminal state)
+"""
 
 
 @dataclass(frozen=True)
@@ -60,6 +93,15 @@ class Appointment:
 
     Immutable domain model following Effectful patterns.
     Status field uses ADT to ensure valid state transitions.
+
+    Attributes:
+        id: Unique appointment identifier
+        patient_id: Patient UUID reference
+        doctor_id: Doctor UUID reference
+        status: Current status ADT variant
+        reason: Patient's stated reason for appointment
+        created_at: Timestamp when appointment was created
+        updated_at: Timestamp of last status change
     """
 
     id: UUID
@@ -74,14 +116,24 @@ class Appointment:
 # State transition validation
 @dataclass(frozen=True)
 class TransitionSuccess:
-    """Valid state transition."""
+    """Valid state transition.
+
+    Attributes:
+        new_status: The new status that was successfully transitioned to
+    """
 
     new_status: AppointmentStatus
 
 
 @dataclass(frozen=True)
 class TransitionInvalid:
-    """Invalid state transition."""
+    """Invalid state transition.
+
+    Attributes:
+        current_status: String name of current status
+        attempted_status: String name of attempted new status
+        reason: Human-readable explanation of why transition is invalid
+    """
 
     current_status: str
     attempted_status: str
@@ -89,6 +141,12 @@ class TransitionInvalid:
 
 
 type TransitionResult = TransitionSuccess | TransitionInvalid
+"""State transition validation result ADT.
+
+Variants:
+    TransitionSuccess: Transition is valid, contains new status
+    TransitionInvalid: Transition is invalid, contains error details
+"""
 
 
 def validate_transition(current: AppointmentStatus, new: AppointmentStatus) -> TransitionResult:

@@ -474,7 +474,122 @@ def get_profile_with_fallback(user_id: UUID) -> Generator[AllEffects, EffectResu
                     return ProfileFound(profile=profile, source="database")
 ```
 
-## Step 6: Test ADT-driven code
+---
+
+## Step 6: OptionalValue - The Pre-Built ADT
+
+### When Custom ADTs Are Overkill
+
+You've learned to create custom ADTs like `UserFound | UserNotFound | UserDeleted`. But sometimes a simpler approach is better.
+
+**Example: Patient Demographics**
+
+```python
+# ❌ Overly complex for generic optional fields
+@dataclass(frozen=True)
+class BloodTypeProvided:
+    value: str
+
+@dataclass(frozen=True)
+class BloodTypeNotProvided:
+    pass
+
+type BloodTypeField = BloodTypeProvided | BloodTypeNotProvided
+
+# ✅ Better: Use OptionalValue for generic presence/absence
+from effectful.domain.optional_value import OptionalValue, Provided, Absent
+
+@dataclass(frozen=True)
+class Patient:
+    id: UUID
+    name: str
+    blood_type: OptionalValue[str]  # Simple: present or absent
+```
+
+### The OptionalValue ADT
+
+OptionalValue is a pre-built ADT with two variants:
+- `Provided[T]` - Value is present
+- `Absent[T]` - Value is intentionally missing with a reason
+
+```python
+from effectful.domain.optional_value import OptionalValue, Provided, Absent, to_optional_value
+
+# Construction
+blood_type = Provided(value="O+")
+blood_type = Absent(reason="not_provided")
+blood_type = to_optional_value("O+")  # Helper: T | None → OptionalValue[T]
+blood_type = to_optional_value(None)  # → Absent(reason="not_provided")
+
+# Pattern matching
+match patient.blood_type:
+    case Provided(value=bt):
+        print(f"Blood type: {bt}")
+    case Absent(reason=r):
+        print(f"Blood type unknown: {r}")
+```
+
+### Decision Tree: When to Use What?
+
+```
+Does the field have domain-specific absence reasons?
+├─ YES → Custom ADT (UserFound | UserNotFound | UserDeleted)
+└─ NO → Is it optional with generic "not provided" semantics?
+    ├─ YES → OptionalValue[T]
+    └─ NO → Use concrete type (not optional)
+```
+
+**Examples:**
+
+| Field | Choice | Reason |
+|-------|--------|--------|
+| User lookup result | Custom ADT | Domain reasons: not_found, deleted, access_denied |
+| Blood type | OptionalValue[str] | Generic: provided or not_provided |
+| Effect metadata | OptionalValue[dict] | Generic optional parameter |
+| Patient age | int | Always present (not optional) |
+
+### Testing OptionalValue
+
+```python
+def test_patient_with_blood_type() -> None:
+    patient = Patient(id=uuid4(), name="Alice", blood_type=Provided(value="O+"))
+
+    match patient.blood_type:
+        case Provided(value=bt):
+            assert bt == "O+"
+        case Absent():
+            pytest.fail("Expected blood type to be provided")
+
+def test_patient_without_blood_type() -> None:
+    patient = Patient(
+        id=uuid4(),
+        name="Bob",
+        blood_type=Absent(reason="not_disclosed")
+    )
+
+    assert isinstance(patient.blood_type, Absent)
+    assert patient.blood_type.reason == "not_disclosed"
+```
+
+### Common Mistake: Using Optional
+
+```python
+# ❌ WRONG: Optional hides WHY it's None
+@dataclass(frozen=True)
+class Patient:
+    blood_type: Optional[str]  # None - why? Not provided? Unknown? Refused?
+
+# ✅ CORRECT: OptionalValue makes absence explicit
+@dataclass(frozen=True)
+class Patient:
+    blood_type: OptionalValue[str]  # Absent(reason="not_provided")
+```
+
+**See [OptionalValue API Reference](../api/optional_value.md) for complete documentation.**
+
+---
+
+## Step 7: Test ADT-driven code
 
 ### Testing Success Cases
 
@@ -563,7 +678,7 @@ async def test_database_error(mocker) -> None:
     assert "Connection timeout" in error.db_error
 ```
 
-## Step 7: Apply best practices
+## Step 8: Apply best practices
 
 ### 1. Always Use Frozen Dataclasses
 

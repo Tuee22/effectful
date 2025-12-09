@@ -16,6 +16,12 @@ class PatientAuthorized:
     """Patient authorized state.
 
     Represents a validated patient user with access to patient-specific resources.
+
+    Attributes:
+        user_id: Authenticated user's UUID
+        patient_id: Associated patient record UUID
+        email: User's email address
+        role: Literal role indicator for type narrowing
     """
 
     user_id: UUID
@@ -29,6 +35,14 @@ class DoctorAuthorized:
     """Doctor authorized state.
 
     Represents a validated doctor user with access to doctor-specific resources.
+
+    Attributes:
+        user_id: Authenticated user's UUID
+        doctor_id: Associated doctor record UUID
+        email: User's email address
+        specialization: Doctor's medical specialization
+        can_prescribe: Whether doctor is authorized to prescribe medications
+        role: Literal role indicator for type narrowing
     """
 
     user_id: UUID
@@ -44,6 +58,11 @@ class AdminAuthorized:
     """Admin authorized state.
 
     Represents a validated admin user with full system access.
+
+    Attributes:
+        user_id: Authenticated user's UUID
+        email: User's email address
+        role: Literal role indicator for type narrowing
     """
 
     user_id: UUID
@@ -56,6 +75,10 @@ class Unauthorized:
     """Unauthorized state.
 
     Represents failed authentication or insufficient permissions.
+
+    Attributes:
+        reason: Primary reason for authorization failure
+        detail: Optional additional context about the failure
     """
 
     reason: str
@@ -64,6 +87,14 @@ class Unauthorized:
 
 # Authorization state ADT - makes illegal states unrepresentable
 type AuthorizationState = PatientAuthorized | DoctorAuthorized | AdminAuthorized | Unauthorized
+"""Authorization state ADT for role-based access control.
+
+Variants:
+    PatientAuthorized: Validated patient with patient_id and patient-specific access
+    DoctorAuthorized: Validated doctor with doctor_id, specialization, and prescribe capability
+    AdminAuthorized: Validated admin with full system access
+    Unauthorized: Failed authentication or insufficient permissions with reason
+"""
 
 
 # Helper functions for creating authorization states

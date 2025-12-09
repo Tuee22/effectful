@@ -238,7 +238,11 @@ class HealthcareInterpreter:
                 return await self._get_appointment_by_id(appointment_id)
 
             case ListAppointments(patient_id=patient_id, doctor_id=doctor_id, status=status):
-                return await self._list_appointments(patient_id, doctor_id, status)
+                return await self._list_appointments(
+                    from_optional_value(patient_id),
+                    from_optional_value(doctor_id),
+                    from_optional_value(status),
+                )
 
             case TransitionAppointmentStatus(
                 appointment_id=appointment_id, new_status=new_status, actor_id=actor_id
@@ -272,7 +276,9 @@ class HealthcareInterpreter:
                 return await self._get_prescription_by_id(prescription_id)
 
             case ListPrescriptions(patient_id=patient_id, doctor_id=doctor_id):
-                return await self._list_prescriptions(patient_id, doctor_id)
+                return await self._list_prescriptions(
+                    from_optional_value(patient_id), from_optional_value(doctor_id)
+                )
 
             case CheckMedicationInteractions(medications=medications):
                 return await self._check_medication_interactions(medications)
@@ -300,10 +306,12 @@ class HealthcareInterpreter:
                 return await self._get_lab_result_by_id(result_id)
 
             case ListLabResults(patient_id=patient_id, doctor_id=doctor_id):
-                return await self._list_lab_results(patient_id, doctor_id)
+                return await self._list_lab_results(
+                    from_optional_value(patient_id), from_optional_value(doctor_id)
+                )
 
             case ReviewLabResult(result_id=result_id, doctor_notes=doctor_notes):
-                return await self._review_lab_result(result_id, doctor_notes)
+                return await self._review_lab_result(result_id, from_optional_value(doctor_notes))
 
             case CreateInvoice(
                 patient_id=patient_id,
@@ -335,7 +343,7 @@ class HealthcareInterpreter:
                 return await self._get_invoice_by_id(invoice_id)
 
             case ListInvoices(patient_id=patient_id):
-                return await self._list_invoices(patient_id)
+                return await self._list_invoices(from_optional_value(patient_id))
 
             case ListInvoiceLineItems(invoice_id=invoice_id):
                 return await self._list_invoice_line_items(invoice_id)

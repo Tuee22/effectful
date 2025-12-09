@@ -14,4 +14,5 @@
 
 ## Cross-References
 - [HealthHub Documentation Guide](../documentation_standards.md)
-- [HealthHub Documentation Hub](../README.md)
+- [HealthHub Documentation Hub](../readme.md)
+- [Effectful ADTs and Results Tutorial](../../../../documents/tutorials/adts_and_results.md)

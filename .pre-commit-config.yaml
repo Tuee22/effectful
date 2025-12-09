@@ -45,6 +45,30 @@ repos:
       - id: check-merge-conflict
       - id: debug-statements
 
+  # Local hooks - OptionalValue doctrine enforcement
+  - repo: local
+    hooks:
+      - id: no-optional-in-domain-effects
+        name: Prevent Optional[] in domain/effects
+        entry: bash -c 'grep -r "from typing import.*Optional" effectful/domain effectful/effects && echo "❌ Use OptionalValue[T] or custom ADT instead. See: documents/api/optional_value.md#decision-tree" && exit 1 || exit 0'
+        language: system
+        pass_filenames: false
+        files: ^effectful/(domain|effects)/.*\.py$
+
+      - id: optional-value-pattern-check
+        name: Verify OptionalValue normalization pattern
+        entry: python3 scripts/check_optional_value_pattern.py
+        language: system
+        pass_filenames: false
+        files: ^effectful/effects/.*\.py$
+
+      - id: optional-value-doctrine-validation
+        name: Full OptionalValue doctrine validation
+        entry: bash scripts/validate_optional_value_doctrine.sh
+        language: system
+        pass_filenames: false
+        stages: [manual]
+
 # Configuration
 default_language_version:
   python: python3.12

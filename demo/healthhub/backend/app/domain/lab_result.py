@@ -14,6 +14,17 @@ class LabResult:
     """Lab test result entity.
 
     Immutable domain model following Effectful patterns.
+
+    Attributes:
+        id: Unique lab result identifier
+        patient_id: Patient UUID reference
+        doctor_id: Ordering doctor UUID reference
+        test_type: Type of lab test performed
+        result_data: Test-specific result values (immutable mapping)
+        critical: Whether result requires immediate attention
+        reviewed_by_doctor: Whether doctor has reviewed the result
+        doctor_notes: Optional doctor review notes
+        created_at: Timestamp when result was created
     """
 
     id: UUID
@@ -33,17 +44,32 @@ class LabResult:
 # Lab Result Lookup ADT
 @dataclass(frozen=True)
 class LabResultFound:
-    """Lab result lookup success."""
+    """Lab result lookup success.
+
+    Attributes:
+        lab_result: The found lab result entity
+    """
 
     lab_result: LabResult
 
 
 @dataclass(frozen=True)
 class LabResultNotFound:
-    """Lab result lookup failure."""
+    """Lab result lookup failure.
+
+    Attributes:
+        result_id: UUID of the lab result that was not found
+        reason: Reason why result was not found
+    """
 
     result_id: UUID
     reason: str
 
 
 type LabResultLookupResult = LabResultFound | LabResultNotFound
+"""Lab result lookup ADT.
+
+Variants:
+    LabResultFound: Lab result found successfully
+    LabResultNotFound: Lab result not found with reason
+"""

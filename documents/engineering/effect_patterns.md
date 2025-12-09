@@ -358,6 +358,113 @@ def save_message(user_id: UUID, text: str) -> Generator[AllEffects, EffectResult
     return True
 ```
 
+---
+
+## Pattern 6: Boundary Normalization for OptionalValue
+
+### The Problem: Ergonomic APIs vs Type Safety
+
+Users want ergonomic APIs when constructing effects:
+```python
+# Ergonomic: pass dict directly, or None, or OptionalValue
+yield PutObject(bucket="x", key="y", content=b"z", metadata={"k": "v"})
+yield PutObject(bucket="x", key="y", content=b"z")  # metadata absent
+yield PutObject(bucket="x", key="y", content=b"z", metadata=Absent(reason="redacted"))
+```
+
+But effects should store normalized OptionalValue[T] internally for type safety and pattern matching.
+
+### The Solution: Local Type-Specific Normalization
+
+**CANONICAL PATTERN** - Replicate this in your effects:
+
+```python
+from dataclasses import dataclass
+from effectful.domain.optional_value import OptionalValue, Provided, Absent, to_optional_value
+
+# Local normalization - type-specific, 4 lines, simple
+def _normalize_optional_value(
+    value: dict[str, str] | OptionalValue[dict[str, str]] | None,
+) -> OptionalValue[dict[str, str]]:
+    """Normalize plain values into OptionalValue ADT."""
+    if isinstance(value, (Provided, Absent)):
+        return value
+    return to_optional_value(value)
+
+@dataclass(frozen=True, init=False)
+class PutObject:
+    bucket: str
+    key: str
+    content: bytes
+    metadata: OptionalValue[dict[str, str]]  # Always OptionalValue internally
+
+    def __init__(
+        self,
+        bucket: str,
+        key: str,
+        content: bytes,
+        metadata: dict[str, str] | OptionalValue[dict[str, str]] | None = None,
+    ) -> None:
+        """Create PutObject effect with ergonomic metadata parameter.
+
+        Args:
+            bucket: S3 bucket name
+            key: Object key
+            content: Object content bytes
+            metadata: Optional metadata dict (normalized to OptionalValue)
+        """
+        # Normalize to OptionalValue before storing
+        object.__setattr__(self, "bucket", bucket)
+        object.__setattr__(self, "key", key)
+        object.__setattr__(self, "content", content)
+        object.__setattr__(self, "metadata", _normalize_optional_value(metadata))
+```
+
+### Why Local (Not Shared)?
+
+**This is NOT duplication to fix.** Each normalization function:
+1. **Type-specific** - Handles concrete types (dict[str, str], int, str)
+2. **Simple** - 4 lines, single isinstance check
+3. **Local** - Used only in one module's __init__ methods
+4. **Pattern** - Intentionally replicated, like frozen=True
+
+Extracting to shared utility would:
+- Lose type specificity (requires complex generics)
+- Add unnecessary indirection
+- Create import dependencies
+- Violate locality principle
+
+### Testing Pattern
+
+```python
+def test_put_object_normalizes_metadata() -> None:
+    # Test with dict (normalized to Provided)
+    effect = PutObject(bucket="b", key="k", content=b"", metadata={"x": "y"})
+    assert isinstance(effect.metadata, Provided)
+    assert effect.metadata.value == {"x": "y"}
+
+    # Test with None (normalized to Absent)
+    effect = PutObject(bucket="b", key="k", content=b"")
+    assert isinstance(effect.metadata, Absent)
+    assert effect.metadata.reason == "not_provided"
+
+    # Test with OptionalValue (idempotent)
+    effect = PutObject(bucket="b", key="k", content=b"", metadata=Absent(reason="custom"))
+    assert effect.metadata.reason == "custom"
+```
+
+### When to Use This Pattern
+
+Use local normalization when:
+- Effect has optional parameters
+- Want ergonomic API (allow T, None, or OptionalValue[T])
+- Need type-safe storage (always OptionalValue[T] internally)
+- Each parameter has concrete type (not generic across effects)
+
+**See**: [OptionalValue API Reference](../api/optional_value.md#pattern-3-effect-parameters-the-canonical-normalization-pattern) for complete documentation.
+
+---
+
 ## See Also
 
 - [Code Quality](code_quality.md) - Type safety and purity doctrines

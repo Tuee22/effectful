@@ -151,7 +151,7 @@ async def create_instrumented_interpreter(
     """Factory function to create instrumented interpreter.
 
     Args:
-        wrapped: Any interpreter to wrap with metrics
+        wrapped: Interpreter instance to wrap with metrics
         metrics_collector: Metrics collector (must have FRAMEWORK_METRICS registered)
 
     Returns:

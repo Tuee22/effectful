@@ -41,21 +41,33 @@ from app.interpreters.composite_interpreter import AllEffects
 
 @dataclass(frozen=True)
 class LabResultProcessed:
-    """Lab result stored successfully."""
+    """Lab result stored successfully.
+
+    Attributes:
+        lab_result: The created lab result entity
+    """
 
     lab_result: LabResult
 
 
 @dataclass(frozen=True)
 class LabResultPatientMissing:
-    """Patient not found for lab result."""
+    """Patient not found for lab result.
+
+    Attributes:
+        patient_id: UUID of patient that was not found
+    """
 
     patient_id: UUID
 
 
 @dataclass(frozen=True)
 class LabResultDoctorMissing:
-    """Doctor not found for lab result."""
+    """Doctor not found for lab result.
+
+    Attributes:
+        doctor_id: UUID of doctor that was not found
+    """
 
     doctor_id: UUID
 
@@ -63,23 +75,44 @@ class LabResultDoctorMissing:
 type ProcessLabResultResult = (
     LabResultProcessed | LabResultPatientMissing | LabResultDoctorMissing
 )
+"""Lab result processing result ADT.
+
+Variants:
+    LabResultProcessed: Lab result stored successfully
+    LabResultPatientMissing: Patient not found
+    LabResultDoctorMissing: Doctor not found
+"""
 
 
 @dataclass(frozen=True)
 class LabResultViewed:
-    """Lab result fetched successfully."""
+    """Lab result fetched successfully.
+
+    Attributes:
+        lab_result: The retrieved lab result entity
+    """
 
     lab_result: LabResult
 
 
 @dataclass(frozen=True)
 class LabResultMissing:
-    """Lab result not found."""
+    """Lab result not found.
+
+    Attributes:
+        result_id: UUID of lab result that was not found
+    """
 
     result_id: UUID
 
 
 type ViewLabResultResult = LabResultViewed | LabResultMissing
+"""Lab result view result ADT.
+
+Variants:
+    LabResultViewed: Lab result found and retrieved
+    LabResultMissing: Lab result not found
+"""
 
 
 def process_lab_result_program(
@@ -112,6 +145,14 @@ def process_lab_result_program(
 
     Returns:
         LabResult if successful, error string if validation fails
+
+    Effects:
+        GetPatientById: Verify patient exists
+        GetDoctorById: Verify ordering doctor exists
+        CreateLabResult: Store lab result in database
+        IncrementCounter: Track lab result creation metrics
+        PublishWebSocketNotification: Notify patient (and doctor if critical)
+        LogAuditEvent: Log lab result access for HIPAA compliance
     """
     # Step 1: Verify patient exists
     patient_result = yield GetPatientById(patient_id=patient_id)
@@ -216,6 +257,10 @@ def view_lab_result_program(
 
     Returns:
         LabResult if found, None otherwise
+
+    Effects:
+        GetLabResultById: Retrieve lab result from database
+        LogAuditEvent: Log PHI access for HIPAA compliance (if found)
     """
     # Step 1: Fetch lab result
     lab_result_result = yield GetLabResultById(result_id=result_id)

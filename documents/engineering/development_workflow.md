@@ -36,11 +36,13 @@ flowchart TB
 
 ## Daily Development Loop
 
-1. `docker compose -f docker/docker-compose.yml up -d`
+1. Start services (see [Command Reference](command_reference.md#docker-service-management))
 2. Make code changes
-3. `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code` (Black → MyPy → doc link verification; see [Code Quality](code_quality.md))
-4. `docker compose -f docker/docker-compose.yml exec effectful poetry run pytest` (see [Command Reference](command_reference.md))
-5. Leave changes uncommitted (see Git Workflow Policy below)
+3. Run code quality checks (see [Command Reference](command_reference.md#code-quality-validation))
+4. Run tests (see [Command Reference](command_reference.md#running-tests))
+5. Leave changes uncommitted (see [Git Workflow Policy](#git-workflow-policy) below)
+
+All commands follow the Docker pattern. See [Command Reference](command_reference.md) for complete command table.
 
 ## Adding New Effects
 

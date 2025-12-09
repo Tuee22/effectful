@@ -15,16 +15,9 @@ All development happens inside Docker containers. See [Docker Workflow](engineer
 
 **CRITICAL**: Poetry is configured to NOT create virtual environments (`poetry.toml`). Do NOT run `poetry install` locally.
 
-```bash
-# Start development environment
-docker compose -f docker/docker-compose.yml up -d
+All development commands follow the pattern `docker compose -f docker/docker-compose.yml exec effectful poetry run <command>`.
 
-# Run tests
-docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
-
-# Type check
-docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
-```
+**See**: [Command Reference](engineering/command_reference.md) for the complete command table with all Docker commands.
 
 ## Quick Links
 
@@ -40,23 +33,76 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
 
 ## Contributing Checklist
 
-All contributions must meet the **Universal Success Criteria**:
+All contributions must meet the **Universal Success Criteria** including: zero MyPy errors (strict mode), zero stderr output, 100% test pass rate, and no escape hatches (Any/cast/type:ignore).
 
-- ✅ Exit code 0 (all operations complete successfully)
-- ✅ **Zero MyPy errors** (mypy --strict mandatory)
-- ✅ Zero stderr output
-- ✅ No skipped tests
-- ✅ Lint + doc link verification passed
-- ✅ Documentation updated (links + SSoT alignment)
+**See**: [Code Quality - Universal Success Criteria](engineering/code_quality.md#universal-success-criteria) for the complete list.
+
+## Validation Checks
+
+Before submitting code, run these validation checks:
+
+### 1. Core Type Safety and Formatting
+
+```bash
+# Black formatting + MyPy strict + doc links
+docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
+```
+
+**Must pass**: Zero errors, exit code 0
+
+### 2. OptionalValue Doctrine Validation
+
+```bash
+# Full OptionalValue doctrine validation
+bash scripts/validate_optional_value_doctrine.sh
+
+# Pattern checker (if modifying effects)
+python3 scripts/check_optional_value_pattern.py
+```
+
+**Checks**:
+- No Optional[] in domain/effects (use OptionalValue or ADTs)
+- Normalization functions present in effects
+- No escape hatches (Any, cast, type: ignore)
+- Canonical pattern followed (frozen=True, init=False, object.__setattr__)
+
+**See**: [Code Quality: OptionalValue Enforcement](engineering/code_quality.md#optionalvalue-doctrine-enforcement)
+
+### 3. Pre-Commit Hooks (Recommended)
+
+```bash
+# One-time setup
+pre-commit install
+
+# Manual run (tests all files)
+pre-commit run --all-files
+```
+
+**Prevents**: Optional[] commits, pattern violations, formatting issues
+
+### 4. Test Suites
+
+```bash
+# Unit tests only (fast)
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tests/unit
+
+# Full test suite (unit + integration)
+docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
+```
+
+**Must pass**: 100% pass rate, zero skipped tests
 
 ## How to Contribute
 
 1. Fork the repository and create a branch for your change
 2. Ensure Docker services are running (`docker compose -f docker/docker-compose.yml up -d`)
-3. Run `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code`
-4. Run relevant test suites (`... pytest tests/unit` or `... pytest`)
-5. Update documentation and links if you add or move modules
-6. Open a PR with a concise description and a list of commands you ran
+3. **Run validation checks** (see section above)
+4. Update documentation and links if you add or move modules
+5. Run pre-commit hooks: `pre-commit run --all-files`
+6. Open a PR with:
+   - Concise description of changes
+   - List of commands you ran
+   - Confirmation all validation checks passed
 
 ## Code of Conduct
 

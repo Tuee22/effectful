@@ -23,10 +23,10 @@ class PublishWebSocketNotification:
     Used for real-time notifications to connected WebSocket clients.
     Messages are not persisted - only delivered to active connections.
 
-    Args:
-        channel: Redis pub/sub channel (e.g., "user:123:notifications").
-        message: Notification payload.
-        recipient_id: Optional recipient identifier (None = broadcast).
+    Attributes:
+        channel: Redis pub/sub channel (e.g., "user:123:notifications")
+        message: Notification payload
+        recipient_id: Optional recipient identifier (None = broadcast)
 
     Returns:
         NotificationPublished | PublishFailed
@@ -44,7 +44,7 @@ class LogAuditEvent:
     All sensitive operations (appointment access, prescription creation,
     lab result viewing) must be logged for regulatory compliance.
 
-    Args:
+    Attributes:
         user_id: User performing the action.
         action: Action performed (e.g., "view_appointment").
         resource_type: Resource type affected.
@@ -71,7 +71,7 @@ class LogAuditEvent:
 class NotificationPublished:
     """Notification successfully published to channel.
 
-    Args:
+    Attributes:
         channel: Channel name where message was sent.
         message_id: Redis message identifier.
         recipients_count: Number of recipients that received the message.
@@ -86,7 +86,7 @@ class NotificationPublished:
 class PublishFailed:
     """Failed to publish notification.
 
-    Args:
+    Attributes:
         channel: Channel attempted.
         reason: Human-readable failure reason.
     """
@@ -103,7 +103,7 @@ type PublishResult = NotificationPublished | PublishFailed
 class AuditEventLogged:
     """Audit event successfully stored.
 
-    Args:
+    Attributes:
         event_id: Stored event identifier.
         logged_at: Timestamp when the event was written.
     """

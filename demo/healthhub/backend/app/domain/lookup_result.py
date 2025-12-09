@@ -15,152 +15,274 @@ from app.domain.user import User
 
 @dataclass(frozen=True)
 class PatientFound:
-    """Patient lookup succeeded."""
+    """Patient lookup succeeded.
+
+    Attributes:
+        patient: The found patient entity
+    """
 
     patient: Patient
 
 
 @dataclass(frozen=True)
 class PatientMissingById:
-    """Patient lookup failed for a patient_id."""
+    """Patient lookup failed for a patient_id.
+
+    Attributes:
+        patient_id: UUID of patient that was not found
+    """
 
     patient_id: UUID
 
 
 @dataclass(frozen=True)
 class PatientMissingByUserId:
-    """Patient lookup failed for a user_id."""
+    """Patient lookup failed for a user_id.
+
+    Attributes:
+        user_id: UUID of user whose patient record was not found
+    """
 
     user_id: UUID
 
 
 type PatientLookupResult = PatientFound | PatientMissingById | PatientMissingByUserId
+"""Patient lookup result ADT.
+
+Variants:
+    PatientFound: Patient found successfully
+    PatientMissingById: Patient not found by patient_id
+    PatientMissingByUserId: Patient not found by user_id
+"""
 
 
 @dataclass(frozen=True)
 class DoctorFound:
-    """Doctor lookup succeeded."""
+    """Doctor lookup succeeded.
+
+    Attributes:
+        doctor: The found doctor entity
+    """
 
     doctor: Doctor
 
 
 @dataclass(frozen=True)
 class DoctorMissingById:
-    """Doctor lookup failed for a doctor_id."""
+    """Doctor lookup failed for a doctor_id.
+
+    Attributes:
+        doctor_id: UUID of doctor that was not found
+    """
 
     doctor_id: UUID
 
 
 @dataclass(frozen=True)
 class DoctorMissingByUserId:
-    """Doctor lookup failed for a user_id."""
+    """Doctor lookup failed for a user_id.
+
+    Attributes:
+        user_id: UUID of user whose doctor record was not found
+    """
 
     user_id: UUID
 
 
 type DoctorLookupResult = DoctorFound | DoctorMissingById | DoctorMissingByUserId
+"""Doctor lookup result ADT.
+
+Variants:
+    DoctorFound: Doctor found successfully
+    DoctorMissingById: Doctor not found by doctor_id
+    DoctorMissingByUserId: Doctor not found by user_id
+"""
 
 
 @dataclass(frozen=True)
 class UserFound:
-    """User lookup succeeded."""
+    """User lookup succeeded.
+
+    Attributes:
+        user: The found user entity
+    """
 
     user: User
 
 
 @dataclass(frozen=True)
 class UserMissingByEmail:
-    """User lookup failed for an email."""
+    """User lookup failed for an email.
+
+    Attributes:
+        email: Email address that was not found
+    """
 
     email: str
 
 
 type UserLookupResult = UserFound | UserMissingByEmail
+"""User lookup result ADT.
+
+Variants:
+    UserFound: User found successfully
+    UserMissingByEmail: User not found by email address
+"""
 
 
 @dataclass(frozen=True)
 class AppointmentFound:
-    """Appointment lookup succeeded."""
+    """Appointment lookup succeeded.
+
+    Attributes:
+        appointment: The found appointment entity
+    """
 
     appointment: Appointment
 
 
 @dataclass(frozen=True)
 class AppointmentMissing:
-    """Appointment lookup failed for an appointment_id."""
+    """Appointment lookup failed for an appointment_id.
+
+    Attributes:
+        appointment_id: UUID of appointment that was not found
+    """
 
     appointment_id: UUID
 
 
 type AppointmentLookupResult = AppointmentFound | AppointmentMissing
+"""Appointment lookup result ADT.
+
+Variants:
+    AppointmentFound: Appointment found successfully
+    AppointmentMissing: Appointment not found by appointment_id
+"""
 
 
 @dataclass(frozen=True)
 class PrescriptionFound:
-    """Prescription lookup succeeded."""
+    """Prescription lookup succeeded.
+
+    Attributes:
+        prescription: The found prescription entity
+    """
 
     prescription: Prescription
 
 
 @dataclass(frozen=True)
 class PrescriptionMissing:
-    """Prescription lookup failed for a prescription_id."""
+    """Prescription lookup failed for a prescription_id.
+
+    Attributes:
+        prescription_id: UUID of prescription that was not found
+    """
 
     prescription_id: UUID
 
 
 type PrescriptionLookupResult = PrescriptionFound | PrescriptionMissing
+"""Prescription lookup result ADT.
+
+Variants:
+    PrescriptionFound: Prescription found successfully
+    PrescriptionMissing: Prescription not found by prescription_id
+"""
 
 
 @dataclass(frozen=True)
 class LabResultFound:
-    """Lab result lookup succeeded."""
+    """Lab result lookup succeeded.
+
+    Attributes:
+        lab_result: The found lab result entity
+    """
 
     lab_result: LabResult
 
 
 @dataclass(frozen=True)
 class LabResultMissing:
-    """Lab result lookup failed for a result_id."""
+    """Lab result lookup failed for a result_id.
+
+    Attributes:
+        result_id: UUID of lab result that was not found
+    """
 
     result_id: UUID
 
 
 type LabResultLookupResult = LabResultFound | LabResultMissing
+"""Lab result lookup result ADT.
+
+Variants:
+    LabResultFound: Lab result found successfully
+    LabResultMissing: Lab result not found by result_id
+"""
 
 
 @dataclass(frozen=True)
 class InvoiceFound:
-    """Invoice lookup succeeded."""
+    """Invoice lookup succeeded.
+
+    Attributes:
+        invoice: The found invoice entity
+    """
 
     invoice: Invoice
 
 
 @dataclass(frozen=True)
 class InvoiceMissing:
-    """Invoice lookup failed for an invoice_id."""
+    """Invoice lookup failed for an invoice_id.
+
+    Attributes:
+        invoice_id: UUID of invoice that was not found
+    """
 
     invoice_id: UUID
 
 
 type InvoiceLookupResult = InvoiceFound | InvoiceMissing
+"""Invoice lookup result ADT.
+
+Variants:
+    InvoiceFound: Invoice found successfully
+    InvoiceMissing: Invoice not found by invoice_id
+"""
 
 
 @dataclass(frozen=True)
 class PatientUpdated:
-    """Patient update succeeded."""
+    """Patient update succeeded.
+
+    Attributes:
+        patient: The updated patient entity
+    """
 
     patient: Patient
 
 
 @dataclass(frozen=True)
 class PatientUpdateMissing:
-    """Patient update failed because the patient was not found."""
+    """Patient update failed because the patient was not found.
+
+    Attributes:
+        patient_id: UUID of patient that was not found for update
+    """
 
     patient_id: UUID
 
 
 type PatientUpdateResult = PatientUpdated | PatientUpdateMissing
+"""Patient update result ADT.
+
+Variants:
+    PatientUpdated: Patient updated successfully
+    PatientUpdateMissing: Patient not found for update
+"""
 
 
 def is_patient_lookup_result(value: object) -> TypeGuard[PatientLookupResult]:

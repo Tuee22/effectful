@@ -139,58 +139,9 @@ source .venv/bin/activate
 
 ## Development Workflow
 
-### Initial Setup
+Docker-based development follows a consistent daily loop: start services, make changes, run quality checks, run tests, and leave changes uncommitted for review.
 
-```bash
-# Start all services (effectful + infrastructure)
-docker compose -f docker/docker-compose.yml up -d
-
-# Verify services are running
-docker compose -f docker/docker-compose.yml ps
-```
-
-### Daily Development
-
-```bash
-# 1. Make code changes in your editor (host machine)
-# 2. Run type checker
-docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
-
-# 3. Run tests
-docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
-
-# 4. Iterate
-```
-
-### Adding Dependencies
-
-```bash
-# Runtime dependency
-docker compose -f docker/docker-compose.yml exec effectful poetry add <package>
-
-# Development dependency
-docker compose -f docker/docker-compose.yml exec effectful poetry add --group dev <package>
-```
-
-**CRITICAL**: Never run `poetry add` locally - use Docker exec wrapper.
-
-### Code Quality Gates
-
-Before committing any code, ensure all gates pass:
-
-```bash
-# 1. Type check (mypy --strict)
-docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
-
-# 2. Run all tests (~750 test functions; containerized)
-docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
-```
-
-All gates must pass with:
-- ✅ Exit code 0
-- ✅ Zero MyPy errors
-- ✅ Zero test failures
-- ✅ Zero skipped tests
+**See**: [Development Workflow - Daily Development Loop](development_workflow.md#daily-development-loop) for the complete workflow and [Command Reference](command_reference.md) for all Docker commands.
 
 ### Pull Request Checklist
 
@@ -208,21 +159,7 @@ Before submitting a PR:
 
 ### Git Workflow
 
-**CRITICAL**: Claude Code users must follow this workflow:
-
-**Forbidden Operations**:
-- ❌ `git commit` (including --amend, --no-verify)
-- ❌ `git push` (including --force)
-- ❌ Automated commits of any kind
-
-**Required Workflow**:
-1. Make code changes
-2. Run quality gates (check-code, pytest)
-3. Leave changes uncommitted
-4. User reviews with `git status` and `git diff`
-5. User manually commits and pushes
-
-**Rationale**: All changes must be human-reviewed before entering version control.
+**See**: [Development Workflow - Git Workflow Policy](development_workflow.md#git-workflow-policy) for complete Git restrictions and required workflow. All changes must be left uncommitted for human review.
 
 ### Viewing Logs
 

@@ -4,8 +4,7 @@
 **Supersedes**: none  
 **Referenced by**: engineering/README.md
 
-> **Purpose**: Authoritative rules for what counts as a build artifact, where it lives, and why it must never be versioned or copied out of the container.  
-> **📖 See**: [Documentation Standards](../documentation_standards.md) for SSoT/linking rules.
+> **Purpose**: Authoritative rules for what counts as a build artifact, where it lives, and why it must never be versioned or copied out of the container.
 
 ---
 

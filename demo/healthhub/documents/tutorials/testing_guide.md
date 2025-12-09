@@ -14,4 +14,5 @@
 
 ## Cross-References
 - [HealthHub Documentation Guide](../documentation_standards.md)
-- [HealthHub Documentation Hub](../README.md)
+- [HealthHub Documentation Hub](../readme.md)
+- [Effectful Testing Guide](../../../../documents/tutorials/testing_guide.md)

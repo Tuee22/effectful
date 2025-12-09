@@ -30,6 +30,10 @@ Quick links to key standards:
 
 ### Start Development
 
+> **📖 SSoT**: [Command Reference](documents/engineering/command_reference.md)
+>
+> _This section duplicates commands for AI agent context. Humans should consult the SSoT._
+
 ```bash
 # Start services
 docker compose -f docker/docker-compose.yml up -d
@@ -44,6 +48,10 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
 **See**: [Command Reference](documents/engineering/command_reference.md) for complete command table.
 
 ### Universal Success Criteria
+
+> **📖 SSoT**: [Code Quality - Universal Success Criteria](documents/engineering/code_quality.md#universal-success-criteria)
+>
+> _This section duplicates criteria for AI agent context. Humans should consult the SSoT._
 
 All code changes must meet these requirements:
 
@@ -61,6 +69,10 @@ All code changes must meet these requirements:
 ## Claude Code-Specific Patterns
 
 ### Test Output Management Pattern
+
+> **📖 SSoT**: [Command Reference - Test Output Management](documents/engineering/command_reference.md#test-output-management)
+>
+> _This section duplicates the test pattern for AI agent context. Humans should consult the SSoT._
 
 **CRITICAL - Output Truncation**: Bash tool truncates at 30,000 characters. Large test suites can exceed this.
 
@@ -91,6 +103,10 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest > /
 **See**: [Command Reference](documents/engineering/command_reference.md) for complete test execution patterns.
 
 ### Git Workflow Policy
+
+> **📖 SSoT**: [Development Workflow - Git Workflow Policy](documents/engineering/development_workflow.md#git-workflow-policy)
+>
+> _This section duplicates the Git policy for AI agent context. Humans should consult the SSoT._
 
 **Critical Rule**: Claude Code is NOT authorized to commit or push changes.
 
