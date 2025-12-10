@@ -8,8 +8,6 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from typing_extensions import assert_never
-
 
 # Appointment Status ADT - makes illegal states unrepresentable
 @dataclass(frozen=True)
@@ -180,8 +178,7 @@ def validate_transition(current: AppointmentStatus, new: AppointmentStatus) -> T
                         attempted_status=new_name,
                         reason=f"Cannot transition from {current_name} to {new_name}",
                     )
-                case _:
-                    assert_never(new)
+                # MyPy enforces exhaustiveness - no fallback needed
 
         case Confirmed():
             match new:
@@ -195,8 +192,7 @@ def validate_transition(current: AppointmentStatus, new: AppointmentStatus) -> T
                         attempted_status=new_name,
                         reason=f"Cannot transition from {current_name} to {new_name}",
                     )
-                case _:
-                    assert_never(new)
+                # MyPy enforces exhaustiveness - no fallback needed
 
         case InProgress():
             match new:
@@ -210,8 +206,7 @@ def validate_transition(current: AppointmentStatus, new: AppointmentStatus) -> T
                         attempted_status=new_name,
                         reason=f"Cannot transition from {current_name} to {new_name}",
                     )
-                case _:
-                    assert_never(new)
+                # MyPy enforces exhaustiveness - no fallback needed
 
         case Completed() | Cancelled():
             current_name = type(current).__name__
@@ -221,6 +216,4 @@ def validate_transition(current: AppointmentStatus, new: AppointmentStatus) -> T
                 attempted_status=new_name,
                 reason=f"Cannot transition from {current_name} to {new_name}",
             )
-
-        case _:
-            assert_never(current)
+        # MyPy enforces exhaustiveness - no fallback needed

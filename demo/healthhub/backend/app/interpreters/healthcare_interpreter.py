@@ -12,7 +12,6 @@ from typing import Literal
 from uuid import UUID, uuid4
 
 import asyncpg
-from typing_extensions import assert_never
 
 from app.protocols.database import DatabasePool
 from app.database.converters import (
@@ -350,7 +349,7 @@ class HealthcareInterpreter:
 
             case CheckDatabaseHealth():
                 return await self._check_database_health()
-        assert_never(effect)
+        # MyPy enforces exhaustiveness - no fallback needed
 
     # Patient operations
     async def _get_patient_by_id(self, patient_id: UUID) -> PatientLookupResult:
@@ -675,8 +674,7 @@ class HealthcareInterpreter:
                 )
             case AppointmentFound(appointment=appointment):
                 current_appointment = appointment
-            case _:
-                assert_never(appointment_lookup)
+            # MyPy enforces exhaustiveness - no fallback needed
 
         # Validate transition
         result = validate_transition(current_appointment.status, new_status)

@@ -190,3 +190,15 @@ All engineering documents marked with "**SSoT**" are authoritative. When conflic
 - **[Documentation Hub](../readme.md)** - Complete documentation index (tutorials + API + engineering)
 - **[Contributing Guide](../contributing.md)** - How to contribute to effectful
 - **[Main README](../../README.md)** - Project overview and quickstart
+
+## Cross-References
+
+- [Code Quality](code_quality.md) - Type safety and purity doctrines
+- [Architecture](architecture.md) - 5-layer architecture design
+- [Testing](testing.md) - Test standards and anti-patterns
+- [Docker Workflow](docker_workflow.md) - Docker-only development contract
+- [Command Reference](command_reference.md) - All Docker commands
+- [Development Workflow](development_workflow.md) - Daily development loop
+- [Effect Patterns](effect_patterns.md) - Functional composition patterns
+- [Documentation Standards](../documentation_standards.md) - SSoT and DRY principles
+- [Contributing Guide](../contributing.md) - How to contribute

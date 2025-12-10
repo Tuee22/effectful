@@ -80,6 +80,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 # Bootstrap settings for app construction (before lifespan)
+#
+# Doctrine 7 Exception: This is a necessary violation because FastAPI requires
+# title, description, and version at module level during app construction,
+# which happens before the lifespan context manager runs.
+#
+# The runtime Settings instance is correctly created in the lifespan context
+# manager above (line 45) and stored in app.state for dependency injection.
+# Effect programs never access this bootstrap instance.
 _bootstrap_settings = Settings()
 
 # Create FastAPI application

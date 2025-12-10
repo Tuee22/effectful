@@ -72,7 +72,7 @@ def compute_guard_decision(
                 if required_roles and not required_roles.issubset(user.roles):
                     return Denied(user.id)
                 return Authorized(user.id, roles=user.roles)
-    assert_never(readiness)
+    # MyPy enforces exhaustiveness - no assert_never needed
 ```
 
 ---

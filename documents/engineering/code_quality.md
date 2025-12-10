@@ -92,8 +92,8 @@ See [OptionalValue API Decision Tree](../api/optional_value.md#decision-tree-opt
 - Update via `replace()` or immutable copies, never in-place mutation.
 
 ### 5. Exhaustive Pattern Matching
-- Use `match` with `assert_never()` to cover every union variant at compile time.
-- No wildcard fallbacks that swallow new cases.
+- Use `match` to cover every union variant; MyPy enforces exhaustiveness at compile time.
+- No wildcard fallbacks (`case _:`) that swallow new cases.
 
 ### 6. Type Narrowing for Union Types
 - Narrow with structural checks (`match`, `isinstance`, tagged unions) instead of casts.
@@ -130,7 +130,7 @@ See [OptionalValue API Decision Tree](../api/optional_value.md#decision-tree-opt
 - Pure layers construct new values instead of mutating; adapters may manage mutable handles.
 
 ### Doctrine 6: Exhaustive Pattern Matching
-- Pure code matches on ADTs exhaustively with `assert_never()` safeguards.
+- Pure code matches on ADTs exhaustively; MyPy in `--strict` mode enforces completeness.
 
 ### Doctrine 7: Configuration Lifecycle Management
 
@@ -273,6 +273,35 @@ grep -r "from app.config import settings" backend/app/programs/
 2. Apply the canonical pattern from this file (or linked SSoT).
 3. Add/adjust tests (unit/integration as appropriate).
 4. Run `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code`.
+
+---
+
+## Universal Success Criteria
+
+All code changes must meet these mandatory requirements before merge:
+
+1. **Exit code 0**: `poetry run check-code` passes (Black + MyPy strict)
+2. **Zero MyPy errors**: `mypy --strict` with `disallow_any_explicit = true`
+3. **Zero skipped tests**: No `pytest.skip()` anywhere (fix or delete tests)
+4. **Zero escape hatches**: No `Any`, `cast()`, or `# type: ignore` in any code
+5. **All tests passing**: 100% pass rate for unit and integration tests
+6. **Frozen dataclasses**: All domain models use `@dataclass(frozen=True)`
+7. **Result types**: All fallible operations return `Result[T, E]`
+8. **Exhaustive pattern matching**: All ADT unions handled; MyPy verifies completeness
+9. **No direct I/O in programs**: Programs yield effects, interpreters execute them
+10. **Docker-only execution**: All commands run via docker compose (see [Docker Workflow](docker_workflow.md#development-contract))
+
+**Verification Command:**
+
+```bash
+docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
+docker compose -f docker/docker-compose.yml exec effectful poetry run test-all
+```
+
+**See also:**
+- [Command Reference](command_reference.md) - Complete command table
+- [Testing](testing.md) - Test requirements and anti-patterns
+- [Docker Workflow](docker_workflow.md#development-contract) - Docker-only policy
 
 ---
 

@@ -1,4 +1,4 @@
-# Documentation Guide (HealthHub)
+# Documentation Standards (HealthHub Delta)
 
 **Status**: Reference only
 **Supersedes**: none

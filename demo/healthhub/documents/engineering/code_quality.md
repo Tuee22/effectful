@@ -8,8 +8,10 @@
 > **📖 Authoritative Reference**: [Code Quality](../../../../documents/engineering/code_quality.md)
 
 ## Deltas
-- HealthHub follows the base guidance; no additional deltas beyond using the HealthHub compose stack and service name (`healthhub`).
-- PHI/PII handling (HIPAA compliance) defers to the base code quality SSoT; apply HealthHub-specific ports, credentials, and service names where applicable.
+
+This follows base with no changes beyond service name (`healthhub`) and compose location.
+
+PHI/PII handling (HIPAA compliance) defers to the base code quality SSoT; apply HealthHub-specific ports, credentials, and service names where applicable.
 
 ## Cross-References
 - [HealthHub Documentation Guide](../documentation_standards.md)

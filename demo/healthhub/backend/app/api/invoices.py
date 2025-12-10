@@ -8,7 +8,6 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Annotated, Literal
 from uuid import UUID
-from typing_extensions import assert_never
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
@@ -291,8 +290,7 @@ async def get_invoice(
                 line_items = yield ListInvoiceLineItems(invoice_id=UUID(invoice_id))
                 assert isinstance(line_items, list)
                 return invoice, line_items
-            case _:
-                assert_never(invoice_result)
+            # MyPy enforces exhaustiveness - no fallback needed
 
     # Run effect program
     result = await run_program(get_program(), interpreter)
@@ -305,8 +303,7 @@ async def get_invoice(
             )
         case tuple() as invoice_tuple:
             invoice, line_items = invoice_tuple
-        case _:
-            assert_never(result)
+        # MyPy enforces exhaustiveness - no fallback needed
 
     # Authorization check - patient can only see their own invoices
     match auth:
@@ -404,8 +401,7 @@ async def update_invoice_status(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Invoice {invoice_id} not found",
             )
-        case _:
-            assert_never(invoice_result)
+        # MyPy enforces exhaustiveness - no fallback needed
 
 
 @router.get("/patient/{patient_id}", response_model=list[InvoiceResponse])

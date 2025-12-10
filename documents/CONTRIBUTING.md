@@ -107,3 +107,12 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
 ## Code of Conduct
 
 Be respectful and inclusive. Follow the community guidelines in the project tracker.
+
+## Cross-References
+
+- [Engineering Standards](engineering/README.md) - Master index
+- [Code Quality](engineering/code_quality.md#universal-success-criteria) - Success criteria
+- [Testing](engineering/testing.md) - Test standards and anti-patterns
+- [Docker Workflow](engineering/docker_workflow.md) - Docker-only development contract
+- [Command Reference](engineering/command_reference.md) - Complete command table
+- [Architecture](engineering/architecture.md) - 5-layer design

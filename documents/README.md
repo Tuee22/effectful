@@ -1,8 +1,8 @@
 # effectful Documentation
 
-**Status**: Reference only  
-**Supersedes**: none  
-**Referenced by**: README.md, contributing.md, demo/healthhub/documents/readme.md
+**Status**: Reference only
+**Supersedes**: none
+**Referenced by**: demo/healthhub/documents/readme.md
 
 > **Purpose**: Navigation hub for all effectful documentation (engineering standards, tutorials, and API reference).
 > **📖 Authoritative Reference**: [Engineering README](engineering/README.md)
@@ -109,3 +109,14 @@ Complete API documentation:
 - **Questions?** Open a discussion in the project tracker.
 - **Bug reports?** File an issue in the project tracker.
 - **Contributing?** See [Contributing Guide](contributing.md) and [Engineering Standards](engineering/README.md)
+
+## Cross-References
+
+- [Engineering README](engineering/README.md) - Master index of standards
+- [Code Quality](engineering/code_quality.md) - Type safety and purity
+- [Architecture](engineering/architecture.md) - 5-layer design
+- [Testing](engineering/testing.md) - Test standards and anti-patterns
+- [Docker Workflow](engineering/docker_workflow.md) - Docker-only development
+- [Command Reference](engineering/command_reference.md) - All Docker commands
+- [Contributing Guide](contributing.md) - How to contribute
+- [Documentation Standards](documentation_standards.md) - SSoT and DRY principles

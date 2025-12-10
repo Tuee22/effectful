@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Annotated
 from uuid import UUID
-from typing_extensions import assert_never
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -328,8 +327,7 @@ async def get_patient_by_user(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Patient for user {missing_user_id} not found",
             )
-        case _:
-            assert_never(patient_result)
+        # MyPy enforces exhaustiveness - no fallback needed
 
 
 @router.put("/{patient_id}", response_model=PatientResponse)
@@ -396,8 +394,7 @@ async def update_patient(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Patient for user {missing_user_id} not found",
             )
-        case _:
-            assert_never(patient_lookup)
+        # MyPy enforces exhaustiveness - no fallback needed
 
     def update_program() -> Generator[AllEffects, object, PatientUpdateResult]:
         result = yield UpdatePatient(

@@ -123,13 +123,12 @@ async def wait_for_page_ready(
     Composite helper that waits for data loading state.
 
     Example:
-        # Before (timing hack - BAD):
+        # Before (timing hack - ANTI-PATTERN):
         await page.goto(make_url("/appointments"))
-        await page.wait_for_timeout(5000)  # Hope it's ready
+        await page.wait_for_timeout(5000)  # Arbitrary delay, race condition prone
 
-        # After (ADT-based - GOOD):
-        await page.goto(make_url("/appointments"))
-        await wait_for_page_ready(page)
+        # After (ADT-based synchronization - CORRECT):
+        await navigate_and_wait_for_ready(page, make_url("/appointments"))
 
     Args:
         page: Playwright page

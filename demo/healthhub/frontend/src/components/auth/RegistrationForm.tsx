@@ -120,7 +120,7 @@ export const RegistrationForm = () => {
   return (
     <form className="login-form" onSubmit={handleSubmit}>
       <h2 className="login-title">Register for HealthHub</h2>
-      {error && <div className="login-error">{error}</div>}
+      {error && <div className="login-error" role="alert">{error}</div>}
 
       <div className="form-group">
         <label htmlFor="email">

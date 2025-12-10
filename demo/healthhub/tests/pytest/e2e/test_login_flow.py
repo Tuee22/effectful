@@ -164,13 +164,16 @@ class TestFailedLogin:
         await page.locator('input[name="password"]').fill("wrongpassword")
         await page.locator('button[type="submit"]').click()
 
-        # Should stay on login page
-        await page.wait_for_timeout(2000)  # Wait for error to appear
+        # Should stay on login page - wait for error message to appear
+        error_locator = page.locator(
+            '[data-testid="error-message"], [role="alert"], .error, .alert-error, .login-error'
+        )
+        await expect(error_locator).to_be_visible(timeout=5000)
         await expect(page).to_have_url(make_url("/login"))
 
         # Check for error message (various possible selectors)
         error_visible = await page.locator(
-            '[data-testid="error-message"], [role="alert"], .error, .alert-error'
+            '[data-testid="error-message"], [role="alert"], .error, .alert-error, .login-error'
         ).is_visible()
 
         # Auth state should be AuthenticationFailed

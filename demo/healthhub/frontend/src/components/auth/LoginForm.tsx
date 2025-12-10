@@ -39,7 +39,7 @@ export const LoginForm = () => {
       <h2 className="login-title">Sign in to HealthHub</h2>
 
       {error && (
-        <div className="login-error">
+        <div className="login-error" role="alert">
           {error}
           <button type="button" className="error-dismiss" onClick={clearError}>
             &times;

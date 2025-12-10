@@ -6,7 +6,6 @@ Routes effects to specialized interpreters based on effect type.
 from __future__ import annotations
 
 from typing import TypeGuard
-from typing_extensions import assert_never
 
 from app.protocols.database import DatabasePool
 from app.protocols.observability import ObservabilityInterpreter as ObservabilityProtocol

@@ -16,6 +16,8 @@ from collections.abc import Callable
 import pytest
 from playwright.async_api import Page, expect
 
+from tests.pytest.e2e.helpers.adt_state_helpers import navigate_and_wait_for_ready
+
 
 @pytest.mark.e2e
 @pytest.mark.asyncio
@@ -64,8 +66,9 @@ class TestInvoiceStatus:
         self, authenticated_admin_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that invoices show status badges."""
-        await authenticated_admin_page.goto(make_url("/invoices"))
-        await authenticated_admin_page.wait_for_timeout(2000)
+        await navigate_and_wait_for_ready(
+            authenticated_admin_page, make_url("/invoices"), data=False
+        )
 
         # Look for status badges
         status_badge = authenticated_admin_page.locator(
@@ -86,8 +89,9 @@ class TestInvoiceStatus:
         self, authenticated_admin_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that invoices display total amount."""
-        await authenticated_admin_page.goto(make_url("/invoices"))
-        await authenticated_admin_page.wait_for_timeout(2000)
+        await navigate_and_wait_for_ready(
+            authenticated_admin_page, make_url("/invoices"), data=False
+        )
 
         # Look for currency amounts
         amount = authenticated_admin_page.locator(

@@ -11,18 +11,9 @@ Pure modelling keeps the software and the real world in sync. When every legitim
 
 ## Auth concepts in plain language
 
-> Canonical ADTs, guard decisions, and lifecycles now live in [authentication.md](authentication.md). This document keeps only a brief reminder to stay DRY.
+> Canonical ADTs, guard decisions, and lifecycles now live in [authentication.md](authentication.md).
 
-- Hydration: read stored session quickly; if none, treat as logged out immediately.
-- Session restoring: short window to swap stored session for fresh; ends in authenticated, expired, or redirect.
-- Guard: pure decision `AwaitAuth | RedirectToLogin | Denied | Authorized` that drives UI/WS; no pre-render before a decision.
-- Redirect vs deny: 401/redirect for unauthenticated, 403/deny for insufficient roles.
-- Near expiry: refresh proactively or fail cleanly as `SessionExpired`; account for clock skew.
-- **Hydration**: On page load, we peek at storage (cookies or local storage) to see if a session might exist. If nothing is there, we immediately treat the user as logged out; if something is there, we try to refresh it. This keeps the “cold boot” experience deterministic instead of spinning forever.
-- **Session restoring**: A short window where we swap a stored session for a fresh one. It must end quickly: either we are authenticated, expired, or redirected to login. Think of it as exchanging an old ticket for a new one before we let the user into the venue.
-- **Guard**: A pure function that looks at readiness plus required roles and decides: wait, redirect, deny, or authorize. UI rendering and WS connections follow this decision so that no protected content or socket traffic leaks before the decision is made.
-- **Redirect to login vs. deny**: Redirect means “you are not signed in”; deny means “you are signed in but lack permission.” This distinction keeps UX clear and aligns with backend 401 vs 403 responses.
-- **Near expiry**: Tokens close to expiry should be refreshed proactively or allowed to fail cleanly as `SessionExpired`; do not assume clocks are perfect. Small skews between browser and server can otherwise cause flapping access.
+Key auth concepts: Hydration (check stored session), Session restoring (refresh token window), Guard (pure decision driving UI/WS), and Near expiry handling. See [authentication.md](authentication.md) for complete definitions and patterns.
 
 ## Principles (plainly)
 - Model only what can really happen; impossible states do not exist in the types.
@@ -51,10 +42,10 @@ Pure modelling keeps the software and the real world in sync. When every legitim
 ```mermaid
 flowchart TB
     A[App Boot] --> B[Auth Readiness Initializing]
-    B --> C{Persisted user?}
+    B --> C{Persisted user}
     C -->|No| D[Ready Unauthenticated]
     C -->|Yes| E[Ready SessionRestoring]
-    E --> F{Refresh ok?}
+    E --> F{Refresh success}
     F -->|Yes| G[Ready Authenticated]
     F -->|Expired or missing| H[Ready SessionExpired]
     F -->|Network fail| I[Ready SessionRestoring redirect login]
@@ -120,7 +111,7 @@ flowchart TB
 - **Browser-specific blind spots**: We repeatedly saw e2e suites pass on Chrome and Firefox but fail on WebKit. Investigating root causes (different cookie persistence rules, stricter storage quotas, slightly different timing on navigation) led us to remove timeout hacks and instead model explicit states for “storage read failed,” “refresh in flight,” and “redirect after navigation.” Once the model captured those realities, a single pure guard path worked cleanly across all three browsers.
 
 ## Patterns to embrace
-- Exhaustive matches on every ADT; no default branches that hide work. Readers should see every variant handled on one screen.
+- Exhaustive matches on every ADT; MyPy enforces completeness, no default branches that hide work. Readers should see every variant handled on one screen.
 - Deterministic hydration: empty storage jumps to `Ready(Unauthenticated)` with no delay; stored sessions always attempt one refresh and then resolve.
 - Let `GuardDecision` drive everything: rendering, redirects, and whether WS connects. Avoid ad-hoc checks like `if (user) render`.
 - Backend and frontend share meaning: 401 aligns with `RedirectToLogin`, 403 with `Denied`, 200 with `Authorized`. This symmetry keeps logs, UX, and tests consistent.

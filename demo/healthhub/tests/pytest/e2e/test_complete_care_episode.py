@@ -25,6 +25,8 @@ from collections.abc import Callable
 import pytest
 from playwright.async_api import Page, expect
 
+from tests.pytest.e2e.helpers.adt_state_helpers import navigate_and_wait_for_ready
+
 
 @pytest.mark.e2e
 @pytest.mark.asyncio
@@ -54,8 +56,7 @@ class TestCompleteCareEpisode:
         patient_page = authenticated_patient_page
 
         # Seed data includes confirmed appointment for Alice
-        await patient_page.goto(make_url("/appointments"))
-        await patient_page.wait_for_timeout(1000)
+        await navigate_and_wait_for_ready(patient_page, make_url("/appointments"), data=False)
 
         # Verify appointment is visible
         appointment_card = patient_page.locator(
@@ -68,8 +69,7 @@ class TestCompleteCareEpisode:
         await doctor_page.goto(make_url("/dashboard"))
 
         # Doctor can see patient appointments
-        await doctor_page.goto(make_url("/appointments"))
-        await doctor_page.wait_for_timeout(1000)
+        await navigate_and_wait_for_ready(doctor_page, make_url("/appointments"), data=False)
 
         # Verify doctor can see patient appointments
         # Seed data includes appointments for multiple patients
@@ -83,8 +83,7 @@ class TestCompleteCareEpisode:
         await admin_page.goto(make_url("/dashboard"))
 
         # Admin can view invoices
-        await admin_page.goto(make_url("/invoices"))
-        await admin_page.wait_for_timeout(1000)
+        await navigate_and_wait_for_ready(admin_page, make_url("/invoices"), data=False)
 
         # Seed data includes one invoice for Carol Carter
         # invoice_id: 80000000-0000-0000-0000-000000000001
@@ -116,8 +115,7 @@ class TestAppointmentStateTransitions:
         page = authenticated_doctor_page
 
         # Navigate to appointments
-        await page.goto(make_url("/appointments"))
-        await page.wait_for_timeout(1000)
+        await navigate_and_wait_for_ready(page, make_url("/appointments"), data=False)
 
         # Seed data includes:
         # - Confirmed appointment (id: ...001)
@@ -154,8 +152,7 @@ class TestAppointmentStateTransitions:
         page = authenticated_doctor_page
 
         # Navigate to appointments
-        await page.goto(make_url("/appointments"))
-        await page.wait_for_timeout(1000)
+        await navigate_and_wait_for_ready(page, make_url("/appointments"), data=False)
 
         # Find completed appointment from seed data
         # appointment_id: 50000000-0000-0000-0000-000000000003
@@ -169,7 +166,8 @@ class TestAppointmentStateTransitions:
         if await completed_appt_link.count() > 0:
             # Click to view details
             await completed_appt_link.click()
-            await page.wait_for_timeout(1000)
+            # Wait for detail page to load
+            await page.wait_for_load_state("networkidle", timeout=5000)
 
             # Verify no transition buttons are available
             # (e.g., no "Start", "Complete", or "Confirm" buttons)
@@ -199,8 +197,7 @@ class TestPrescriptionWorkflow:
         page = authenticated_doctor_page
 
         # Navigate to prescriptions page
-        await page.goto(make_url("/prescriptions"))
-        await page.wait_for_timeout(1000)
+        await navigate_and_wait_for_ready(page, make_url("/prescriptions"), data=False)
 
         # Seed data includes 2 prescriptions:
         # 1. Lisinopril for Alice Anderson
@@ -221,8 +218,7 @@ class TestPrescriptionWorkflow:
         page = authenticated_patient_page
 
         # Alice has one prescription: Lisinopril 10mg, Once daily
-        await page.goto(make_url("/prescriptions"))
-        await page.wait_for_timeout(1000)
+        await navigate_and_wait_for_ready(page, make_url("/prescriptions"), data=False)
 
         # Verify prescription details are visible
         has_medication = await page.locator("text=Lisinopril").count() > 0
@@ -247,8 +243,7 @@ class TestInvoiceWorkflow:
         page = authenticated_admin_page
 
         # Navigate to invoices page
-        await page.goto(make_url("/invoices"))
-        await page.wait_for_timeout(1000)
+        await navigate_and_wait_for_ready(page, make_url("/invoices"), data=False)
 
         # Seed data includes one invoice for Carol Carter
         # invoice_id: 80000000-0000-0000-0000-000000000001
@@ -267,8 +262,7 @@ class TestInvoiceWorkflow:
         page = authenticated_admin_page
 
         # Navigate to invoices
-        await page.goto(make_url("/invoices"))
-        await page.wait_for_timeout(1000)
+        await navigate_and_wait_for_ready(page, make_url("/invoices"), data=False)
 
         # Seed data invoice has 2 line items:
         # 1. Office Visit - Dermatology Consultation ($200)
@@ -281,7 +275,8 @@ class TestInvoiceWorkflow:
 
         if await invoice_link.count() > 0:
             await invoice_link.click()
-            await page.wait_for_timeout(1000)
+            # Wait for detail page to load
+            await page.wait_for_load_state("networkidle", timeout=5000)
 
             # Verify line items are visible
             has_office_visit = (
@@ -298,8 +293,7 @@ class TestInvoiceWorkflow:
         page = authenticated_patient_page
 
         # Alice is authenticated, but seed data invoice belongs to Carol
-        await page.goto(make_url("/invoices"))
-        await page.wait_for_timeout(1000)
+        await navigate_and_wait_for_ready(page, make_url("/invoices"), data=False)
 
         # Alice should see empty invoice list (or no invoices message)
         # Carol's invoice should NOT be visible to Alice
@@ -325,8 +319,7 @@ class TestLabResultWorkflow:
         page = authenticated_doctor_page
 
         # Navigate to lab results
-        await page.goto(make_url("/lab-results"))
-        await page.wait_for_timeout(1000)
+        await navigate_and_wait_for_ready(page, make_url("/lab-results"), data=False)
 
         # Seed data includes 2 lab results:
         # 1. Lipid Panel for Alice Anderson (reviewed)
@@ -347,8 +340,7 @@ class TestLabResultWorkflow:
         page = authenticated_doctor_page
 
         # Navigate to lab results
-        await page.goto(make_url("/lab-results"))
-        await page.wait_for_timeout(1000)
+        await navigate_and_wait_for_ready(page, make_url("/lab-results"), data=False)
 
         # Seed data includes critical Blood Glucose result for David Davis
         # critical: true
@@ -370,8 +362,7 @@ class TestLabResultWorkflow:
         page = authenticated_patient_page
 
         # Alice has one lab result: Lipid Panel (reviewed)
-        await page.goto(make_url("/lab-results"))
-        await page.wait_for_timeout(1000)
+        await navigate_and_wait_for_ready(page, make_url("/lab-results"), data=False)
 
         # Verify lab result is visible
         has_lipid_panel = await page.locator("text=Lipid Panel").count() > 0
@@ -392,8 +383,7 @@ class TestMultiFeatureIntegration:
         page = authenticated_doctor_page
 
         # Navigate to appointments
-        await page.goto(make_url("/appointments"))
-        await page.wait_for_timeout(1000)
+        await navigate_and_wait_for_ready(page, make_url("/appointments"), data=False)
 
         # Completed appointment for Carol Carter (Skin rash consultation)
         # has associated prescription (Hydrocortisone Cream)
@@ -412,8 +402,7 @@ class TestMultiFeatureIntegration:
         page = authenticated_admin_page
 
         # Navigate to invoices
-        await page.goto(make_url("/invoices"))
-        await page.wait_for_timeout(1000)
+        await navigate_and_wait_for_ready(page, make_url("/invoices"), data=False)
 
         # Invoice 80000000-0000-0000-0000-000000000001 is linked to
         # appointment 50000000-0000-0000-0000-000000000003

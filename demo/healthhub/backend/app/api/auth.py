@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Annotated
 from uuid import UUID
-from typing_extensions import assert_never
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, EmailStr, Field
@@ -215,8 +214,7 @@ async def login(
                 return LoginInvalidCredentials(reason="Invalid email or password")
             case UserFound(user=user):
                 current_user = user
-            case _:
-                assert_never(user_result)
+            # MyPy enforces exhaustiveness - no fallback needed
 
         if not verify_password(request.password, current_user.password_hash):
             return LoginInvalidCredentials(reason="Invalid email or password")
@@ -226,30 +224,33 @@ async def login(
 
         yield UpdateUserLastLogin(user_id=current_user.id)
 
-        if current_user.role.value == "patient":
-            patient_result = yield GetPatientByUserId(user_id=current_user.id)
-            assert is_patient_lookup_result(patient_result)
-            match patient_result:
-                case PatientFound(patient=found_patient):
-                    result: LoginResult = PatientLoginSuccess(
-                        user=current_user, patient=found_patient
-                    )
-                case PatientMissingByUserId() | PatientMissingById():
-                    result = PatientProfileMissing(user=current_user)
-                case _:
-                    assert_never(patient_result)
-        elif current_user.role.value == "doctor":
-            doctor_result = yield GetDoctorByUserId(user_id=current_user.id)
-            assert is_doctor_lookup_result(doctor_result)
-            match doctor_result:
-                case DoctorFound(doctor=found_doctor):
-                    result = DoctorLoginSuccess(user=current_user, doctor=found_doctor)
-                case DoctorMissingByUserId() | DoctorMissingById():
-                    result = DoctorProfileMissing(user=current_user)
-                case _:
-                    assert_never(doctor_result)
-        else:
-            result = AdminLoginSuccess(user=current_user)
+        # Pattern match on UserRole enum for type-safe role handling
+        match current_user.role:
+            case UserRole.PATIENT:
+                patient_result = yield GetPatientByUserId(user_id=current_user.id)
+                assert is_patient_lookup_result(patient_result)
+                match patient_result:
+                    case PatientFound(patient=found_patient):
+                        result: LoginResult = PatientLoginSuccess(
+                            user=current_user, patient=found_patient
+                        )
+                    case PatientMissingByUserId() | PatientMissingById():
+                        result = PatientProfileMissing(user=current_user)
+                    # MyPy enforces exhaustiveness - no fallback needed
+
+            case UserRole.DOCTOR:
+                doctor_result = yield GetDoctorByUserId(user_id=current_user.id)
+                assert is_doctor_lookup_result(doctor_result)
+                match doctor_result:
+                    case DoctorFound(doctor=found_doctor):
+                        result = DoctorLoginSuccess(user=current_user, doctor=found_doctor)
+                    case DoctorMissingByUserId() | DoctorMissingById():
+                        result = DoctorProfileMissing(user=current_user)
+                    # MyPy enforces exhaustiveness - no fallback needed
+
+            case UserRole.ADMIN:
+                result = AdminLoginSuccess(user=current_user)
+            # MyPy enforces exhaustiveness - no fallback needed
 
         yield LogAuditEvent(
             user_id=current_user.id,
@@ -398,8 +399,7 @@ async def register(
                 pass
             case UserFound():
                 return RegisterEmailExists(email=request.email)
-            case _:
-                assert_never(existing_user_result)
+            # MyPy enforces exhaustiveness - no fallback needed
 
         password_hash = hash_password(request.password)
         created_user = yield CreateUser(

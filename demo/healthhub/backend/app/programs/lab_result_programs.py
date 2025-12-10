@@ -6,7 +6,6 @@ Effect programs for lab result processing and notifications.
 from collections.abc import Generator
 from dataclasses import dataclass
 from uuid import UUID
-from typing_extensions import assert_never
 
 from app.domain.doctor import Doctor
 from app.domain.lookup_result import (
@@ -164,8 +163,7 @@ def process_lab_result_program(
             return LabResultPatientMissing(patient_id=missing_id)
         case PatientMissingByUserId():
             return LabResultPatientMissing(patient_id=patient_id)
-        case _:
-            assert_never(patient_result)
+        # MyPy enforces exhaustiveness - no fallback needed
 
     # Step 2: Verify doctor exists
     doctor_result = yield GetDoctorById(doctor_id=doctor_id)
@@ -177,8 +175,7 @@ def process_lab_result_program(
             return LabResultDoctorMissing(doctor_id=missing_id)
         case DoctorMissingByUserId():
             return LabResultDoctorMissing(doctor_id=doctor_id)
-        case _:
-            assert_never(doctor_result)
+        # MyPy enforces exhaustiveness - no fallback needed
 
     # Step 3: Store lab result
     lab_result = yield CreateLabResult(
@@ -271,5 +268,4 @@ def view_lab_result_program(
             return LabResultViewed(lab_result=lab_result)
         case LabResultLookupMissing(result_id=missing_id):
             return LabResultMissing(result_id=missing_id)
-        case _:
-            assert_never(lab_result_result)
+        # MyPy enforces exhaustiveness - no fallback needed

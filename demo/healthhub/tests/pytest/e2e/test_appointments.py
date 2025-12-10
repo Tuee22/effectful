@@ -20,6 +20,8 @@ from collections.abc import Callable
 import pytest
 from playwright.async_api import Page, expect
 
+from tests.pytest.e2e.helpers.adt_state_helpers import navigate_and_wait_for_ready
+
 
 @pytest.mark.e2e
 @pytest.mark.asyncio
@@ -30,10 +32,9 @@ class TestAppointmentListDisplay:
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that appointments page displays appointment list."""
-        await authenticated_doctor_page.goto(make_url("/appointments"))
-
-        # Wait for page to load
-        await authenticated_doctor_page.wait_for_timeout(2000)
+        await navigate_and_wait_for_ready(
+            authenticated_doctor_page, make_url("/appointments"), data=False
+        )
 
         # Should be on appointments page
         await expect(authenticated_doctor_page).to_have_url(make_url("/appointments"))
@@ -52,8 +53,9 @@ class TestAppointmentListDisplay:
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that appointments can be filtered by status."""
-        await authenticated_doctor_page.goto(make_url("/appointments"))
-        await authenticated_doctor_page.wait_for_timeout(2000)
+        await navigate_and_wait_for_ready(
+            authenticated_doctor_page, make_url("/appointments"), data=False
+        )
 
         # Look for filter controls
         filter_control = authenticated_doctor_page.locator(
@@ -68,8 +70,9 @@ class TestAppointmentListDisplay:
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that appointment detail page is accessible."""
-        await authenticated_doctor_page.goto(make_url("/appointments"))
-        await authenticated_doctor_page.wait_for_timeout(2000)
+        await navigate_and_wait_for_ready(
+            authenticated_doctor_page, make_url("/appointments"), data=False
+        )
 
         # Try to find an appointment link/button
         appointment_link = authenticated_doctor_page.locator(
@@ -83,8 +86,8 @@ class TestAppointmentListDisplay:
         is_visible = await appointment_link.is_visible()
         if is_visible:
             await appointment_link.click()
-            # Should navigate to detail page
-            await authenticated_doctor_page.wait_for_timeout(1000)
+            # Should navigate to detail page - wait for URL change
+            await authenticated_doctor_page.wait_for_url("**/appointments/**", timeout=5000)
             # Verify navigation occurred - URL should change to detail page
             current_url = authenticated_doctor_page.url
             assert "/appointments/" in current_url
@@ -99,8 +102,9 @@ class TestAppointmentStateMachine:
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that doctor can see appointment action buttons."""
-        await authenticated_doctor_page.goto(make_url("/appointments"))
-        await authenticated_doctor_page.wait_for_timeout(2000)
+        await navigate_and_wait_for_ready(
+            authenticated_doctor_page, make_url("/appointments"), data=False
+        )
 
         # Doctor should have access to the appointments page
         await expect(authenticated_doctor_page).to_have_url(make_url("/appointments"))
@@ -112,8 +116,9 @@ class TestAppointmentStateMachine:
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that requested appointments can be confirmed."""
-        await authenticated_doctor_page.goto(make_url("/appointments"))
-        await authenticated_doctor_page.wait_for_timeout(2000)
+        await navigate_and_wait_for_ready(
+            authenticated_doctor_page, make_url("/appointments"), data=False
+        )
 
         # Look for appointments with "Requested" status
         requested_appointment = authenticated_doctor_page.locator(
@@ -135,8 +140,9 @@ class TestAppointmentStateMachine:
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that confirmed appointments can be started."""
-        await authenticated_doctor_page.goto(make_url("/appointments"))
-        await authenticated_doctor_page.wait_for_timeout(2000)
+        await navigate_and_wait_for_ready(
+            authenticated_doctor_page, make_url("/appointments"), data=False
+        )
 
         # Look for appointments with "Confirmed" status
         confirmed_appointment = authenticated_doctor_page.locator(
@@ -158,8 +164,9 @@ class TestAppointmentStateMachine:
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that in-progress appointments can be completed."""
-        await authenticated_doctor_page.goto(make_url("/appointments"))
-        await authenticated_doctor_page.wait_for_timeout(2000)
+        await navigate_and_wait_for_ready(
+            authenticated_doctor_page, make_url("/appointments"), data=False
+        )
 
         # Look for appointments with "In Progress" status
         in_progress_appointment = authenticated_doctor_page.locator(
@@ -182,8 +189,9 @@ class TestAppointmentStateMachine:
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that completed appointments cannot be transitioned."""
-        await authenticated_doctor_page.goto(make_url("/appointments"))
-        await authenticated_doctor_page.wait_for_timeout(2000)
+        await navigate_and_wait_for_ready(
+            authenticated_doctor_page, make_url("/appointments"), data=False
+        )
 
         # Look for appointments with "Completed" status
         completed_appointment = authenticated_doctor_page.locator(
@@ -212,8 +220,9 @@ class TestAppointmentStateMachine:
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that cancelled appointments cannot be transitioned."""
-        await authenticated_doctor_page.goto(make_url("/appointments"))
-        await authenticated_doctor_page.wait_for_timeout(2000)
+        await navigate_and_wait_for_ready(
+            authenticated_doctor_page, make_url("/appointments"), data=False
+        )
 
         # Look for appointments with "Cancelled" status
         cancelled_appointment = authenticated_doctor_page.locator(

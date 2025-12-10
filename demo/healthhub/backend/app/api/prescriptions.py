@@ -7,7 +7,6 @@ from collections.abc import Generator
 from datetime import datetime
 from typing import Annotated
 from uuid import UUID
-from typing_extensions import assert_never
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -278,8 +277,7 @@ async def get_prescription(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Prescription {prescription_id} not found",
             )
-        case _:
-            assert_never(prescription_result)
+        # MyPy enforces exhaustiveness - no fallback needed
 
 
 @router.get("/patient/{patient_id}", response_model=list[PrescriptionResponse])

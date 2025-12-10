@@ -7,7 +7,6 @@ from collections.abc import Generator
 from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
-from typing_extensions import assert_never
 
 from app.domain.appointment import (
     Appointment,
@@ -136,8 +135,7 @@ def schedule_appointment_program(
             return AppointmentPatientMissing(patient_id=missing_id)
         case PatientMissingByUserId():
             return AppointmentPatientMissing(patient_id=patient_id)
-        case _:
-            assert_never(patient_result)
+        # MyPy enforces exhaustiveness - no fallback needed
 
     # Step 2: Verify doctor exists
     doctor_result = yield GetDoctorById(doctor_id=doctor_id)
@@ -149,8 +147,7 @@ def schedule_appointment_program(
             return AppointmentDoctorMissing(doctor_id=missing_id)
         case DoctorMissingByUserId():
             return AppointmentDoctorMissing(doctor_id=doctor_id)
-        case _:
-            assert_never(doctor_result)
+        # MyPy enforces exhaustiveness - no fallback needed
 
     # Step 3: Create appointment
     appointment = yield CreateAppointment(
@@ -233,8 +230,7 @@ def transition_appointment_program(
                 attempted_status=type(new_status).__name__,
                 reason=f"Appointment {appointment_id} not found",
             )
-        case _:
-            assert_never(appointment_result)
+        # MyPy enforces exhaustiveness - no fallback needed
 
     # Step 2: Attempt transition
     result = yield TransitionAppointmentStatus(

@@ -1,6 +1,6 @@
 # Beginner Journey
 
-**Status**: Authoritative source
+**Status**: Authoritative source (HealthHub tutorial patterns)
 **Supersedes**: none
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 

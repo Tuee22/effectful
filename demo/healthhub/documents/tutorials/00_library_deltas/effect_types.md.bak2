@@ -13,5 +13,6 @@
 - Refer to the base document for canonical procedures; apply HealthHub-specific ports, credentials, and service names where applicable.
 
 ## Cross-References
-- [HealthHub Documentation Hub](../../readme.md)
+- [HealthHub Documentation Guide](../../../../../documents/readme.md)
+- [HealthHub Documentation Hub](../readme.md)
 - [Effectful Effect Types Tutorial](../../../../../documents/tutorials/effect_types.md)

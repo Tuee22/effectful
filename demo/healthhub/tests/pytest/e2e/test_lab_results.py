@@ -16,6 +16,8 @@ from collections.abc import Callable
 import pytest
 from playwright.async_api import Page, expect
 
+from tests.pytest.e2e.helpers.adt_state_helpers import navigate_and_wait_for_ready
+
 
 @pytest.mark.e2e
 @pytest.mark.asyncio
@@ -68,8 +70,9 @@ class TestLabResultReview:
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that lab results show review status."""
-        await authenticated_doctor_page.goto(make_url("/lab-results"))
-        await authenticated_doctor_page.wait_for_timeout(2000)
+        await navigate_and_wait_for_ready(
+            authenticated_doctor_page, make_url("/lab-results"), data=False
+        )
 
         # Look for review status indicators
         status_indicator = authenticated_doctor_page.locator(

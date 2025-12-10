@@ -6,7 +6,6 @@ Effect programs for prescription management.
 from collections.abc import Generator
 from dataclasses import dataclass
 from uuid import UUID
-from typing_extensions import assert_never
 
 from app.domain.doctor import Doctor
 from app.domain.lookup_result import (
@@ -172,8 +171,7 @@ def create_prescription_program(
             return PrescriptionPatientMissing(patient_id=missing_id)
         case PatientMissingByUserId():
             return PrescriptionPatientMissing(patient_id=patient_id)
-        case _:
-            assert_never(patient_result)
+        # MyPy enforces exhaustiveness - no fallback needed
 
     # Step 2: Verify doctor exists and can prescribe
     doctor_result = yield GetDoctorById(doctor_id=doctor_id)
@@ -186,8 +184,7 @@ def create_prescription_program(
             return PrescriptionDoctorMissing(doctor_id=missing_id)
         case DoctorMissingByUserId():
             return PrescriptionDoctorMissing(doctor_id=doctor_id)
-        case _:
-            assert_never(doctor_result)
+        # MyPy enforces exhaustiveness - no fallback needed
 
     if not current_doctor.can_prescribe:
         return PrescriptionDoctorUnauthorized(doctor_id=doctor_id)

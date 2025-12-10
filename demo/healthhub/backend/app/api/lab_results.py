@@ -7,7 +7,6 @@ from collections.abc import Generator
 from datetime import datetime
 from typing import Annotated
 from uuid import UUID, uuid4
-from typing_extensions import assert_never
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
@@ -231,8 +230,7 @@ async def get_lab_result(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Lab result {missing_id} not found",
             )
-        case _:
-            assert_never(lab_result_result)
+        # MyPy enforces exhaustiveness - no fallback needed
 
     # Authorization check - patient can only see their own results
     match auth:
@@ -288,8 +286,7 @@ async def review_lab_result(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Lab result {missing_id} not found",
             )
-        case _:
-            assert_never(lab_result_result)
+        # MyPy enforces exhaustiveness - no fallback needed
 
 
 @router.get("/patient/{patient_id}", response_model=list[LabResultResponse])

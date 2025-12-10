@@ -153,7 +153,7 @@ flowchart TB
     Start[Test creates generator] --> FirstYield[next(gen)]
     FirstYield --> AssertEffect[Assert effect type and params]
     AssertEffect --> SendMock[gen.send(mock_response)]
-    SendMock --> More{More effects?}
+    SendMock --> More{More effects}
     More -->|Yes| NextEffect[next(gen)]
     NextEffect --> AssertEffect
     More -->|No| StopIter[StopIteration(result)]

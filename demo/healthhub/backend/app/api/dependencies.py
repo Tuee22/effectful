@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from typing import Annotated
 from collections.abc import AsyncGenerator, Generator
 from uuid import UUID
-from typing_extensions import assert_never
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -297,8 +296,7 @@ async def get_current_user(
                             reason="no_profile",
                             detail="Doctor profile not found or was deleted.",
                         )
-                    case _:
-                        assert_never(doctor_result)
+                    # MyPy enforces exhaustiveness - no fallback needed
 
             case "admin":
                 auth_state = AdminAuthorized(

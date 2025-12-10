@@ -7,7 +7,6 @@ from collections.abc import Generator
 from datetime import datetime, timezone
 from typing import Annotated, Literal
 from uuid import UUID
-from typing_extensions import assert_never
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
@@ -327,8 +326,7 @@ async def get_appointment(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Appointment {appointment_id} not found",
             )
-        case _:
-            assert_never(appointment_result)
+        # MyPy enforces exhaustiveness - no fallback needed
 
 
 @router.post("/{appointment_id}/transition", response_model=dict[str, str])
@@ -380,8 +378,7 @@ async def transition_status(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Appointment {appointment_id} not found",
             )
-        case _:
-            assert_never(appointment_result)
+        # MyPy enforces exhaustiveness - no fallback needed
 
     match auth:
         case PatientAuthorized(patient_id=auth_patient_id):

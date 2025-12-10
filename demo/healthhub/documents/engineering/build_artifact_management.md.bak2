@@ -11,7 +11,7 @@
 
 This follows base with no changes beyond service name (`healthhub`) and compose location.
 
-Refer to the base document for canonical procedures; apply HealthHub-specific ports, credentials, and service names where applicable.
+- Refer to the base document for canonical procedures; apply HealthHub-specific ports, credentials, and service names where applicable.
 
 ## Cross-References
 - [HealthHub Documentation Guide](../documentation_standards.md)
