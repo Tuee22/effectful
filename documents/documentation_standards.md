@@ -62,7 +62,28 @@ flowchart TB
 
 ---
 
-## 3) Required Header Metadata
+## 2a) File Type Policy
+
+**Prohibited in documentation directories**:
+
+| Pattern | Examples | Reason |
+|---------|----------|--------|
+| Backup suffixes | `.bak`, `.bak2`, `.backup`, `.old`, `~` | Git history is the backup system |
+| Temporary files | `.tmp`, `.temp`, `.swp`, `.swo` | Indicates incomplete work; use git branches |
+| Plain text files | `.txt` | Lacks semantic structure; use `.md` for all docs |
+
+**Exceptions**:
+- Configuration files that require specific extensions (e.g., `.yaml`, `.json`, `.toml`)
+- Lock files (e.g., `poetry.lock`)
+- Generated artifacts explicitly documented in build process
+
+**Enforcement**:
+- Pre-commit hooks should reject these patterns in `documents/` directories
+- CI/CD pipeline should fail if backup or temp files are committed
+
+---
+
+## 4) Required Header Metadata
 
 Every doc starts with:
 ```markdown
@@ -80,7 +101,7 @@ Every doc starts with:
 
 ---
 
-## 4) Cross-Referencing Rules
+## 5) Cross-Referencing Rules
 
 - Use relative links with anchors; prefer deep links.  
 - Bidirectional links are recommended when documents depend on each other.  
@@ -93,7 +114,7 @@ Every doc starts with:
 
 ---
 
-## 5) Duplication Rules
+## 6) Duplication Rules
 
 - **Always link, do not copy**: examples, procedures, standards, diagrams, configurations.  
 - **Allowed duplication**: navigation tables, TOCs, quick-reference summaries (≤5 lines) that link to the SSoT.  
@@ -101,7 +122,7 @@ Every doc starts with:
 
 ---
 
-## 6) Writing Style and Code/Doc Rigor
+## 7) Writing Style and Code/Doc Rigor
 
 - **Imperative and active voice** for standards (“Use frozen dataclasses”; “The interpreter handles effects”).  
 - **Code examples**: language fences required; first line includes file path comment. Show WRONG/RIGHT pairs for anti-patterns. Zero tolerance for `Any`, `cast`, or `# type: ignore`. Keep lines readable; add minimal comments for highlights.  
@@ -112,7 +133,7 @@ Every doc starts with:
 
 ---
 
-## 7) Mermaid Diagram Standards
+## 8) Mermaid Diagram Standards
 
 - **Compatibility-first**: GitHub, VSCode, and Mermaid Live must render identically.  
 - **Orientation**: TB by default. Use LR only for ≤3 sequential steps or purely parallel flows; never draw right-to-left.  
@@ -123,7 +144,7 @@ Every doc starts with:
 
 ---
 
-## 8) Templates
+## 9) Templates
 
 **Authoritative Doc**
 ```markdown
@@ -162,7 +183,7 @@ Every doc starts with:
 
 ---
 
-## 9) Maintenance Checklist
+## 10) Maintenance Checklist
 
 - [ ] Update the authoritative source first; then dependent links.  
 - [ ] Run link validation after renames/moves.  
@@ -174,7 +195,7 @@ Every doc starts with:
 
 ---
 
-## 10) Demo Overlay Rules (Effectful-specific)
+## 11) Demo Overlay Rules (Effectful-specific)
 
 - Demos inherit all base standards.
 - Overlay docs live under `demo/<project>/documents/` and use the same filenames as their base documents.

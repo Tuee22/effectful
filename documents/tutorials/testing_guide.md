@@ -90,7 +90,6 @@ poetry add --group dev pytest pytest-asyncio pytest-mock pytest-cov
 ### Project Structure
 
 ```text
-# file: examples/04_testing_project_structure.txt
 your_project/
 ├── src/
 │   └── programs/
@@ -112,7 +111,6 @@ your_project/
 Let's start with a simple program that uses explicit error handling with Result types:
 
 ```python
-# file: examples/04_testing_guide.py
 # src/programs/user_programs.py
 from collections.abc import Generator
 from uuid import UUID
@@ -172,7 +170,6 @@ flowchart TB
 **Example Test:**
 
 ```python
-# file: examples/04_testing_guide.py
 # tests/test_programs/test_user_programs.py
 import pytest
 from pytest_mock import MockerFixture
@@ -255,7 +252,6 @@ class TestGetUserProgram:
 Let's test a program that validates input, fetches data, and performs an update:
 
 ```python
-# file: examples/04_testing_guide.py
 # src/programs/user_programs.py
 import re
 from uuid import UUID
@@ -306,7 +302,6 @@ def update_user_program(
 ### Testing Multi-Step Success Path
 
 ```python
-# file: examples/04_testing_guide.py
 def test_update_user_success(self, mocker: MockerFixture) -> None:
     """Test successfully updating a user."""
     # Setup
@@ -353,7 +348,6 @@ def test_update_user_success(self, mocker: MockerFixture) -> None:
 ### Testing Validation Errors (No Effects Yielded)
 
 ```python
-# file: examples/04_testing_guide.py
 def test_update_user_no_fields(self, mocker: MockerFixture) -> None:
     """Test update fails when no fields provided."""
     # Create generator
@@ -397,7 +391,6 @@ def test_update_user_invalid_email(self, mocker: MockerFixture) -> None:
 Let's test a complex program that demonstrates auth, cache, database, storage, messaging, and WebSocket:
 
 ```python
-# file: examples/04_testing_guide.py
 # src/programs/chat_programs.py
 import json
 from collections.abc import Generator
@@ -497,7 +490,6 @@ def send_authenticated_message_with_storage_program(
 ### Testing the Complete Success Path
 
 ```python
-# file: examples/04_testing_guide.py
 from effectful.domain.s3_object import PutSuccess
 
 def test_send_authenticated_message_success(self, mocker: MockerFixture) -> None:
@@ -576,7 +568,6 @@ def test_send_authenticated_message_success(self, mocker: MockerFixture) -> None
 Programs can return early when encountering validation errors or missing data:
 
 ```python
-# file: examples/04_testing_guide.py
 def test_send_authenticated_message_invalid_token(
     self, mocker: MockerFixture
 ) -> None:
@@ -615,7 +606,6 @@ def test_send_authenticated_message_invalid_token(
 Group related tests in classes:
 
 ```python
-# file: examples/04_testing_guide.py
 class TestSendMessageProgram:
     """Test suite for send_message_program."""
 
@@ -673,7 +663,6 @@ class TestSendMessageProgram:
 ### Directory Structure
 
 ```text
-# file: examples/04_testing_suite_layout.txt
 tests/
 ├── test_demo/
 │   ├── __init__.py
@@ -692,7 +681,6 @@ tests/
 
 1. **Test Programs as Pure Generators**
    ```python
-   # file: examples/04_testing_best_practices.py
    # ✅ No interpreters, no infrastructure
    gen = get_user_program(user_id=user_id)
    effect = next(gen)
@@ -701,7 +689,6 @@ tests/
 
 2. **Use Result Types for Explicit Error Handling**
    ```python
-   # file: examples/04_testing_best_practices.py
    # ✅ Return Result[T, E] from programs
    from collections.abc import Generator
    from dataclasses import dataclass
@@ -728,7 +715,6 @@ tests/
 
 3. **Test One Behavior Per Test**
    ```python
-   # file: examples/04_testing_best_practices.py
    def test_user_found_returns_ok() -> None:
        result = Ok(User(user_id=uuid4(), name="Alice"))
        assert isinstance(result, Ok)
@@ -744,7 +730,6 @@ tests/
 
 4. **Verify Effect Properties**
    ```python
-   # file: examples/04_testing_best_practices.py
    effect = next(gen)
    assert effect.__class__.__name__ == "GetUserById"
    assert effect.user_id == expected_user_id
@@ -752,7 +737,6 @@ tests/
 
 5. **Use Pattern Matching or isinstance for Results**
    ```python
-   # file: examples/04_testing_best_practices.py
    # Pattern matching
    match result:
        case Ok(user): assert user.id == user_id
@@ -765,7 +749,6 @@ tests/
 
 6. **Test Early Returns (Validation Errors)**
    ```python
-   # file: examples/04_testing_best_practices.py
    gen = update_user_program(user_id=uuid4())  # No fields
    try:
        next(gen)  # Should stop immediately
@@ -778,7 +761,6 @@ tests/
 
 1. **Don't Use Fakes or Test Doubles**
    ```python
-   # file: examples/04_testing_anti_patterns.py
 # ❌ Forbidden
 interpreter = MessagingInterpreter(producer=FakeMessageProducer())
 
@@ -790,7 +772,6 @@ result = gen.send(mock_response)
 
 2. **Don't Skip Result Type Verification**
    ```python
-   # file: examples/04_testing_anti_patterns.py
    # ❌ Missing Result type check
    result = e.value
    assert result.value.id == user_id  # Assumes Ok
@@ -802,7 +783,6 @@ result = gen.send(mock_response)
 
 3. **Don't Test Multiple Behaviors in One Test**
 ```python
-# file: examples/04_testing_guide.py
 # ❌ Too much in one test
 def test_get_user() -> None:
     # Tests both found AND not found - split into 2 tests!
@@ -814,7 +794,6 @@ def test_get_user() -> None:
 
 4. **Don't Use Real Infrastructure in Unit Tests**
    ```python
-   # file: examples/04_testing_anti_patterns.py
    # ❌ Don't do this in unit tests
    db_conn = await asyncpg.connect(DATABASE_URL)
    redis_client = await aioredis.from_url(REDIS_URL)
@@ -822,7 +801,6 @@ def test_get_user() -> None:
 
 5. **Don't Use pytest.skip()**
    ```python
-   # file: examples/04_testing_anti_patterns.py
 # ❌ Forbidden - creates false confidence
 @pytest.mark.skip(reason="Not implemented yet")
 def test_complex_workflow() -> None:
@@ -846,7 +824,6 @@ Metrics effects follow the same testing patterns as other effects, with addition
 Test metrics effects like any other effect using generator-based mocking:
 
 ```python
-# file: examples/04_testing_guide.py
 from effectful.effects.metrics import IncrementCounter, ObserveHistogram
 from effectful.domain.metrics_result import MetricRecorded, MetricRecordingFailed
 
@@ -890,7 +867,6 @@ def test_increment_counter_success() -> None:
 Test how programs handle metric recording failures:
 
 ```python
-# file: examples/04_testing_guide.py
 def test_increment_counter_handles_failure() -> None:
     """Test program handles metric recording failure gracefully."""
 
@@ -934,7 +910,6 @@ def test_increment_counter_handles_failure() -> None:
 Test duration tracking with histograms:
 
 ```python
-# file: examples/04_testing_guide.py
 def test_observe_histogram_duration() -> None:
     """Test observing duration in histogram."""
 
@@ -969,7 +944,6 @@ def test_observe_histogram_duration() -> None:
 Use `ResetMetrics` effect in test fixtures for isolation:
 
 ```python
-# file: examples/04_testing_guide.py
 import pytest
 from effectful.effects.metrics import ResetMetrics
 
@@ -1028,7 +1002,6 @@ async def test_counter_increments(clean_metrics: None) -> None:
 Test that invalid metrics are rejected:
 
 ```python
-# file: examples/04_testing_guide.py
 def test_invalid_metric_name_rejected() -> None:
     """Test metric recording fails for unregistered metric."""
 
@@ -1087,7 +1060,6 @@ def test_missing_required_label_rejected() -> None:
 Test that interpreters automatically record metrics:
 
 ```python
-# file: examples/04_testing_guide.py
 from unittest.mock import AsyncMock
 
 @pytest.mark.asyncio

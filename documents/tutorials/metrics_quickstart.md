@@ -41,7 +41,6 @@ The registry is a **frozen dataclass** that defines all metrics at application s
 **Why frozen?** Prevents runtime metric creation, which causes cardinality explosion.
 
 ```python
-# file: examples/11_metrics_quickstart.py
 from effectful.observability import (
     MetricsRegistry,
     CounterDefinition,
@@ -82,7 +81,6 @@ APP_METRICS = MetricsRegistry(
 Counters track **monotonically increasing values** (requests, errors, tasks processed).
 
 ```python
-# file: examples/11_metrics_quickstart.py
 from collections.abc import Generator
 from effectful import AllEffects, EffectResult
 from effectful.effects.metrics import IncrementCounter
@@ -132,7 +130,6 @@ def process_task_with_metrics(
 Histograms track **distributions** (latency, request size, duration).
 
 ```python
-# file: examples/11_metrics_quickstart.py
 import time
 
 def measure_task_duration(
@@ -176,7 +173,6 @@ def measure_task_duration(
 Query current metric values for debugging or health checks.
 
 ```python
-# file: examples/11_metrics_quickstart.py
 from effectful.effects.metrics import QueryMetrics
 from effectful.domain.metrics_result import QuerySuccess, QueryFailure
 
@@ -201,7 +197,6 @@ def check_task_metrics() -> Generator[AllEffects, EffectResult, dict[str, float]
 
 **Output Example**:
 ```text
-# file: examples/11_metrics_quickstart_output.txt
 📊 Metrics at 1706472000.0:
   tasks_processed_total{task_type="email",status="success"} = 142.0
 ```
@@ -213,7 +208,6 @@ def check_task_metrics() -> Generator[AllEffects, EffectResult, dict[str, float]
 Metrics can fail for several reasons. Always pattern match to handle errors gracefully.
 
 ```python
-# file: examples/11_metrics_quickstart.py
 def robust_metric_recording(
     task_type: str,
 ) -> Generator[AllEffects, EffectResult, None]:
@@ -259,7 +253,6 @@ def robust_metric_recording(
 ## Complete Working Example
 
 ```python
-# file: examples/11_metrics_quickstart.py
 from collections.abc import Generator
 from dataclasses import dataclass
 import time
@@ -379,7 +372,6 @@ async def main() -> None:
 
 **Expected Output**:
 ```text
-# file: examples/11_metrics_quickstart_output.txt
 ✅ All metrics recorded successfully
 Task 0: Ok(True)
 ✅ All metrics recorded successfully
@@ -401,7 +393,6 @@ Stats: Ok(5)
 Use `ResetMetrics` effect in test fixtures for isolation.
 
 ```python
-# file: examples/11_metrics_quickstart.py
 import pytest
 from effectful.effects.metrics import ResetMetrics
 
@@ -461,7 +452,6 @@ Now that you understand basic metrics, explore advanced topics:
 ### Pattern 1: Automatic Duration Tracking
 
 ```python
-# file: examples/11_metrics_quickstart.py
 def with_duration_tracking[T] (
     metric_name: str,
     labels: dict[str, str],
@@ -494,7 +484,6 @@ user = yield from with_duration_tracking(
 ### Pattern 2: Conditional Metrics
 
 ```python
-# file: examples/11_metrics_quickstart.py
 def process_with_status_metrics(
     task_id: str,
 ) -> Generator[AllEffects, EffectResult, None]:
@@ -524,7 +513,6 @@ def process_with_status_metrics(
 **Solution**: Add metric to registry before using it.
 
 ```python
-# file: examples/11_metrics_quickstart.py
 # ❌ WRONG - Metric not in registry
 yield IncrementCounter(
     metric_name="unknown_metric_total",
@@ -552,7 +540,6 @@ APP_METRICS = MetricsRegistry(
 **Solution**: Provide all labels defined in registry.
 
 ```python
-# file: examples/11_metrics_quickstart.py
 # Registry defines: label_names=("task_type", "status")
 
 # ❌ WRONG - Missing "status" label
@@ -577,7 +564,6 @@ yield IncrementCounter(
 **Solution**: Use correct effect type for metric.
 
 ```python
-# file: examples/11_metrics_quickstart.py
 # Registry defines as CounterDefinition
 
 # ❌ WRONG - Using RecordGauge on Counter

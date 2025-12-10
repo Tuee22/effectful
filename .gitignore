@@ -38,6 +38,14 @@ dmypy.json
 *~
 .DS_Store
 
+# Documentation (see documents/documentation_standards.md#2a-file-type-policy)
+*.bak
+*.bak2
+*.backup
+*.old
+*.tmp
+*.temp
+
 # Distribution
 dist/
 build/

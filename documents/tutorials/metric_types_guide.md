@@ -87,7 +87,6 @@ Prometheus provides 4 metric types, each optimized for different use cases:
 ### Example
 
 ```python
-# file: examples/12_metric_types_guide.py
 from effectful.effects.metrics import IncrementCounter
 from effectful.observability import CounterDefinition, MetricsRegistry
 
@@ -185,7 +184,6 @@ sum(rate(http_requests_total[5m]))
 ### Example
 
 ```python
-# file: examples/12_metric_types_guide.py
 from effectful.effects.metrics import RecordGauge
 from effectful.observability import GaugeDefinition, MetricsRegistry
 
@@ -293,7 +291,6 @@ websocket_connections_active > 1000
 ### Example
 
 ```python
-# file: examples/12_metric_types_guide.py
 from effectful.effects.metrics import ObserveHistogram
 from effectful.observability import HistogramDefinition, MetricsRegistry
 import time
@@ -345,14 +342,12 @@ def measure_request_duration(
 
 **Good Buckets** (exponential distribution):
 ```python
-# file: examples/12_metric_types_guide.py
 buckets=(0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0)
 # Roughly doubles each step, covers 5ms to 10s
 ```
 
 **Bad Buckets** (linear distribution):
 ```python
-# file: examples/12_metric_types_guide.py
 buckets=(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
 # Poor resolution at extremes
 ```
@@ -440,7 +435,6 @@ http_request_duration_seconds_count{method="GET",endpoint="/api/users"} 250
 ### Example
 
 ```python
-# file: examples/12_metric_types_guide.py
 from effectful.effects.metrics import RecordSummary
 from effectful.observability import SummaryDefinition, MetricsRegistry
 
@@ -505,7 +499,6 @@ response_size_bytes_count{endpoint="/api/users"} 100
 ### Example 1: HealthHub Appointments
 
 ```python
-# file: examples/12_metric_types_guide.py
 from effectful.observability import MetricsRegistry, CounterDefinition, HistogramDefinition, GaugeDefinition
 
 HEALTHHUB_METRICS = MetricsRegistry(
@@ -566,7 +559,6 @@ HEALTHHUB_METRICS = MetricsRegistry(
 ### Example 2: E-commerce System
 
 ```python
-# file: examples/12_metric_types_guide.py
 ECOMMERCE_METRICS = MetricsRegistry(
     counters=(
         # Orders
@@ -631,7 +623,6 @@ ECOMMERCE_METRICS = MetricsRegistry(
 Track both count and duration for requests:
 
 ```python
-# file: examples/12_metric_types_guide.py
 def handle_api_request(
     endpoint: str,
 ) -> Generator[AllEffects, EffectResult, None]:
@@ -665,7 +656,6 @@ def handle_api_request(
 Update gauge when resource count changes:
 
 ```python
-# file: examples/12_metric_types_guide.py
 def update_connection_gauge(
     pool_name: str,
     connections: int,
@@ -690,7 +680,6 @@ yield from update_connection_gauge("main", current_connections - 1)
 Use labels to separate success/error counts:
 
 ```python
-# file: examples/12_metric_types_guide.py
 def track_operation_result(
     operation: str,
     result: OperationResult,
@@ -726,7 +715,6 @@ sum(rate(operations_total[5m]))
 ### Counter
 
 ```python
-# file: examples/12_metric_types_guide.py
 # Define
 CounterDefinition(name="events_total", help_text="...", label_names=(...))
 
@@ -741,7 +729,6 @@ increase(events_total[1h])
 ### Gauge
 
 ```python
-# file: examples/12_metric_types_guide.py
 # Define
 GaugeDefinition(name="active_connections", help_text="...", label_names=(...))
 
@@ -756,7 +743,6 @@ avg_over_time(active_connections[5m])
 ### Histogram
 
 ```python
-# file: examples/12_metric_types_guide.py
 # Define
 HistogramDefinition(
     name="duration_seconds",
@@ -775,7 +761,6 @@ histogram_quantile(0.95, rate(duration_seconds_bucket[5m]))
 ### Summary (Rare)
 
 ```python
-# file: examples/12_metric_types_guide.py
 # Define
 SummaryDefinition(
     name="size_bytes",

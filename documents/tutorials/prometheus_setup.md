@@ -291,7 +291,6 @@ providers:
 Add metrics endpoint to your FastAPI application:
 
 ```python
-# file: examples/13_prometheus_setup.py
 from fastapi import FastAPI
 from prometheus_client import (
     CollectorRegistry,
@@ -550,7 +549,6 @@ alerting:
 
 **Solution**:
 ```python
-# file: examples/13_prometheus_setup.py
 # Ensure FastAPI listens on 0.0.0.0
 if __name__ == "__main__":
     import uvicorn

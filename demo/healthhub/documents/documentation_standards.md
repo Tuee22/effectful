@@ -27,3 +27,10 @@
 - Demo docs must stay delta-only: same filenames as base docs, start with a link to the base SSoT, and avoid copying procedures, examples, or diagrams. Add future deltas here with deep links to the overridden base sections.
 - When migrating content from `product/` to `engineering/`, consolidate into the relevant delta doc and remove redundant wording; keep `product/` focused on HealthHub-specific product decisions and user-facing behaviors.
 - Tutorials should reference engineering deltas for compliance patterns and avoid re-teaching the SSoT—link instead.
+
+### File Type Policy
+
+HealthHub follows the base [File Type Policy](../../../documents/documentation_standards.md#2a-file-type-policy) with no exceptions:
+- No backup files (`.bak`, `.bak2`, `.backup`, `.old`, `~`)
+- No temporary files (`.tmp`, `.temp`, `.swp`, `.swo`)
+- No `.txt` files (use `.md` for all documentation)

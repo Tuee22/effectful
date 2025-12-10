@@ -46,7 +46,6 @@ flowchart TB
 Keep programs orchestration-only; let interpreters own I/O and retries.
 
 ```python
-# file: examples/09_storage_effects.py
 from collections.abc import Generator
 
 from effectful.effects.storage import GetObject, PutObject, DeleteObject
