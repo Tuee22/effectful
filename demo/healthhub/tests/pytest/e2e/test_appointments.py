@@ -86,9 +86,8 @@ class TestAppointmentListDisplay:
             # Should navigate to detail page
             await authenticated_doctor_page.wait_for_timeout(1000)
             # Verify navigation occurred - URL should change to detail page
-            await expect(authenticated_doctor_page).to_have_url(
-                lambda url: "/appointments/" in url, timeout=5000
-            )
+            current_url = authenticated_doctor_page.url
+            assert "/appointments/" in current_url
 
 
 @pytest.mark.e2e
@@ -205,7 +204,9 @@ class TestAppointmentStateMachine:
             )
             # Assert no transition buttons are visible for completed appointments
             count = await action_buttons.count()
-            assert count == 0, f"Expected no transition buttons for completed appointment, found {count}"
+            assert (
+                count == 0
+            ), f"Expected no transition buttons for completed appointment, found {count}"
 
     async def test_cancelled_appointment_has_no_transition_buttons(
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
@@ -233,4 +234,6 @@ class TestAppointmentStateMachine:
             )
             # Assert no transition buttons are visible for cancelled appointments
             count = await action_buttons.count()
-            assert count == 0, f"Expected no transition buttons for cancelled appointment, found {count}"
+            assert (
+                count == 0
+            ), f"Expected no transition buttons for cancelled appointment, found {count}"

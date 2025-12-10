@@ -194,6 +194,14 @@ Must meet Universal Success Criteria.
 
 17. **Inline Interpreter Construction** - ❌ Manually creating db_manager, pool, redis_client, observability_interpreter, base_interpreter, and AuditedCompositeInterpreter in each endpoint | ✅ Use `Depends(get_audited_composite_interpreter)` dependency injection
 
+### Configuration Anti-Patterns
+
+> **📖 See**: [Configuration Lifecycle Management (Doctrine 7)](../../documents/engineering/code_quality.md#doctrine-7-configuration-lifecycle-management)
+
+18. **Module-Level Settings Singleton** - ❌ `settings = Settings()` at module level | ✅ Create Settings in lifespan context manager only
+19. **Settings in Effect Programs** - ❌ Yielding GetSettings effect or passing Settings to programs | ✅ Settings injected to infrastructure constructors only
+20. **Mutable Settings Object** - ❌ Settings without frozen=True | ✅ Pydantic BaseSettings with frozen=True in model_config
+
 ## 🛡️ Type Safety
 
 **Core Rules**:
@@ -287,12 +295,13 @@ JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
 - [ ] `poetry run check-code` exits 0
 - [ ] Tests for all features (unit + integration)
 - [ ] No forbidden constructs (Any/cast/type:ignore)
-- [ ] No anti-patterns (1-17)
+- [ ] No anti-patterns (1-20, including configuration anti-patterns)
 - [ ] All dataclasses frozen (`frozen=True`)
 - [ ] ADTs used instead of Optional for domain logic
 - [ ] Result type used for all fallible operations
 - [ ] Effect programs yield effects, don't call infrastructure
 - [ ] API endpoints use dependency injection for interpreters
+- [ ] Settings created ONLY in lifespan context manager (Doctrine 7)
 - [ ] HIPAA audit logging for PHI access
 - [ ] Changes left uncommitted
 

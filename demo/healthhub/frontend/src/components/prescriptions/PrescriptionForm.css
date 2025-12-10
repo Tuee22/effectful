@@ -1,0 +1,116 @@
+.prescription-form-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.prescription-form {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.prescription-form h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+.prescription-form .form-group {
+  margin-bottom: 1rem;
+}
+
+.prescription-form .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.prescription-form .required {
+  color: #e74c3c;
+}
+
+.prescription-form input,
+.prescription-form select,
+.prescription-form textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.prescription-form textarea {
+  resize: vertical;
+}
+
+.prescription-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.prescription-form .form-error {
+  background-color: #fee;
+  color: #c00;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.prescription-form .form-warning {
+  background-color: #fffbeb;
+  color: #92400e;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.prescription-form .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.prescription-form .cancel-button,
+.prescription-form .submit-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.prescription-form .cancel-button {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.prescription-form .cancel-button:hover:not(:disabled) {
+  background-color: #e0e0e0;
+}
+
+.prescription-form .submit-button {
+  background-color: #3498db;
+  color: white;
+}
+
+.prescription-form .submit-button:hover:not(:disabled) {
+  background-color: #2980b9;
+}
+
+.prescription-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

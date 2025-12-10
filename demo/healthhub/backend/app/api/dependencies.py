@@ -15,6 +15,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.auth import verify_token, TokenData, TokenType
 from app.auth.jwt import TokenValidationSuccess, TokenValidationError
+from app.config import Settings
 from app.container import ApplicationContainer
 from app.domain.lookup_result import (
     DoctorFound,
@@ -173,11 +174,13 @@ async def get_composite_interpreter(
 
 
 def get_token_data(
+    request: Request,
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
 ) -> TokenData:
     """Validate JWT access token and return token data.
 
     Args:
+        request: FastAPI request to access app.state.settings
         credentials: Parsed bearer credentials from the Authorization header.
 
     Returns:
@@ -189,8 +192,9 @@ def get_token_data(
     Effects:
         verify_token (JWT validation)
     """
+    settings: Settings = request.app.state.settings
     token = credentials.credentials
-    result = verify_token(token, TokenType.ACCESS)
+    result = verify_token(settings, token, TokenType.ACCESS)
 
     match result:
         case TokenValidationSuccess(token_data=data):

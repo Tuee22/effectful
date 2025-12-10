@@ -132,6 +132,111 @@ See [OptionalValue API Decision Tree](../api/optional_value.md#decision-tree-opt
 ### Doctrine 6: Exhaustive Pattern Matching
 - Pure code matches on ADTs exhaustively with `assert_never()` safeguards.
 
+### Doctrine 7: Configuration Lifecycle Management
+
+**Settings must be Pydantic BaseSettings created ONLY in lifespan context manager.**
+
+#### Rules
+
+1. **Pydantic BaseSettings**: All configuration classes MUST inherit from `pydantic_settings.BaseSettings`
+   - Automatic environment variable loading
+   - Type validation at instantiation
+   - Clear contract for required vs optional fields
+
+2. **Lifespan-Scoped Creation**: Settings objects MUST be instantiated ONLY in the uvicorn/FastAPI lifespan context manager
+   ```python
+   @asynccontextmanager
+   async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+       settings = Settings()  # ✅ ONLY HERE
+       # ... use settings to create infrastructure ...
+       yield
+   ```
+   ❌ FORBIDDEN:
+   - Module-level: `settings = Settings()` at file scope
+   - Function-level: Creating Settings in business logic
+   - Test-level: Creating Settings outside fixtures
+
+3. **Immutability**: Settings MUST be frozen after creation
+   ```python
+   @dataclass(frozen=True)
+   class Settings(BaseSettings):
+       model_config = SettingsConfigDict(...)
+   ```
+
+4. **Not Business Logic**: Configuration is infrastructure concern, lives outside purity constraints
+   - Settings MAY be passed to infrastructure constructors (DatabaseManager, RedisClientFactory)
+   - Settings MUST NOT be accessed in effect programs (programs remain pure)
+   - Settings MUST NOT be passed to interpreters (interpreters use configured resources)
+
+5. **No Singletons**: Settings MUST NOT be module-level singletons
+   - Creates Settings once in lifespan
+   - Passes to infrastructure constructors
+   - Optionally stores in `app.state.settings` for API layer access
+   - Garbage collected after lifespan ends (or remains in app.state)
+
+#### Rationale
+
+- **Fail-Fast**: Validation errors crash at startup, not during requests
+- **Immutability**: Cannot be mutated after application startup
+- **Lifecycle**: Clear creation point (lifespan start) and scope (application lifetime)
+- **Testability**: Override lifespan to inject test settings
+- **Separation**: Config separate from business logic (different concerns)
+
+#### Examples
+
+**✅ Correct Pattern**:
+```python
+# config.py
+@dataclass(frozen=True)
+class Settings(BaseSettings):
+    postgres_host: str
+    postgres_port: int
+    # ...
+
+# main.py
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    settings = Settings()  # Created here
+    db_manager = DatabaseManager(settings)  # Passed to infrastructure
+    await db_manager.setup()
+    yield
+
+app = FastAPI(lifespan=lifespan)
+```
+
+**❌ Anti-Pattern**:
+```python
+# config.py
+settings = Settings()  # Module-level singleton - FORBIDDEN
+
+# programs.py
+def my_program() -> Generator[...]:
+    db_host = settings.postgres_host  # Settings in program - FORBIDDEN
+```
+
+#### Detection
+
+**Automated**:
+```bash
+# Detect module-level Settings instantiation
+grep -r "^settings = Settings()" backend/app/
+
+# Detect Settings usage in programs
+grep -r "from app.config import settings" backend/app/programs/
+```
+
+**Manual**: Code review checks:
+- Settings class has `frozen=True`
+- Settings created only in lifespan
+- Programs never import settings
+- Tests use Settings fixtures
+
+#### Cross-References
+
+- [Architecture: Infrastructure Topology](architecture.md#infrastructure-topology) - Settings create infrastructure
+- [Testing: Integration Test Patterns](testing.md) - Settings in test fixtures
+- [Docker Workflow](docker_workflow.md) - Environment variable configuration
+
 ---
 
 ## Generator Program Rules
@@ -156,6 +261,9 @@ See [OptionalValue API Decision Tree](../api/optional_value.md#decision-tree-opt
 | Imperative effect execution | Untestable programs | See [Doctrine 3: Yield Don't Call](#doctrine-3-yield-dont-call) |
 | Impure comprehensions | Side effects in pure layer | See [Doctrine 1: No Loops](#doctrine-1-no-loops) |
 | Global mutable state | Non-determinism | See [Doctrine 5: Immutability by Default](#doctrine-5-immutability-by-default) |
+| Module-level Settings singleton | Global mutable config | See [Doctrine 7: Configuration Lifecycle Management](#doctrine-7-configuration-lifecycle-management) |
+| Settings in effect programs | Impure programs | See [Doctrine 7: Configuration Lifecycle Management](#doctrine-7-configuration-lifecycle-management) |
+| Mutable Settings object | Runtime config drift | See [Doctrine 7: Configuration Lifecycle Management](#doctrine-7-configuration-lifecycle-management) |
 | Inline interpreter construction | Boilerplate, resource leaks | Use `Depends(get_audited_composite_interpreter)` for API endpoints |
 | Skipped tests (`pytest.skip`) | Masks regressions | See [Testing Anti-Patterns](testing.md#anti-pattern-2-skipped-tests) |
 | Running pytest/poetry on host | Bypasses infra contract | See [Docker Workflow](docker_workflow.md#development-contract) |

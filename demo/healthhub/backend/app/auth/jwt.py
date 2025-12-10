@@ -12,7 +12,7 @@ from uuid import UUID
 
 import jwt
 
-from app.config import settings
+from app.config import Settings
 from effectful.domain.optional_value import OptionalValue, to_optional_value
 
 
@@ -56,6 +56,7 @@ type TokenValidationResult = TokenValidationSuccess | TokenValidationError
 
 
 def create_access_token(
+    settings: Settings,
     user_id: UUID,
     email: str,
     role: str,
@@ -65,6 +66,7 @@ def create_access_token(
     """Create a short-lived JWT access token (15 minutes) with profile IDs.
 
     Args:
+        settings: Application settings for JWT configuration
         user_id: User UUID
         email: User email
         role: User role (patient, doctor, admin)
@@ -93,6 +95,7 @@ def create_access_token(
 
 
 def create_refresh_token(
+    settings: Settings,
     user_id: UUID,
     email: str,
     role: str,
@@ -102,6 +105,7 @@ def create_refresh_token(
     """Create a long-lived JWT refresh token (7 days) with profile IDs.
 
     Args:
+        settings: Application settings for JWT configuration
         user_id: User UUID
         email: User email
         role: User role (patient, doctor, admin)
@@ -129,10 +133,11 @@ def create_refresh_token(
     return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
 
-def verify_token(token: str, expected_type: TokenType) -> TokenValidationResult:
+def verify_token(settings: Settings, token: str, expected_type: TokenType) -> TokenValidationResult:
     """Verify and decode a JWT token.
 
     Args:
+        settings: Application settings for JWT configuration
         token: JWT token string
         expected_type: Expected token type (access or refresh)
 

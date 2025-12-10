@@ -9,7 +9,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Request, status
 import redis.asyncio as redis
 
-from app.infrastructure.redis_client import create_redis_client
+from app.config import Settings
 
 
 class RedisWrapper:
@@ -67,9 +67,20 @@ class RateLimiter:
         return int(current_count) < max_requests
 
 
-def get_rate_limiter() -> RateLimiter:
-    """Dependency to get rate limiter instance."""
-    redis_client = create_redis_client()
+def get_rate_limiter(request: Request) -> RateLimiter:
+    """Dependency to get rate limiter instance.
+
+    DEPRECATED: This creates a new Redis client on every request which is inefficient.
+    Rate limiting should be refactored to use RedisClientFactory from container.
+    For now, we get settings from app.state to avoid singleton pattern violation.
+    """
+    settings: Settings = request.app.state.settings
+    redis_client: redis.Redis[bytes] = redis.Redis(
+        host=settings.redis_host,
+        port=settings.redis_port,
+        db=settings.redis_db,
+        decode_responses=False,
+    )
     return RateLimiter(RedisWrapper(redis_client))
 
 

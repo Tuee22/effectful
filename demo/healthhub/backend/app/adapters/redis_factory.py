@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 import redis.asyncio as redis
 
-from app.config import settings
+from app.config import Settings
 
 if TYPE_CHECKING:
     from redis.asyncio import Redis
@@ -26,11 +26,15 @@ class ProductionRedisClientFactory:
     typing, allowing for easy test mocking.
 
     Example usage:
-        factory = ProductionRedisClientFactory()
+        factory = ProductionRedisClientFactory(settings)
         async with factory.managed() as client:
             await client.set("key", "value")
         # Client automatically closed
     """
+
+    def __init__(self, settings: Settings) -> None:
+        """Initialize factory with settings."""
+        self._settings = settings
 
     def create(self) -> "Redis[bytes]":
         """Create new Redis client for single request.
@@ -43,9 +47,9 @@ class ProductionRedisClientFactory:
             Consider using managed() for automatic cleanup.
         """
         return redis.Redis(
-            host=settings.redis_host,
-            port=settings.redis_port,
-            db=settings.redis_db,
+            host=self._settings.redis_host,
+            port=self._settings.redis_port,
+            db=self._settings.redis_db,
             decode_responses=False,
         )
 

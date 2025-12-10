@@ -408,8 +408,6 @@ class HealthcareInterpreter:
         now = datetime.now(timezone.utc)
         patient_id = uuid4()
 
-        allergies_json = json.dumps(allergies)
-
         row = await self.pool.fetchrow(
             """
             INSERT INTO patients (
@@ -417,7 +415,7 @@ class HealthcareInterpreter:
                 blood_type, allergies, insurance_id, emergency_contact,
                 phone, address, created_at, updated_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10, $11, $12, $13)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
             RETURNING id, user_id, first_name, last_name, date_of_birth,
                       blood_type, allergies, insurance_id, emergency_contact,
                       phone, address, created_at, updated_at
@@ -428,7 +426,7 @@ class HealthcareInterpreter:
             last_name,
             date_of_birth,
             blood_type,
-            allergies_json,
+            allergies,
             insurance_id,
             emergency_contact,
             phone,

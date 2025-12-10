@@ -49,6 +49,7 @@ class TestPatientRegistration:
         await page.locator('input[name="firstName"]').fill("New")
         await page.locator('input[name="lastName"]').fill("Patient")
         await page.locator('input[name="dateOfBirth"]').fill("1990-01-01")
+        await page.locator('input[name="emergencyContact"]').fill("John Doe: 555-0100")
         await page.locator('input[name="phone"]').fill("555-0199")
 
         # Submit registration
@@ -100,7 +101,7 @@ class TestPatientAppointmentWorkflow:
                 await page.wait_for_timeout(1000)  # Allow state update
 
                 # Verify appointment appears with "Requested" status
-                await expect(page.locator('text=Requested')).to_be_visible(timeout=5000)
+                await expect(page.locator("text=Requested")).to_be_visible(timeout=5000)
 
     async def test_patient_can_view_appointment_list(
         self, authenticated_patient_page: Page, make_url: Callable[[str], str]
@@ -121,7 +122,7 @@ class TestPatientAppointmentWorkflow:
 
         # Verify at least one appointment is visible
         # Look for either the appointment reason or status
-        appointments_section = page.locator('[data-testid="appointments-list"], .appointments-list, text=Annual cardiac checkup')
+        appointments_section = page.locator("[data-testid='appointments-list'], .appointments-list")
 
         # If appointments exist, at least one should be visible
         # Note: This is flexible to account for different UI implementations
@@ -155,7 +156,9 @@ class TestPatientMedicalRecords:
         await page.wait_for_timeout(1000)
 
         # Verify page loaded (look for prescription list container or medication name)
-        prescriptions_section = page.locator('[data-testid="prescriptions-list"], .prescriptions-list, text=Lisinopril')
+        prescriptions_section = page.locator(
+            "[data-testid='prescriptions-list'], .prescriptions-list"
+        )
 
         # Check if prescriptions are visible
         has_prescriptions = await prescriptions_section.count() > 0
@@ -178,7 +181,7 @@ class TestPatientMedicalRecords:
         await page.wait_for_timeout(1000)
 
         # Verify page loaded
-        lab_results_section = page.locator('[data-testid="lab-results-list"], .lab-results-list, text=Lipid Panel')
+        lab_results_section = page.locator("[data-testid='lab-results-list'], .lab-results-list")
 
         # Check if lab results are visible
         has_lab_results = await lab_results_section.count() > 0
@@ -200,7 +203,9 @@ class TestPatientMedicalRecords:
         await page.wait_for_timeout(1000)
 
         # Verify invoices page loaded (look for invoices section or empty state)
-        await expect(page.locator('text=Invoices, text=No invoices, [data-testid="invoices-list"]').first).to_be_visible(timeout=5000)
+        await expect(
+            page.locator("[data-testid='invoices-list'], .invoice-list, .invoice-list-empty").first
+        ).to_be_visible(timeout=5000)
 
 
 @pytest.mark.e2e
@@ -232,7 +237,11 @@ class TestPatientRBACEnforcement:
 
             # Check that we're NOT on the admin URL (redirected away)
             current_url = page.url
-            is_redirected = admin_url not in current_url or "403" in await page.content() or "Access Denied" in await page.content()
+            is_redirected = (
+                admin_url not in current_url
+                or "403" in await page.content()
+                or "Access Denied" in await page.content()
+            )
 
     async def test_patient_can_only_view_own_data(
         self, authenticated_patient_page: Page, make_url: Callable[[str], str]
@@ -254,7 +263,11 @@ class TestPatientRBACEnforcement:
         # 3. Redirect to dashboard
 
         current_url = page.url
-        is_access_denied = bob_patient_id not in current_url or "403" in await page.content() or "Access Denied" in await page.content()
+        is_access_denied = (
+            bob_patient_id not in current_url
+            or "403" in await page.content()
+            or "Access Denied" in await page.content()
+        )
 
 
 @pytest.mark.e2e
@@ -273,7 +286,9 @@ class TestPatientNotifications:
 
         # Check for notifications indicator (badge, bell icon, etc.)
         # Note: Actual implementation depends on UI design
-        notifications_indicator = page.locator('[data-testid="notifications"], .notifications-badge, text=Notification')
+        notifications_indicator = page.locator(
+            "[data-testid='notifications'], .notifications-badge"
+        )
 
         # Wait for page to load
         await page.wait_for_timeout(1000)

@@ -100,8 +100,12 @@ class TestPrescriptionCreation:
             )
             # Assert at least one form element is visible
             count = await form_fields.count()
-            assert count > 0, "Expected prescription form fields to be visible after clicking create"
+            assert (
+                count > 0
+            ), "Expected prescription form fields to be visible after clicking create"
             # Verify we navigated to a form page or modal appeared
             await expect(
-                authenticated_doctor_page.locator("form, [role='dialog'], [data-testid='prescription-form']").first
+                authenticated_doctor_page.locator(
+                    "form, [role='dialog'], [data-testid='prescription-form']"
+                ).first
             ).to_be_visible(timeout=5000)

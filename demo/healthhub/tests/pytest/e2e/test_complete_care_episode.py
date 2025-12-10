@@ -33,7 +33,7 @@ class TestCompleteCareEpisode:
 
     async def test_complete_patient_journey_ui(
         self,
-        page: Page,
+        authenticated_patient_page: Page,
         authenticated_doctor_page: Page,
         authenticated_admin_page: Page,
         make_url: Callable[[str], str],
@@ -49,43 +49,40 @@ class TestCompleteCareEpisode:
         Note: This is a simplified UI test. Full workflow requires API-level
         testing for complete state machine validation.
         """
-        # ===== Step 1: Patient Login =====
-        await page.goto(make_url("/login"))
-        await page.wait_for_selector('input[name="email"]', timeout=15000)
-        await page.locator('input[name="email"]').fill("alice.patient@example.com")
-        await page.locator('input[name="password"]').fill("password123")
+        # ===== Step 1: Patient Views Existing Appointment =====
+        # Use pre-authenticated patient page (Alice)
+        patient_page = authenticated_patient_page
 
-        async with page.expect_navigation(timeout=30000):
-            await page.locator('button[type="submit"]').click()
-
-        await page.wait_for_url(make_url("/dashboard"), timeout=30000)
-
-        # ===== Step 2: Patient Views Existing Appointment =====
         # Seed data includes confirmed appointment for Alice
-        await page.goto(make_url("/appointments"))
-        await page.wait_for_timeout(1000)
+        await patient_page.goto(make_url("/appointments"))
+        await patient_page.wait_for_timeout(1000)
 
         # Verify appointment is visible
-        appointment_card = page.locator('text=Annual cardiac checkup, text=Cardiology, [data-testid="appointment-card"]').first
+        appointment_card = patient_page.locator(
+            'text=Annual cardiac checkup, text=Cardiology, [data-testid="appointment-card"]'
+        ).first
         has_appointment = await appointment_card.count() > 0
 
-        # ===== Step 3: Doctor Login (using authenticated_doctor_page) =====
+        # ===== Step 2: Doctor Views Appointments =====
         doctor_page = authenticated_doctor_page
         await doctor_page.goto(make_url("/dashboard"))
 
-        # ===== Step 4: Doctor Views Appointments =====
+        # Doctor can see patient appointments
         await doctor_page.goto(make_url("/appointments"))
         await doctor_page.wait_for_timeout(1000)
 
         # Verify doctor can see patient appointments
         # Seed data includes appointments for multiple patients
-        appointments_visible = await doctor_page.locator('[data-testid="appointments-list"], .appointments-container, text=Annual cardiac checkup').count() > 0
+        appointments_container = doctor_page.locator(
+            '[data-testid="appointments-list"], .appointments-container'
+        ).first
+        appointments_visible = await appointments_container.count() > 0
 
-        # ===== Step 5: Admin Login (using authenticated_admin_page) =====
+        # ===== Step 3: Admin Views Invoices =====
         admin_page = authenticated_admin_page
         await admin_page.goto(make_url("/dashboard"))
 
-        # ===== Step 6: Admin Views Invoices =====
+        # Admin can view invoices
         await admin_page.goto(make_url("/invoices"))
         await admin_page.wait_for_timeout(1000)
 
@@ -95,7 +92,10 @@ class TestCompleteCareEpisode:
         # total: $272.50
 
         # Verify admin can view invoices
-        invoices_visible = await admin_page.locator('[data-testid="invoices-list"], .invoices-container, text=Invoice, text=sent').count() > 0
+        invoices_container = admin_page.locator(
+            '[data-testid="invoices-list"], .invoices-container'
+        ).first
+        invoices_visible = await invoices_container.count() > 0
 
 
 @pytest.mark.e2e
@@ -125,13 +125,19 @@ class TestAppointmentStateTransitions:
         # - Completed appointment (id: ...003)
 
         # Verify appointments with different statuses are visible
-        confirmed_appt = page.locator('text=confirmed, text=Confirmed, [data-status="confirmed"]').first
+        confirmed_appt = page.locator(
+            'text=confirmed, text=Confirmed, [data-status="confirmed"]'
+        ).first
         has_confirmed = await confirmed_appt.count() > 0
 
-        requested_appt = page.locator('text=requested, text=Requested, [data-status="requested"]').first
+        requested_appt = page.locator(
+            'text=requested, text=Requested, [data-status="requested"]'
+        ).first
         has_requested = await requested_appt.count() > 0
 
-        completed_appt = page.locator('text=completed, text=Completed, [data-status="completed"]').first
+        completed_appt = page.locator(
+            'text=completed, text=Completed, [data-status="completed"]'
+        ).first
         has_completed = await completed_appt.count() > 0
 
         # Note: Actual state transition testing (e.g., clicking "Confirm" button)
@@ -156,7 +162,9 @@ class TestAppointmentStateTransitions:
         # status: completed
         # reason: Skin rash consultation
 
-        completed_appt_link = page.locator('text=Skin rash consultation, [data-appointment-id="50000000-0000-0000-0000-000000000003"]').first
+        completed_appt_link = page.locator(
+            'text=Skin rash consultation, [data-appointment-id="50000000-0000-0000-0000-000000000003"]'
+        ).first
 
         if await completed_appt_link.count() > 0:
             # Click to view details
@@ -174,7 +182,9 @@ class TestAppointmentStateTransitions:
             has_confirm = await confirm_button.count() > 0
 
             # All should be false (no transition buttons for terminal state)
-            assert not (has_start or has_complete or has_confirm), "Completed appointments should have no transition buttons"
+            assert not (
+                has_start or has_complete or has_confirm
+            ), "Completed appointments should have no transition buttons"
 
 
 @pytest.mark.e2e
@@ -197,7 +207,12 @@ class TestPrescriptionWorkflow:
         # 2. Hydrocortisone Cream for Carol Carter
 
         # Verify prescriptions are visible to doctor
-        prescriptions_visible = await page.locator('text=Lisinopril, text=Hydrocortisone, [data-testid="prescriptions-list"]').count() > 0
+        prescriptions_visible = (
+            await page.locator(
+                'text=Lisinopril, text=Hydrocortisone, [data-testid="prescriptions-list"]'
+            ).count()
+            > 0
+        )
 
     async def test_prescription_shows_medication_details(
         self, authenticated_patient_page: Page, make_url: Callable[[str], str]
@@ -210,12 +225,14 @@ class TestPrescriptionWorkflow:
         await page.wait_for_timeout(1000)
 
         # Verify prescription details are visible
-        has_medication = await page.locator('text=Lisinopril').count() > 0
-        has_dosage = await page.locator('text=10mg').count() > 0
-        has_frequency = await page.locator('text=Once daily').count() > 0
+        has_medication = await page.locator("text=Lisinopril").count() > 0
+        has_dosage = await page.locator("text=10mg").count() > 0
+        has_frequency = await page.locator("text=Once daily").count() > 0
 
         # At least medication name should be visible
-        assert has_medication or has_dosage or has_frequency, "Prescription details should be visible"
+        assert (
+            has_medication or has_dosage or has_frequency
+        ), "Prescription details should be visible"
 
 
 @pytest.mark.e2e
@@ -239,7 +256,9 @@ class TestInvoiceWorkflow:
         # total: $272.50
 
         # Verify invoices are visible
-        invoices_visible = await page.locator('[data-testid="invoices-list"], .invoices-container, text=Invoice').count() > 0
+        invoices_visible = (
+            await page.locator("[data-testid='invoices-list'], .invoices-container").count() > 0
+        )
 
     async def test_invoice_shows_line_items(
         self, authenticated_admin_page: Page, make_url: Callable[[str], str]
@@ -256,15 +275,21 @@ class TestInvoiceWorkflow:
         # 2. Prescription - Hydrocortisone Cream ($50)
 
         # Click to view invoice details (if implemented)
-        invoice_link = page.locator('text=272.50, [data-invoice-id="80000000-0000-0000-0000-000000000001"]').first
+        invoice_link = page.locator(
+            'text=272.50, [data-invoice-id="80000000-0000-0000-0000-000000000001"]'
+        ).first
 
         if await invoice_link.count() > 0:
             await invoice_link.click()
             await page.wait_for_timeout(1000)
 
             # Verify line items are visible
-            has_office_visit = await page.locator('text=Office Visit, text=Dermatology Consultation').count() > 0
-            has_prescription = await page.locator('text=Prescription, text=Hydrocortisone Cream').count() > 0
+            has_office_visit = (
+                await page.locator("text=Office Visit, text=Dermatology Consultation").count() > 0
+            )
+            has_prescription = (
+                await page.locator("text=Prescription, text=Hydrocortisone Cream").count() > 0
+            )
 
     async def test_patient_can_view_own_invoices_only(
         self, authenticated_patient_page: Page, make_url: Callable[[str], str]
@@ -279,7 +304,9 @@ class TestInvoiceWorkflow:
         # Alice should see empty invoice list (or no invoices message)
         # Carol's invoice should NOT be visible to Alice
 
-        carol_invoice = page.locator('text=272.50, [data-invoice-id="80000000-0000-0000-0000-000000000001"]')
+        carol_invoice = page.locator(
+            'text=272.50, [data-invoice-id="80000000-0000-0000-0000-000000000001"]'
+        )
         carol_invoice_visible = await carol_invoice.count() > 0
 
         # Alice should NOT see Carol's invoice
@@ -306,7 +333,12 @@ class TestLabResultWorkflow:
         # 2. Blood Glucose for David Davis (reviewed, critical)
 
         # Verify lab results are visible
-        lab_results_visible = await page.locator('text=Lipid Panel, text=Blood Glucose, [data-testid="lab-results-list"]').count() > 0
+        lab_results_visible = (
+            await page.locator(
+                'text=Lipid Panel, text=Blood Glucose, [data-testid="lab-results-list"]'
+            ).count()
+            > 0
+        )
 
     async def test_critical_lab_result_flagged(
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
@@ -323,7 +355,9 @@ class TestLabResultWorkflow:
         # test_type: Blood Glucose
 
         # Look for critical flag (icon, badge, or text)
-        critical_indicator = page.locator('text=Critical, text=CRITICAL, [data-critical="true"], .critical-badge').first
+        critical_indicator = page.locator(
+            'text=Critical, text=CRITICAL, [data-critical="true"], .critical-badge'
+        ).first
 
         if await critical_indicator.count() > 0:
             # Critical indicator is visible
@@ -340,10 +374,10 @@ class TestLabResultWorkflow:
         await page.wait_for_timeout(1000)
 
         # Verify lab result is visible
-        has_lipid_panel = await page.locator('text=Lipid Panel').count() > 0
+        has_lipid_panel = await page.locator("text=Lipid Panel").count() > 0
 
         # Verify doctor notes are visible (if UI displays them)
-        has_doctor_notes = await page.locator('text=Results within normal range').count() > 0
+        has_doctor_notes = await page.locator("text=Results within normal range").count() > 0
 
 
 @pytest.mark.e2e
@@ -368,7 +402,7 @@ class TestMultiFeatureIntegration:
         # Full implementation depends on UI design
 
         # Verify completed appointment is visible
-        completed_appt = page.locator('text=Skin rash consultation, text=completed').first
+        completed_appt = page.locator("text=Skin rash consultation, text=completed").first
         has_completed = await completed_appt.count() > 0
 
     async def test_appointment_links_to_invoice(
@@ -385,5 +419,5 @@ class TestMultiFeatureIntegration:
         # appointment 50000000-0000-0000-0000-000000000003
 
         # Verify invoice is visible
-        invoice = page.locator('[data-invoice-id="80000000-0000-0000-0000-000000000001"], text=272.50').first
+        invoice = page.locator("[data-invoice-id='80000000-0000-0000-0000-000000000001']").first
         has_invoice = await invoice.count() > 0

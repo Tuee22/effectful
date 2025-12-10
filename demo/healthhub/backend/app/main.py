@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from prometheus_client import CONTENT_TYPE_LATEST, REGISTRY, generate_latest
 
-from app.config import settings
+from app.config import Settings
 from app.container import ApplicationContainer
 from app.adapters.asyncpg_pool import AsyncPgPoolAdapter
 from app.adapters.prometheus_observability import PrometheusObservabilityAdapter
@@ -41,8 +41,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     Creates ApplicationContainer with protocol implementations,
     stores in app.state for dependency injection.
     """
+    # Load settings (Doctrine 7: Configuration Lifecycle Management)
+    settings = Settings()
+
     # Startup: Create database pool
-    db_manager = DatabaseManager()
+    db_manager = DatabaseManager(settings)
     await db_manager.setup()
     pool = db_manager.get_pool()
 
@@ -51,7 +54,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     observability_adapter = PrometheusObservabilityAdapter(ConcreteObservabilityInterpreter())
 
     # Create factories
-    redis_factory = ProductionRedisClientFactory()
+    redis_factory = ProductionRedisClientFactory(settings)
     interpreter_factory = ProductionInterpreterFactory(
         database_pool=database_pool_adapter,
         redis_factory=redis_factory,
@@ -68,6 +71,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     # Store in app.state (replaces global singletons)
     app.state.container = container
+    app.state.settings = settings  # Store for auth endpoints
 
     yield
 
@@ -75,9 +79,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await database_pool_adapter.close()
 
 
+# Bootstrap settings for app construction (before lifespan)
+_bootstrap_settings = Settings()
+
 # Create FastAPI application
 app = FastAPI(
-    title=settings.app_name,
+    title=_bootstrap_settings.app_name,
     description="Healthcare portal demo with Effectful effect system",
     version="1.0.0",
     lifespan=lifespan,
@@ -86,26 +93,34 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=settings.cors_allow_credentials,
-    allow_methods=settings.cors_allow_methods,
-    allow_headers=settings.cors_allow_headers,
+    allow_origins=_bootstrap_settings.cors_origins,
+    allow_credentials=_bootstrap_settings.cors_allow_credentials,
+    allow_methods=_bootstrap_settings.cors_allow_methods,
+    allow_headers=_bootstrap_settings.cors_allow_headers,
 )
 
 # Include routers
 app.include_router(health_router, tags=["health"])
-app.include_router(auth_router, prefix=f"{settings.api_prefix}/auth", tags=["auth"])
-app.include_router(patients_router, prefix=f"{settings.api_prefix}/patients", tags=["patients"])
+app.include_router(auth_router, prefix=f"{_bootstrap_settings.api_prefix}/auth", tags=["auth"])
 app.include_router(
-    appointments_router, prefix=f"{settings.api_prefix}/appointments", tags=["appointments"]
+    patients_router, prefix=f"{_bootstrap_settings.api_prefix}/patients", tags=["patients"]
 )
 app.include_router(
-    prescriptions_router, prefix=f"{settings.api_prefix}/prescriptions", tags=["prescriptions"]
+    appointments_router,
+    prefix=f"{_bootstrap_settings.api_prefix}/appointments",
+    tags=["appointments"],
 )
 app.include_router(
-    lab_results_router, prefix=f"{settings.api_prefix}/lab-results", tags=["lab-results"]
+    prescriptions_router,
+    prefix=f"{_bootstrap_settings.api_prefix}/prescriptions",
+    tags=["prescriptions"],
 )
-app.include_router(invoices_router, prefix=f"{settings.api_prefix}/invoices", tags=["invoices"])
+app.include_router(
+    lab_results_router, prefix=f"{_bootstrap_settings.api_prefix}/lab-results", tags=["lab-results"]
+)
+app.include_router(
+    invoices_router, prefix=f"{_bootstrap_settings.api_prefix}/invoices", tags=["invoices"]
+)
 
 
 # Serve frontend static files (FastAPI StaticFiles + catch-all)

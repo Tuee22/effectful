@@ -3,6 +3,7 @@
  */
 
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { isOk } from '../../algebraic/Result'
 import { getErrorMessage } from '../../models/Auth'
@@ -79,6 +80,10 @@ export const LoginForm = () => {
       <button type="submit" className="login-button" disabled={isLoading}>
         {isLoading ? 'Signing in...' : 'Sign In'}
       </button>
+
+      <div className="form-footer">
+        <Link to="/register">Don't have an account? Register here</Link>
+      </div>
     </form>
   )
 }

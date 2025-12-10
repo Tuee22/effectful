@@ -4,9 +4,20 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Application settings loaded from environment variables."""
+    """Application settings loaded from environment variables.
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    Doctrine 7: Configuration Lifecycle Management
+    - Pydantic BaseSettings for environment variable loading
+    - Created ONLY in FastAPI lifespan context manager
+    - Immutable after creation (frozen via model_config)
+    """
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        frozen=True,  # Immutability via Pydantic
+    )
 
     # Application
     app_name: str = "HealthHub Medical Center"
@@ -58,7 +69,3 @@ class Settings(BaseSettings):
     def redis_url(self) -> str:
         """Build Redis connection URL."""
         return f"redis://{self.redis_host}:{self.redis_port}/{self.redis_db}"
-
-
-# Global settings instance
-settings = Settings()

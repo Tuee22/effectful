@@ -156,19 +156,20 @@ async def page(context: BrowserContext) -> AsyncGenerator[Page, None]:
 
 
 @pytest_asyncio.fixture
-async def authenticated_patient_page(
-    context: BrowserContext, base_url: str
-) -> AsyncGenerator[Page, None]:
+async def authenticated_patient_page(browser: Browser, base_url: str) -> AsyncGenerator[Page, None]:
     """Create an authenticated page logged in as a patient.
 
     Uses alice.patient@example.com from seed data.
+    Creates its own browser context for isolation when multiple auth fixtures are used.
     """
+    # Create isolated context for this fixture
+    context = await browser.new_context(viewport={"width": 1280, "height": 720})
     page = await context.new_page()
     page.on("console", lambda msg: print(f"[Browser {msg.type.upper()}]: {msg.text}"))
     page.set_default_timeout(15000)
     page.set_default_navigation_timeout(15000)
 
-    # Navigate to login page
+    # Navigate to login
     await page.goto(f"{base_url}/login")
 
     # Wait for React to render the login form
@@ -189,23 +190,27 @@ async def authenticated_patient_page(
     await wait_for_auth_hydration(page, timeout_ms=10000)
 
     yield page
+
+    # Close page and context
     await page.close()
+    await context.close()
 
 
 @pytest_asyncio.fixture
-async def authenticated_doctor_page(
-    context: BrowserContext, base_url: str
-) -> AsyncGenerator[Page, None]:
+async def authenticated_doctor_page(browser: Browser, base_url: str) -> AsyncGenerator[Page, None]:
     """Create an authenticated page logged in as a doctor.
 
     Uses dr.smith@healthhub.com from seed data.
+    Creates its own browser context for isolation when multiple auth fixtures are used.
     """
+    # Create isolated context for this fixture
+    context = await browser.new_context(viewport={"width": 1280, "height": 720})
     page = await context.new_page()
     page.on("console", lambda msg: print(f"[Browser {msg.type.upper()}]: {msg.text}"))
     page.set_default_timeout(15000)
     page.set_default_navigation_timeout(15000)
 
-    # Navigate to login page
+    # Navigate to login
     await page.goto(f"{base_url}/login")
 
     # Wait for React to render the login form
@@ -226,23 +231,27 @@ async def authenticated_doctor_page(
     await wait_for_auth_hydration(page, timeout_ms=10000)
 
     yield page
+
+    # Close page and context
     await page.close()
+    await context.close()
 
 
 @pytest_asyncio.fixture
-async def authenticated_admin_page(
-    context: BrowserContext, base_url: str
-) -> AsyncGenerator[Page, None]:
+async def authenticated_admin_page(browser: Browser, base_url: str) -> AsyncGenerator[Page, None]:
     """Create an authenticated page logged in as an admin.
 
     Uses admin@healthhub.com from seed data.
+    Creates its own browser context for isolation when multiple auth fixtures are used.
     """
+    # Create isolated context for this fixture
+    context = await browser.new_context(viewport={"width": 1280, "height": 720})
     page = await context.new_page()
     page.on("console", lambda msg: print(f"[Browser {msg.type.upper()}]: {msg.text}"))
     page.set_default_timeout(15000)
     page.set_default_navigation_timeout(15000)
 
-    # Navigate to login page
+    # Navigate to login
     await page.goto(f"{base_url}/login")
 
     # Wait for React to render the login form
@@ -263,7 +272,10 @@ async def authenticated_admin_page(
     await wait_for_auth_hydration(page, timeout_ms=10000)
 
     yield page
+
+    # Close page and context
     await page.close()
+    await context.close()
 
 
 # =============================================================================

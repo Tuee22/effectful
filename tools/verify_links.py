@@ -43,18 +43,13 @@ def verify_link(source_file: Path, link: str) -> Tuple[bool, str]:
     if link.startswith("#"):
         return (True, "anchor")
 
-    # Handle relative paths
-    if link.startswith("../"):
-        # Relative to parent
-        target = (source_file.parent.parent / link.lstrip("../")).resolve()
-    elif link.startswith("./"):
-        # Relative to current
-        target = (source_file.parent / link.lstrip("./")).resolve()
-    elif link.startswith("/"):
+    # Handle relative paths - use Path resolution to handle multiple ../
+    if link.startswith("/"):
         # Absolute from root (treat as relative to project root)
         target = (ROOT / link.lstrip("/")).resolve()
     else:
-        # Relative to current directory
+        # All other relative paths (including ../ and ./)
+        # Let Path handle the resolution properly
         target = (source_file.parent / link).resolve()
 
     # Strip anchor from link

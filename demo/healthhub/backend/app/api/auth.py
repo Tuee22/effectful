@@ -7,12 +7,13 @@ Implements JWT dual-token authentication pattern:
 
 from collections.abc import Generator
 from dataclasses import dataclass
+from datetime import date
 from typing import Annotated
 from uuid import UUID
 from typing_extensions import assert_never
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 from app.auth import (
     TokenType,
@@ -24,6 +25,7 @@ from app.auth import (
     verify_password,
     verify_token,
 )
+from app.config import Settings
 from app.domain.doctor import Doctor
 from app.domain.lookup_result import (
     DoctorFound,
@@ -42,6 +44,7 @@ from effectful.domain.optional_value import from_optional_value, to_optional_val
 from app.domain.patient import Patient
 from app.domain.user import User, UserRole
 from app.effects.healthcare import (
+    CreatePatient,
     CreateUser,
     GetDoctorByUserId,
     GetPatientByUserId,
@@ -81,6 +84,17 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str
     role: UserRole
+
+    # Patient-specific fields (required when role="patient")
+    first_name: str | None = None
+    last_name: str | None = None
+    date_of_birth: date | None = None
+    blood_type: str | None = None
+    allergies: list[str] = Field(default_factory=list)
+    insurance_id: str | None = None
+    emergency_contact: str | None = None
+    phone: str | None = None
+    address: str | None = None
 
 
 class RegisterResponse(BaseModel):
@@ -294,8 +308,12 @@ async def login(
                 detail="Unexpected login result",
             )
 
+    # Get settings from app.state
+    settings: Settings = http_request.app.state.settings
+
     # Set refresh token in HttpOnly cookie (7 days)
     refresh_token = create_refresh_token(
+        settings,
         authed_user.id,
         authed_user.email,
         authed_user.role.value,
@@ -312,6 +330,7 @@ async def login(
     )
 
     access_token = create_access_token(
+        settings,
         authed_user.id,
         authed_user.email,
         authed_user.role.value,
@@ -352,8 +371,24 @@ async def register(
     Effects:
         GetUserByEmail
         CreateUser
+        CreatePatient (if role="patient")
         LogAuditEvent
     """
+
+    # Validate patient-specific fields if registering as patient
+    if request.role == UserRole.PATIENT:
+        if not all(
+            [
+                request.first_name,
+                request.last_name,
+                request.date_of_birth,
+                request.emergency_contact,
+            ]
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Patient registration requires: first_name, last_name, date_of_birth, emergency_contact",
+            )
 
     def register_program() -> Generator[AllEffects, object, RegisterResult]:
         existing_user_result = yield GetUserByEmail(email=request.email)
@@ -373,6 +408,23 @@ async def register(
             role=request.role.value,
         )
         assert isinstance(created_user, User)
+
+        # Create patient record if registering as patient
+        if request.role == UserRole.PATIENT:
+            patient = yield CreatePatient(
+                user_id=created_user.id,
+                first_name=request.first_name or "",
+                last_name=request.last_name or "",
+                date_of_birth=request.date_of_birth or date(1900, 1, 1),
+                blood_type=request.blood_type,
+                allergies=request.allergies,
+                insurance_id=request.insurance_id,
+                emergency_contact=request.emergency_contact or "",
+                phone=request.phone,
+                address=request.address,
+            )
+            assert isinstance(patient, Patient)
+
         yield LogAuditEvent(
             user_id=created_user.id,
             action="register_user",
@@ -406,16 +458,24 @@ async def register(
                 detail="Unexpected register result",
             )
 
+    # Message depends on role - patients have full profile created
+    message = (
+        "Registration successful. Please log in."
+        if request.role == UserRole.PATIENT
+        else "User registered successfully. Complete profile setup in the next step."
+    )
+
     return RegisterResponse(
         user_id=str(user.id),
         email=user.email,
         role=user.role.value,
-        message="User registered successfully. Complete profile setup in the next step.",
+        message=message,
     )
 
 
 @router.post("/refresh", response_model=RefreshResponse)
 async def refresh(
+    request: Request,
     response: Response,
     refresh_token: Annotated[str | None, Cookie()] = None,
     _rate_limit: Annotated[None, Depends(rate_limit(10, 60))] = None,
@@ -423,6 +483,7 @@ async def refresh(
     """Refresh access token using refresh token from HttpOnly cookie.
 
     Args:
+        request: Request object to access app.state.settings
         response: Response used to set the rotated refresh token.
         refresh_token: Refresh token from HttpOnly cookie.
         _rate_limit: Rate limit guard (FastAPI dependency).
@@ -436,6 +497,9 @@ async def refresh(
     Effects:
         verify_token
     """
+    # Get settings from app.state
+    settings: Settings = request.app.state.settings
+
     # Check if refresh token exists in cookie
     if refresh_token is None:
         raise HTTPException(
@@ -444,7 +508,7 @@ async def refresh(
         )
 
     # Verify refresh token
-    validation_result = verify_token(refresh_token, TokenType.REFRESH)
+    validation_result = verify_token(settings, refresh_token, TokenType.REFRESH)
 
     match validation_result:
         case TokenValidationError(reason=reason, detail=detail):
@@ -455,6 +519,7 @@ async def refresh(
         case TokenValidationSuccess(token_data=token_data):
             # Generate new tokens (token rotation) with profile IDs
             new_access_token = create_access_token(
+                settings,
                 token_data.user_id,
                 token_data.email,
                 token_data.role,
@@ -462,6 +527,7 @@ async def refresh(
                 doctor_id=from_optional_value(token_data.doctor_id),
             )
             new_refresh_token = create_refresh_token(
+                settings,
                 token_data.user_id,
                 token_data.email,
                 token_data.role,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncpg
 
-from app.config import settings
+from app.config import Settings
 
 
 class DatabaseManager:
@@ -13,9 +13,10 @@ class DatabaseManager:
     Uses asyncpg for high-performance async PostgreSQL access.
     """
 
-    def __init__(self) -> None:
-        """Initialize database manager (pool created on setup)."""
+    def __init__(self, settings: Settings) -> None:
+        """Initialize database manager with settings."""
         self._pool: asyncpg.Pool[asyncpg.Record] | None = None
+        self._settings = settings
 
     async def setup(self) -> None:
         """Create database connection pool.
@@ -26,11 +27,11 @@ class DatabaseManager:
             return
 
         self._pool = await asyncpg.create_pool(
-            host=settings.postgres_host,
-            port=settings.postgres_port,
-            database=settings.postgres_db,
-            user=settings.postgres_user,
-            password=settings.postgres_password,
+            host=self._settings.postgres_host,
+            port=self._settings.postgres_port,
+            database=self._settings.postgres_db,
+            user=self._settings.postgres_user,
+            password=self._settings.postgres_password,
             min_size=5,
             max_size=20,
             command_timeout=60.0,
@@ -57,19 +58,3 @@ class DatabaseManager:
         if self._pool is None:
             raise RuntimeError("Database pool not initialized. Call setup() first.")
         return self._pool
-
-
-# Global database manager instance
-_db_manager: DatabaseManager | None = None
-
-
-def get_database_manager() -> DatabaseManager:
-    """Get the global database manager instance.
-
-    Returns:
-        Database manager singleton
-    """
-    global _db_manager
-    if _db_manager is None:
-        _db_manager = DatabaseManager()
-    return _db_manager
