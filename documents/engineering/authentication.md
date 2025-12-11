@@ -1,8 +1,8 @@
 # Authentication
 
-**Status**: Authoritative source  
-**Supersedes**: none  
-**Referenced by**: engineering/README.md, engineering/code_quality.md, engineering/effect_patterns.md, engineering/total_pure_modelling.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: engineering/README.md, engineering/code_quality.md, engineering/effect_patterns.md, engineering/total_pure_modelling.md, tutorials/auth_effects.md
 
 > **Purpose**: Single Source of Truth for authentication flows and modelling across frontend and backend. Based on the pure ADT workflow from `engineering/total_pure_modelling.md`. Applies to all services and clients unless a delta overrides with additional, system-specific constraints.
 

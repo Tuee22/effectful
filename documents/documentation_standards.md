@@ -51,8 +51,9 @@ flowchart TB
 
 ## 2) Naming and File Organization
 
-- **Primary rule**: Follow repository convention. Effectful uses snake_case for docs; stay consistent (e.g., `documentation_standards.md`, not `documentation-standards.md`).  
-- Descriptive, unabbreviated names; no version numbers in filenames.  
+- **Primary rule**: Follow repository convention. Effectful uses snake_case for docs; stay consistent (e.g., `documentation_standards.md`, not `documentation-standards.md`).
+- **Exception**: README.md, CLAUDE.md, and AGENTS.md always use uppercase naming regardless of repository convention.
+- Descriptive, unabbreviated names; no version numbers in filenames.
 - Keep prefixes for grouping when useful (e.g., `command_reference.md`).  
 - Directory layout:  
   - `documents/engineering/` — contributor standards (how to build)  
@@ -137,8 +138,8 @@ Every doc starts with:
 
 - **Compatibility-first**: GitHub, VSCode, and Mermaid Live must render identically.  
 - **Orientation**: TB by default. Use LR only for ≤3 sequential steps or purely parallel flows; never draw right-to-left.  
-- **Allowed syntax**: `flowchart TB|LR`, simple nodes `[ ] ( ) { }`, solid arrows `-->`. Arrow labels may be inline (`A -->|label| B`) or via label nodes—stay consistent per diagram.  
-- **Forbidden**: dotted lines, subgraphs, thick arrows, `Note over`, mixed arrow styles within one diagram, labels with punctuation (`: () {}`) or hyphens, comments inside diagrams.  
+- **Allowed syntax**: `flowchart TB|LR`, simple nodes `[ ] ( ) { }`, solid arrows `-->`. Arrow labels may be inline (`A -->|label| B`) or via label nodes—**choose one style and use it consistently for all arrows within a single diagram**.
+- **Forbidden**: dotted lines, subgraphs, thick arrows, `Note over`, mixed arrow styles within one diagram (e.g., both inline labels and plain arrows), labels with punctuation (`: () {}`) or hyphens, comments inside diagrams.  
 - **Testing checklist**: preview in GitHub, VSCode Mermaid extension, and Mermaid Live.  
 - If the safe subset is insufficient, use ASCII or static images and link to the source.
 

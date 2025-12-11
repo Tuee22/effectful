@@ -1,8 +1,8 @@
 # Workflow-Based Tutorials
 
-**Status**: Reference only
+**Status**: Authoritative source
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/tutorials/README.md
+**Referenced by**: demo/healthhub/documents/readme.md, demo/healthhub/documents/tutorials/README.md, demo/healthhub/documents/product/README.md
 
 > **Purpose**: Multi-feature integration tutorials demonstrating complete healthcare workflows from start to finish.
 
@@ -45,7 +45,7 @@ Workflow tutorials demonstrate how multiple HealthHub features work together in 
 
 **E2E Tests**: test_complete_care_episode.py (patient onboarding scenario)
 
-**Prerequisites**: [Intermediate Journey](../01_journeys/intermediate_journey.md)
+**Prerequisites**: [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md)
 
 ---
 
@@ -72,7 +72,7 @@ Workflow tutorials demonstrate how multiple HealthHub features work together in 
 
 **E2E Tests**: test_complete_care_episode.py (appointment→invoice)
 
-**Prerequisites**: [Intermediate Journey](../01_journeys/intermediate_journey.md)
+**Prerequisites**: [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md)
 
 ---
 
@@ -100,7 +100,7 @@ Workflow tutorials demonstrate how multiple HealthHub features work together in 
 
 **E2E Tests**: test_prescriptions.py (enhanced with workflow), test_patient_management.py
 
-**Prerequisites**: [Intermediate Journey](../01_journeys/intermediate_journey.md)
+**Prerequisites**: [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md)
 
 ---
 
@@ -127,7 +127,7 @@ Workflow tutorials demonstrate how multiple HealthHub features work together in 
 
 **E2E Tests**: test_lab_results.py (enhanced with critical alert workflow)
 
-**Prerequisites**: [Intermediate Journey](../01_journeys/intermediate_journey.md)
+**Prerequisites**: [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md)
 
 ---
 
@@ -185,27 +185,27 @@ Each workflow tutorial follows this pattern:
 ## Related Content
 
 **For feature deep dives**:
-- [Authentication](../03_features/authentication.md)
-- [Appointments](../03_features/appointments.md)
-- [Prescriptions](../03_features/prescriptions.md)
-- [Lab Results](../03_features/lab_results.md)
-- [Invoices](../03_features/invoices.md)
+- [Authentication](../../engineering/features/authentication.md)
+- [Appointments](../../engineering/features/appointments.md)
+- [Prescriptions](../../engineering/features/prescriptions.md)
+- [Lab Results](../../engineering/features/lab_results.md)
+- [Invoices](../../engineering/features/invoices.md)
 
 **For role perspectives**:
-- [Patient Guide](../02_roles/patient_guide.md)
-- [Doctor Guide](../02_roles/doctor_guide.md)
-- [Admin Guide](../02_roles/admin_guide.md)
+- [Patient Guide](../roles/patient_guide.md)
+- [Doctor Guide](../roles/doctor_guide.md)
+- [Admin Guide](../roles/admin_guide.md)
 
 **For progressive learning**:
-- [Beginner Journey](../01_journeys/beginner_journey.md)
-- [Intermediate Journey](../01_journeys/intermediate_journey.md)
-- [Advanced Journey](../01_journeys/advanced_journey.md)
+- [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md)
+- [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md)
+- [Advanced Journey](../../tutorials/01_journeys/advanced_journey.md)
 
 ---
 
 ## Cross-References
 
 - [HealthHub Tutorial Hub](../README.md)
-- [Feature Tutorials](../03_features/README.md)
+- [Feature Tutorials](../../engineering/features/README.md)
 - [HealthHub Engineering Patterns](../../engineering/effect_patterns.md)
 - [HealthHub Domain Documentation](../../domain/)

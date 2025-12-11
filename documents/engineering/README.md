@@ -17,6 +17,7 @@ flowchart TB
   Arch[Architecture SSoT]
   CodeQuality[Code Quality SSoT]
   Testing[Testing SSoT]
+  TestingArch[Testing Architecture SSoT]
   Docker[Docker Workflow SSoT]
   Docs[Documentation Standards SSoT]
   Observability[Observability SSoT]
@@ -25,10 +26,12 @@ flowchart TB
   Hub --> Arch
   Hub --> CodeQuality
   Hub --> Testing
+  Hub --> TestingArch
   Hub --> Docker
   Hub --> Docs
   Hub --> Observability
   Hub --> MonAlert
+  Testing --> TestingArch
   Observability --> Arch
   CommandRef[Command Reference]
   Docker --> CommandRef
@@ -40,6 +43,7 @@ flowchart TB
 | Model authentication flows | [Authentication](authentication.md) |
 | Write type-safe, pure code | [Code Quality](code_quality.md) |
 | Test programs correctly | [Testing](testing.md) |
+| Organize test suites and fixtures | [Testing Architecture](testing_architecture.md) |
 | Set up development environment | [Docker Workflow](docker_workflow.md) |
 | Run quality checks | [Code Quality](code_quality.md#detection-and-enforcement) |
 | Add metrics/observability | [Observability](observability.md) |
@@ -61,10 +65,16 @@ flowchart TB
 - Detection + remediation workflow (check-code, MyPy strict, link verification)
 
 **[Testing](testing.md)** (3,761 lines)
-- Test pyramid strategy (Unit → Integration → E2E)
+- Test execution and service-specific patterns
 - 22 test anti-patterns with examples
 - Generator testing patterns
 - Zero skipped tests policy
+
+**[Testing Architecture](testing_architecture.md)** (~900 lines)
+- Test suite boundaries (Unit/Integration/E2E)
+- Fixture architecture and cleanup patterns
+- Four-layer testing architecture
+- DRY doctrine framework (5 doctrines)
 
 **[Docker Workflow](docker_workflow.md)** (496 lines)
 - Docker-only development policy
@@ -196,6 +206,7 @@ All engineering documents marked with "**SSoT**" are authoritative. When conflic
 - [Code Quality](code_quality.md) - Type safety and purity doctrines
 - [Architecture](architecture.md) - 5-layer architecture design
 - [Testing](testing.md) - Test standards and anti-patterns
+- [Testing Architecture](testing_architecture.md) - Test organization and DRY doctrine
 - [Docker Workflow](docker_workflow.md) - Docker-only development contract
 - [Command Reference](command_reference.md) - All Docker commands
 - [Development Workflow](development_workflow.md) - Daily development loop

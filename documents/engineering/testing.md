@@ -1,29 +1,33 @@
 # Testing
 
-**Status**: Authoritative source  
-**Supersedes**: none  
-**Referenced by**: engineering/README.md, documents/readme.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: engineering/README.md, testing_architecture.md, documents/readme.md
 
-> **Purpose**: Single Source of Truth for all testing policy in the Effectful project.
+> **Purpose**: Single Source of Truth for test execution, service-specific patterns, and anti-patterns in Effectful.
 
 ## SSoT Link Map
 
 ```mermaid
 flowchart TB
   Testing[Testing SSoT]
+  TestingArch[Testing Architecture SSoT]
   CodeQuality[Code Quality SSoT]
   Docker[Docker Workflow SSoT]
   Commands[Command Reference]
   Docs[Documentation Standards]
 
+  Testing --> TestingArch
   Testing --> CodeQuality
   Testing --> Docker
   Testing --> Commands
   Testing --> Docs
+  TestingArch --> Testing
 ```
 
 | Need | Link |
 |------|------|
+| Test organization + fixture architecture + DRY doctrines | [Testing Architecture](testing_architecture.md) |
 | Type safety + purity rules driving test shape | [Code Quality](code_quality.md) |
 | Container + infra contract | [Docker Workflow](docker_workflow.md#development-contract) |
 | Command prefixes for pytest | [Command Reference](command_reference.md#command-table) |
@@ -226,330 +230,26 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest > /
 
 ### Infrastructure Cleanup Patterns
 
-**Core Principle**: Stateful infrastructure (PostgreSQL, Redis, MinIO, **Pulsar**) requires explicit cleanup between tests to prevent cascading failures.
+> **📖 See**: [Testing Architecture - Part 2: Fixture Architecture](testing_architecture.md#part-2-fixture-architecture)
 
-#### Pattern 1: Pre and Post Cleanup Fixtures
+**Core Principle**: Stateful infrastructure (PostgreSQL, Redis, MinIO, Pulsar) requires explicit cleanup between tests to prevent cascading failures.
 
-All `clean_*` fixtures must clean up **before AND after** the test runs:
+**Summary**: All infrastructure fixtures follow six cleanup patterns:
+1. **Pre and Post Cleanup**: Clean before AND after test runs
+2. **Async Sleep**: 200ms sleep after broker operations for finalization
+3. **Client-Level Cleanup**: Close connections, not server-side deletion
+4. **UUID-Based Naming**: Unique resource names for isolation
+5. **Reduced Timeouts**: 5s test timeouts vs 30s production
+6. **Fixture-Level DRY**: Centralized `clean_<project>_state` fixtures
 
-```python
-# file: examples/testing.py
-import asyncio
-from collections.abc import AsyncGenerator
-import pytest_asyncio
-
-@pytest_asyncio.fixture
-async def clean_pulsar(
-    pulsar_producer: PulsarMessageProducer,
-    pulsar_consumer: PulsarMessageConsumer,
-) -> AsyncGenerator[tuple[PulsarMessageProducer, PulsarMessageConsumer], None]:
-    """Provide clean Pulsar producer and consumer.
-
-    Closes all cached producers/consumers before AND after test.
-    """
-    # PRE-CLEANUP: Ensure clean starting state
-    pulsar_producer.close_producers()
-    pulsar_consumer.close_consumers()
-
-    # Give broker time to process close operations
-    await asyncio.sleep(0.2)  # 200ms for async broker operations
-
-    yield (pulsar_producer, pulsar_consumer)
-
-    # POST-CLEANUP: Prevent resource leaks on test failure
-    try:
-        pulsar_producer.close_producers()
-        pulsar_consumer.close_consumers()
-        await asyncio.sleep(0.2)  # Allow cleanup to propagate
-    except Exception:
-        # Ignore cleanup errors - isolation more important than cleanup failure
-        pass
-```
-
-**Why Pre AND Post?**:
-- **Pre-cleanup**: Guarantees clean state even if previous test failed
-- **Post-cleanup**: Prevents leaked resources from failing subsequent tests
-- **try/except**: Cleanup errors shouldn't mask test failures
-
-#### Pattern 2: Async Sleep for Broker Operations
-
-**Critical for Pulsar/Kafka/RabbitMQ**: Message brokers finalize operations asynchronously.
-
-```python
-# file: examples/testing.py
-# Close resources
-pulsar_producer.close_producers()
-
-# REQUIRED: Give broker time to finalize
-await asyncio.sleep(0.2)  # 200ms safety margin
-
-# Now safe to create new resources
-```
-
-**Why**:
-- Brokers need ~100ms to finalize ledger closures, topic deletions, subscription cleanup
-- Without sleep: "Resource still in use" errors, quota exceeded, connection pool exhaustion
-- 200ms is empirically tested safety margin (100ms min + 100ms buffer)
-
-#### Pattern 3: Client-Level Cleanup (Not Server-Level)
-
-**Correct**: Clean up at the **client adapter level** (close cached connections/producers/consumers)
-
-```python
-# file: examples/testing.py
-# ✅ CORRECT - Client-level cleanup
-pulsar_producer.close_producers()  # Closes cached producer objects
-pulsar_consumer.close_consumers()  # Closes cached consumer objects
-```
-
-**Wrong**: Attempting to clean up at server level (delete topics/subscriptions)
-
-```python
-# file: examples/testing.py
-# ❌ WRONG - Server-level cleanup is slow and unreliable
-await pulsar_admin_client.delete_topic(topic)  # 500ms+ per topic
-await pulsar_admin_client.delete_subscription(sub)  # Can fail if consumers exist
-```
-
-**Why Client-Level?**:
-- **Fast**: Closing 100 producers takes <50ms vs 50+ seconds to delete topics
-- **Reliable**: Client cleanup always works; server cleanup has race conditions
-- **Isolation**: UUID topic names ensure no conflicts, cleanup is optional
-
-#### Pattern 4: UUID-Based Naming (Server Isolation)
-
-**Always use UUID for topics, subscriptions, buckets, cache keys**:
-
-```python
-# file: examples/testing.py
-from uuid import uuid4
-
-def test_publish_workflow(clean_pulsar) -> None:
-    """Each test uses unique topic names."""
-    topic = f"test-topic-{uuid4()}"  # Unique topic name
-    subscription = f"{topic}/test-sub-{uuid4()}"  # Unique subscription
-
-    # Test code...
-```
-
-**Why**:
-- **Broker-level isolation**: Tests can't conflict even if cleanup fails
-- **Parallel execution**: Future support for parallel test runs
-- **Debugging**: Easy to identify which test created which resources
-
-#### Pattern 5: Reduced Timeouts for Fast Failures
-
-**Use short timeouts in test environments** to detect issues quickly:
-
-```python
-# file: examples/testing.py
-# Production: Long timeouts for reliability
-producer = client.create_producer(topic, send_timeout_millis=30000)  # 30s
-
-# Tests: Short timeouts for fast failure detection
-producer = client.create_producer(topic, send_timeout_millis=5000)  # 5s
-```
-
-**Rationale**:
-- **Fast feedback**: 5s timeout means test fails in 5s, not 30s
-- **CI efficiency**: Full suite completes in <15s instead of minutes
-- **Early detection**: Timeout failures indicate infrastructure issues
-
-**Configuration example** (`effectful/adapters/pulsar_messaging.py:113`):
-```python
-# file: examples/testing.py
-self._producers[topic] = self._client.create_producer(
-    topic,
-    send_timeout_millis=5000,  # 5-second timeout for integration tests
-)
-```
-
-#### Pattern 6: Fixture-Level Isolation (DRY Doctrine)
-
-**Core Principle**: Test isolation and reproducibility should be enforced at the **fixture level** with a single idempotent base state across **all microservices**, rather than scattered across individual test files.
-
-**Problem**: Without centralized isolation, every test file must implement its own cleanup logic, leading to:
-- **Code duplication**: Same cleanup code copied across 10+ test files
-- **Inconsistent state**: Tests may start with different base states
-- **Maintenance burden**: Changing cleanup logic requires updating many files
-- **Hard-to-debug failures**: Flaky tests from incomplete cleanup
-
-**Solution**: Single `clean_<project>_state` fixture that resets ALL infrastructure to idempotent base state.
-
-**HealthHub Implementation** (`demo/healthhub/tests/conftest.py:154`):
-```python
-# file: demo/healthhub/tests/conftest.py
-@pytest.fixture
-async def clean_healthhub_state(
-    db_pool: asyncpg.Pool[asyncpg.Record],
-) -> AsyncIterator[None]:
-    """Fixture-level isolation: Idempotent base state across all microservices.
-
-    Ensures every test starts with the SAME deterministic state by:
-    1. Truncating all PostgreSQL tables
-    2. Loading seed_data.sql (2 admins, 4 doctors, 5 patients + sample data)
-    3. Clearing all Redis keys (cache, rate limits, notifications)
-    4. (MinIO/Pulsar cleanup would go here if actively used)
-
-    This fixture enforces the DRY principle: isolation and reproducibility
-    managed in ONE place rather than scattered across test files.
-    """
-    # 1. Clean PostgreSQL: Truncate all tables
-    async with db_pool.acquire() as conn:
-        await conn.execute("TRUNCATE TABLE audit_log CASCADE")
-        await conn.execute("TRUNCATE TABLE invoice_line_items CASCADE")
-        await conn.execute("TRUNCATE TABLE invoices CASCADE")
-        await conn.execute("TRUNCATE TABLE lab_results CASCADE")
-        await conn.execute("TRUNCATE TABLE prescriptions CASCADE")
-        await conn.execute("TRUNCATE TABLE appointments CASCADE")
-        await conn.execute("TRUNCATE TABLE doctors CASCADE")
-        await conn.execute("TRUNCATE TABLE patients CASCADE")
-        await conn.execute("TRUNCATE TABLE users CASCADE")
-
-    # 2. Load deterministic seed data from seed_data.sql
-    import subprocess
-    from pathlib import Path
-
-    seed_file = Path(__file__).parent.parent / "backend" / "scripts" / "seed_data.sql"
-    result = subprocess.run(
-        [
-            "psql",
-            "-h", "postgres",
-            "-p", "5432",
-            "-U", "healthhub",
-            "-d", "healthhub_db",
-            "-f", str(seed_file),
-        ],
-        env={**subprocess.os.environ, "PGPASSWORD": "healthhub_secure_pass"},
-        capture_output=True,
-        text=True,
-    )
-
-    if result.returncode != 0:
-        pytest.fail(f"Failed to load seed data: {result.stderr}")
-
-    # 3. Clean Redis: Clear all keys
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
-    try:
-        cursor: int = 0
-        while True:
-            cursor, keys = await redis_client.scan(cursor=cursor, match="*", count=1000)
-            if keys:
-                decoded_keys = [k.decode("utf-8") if isinstance(k, (bytes, bytearray)) else str(k) for k in keys]
-                await redis_client.delete(*decoded_keys)
-            if cursor == 0:
-                break
-    finally:
-        await redis_client.aclose()
-
-    # 4. (Future) MinIO cleanup would go here:
-    # - Delete all buckets and objects
-    # - Recreate default buckets if needed
-
-    # 5. (Future) Pulsar cleanup would go here:
-    # - Delete topics or clear messages
-    # - Reset consumer positions
-
-    yield
-
-    # Post-test cleanup (optional, but ensures no leakage)
-    redis_client_post: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
-    try:
-        cursor = 0
-        while True:
-            cursor, keys = await redis_client_post.scan(cursor=cursor, match="*", count=1000)
-            if keys:
-                decoded_keys = [k.decode("utf-8") if isinstance(k, (bytes, bytearray)) else str(k) for k in keys]
-                await redis_client_post.delete(*decoded_keys)
-            if cursor == 0:
-                break
-    finally:
-        await redis_client_post.aclose()
-```
-
-**E2E Test Integration** (`demo/healthhub/tests/pytest/e2e/conftest.py:284`):
-```python
-# file: demo/healthhub/tests/pytest/e2e/conftest.py
-@pytest_asyncio.fixture(autouse=True)
-async def auto_clean_healthhub_state(
-    clean_healthhub_state: None,
-) -> AsyncGenerator[None, None]:
-    """Automatically apply clean_healthhub_state to all e2e tests.
-
-    This autouse fixture ensures every e2e test starts with idempotent base state
-    without requiring manual fixture injection in each test function signature.
-    """
-    yield
-```
-
-**Benefits**:
-1. **DRY**: One fixture, not 10+ cleanup implementations
-2. **Idempotent**: Every test starts with identical state
-3. **Maintainable**: Change cleanup logic in one place
-4. **Debuggable**: Consistent state makes failures reproducible
-5. **Fast**: Pre-loaded seed data faster than per-test inserts
-6. **Comprehensive**: Resets ALL infrastructure, not just database
-
-**Seed Data Pattern**:
-```sql
--- file: demo/healthhub/backend/scripts/seed_data.sql
--- Clear existing data
-TRUNCATE TABLE audit_log, invoice_line_items, invoices, lab_results,
-    prescriptions, appointments, doctors, patients, users CASCADE;
-
--- Load deterministic test data
-INSERT INTO users (id, email, password_hash, role, status) VALUES
-('00000000-0000-0000-0000-000000000001', 'admin@healthhub.com', '$2b$12$...', 'admin', 'active'),
-('10000000-0000-0000-0000-000000000001', 'dr.smith@healthhub.com', '$2b$12$...', 'doctor', 'active'),
-('20000000-0000-0000-0000-000000000001', 'alice.patient@example.com', '$2b$12$...', 'patient', 'active');
--- ... more seed data
-```
-
-**Usage in Tests**:
-```python
-# file: demo/healthhub/tests/pytest/e2e/test_patient_workflows.py
-@pytest.mark.e2e
-@pytest.mark.asyncio
-async def test_patient_can_view_prescriptions(
-    authenticated_patient_page: Page, make_url: Callable[[str], str]
-) -> None:
-    """Test patient viewing prescriptions.
-
-    Test starts with clean_healthhub_state (via autouse fixture):
-    - 2 admins, 4 doctors, 5 patients loaded from seed_data.sql
-    - Alice has one prescription: Lisinopril 10mg
-    - All Redis keys cleared
-    """
-    page = authenticated_patient_page
-
-    await page.goto(make_url("/prescriptions"))
-    await page.wait_for_timeout(1000)
-
-    # Seed data guarantees Alice has Lisinopril prescription
-    prescriptions_section = page.locator('text=Lisinopril')
-    has_prescriptions = await prescriptions_section.count() > 0
-```
-
-**Why NOT Autouse for All Tests**:
-- **Unit tests**: Don't need infrastructure, shouldn't pay setup cost
-- **Integration tests**: Need infrastructure but may use different seeds
-- **E2E tests**: Always need full state, autouse is appropriate
-
-**See Also**:
-- [Demo HealthHub Tests](../../demo/healthhub/tests/) - Reference implementation
-- [Tutorial: Patient Workflows](../../demo/healthhub/documents/tutorials/04_workflows/patient_onboarding.md) - E2E tutorial validated by tests
+For complete patterns, rationale, and code examples, see [Testing Architecture](testing_architecture.md#part-2-fixture-architecture).
 
 ### PostgreSQL Testing Patterns
 
 PostgreSQL is the most complex infrastructure service in effectful due to its relational model, transactional semantics, and foreign key constraints. This section documents patterns specific to testing PostgreSQL database effects.
+
+> **📖 See Also**: [Testing Architecture - PostgreSQL TRUNCATE CASCADE Pattern](testing_architecture.md#postgresql-truncate-cascade-pattern) for infrastructure cleanup strategy.
+
 
 #### TRUNCATE Pattern: Fast, Atomic Cleanup
 
@@ -1398,301 +1098,20 @@ Integration tests achieve **conceptual feature coverage**, not metric-driven cov
 
 ## Part 4: Four-Layer Testing Architecture
 
-### Test Pyramid
+> **📖 Authoritative Reference**: [Testing Architecture - Part 3: Four-Layer Testing Architecture](testing_architecture.md#part-3-four-layer-testing-architecture)
 
-```mermaid
-flowchart TB
-  Philosophy[Minimal API pytest mock only]
-  Philosophy --> Pyramid[Test Pyramid]
+Effectful uses a four-layer testing architecture that maps directly to the 5-layer system architecture:
 
-  Pyramid --> E2E[E2E Tests Few]
-  Pyramid --> Integration[Integration Tests Some 27 tests]
-  Pyramid --> Unit[Unit Tests Many 200+ tests]
+- **Layer 1: Effect Tests** (Unit) - Test effect dataclass structure and immutability
+- **Layer 2: Interpreter Tests** (Unit) - Test effect execution with mocked infrastructure
+- **Layer 3: Program Tests** (Unit) - Test effect sequencing using manual generator stepping
+- **Layer 4: Workflow Tests** (Integration) - Test complete end-to-end workflows with `run_ws_program()`
 
-  E2E --> E2EDetail[Real infrastructure full stack WebSocket client]
-  Integration --> IntDetail[Real Postgres Redis MinIO Pulsar Mocked WebSocket]
-  Unit --> UnitDetail[pytest mock only No IO Fast under 1 second]
-
-  Unit --> Layer1[Layer 1 Effects]
-  Unit --> Layer2[Layer 2 Interpreters]
-  Integration --> Layer3[Layer 3 Programs]
-  Integration --> Layer4[Layer 4 Workflows]
-```
-
-| Layer | Count | Speed | Infrastructure |
-|-------|-------|-------|----------------|
-| Unit | Many (200+) | Fast (<1s) | pytest-mock only |
-| Integration | Some (27+) | Medium (~1s) | Real PostgreSQL/Redis/MinIO |
-| E2E/Demo | Few | Slow | Full stack |
-
-### Architecture Layers
-
-**Each layer tests ONE concern**:
-- **Effects** = **WHAT** to do (pure data)
-- **Interpreters** = **HOW** to do it (execution)
-- **Programs** = **WHEN** to do it (sequencing)
-- **Workflows** = **WHY** to do it (business scenarios)
-
-**Testability**: Each layer can be tested independently:
-- **Effects**: No dependencies, just dataclass validation
-- **Interpreters**: Mock infrastructure, focus on execution logic
-- **Programs**: Mock effect results, focus on sequencing
-- **Workflows**: Real interpreters + mocked infrastructure, focus on integration
-
-### Layer 1: Effect Tests (Unit)
-
-**Location**: `tests/test_effects/`
-
-**Purpose**: Validate effect dataclass structure, immutability, and type safety.
-
-**Pattern**: Simple instantiation and assertion.
-
-```python
-# file: examples/testing.py
-from effectful.effects.database import GetUserById
-
-def test_get_user_by_id_structure() -> None:
-    """Effect should be immutable with correct fields."""
-    effect = GetUserById(user_id=uuid4())
-
-    assert isinstance(effect, GetUserById)
-    assert effect.user_id is not None
-
-    # Verify immutability
-    with pytest.raises(FrozenInstanceError):
-        effect.user_id = uuid4()
-```
-
-**When to use**: Testing effect dataclass definitions.
-
-**Do NOT**: Use interpreters or generators in effect tests.
-
-### Layer 2: Interpreter Tests (Unit)
-
-**Location**: `tests/test_interpreters/`
-
-**Purpose**: Test effect execution against mocked infrastructure. Verify Result types, error handling, and retryability.
-
-**Pattern**: Direct interpreter method calls with pytest-mock.
-
-```python
-# file: examples/testing.py
-from pytest_mock import MockerFixture
-from effectful.interpreters.database import DatabaseInterpreter
-from effectful.infrastructure.repositories import UserRepository
-
-@pytest.mark.asyncio()
-async def test_get_user_by_id_success(mocker: MockerFixture) -> None:
-    """GetUserById with existing user should return Ok(EffectReturn(user))."""
-    # Arrange - Mock infrastructure
-    user = User(id=uuid4(), email="alice@example.com", name="Alice")
-    mock_repo = mocker.AsyncMock(spec=UserRepository)
-    mock_repo.get_by_id.return_value = user
-
-    interpreter = DatabaseInterpreter(user_repo=mock_repo)
-    effect = GetUserById(user_id=user.id)
-
-    # Act
-    result = await interpreter.interpret(effect)
-
-    # Assert - Pattern match on Result
-    match result:
-        case Ok(EffectReturn(value=returned_user, effect_name="GetUserById")):
-            assert returned_user == user
-        case _:
-            pytest.fail(f"Expected Ok(EffectReturn(user)), got {result}")
-
-    # Verify mock interactions
-    mock_repo.get_by_id.assert_awaited_once_with(user.id)
-```
-
-**Key points**:
-- Use `mocker.AsyncMock(spec=Protocol)` for type safety
-- Test both success (`Ok`) and error (`Err`) paths
-- Verify retryability for errors
-- Use pattern matching for Result validation
-- Assert mock call counts and arguments
-
-**When to use**: Testing individual interpreter implementations.
-
-**Do NOT**: Use generators or run_ws_program in interpreter tests.
-
-### Layer 3: Program Tests (Unit)
-
-**Location**: `tests/test_demo/`
-
-**Purpose**: Test program logic (effect sequencing, data transformations, conditional flows) in isolation.
-
-**Pattern**: Manual generator stepping with `next()` and `gen.send()`.
-
-```python
-# file: examples/testing.py
-from demo.programs.user_programs import get_user_program
-
-def test_get_user_program_success(mocker: MockerFixture) -> None:
-    """Program should yield GetUserById and return Ok(user)."""
-    # Arrange
-    user_id = uuid4()
-    user = User(id=user_id, email="alice@example.com", name="Alice")
-
-    # Act - Step through program
-    gen = get_user_program(user_id=user_id)
-
-    # Step 1: Program yields GetUserById effect
-    effect = next(gen)
-    assert effect.__class__.__name__ == "GetUserById"
-    assert effect.user_id == user_id
-
-    # Step 2: Send mock user result, program completes
-    try:
-        gen.send(user)
-        pytest.fail("Expected StopIteration")
-    except StopIteration as e:
-        result = e.value
-
-    # Assert final result
-    match result:
-        case Ok(returned_user):
-            assert returned_user == user
-        case _:
-            pytest.fail(f"Expected Ok(user), got {result}")
-```
-
-**Key points**:
-- Programs are generators: use `next(gen)` to get next effect
-- Use `gen.send(value)` to provide mock results
-- Catch `StopIteration` to extract final return value
-- Test effect sequencing and conditional logic
-- NO interpreters - we're testing program logic only
-
-**When to use**: Testing program business logic without infrastructure.
-
-**Do NOT**: Use interpreters or run_ws_program in program tests.
-
-### Layer 4: Workflow Tests (Integration)
-
-**Location**: `tests/test_integration/`
-
-**Purpose**: Test complete end-to-end workflows with interpreters executing against mocked infrastructure.
-
-**Pattern**: `run_ws_program()` with pytest-mock infrastructure.
-
-```python
-# file: examples/testing.py
-from effectful.programs.runners import run_ws_program
-from effectful.interpreters.composite import CompositeInterpreter
-
-@pytest.mark.asyncio()
-async def test_complete_user_workflow(mocker: MockerFixture) -> None:
-    """Complete workflow: get user, update profile, verify update."""
-    # Arrange - Mock infrastructure
-    user_id = uuid4()
-    user = User(id=user_id, email="alice@example.com", name="Alice")
-    updated_user = User(id=user_id, email="alice@example.com", name="Alice Updated")
-
-    mock_user_repo = mocker.AsyncMock(spec=UserRepository)
-    mock_user_repo.get_by_id.return_value = user
-    mock_user_repo.update.return_value = updated_user
-
-    # Create interpreter with mocked infrastructure
-    db_interpreter = DatabaseInterpreter(user_repo=mock_user_repo)
-    interpreter = CompositeInterpreter(interpreters=[db_interpreter])
-
-    # Define workflow program
-    def update_user_workflow() -> Generator[AllEffects, EffectResult, User]:
-        """Get user, update name, return updated user."""
-        # Get existing user
-        user_result = yield GetUserById(user_id=user_id)
-        assert isinstance(user_result, User)
-
-        # Update user name
-        updated_result = yield UpdateUser(
-            user_id=user_id,
-            name="Alice Updated"
-        )
-        assert isinstance(updated_result, User)
-
-        return updated_result
-
-    # Act - Run complete workflow
-    result = await run_ws_program(update_user_workflow(), interpreter)
-
-    # Assert - Verify final result
-    match result:
-        case Ok(final_user):
-            assert final_user.name == "Alice Updated"
-            # Verify all infrastructure calls
-            mock_user_repo.get_by_id.assert_awaited_once_with(user_id)
-            mock_user_repo.update.assert_awaited_once()
-        case Err(error):
-            pytest.fail(f"Expected Ok(user), got Err({error})")
-```
-
-**Key points**:
-- Use `run_ws_program(program(), interpreter)` - it handles all generator iteration
-- Create interpreters with mocked infrastructure (pytest-mock with spec)
-- Test complete multi-effect workflows
-- Verify all mock interactions
-- Test both success and error propagation paths
-
-**When to use**: Testing complete business scenarios that compose multiple effects.
-
-**Do NOT**: Manually step through generators (no `next()`/`gen.send()`) - let `run_ws_program` do it.
+Each layer tests ONE concern (WHAT/HOW/WHEN/WHY), enabling independent testing of effects, interpreters, programs, and workflows. For complete implementation patterns, decision trees, and code examples, see [Testing Architecture - Part 3](testing_architecture.md#part-3-four-layer-testing-architecture).
 
 ---
 
 ## Part 5: Testing Patterns
-
-### Pattern Decision Tree
-
-```mermaid
-flowchart TB
-  Start{What are you testing?}
-
-  Start -->|Effect dataclass structure| L1[Layer 1 Effect Tests]
-  Start -->|Interpreter execution logic| L2[Layer 2 Interpreter Tests]
-  Start -->|Program effect sequencing| L3[Layer 3 Program Tests]
-  Start -->|Complete workflow integration| L4[Layer 4 Workflow Tests]
-
-  L1 --> L1Pattern[Pattern Simple instantiation]
-  L1Pattern --> L1Detail[No mocks No async No interpreters]
-
-  L2 --> L2Pattern[Pattern await interpreter.interpret]
-  L2Pattern --> L2Detail[pytest mock for infrastructure Test return values]
-
-  L3 --> L3Pattern[Pattern Manual generator stepping]
-  L3Pattern --> L3Detail[next and send NO interpreters NO run_ws_program]
-
-  L4 --> L4Pattern[Pattern run_ws_program execution]
-  L4Pattern --> L4Detail[pytest mock infrastructure Verify end to end flow]
-```
-
-### Generator Testing Flow (Layer 3)
-
-```mermaid
-flowchart TB
-  Start[Test calls program(...)] --> FirstYield[next(gen)]
-  FirstYield --> AssertEffect[Assert effect type/params]
-  AssertEffect --> SendMock[send(mock_response)]
-  SendMock --> More{More effects?}
-  More -->|Yes| NextEffect[next(gen)]
-  NextEffect --> AssertEffect
-  More -->|No| StopIter[StopIteration → final result]
-  StopIter --> AssertResult[Assert final result]
-```
-
-### Integration Testing Flow (Layer 4)
-
-```mermaid
-flowchart TB
-  SetupMocks[Configure pytest-mock fakes] --> BuildInterp[Create CompositeInterpreter with mocks]
-  BuildInterp --> RunProgram[await run_ws_program(program, interpreter)]
-  RunProgram --> HandleEffect[Interpreter handles effect (e.g., GetUserById)]
-  HandleEffect --> MockCall[Underlying mock invoked]
-  MockCall --> NextEffect{More effects?}
-  NextEffect -->|Yes| HandleEffect
-  NextEffect -->|No| AssertOutcome[Assert final Result value and mock calls]
-```
 
 ### Mock Setup Pattern
 
@@ -3925,6 +3344,7 @@ All code changes must meet these requirements:
 
 ## Part 9: Related Documentation
 
+- **Testing Architecture:** [testing_architecture.md](testing_architecture.md) - Test organization, fixture architecture, and DRY doctrine
 - **Test Suite Audit:** `documents/testing/test_suite_audit.md` - Current test status and inventory
 - **Tutorial:** `documents/tutorials/testing_guide.md` - Step-by-step testing guide
 - **Code Quality:** `documents/engineering/code_quality.md` - Type safety + purity enforcement
@@ -3935,6 +3355,7 @@ All code changes must meet these requirements:
 ---
 
 ## Cross-References
+- [Testing Architecture](testing_architecture.md)
 - [Code Quality](code_quality.md)
 - [Docker Workflow](docker_workflow.md)
 - [Command Reference](command_reference.md)

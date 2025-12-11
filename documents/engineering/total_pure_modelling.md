@@ -2,7 +2,7 @@
 
 **Status**: Authoritative source
 **Supersedes**: none
-**Referenced by**: [engineering/testing.md](testing.md#philosophy), [engineering/code_quality.md](code_quality.md#tldr)
+**Referenced by**: [testing.md](testing.md#part-1-minimal-api-philosophy), [code_quality.md](code_quality.md)
 
 > **Purpose**: A friendly, practical guide for modelling domain state with total, pure ADTs and state machines that match reality. Illegal states must be impossible to represent, and timing tricks or env toggles are off-limits. By separating pure decisions from side effects, we keep frontend and backend in lockstep, avoid ghost states, and stay resilient when real networks and devices misbehave.
 
@@ -41,18 +41,18 @@ Key auth concepts: Hydration (check stored session), Session restoring (refresh 
 ### Frontend state and guard
 ```mermaid
 flowchart TB
-    A[App Boot] --> B[Auth Readiness Initializing]
-    B --> C{Persisted user}
+    A[App Boot] -->|initialize| B[Auth Readiness Initializing]
+    B -->|check| C{Persisted user}
     C -->|No| D[Ready Unauthenticated]
     C -->|Yes| E[Ready SessionRestoring]
-    E --> F{Refresh success}
+    E -->|validate| F{Refresh success}
     F -->|Yes| G[Ready Authenticated]
     F -->|Expired or missing| H[Ready SessionExpired]
     F -->|Network fail| I[Ready SessionRestoring redirect login]
-    D --> J[computeGuardDecision]
-    G --> J
-    H --> J
-    I --> J
+    D -->|evaluate| J[computeGuardDecision]
+    G -->|evaluate| J
+    H -->|evaluate| J
+    I -->|evaluate| J
     J -->|AwaitAuth| K[Gate Loading]
     J -->|RedirectToLogin| L[Redirect to login]
     J -->|Denied| M[AccessDenied UI]
@@ -75,18 +75,18 @@ flowchart TB
     DomainAction[Domain action with user]
     Response[200 payload or rotated token]
 
-    Request --> Validate
-    Validate --> FetchTicket
-    FetchTicket --> Authenticated
-    FetchTicket --> AuthFailure
-    Authenticated --> Authorize
-    AuthFailure --> Redirect
-    Authorize --> AwaitAuth
-    Authorize --> Redirect
-    Authorize --> Denied
-    Authorize --> Authorized
-    Authorized --> DomainAction
-    DomainAction --> Response
+    Request -->|check| Validate
+    Validate -->|query| FetchTicket
+    FetchTicket -->|valid| Authenticated
+    FetchTicket -->|invalid| AuthFailure
+    Authenticated -->|check roles| Authorize
+    AuthFailure -->|fail| Redirect
+    Authorize -->|pending| AwaitAuth
+    Authorize -->|missing token| Redirect
+    Authorize -->|insufficient| Denied
+    Authorize -->|granted| Authorized
+    Authorized -->|execute| DomainAction
+    DomainAction -->|success| Response
 ```
 
 ## Concrete stories

@@ -4,7 +4,7 @@
 **Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: Navigation hub for HealthHub tutorials demonstrating real-world healthcare workflows using the Effectful library.
+> **Purpose**: Navigation hub for HealthHub journey-based tutorials demonstrating progressive learning paths using the Effectful library.
 
 > **📖 Authoritative Reference**: [Effectful Tutorials](../../../../documents/tutorials/) - Learn core Effectful patterns first, then apply them to HealthHub healthcare domain.
 
@@ -12,13 +12,12 @@
 
 ## Overview
 
-HealthHub tutorials demonstrate pure functional effect systems applied to healthcare management. Three learning paths support different goals:
+HealthHub tutorials demonstrate pure functional effect systems applied to healthcare management through journey-based progressive learning paths (Beginner → Intermediate → Advanced).
 
-1. **Journey-Based** (Beginner → Intermediate → Advanced) - Progressive learning
-2. **Role-Based** (Patient, Doctor, Admin) - Learn by user perspective
-3. **Feature-Based** (Appointments, Prescriptions, Labs, Invoices) - Deep dive into specific features
-
-**Plus**: Multi-feature workflow tutorials showing complete healthcare scenarios.
+**Additional Documentation**:
+- **Role-Specific Guides**: [Product Documentation - Role Guides](../product/roles/README.md)
+- **Feature Engineering Patterns**: [Engineering Documentation - Features](../engineering/features/README.md)
+- **End-to-End Workflows**: [Product Documentation - Workflows](../product/workflows/README.md)
 
 ---
 
@@ -29,15 +28,14 @@ HealthHub tutorials demonstrate pure functional effect systems applied to health
 2. [Intermediate Journey](01_journeys/intermediate_journey.md) - Appointments, prescriptions, state machines (2 hours)
 3. [Advanced Journey](01_journeys/advanced_journey.md) - Custom effects, performance, production (3 hours)
 
-**Need role-specific training?** See [Role Guides](02_roles/README.md)
-
-**Need feature documentation?** See [Feature Tutorials](03_features/README.md)
+**Need other documentation?**
+- **Role-specific operational guides**: [Product Documentation - Role Guides](../product/roles/README.md)
+- **Feature engineering patterns**: [Engineering Documentation - Features](../engineering/features/README.md)
+- **Multi-feature workflows**: [Product Documentation - Workflows](../product/workflows/README.md)
 
 ---
 
-## Learning Paths
-
-### Path 1: Journey-Based (Recommended for New Users)
+## Journey-Based Learning Path
 
 Progressive learning from basics to production deployment.
 
@@ -49,54 +47,6 @@ Progressive learning from basics to production deployment.
 
 **Total Time**: ~6 hours
 **Outcome**: Complete understanding of HealthHub architecture and patterns
-
----
-
-### Path 2: Role-Based (Recommended for Role Training)
-
-Learn HealthHub from patient, doctor, or admin perspective.
-
-| Role | Tutorial | Capabilities | RBAC Restrictions |
-|------|----------|--------------|-------------------|
-| **Patient** | [Patient Guide](02_roles/patient_guide.md) | View/request appointments, view prescriptions/labs/invoices | Cannot create prescriptions, view other patients, access admin features |
-| **Doctor** | [Doctor Guide](02_roles/doctor_guide.md) | View all patients, manage appointments, create prescriptions, review labs | Cannot create invoices, access audit logs, manage users |
-| **Admin** | [Admin Guide](02_roles/admin_guide.md) | Full access, audit logs, user management, system metrics | Full system access |
-
-**Use Case**: Training new users on specific roles
-**Outcome**: Role-specific operational knowledge
-
----
-
-### Path 3: Feature-Based (Recommended for Development)
-
-Deep dive into specific HealthHub features.
-
-| Feature | Tutorial | Key Concepts | E2E Tests |
-|---------|----------|--------------|-----------|
-| **Authentication** | [Authentication](03_features/authentication.md) | JWT, RBAC, auth state ADT | test_login_flow.py |
-| **Appointments** | [Appointments](03_features/appointments.md) | State machine, transitions, scheduling | test_appointments.py |
-| **Prescriptions** | [Prescriptions](03_features/prescriptions.md) | RBAC, medication interactions, doctor-only | test_prescriptions.py |
-| **Lab Results** | [Lab Results](03_features/lab_results.md) | Critical alerts, doctor review, notifications | test_lab_results.py |
-| **Invoices** | [Invoices](03_features/invoices.md) | Billing, payment status, line items | test_invoices.py |
-
-**Use Case**: Developers working on specific features
-**Outcome**: Deep technical understanding of feature implementation
-
----
-
-### Path 4: Workflow-Based (Multi-Feature Integration)
-
-Complete healthcare scenarios demonstrating feature integration.
-
-| Workflow | Tutorial | Features Involved | Duration |
-|----------|----------|-------------------|----------|
-| **Patient Onboarding** | [Patient Onboarding](04_workflows/patient_onboarding.md) | Auth, Appointments, Prescriptions, Invoices | 1.5 hours |
-| **Appointment Lifecycle** | [Appointment Lifecycle](04_workflows/appointment_lifecycle.md) | Appointments, Notifications, Invoices | 1 hour |
-| **Prescription Workflow** | [Prescription Workflow](04_workflows/prescription_workflow.md) | Prescriptions, Patient lookup, Notifications | 1 hour |
-| **Lab Result Workflow** | [Lab Result Workflow](04_workflows/lab_result_workflow.md) | Labs, Critical alerts, Doctor review | 1 hour |
-
-**Use Case**: Understanding end-to-end data flow
-**Outcome**: Complete workflow comprehension
 
 ---
 
@@ -173,5 +123,6 @@ Every tutorial workflow has corresponding e2e tests verifying correctness:
 - [HealthHub Documentation Hub](../readme.md)
 - [Effectful Base Tutorials](../../../../documents/tutorials/)
 - [HealthHub Engineering Standards](../engineering/README.md)
+- [HealthHub Product Documentation](../product/roles/README.md)
 - [HealthHub Domain Documentation](../domain/)
 - [Documentation Standards](../documentation_standards.md)

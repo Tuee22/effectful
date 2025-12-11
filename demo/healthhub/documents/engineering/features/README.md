@@ -1,8 +1,8 @@
 # Feature-Based Tutorials
 
-**Status**: Reference only
+**Status**: Authoritative source
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/tutorials/README.md
+**Referenced by**: demo/healthhub/documents/readme.md, demo/healthhub/documents/tutorials/README.md, demo/healthhub/documents/engineering/README.md
 
 > **Purpose**: Deep dive into specific HealthHub features. These tutorials are the Single Source of Truth for HealthHub-specific feature documentation.
 
@@ -35,7 +35,7 @@ Feature tutorials provide comprehensive documentation for each HealthHub feature
 
 **E2E Tests**: test_login_flow.py (all auth state transitions)
 
-**Prerequisites**: [Beginner Journey](../01_journeys/beginner_journey.md)
+**Prerequisites**: [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md)
 
 **Use Cases**: Implementing protected routes, auth state management, role-based access
 
@@ -64,7 +64,7 @@ Cancelled   Cancelled   Cancelled
 
 **E2E Tests**: test_appointments.py (all transitions, terminal states)
 
-**Prerequisites**: [Intermediate Journey](../01_journeys/intermediate_journey.md)
+**Prerequisites**: [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md)
 
 **Use Cases**: Appointment management, state machine implementation, workflow validation
 
@@ -88,7 +88,7 @@ Cancelled   Cancelled   Cancelled
 
 **E2E Tests**: test_prescriptions.py (creation, viewing, RBAC)
 
-**Prerequisites**: [Intermediate Journey](../01_journeys/intermediate_journey.md)
+**Prerequisites**: [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md)
 
 **Use Cases**: Prescription management, medication safety, RBAC patterns
 
@@ -111,7 +111,7 @@ Cancelled   Cancelled   Cancelled
 
 **E2E Tests**: test_lab_results.py (critical alerts, doctor review, patient viewing)
 
-**Prerequisites**: [Intermediate Journey](../01_journeys/intermediate_journey.md)
+**Prerequisites**: [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md)
 
 **Use Cases**: Lab result processing, critical alerts, doctor-patient communication
 
@@ -135,7 +135,7 @@ Cancelled   Cancelled   Cancelled
 
 **E2E Tests**: test_invoices.py (creation, viewing, status)
 
-**Prerequisites**: [Intermediate Journey](../01_journeys/intermediate_journey.md)
+**Prerequisites**: [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md)
 
 **Use Cases**: Billing workflows, invoice management, payment tracking
 
@@ -170,20 +170,20 @@ Each feature tutorial follows this pattern:
 ## Related Content
 
 **For role-specific usage**:
-- [Patient Guide](../02_roles/patient_guide.md)
-- [Doctor Guide](../02_roles/doctor_guide.md)
-- [Admin Guide](../02_roles/admin_guide.md)
+- [Patient Guide](../../product/roles/patient_guide.md)
+- [Doctor Guide](../../product/roles/doctor_guide.md)
+- [Admin Guide](../../product/roles/admin_guide.md)
 
 **For multi-feature integration**:
-- [Appointment Lifecycle](../04_workflows/appointment_lifecycle.md)
-- [Prescription Workflow](../04_workflows/prescription_workflow.md)
-- [Lab Result Workflow](../04_workflows/lab_result_workflow.md)
-- [Patient Onboarding](../04_workflows/patient_onboarding.md)
+- [Appointment Lifecycle](../../product/workflows/appointment_lifecycle.md)
+- [Prescription Workflow](../../product/workflows/prescription_workflow.md)
+- [Lab Result Workflow](../../product/workflows/lab_result_workflow.md)
+- [Patient Onboarding](../../product/workflows/patient_onboarding.md)
 
 **For progressive learning**:
-- [Beginner Journey](../01_journeys/beginner_journey.md)
-- [Intermediate Journey](../01_journeys/intermediate_journey.md)
-- [Advanced Journey](../01_journeys/advanced_journey.md)
+- [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md)
+- [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md)
+- [Advanced Journey](../../tutorials/01_journeys/advanced_journey.md)
 
 ---
 

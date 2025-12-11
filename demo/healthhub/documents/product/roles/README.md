@@ -1,8 +1,8 @@
 # Role-Based Guides
 
-**Status**: Reference only
+**Status**: Authoritative source
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/tutorials/README.md
+**Referenced by**: demo/healthhub/documents/readme.md, demo/healthhub/documents/tutorials/README.md, demo/healthhub/documents/product/README.md
 
 > **Purpose**: Learn HealthHub from patient, doctor, or admin perspective. Role-specific capabilities, RBAC restrictions, and operational workflows.
 
@@ -42,7 +42,7 @@ Role-based guides explain HealthHub from each user role's perspective. Each guid
 
 **E2E Tests**: test_rbac.py (patient access), test_patient_workflows.py
 
-**Prerequisites**: [Beginner Journey](../01_journeys/beginner_journey.md)
+**Prerequisites**: [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md)
 
 ---
 
@@ -68,7 +68,7 @@ Role-based guides explain HealthHub from each user role's perspective. Each guid
 
 **E2E Tests**: test_rbac.py (doctor access), test_prescriptions.py (creation), test_patient_management.py
 
-**Prerequisites**: [Beginner Journey](../01_journeys/beginner_journey.md)
+**Prerequisites**: [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md)
 
 ---
 
@@ -92,7 +92,7 @@ Role-based guides explain HealthHub from each user role's perspective. Each guid
 
 **E2E Tests**: test_rbac.py (admin access), test_admin_workflows.py
 
-**Prerequisites**: [Beginner Journey](../01_journeys/beginner_journey.md)
+**Prerequisites**: [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md)
 
 ---
 

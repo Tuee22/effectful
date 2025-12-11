@@ -1,11 +1,11 @@
 # Contributing to Effectful
 
-**Status**: Reference only  
-**Supersedes**: none  
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: README.md
 
 > **Purpose**: Contributor guide for Effectful, including prerequisites and core development commands.
-> **📖 Authoritative Reference**: [Repository README](../README.md)
+> **📖 Authoritative Reference**: [Project README](../README.md)
 
 Welcome to the effectful project! We're excited to have you contribute.
 
@@ -29,6 +29,7 @@ All development commands follow the pattern `docker compose -f docker/docker-com
 | [Architecture](engineering/architecture.md) | 5-layer architecture design |
 | [Code Quality](engineering/code_quality.md) | Type safety + purity doctrines and anti-pattern routing |
 | [Testing](engineering/testing.md) | Testing standards and 22 anti-patterns |
+| [Testing Architecture](engineering/testing_architecture.md) | Test organization and DRY doctrine |
 | [Docker Workflow](engineering/docker_workflow.md) | All development in Docker |
 
 ## Contributing Checklist
@@ -113,6 +114,7 @@ Be respectful and inclusive. Follow the community guidelines in the project trac
 - [Engineering Standards](engineering/README.md) - Master index
 - [Code Quality](engineering/code_quality.md#universal-success-criteria) - Success criteria
 - [Testing](engineering/testing.md) - Test standards and anti-patterns
+- [Testing Architecture](engineering/testing_architecture.md) - Test organization and DRY doctrine
 - [Docker Workflow](engineering/docker_workflow.md) - Docker-only development contract
 - [Command Reference](engineering/command_reference.md) - Complete command table
 - [Architecture](engineering/architecture.md) - 5-layer design

@@ -390,11 +390,11 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-  Start[Start run_ws_program] --> NextEffect[Call next() on program generator]
-  NextEffect --> Yielded{Effect yielded?}
+  Start[Start run_ws_program] -->|call| NextEffect[Call next() on program generator]
+  NextEffect -->|evaluate| Yielded{Effect yielded?}
   Yielded -->|Yes| Interpret[Interpreter interprets effect]
   Interpret -->|Ok EffectReturn| SendBack[runner.send(effect_return)]
-  SendBack --> NextEffect
+  SendBack -->|continue| NextEffect
   Interpret -->|Err InterpreterError| FailFast[Return Err immediately]
   Yielded -->|StopIteration| Finish[Return Ok(final_value)]
 ```
@@ -581,16 +581,6 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, None]:
 - **Not an ORM** - Use SQLAlchemy/asyncpg/etc.
 - **Not a task queue** - Use Celery/Dramatiq/etc.
 - **Not a reactive framework** - Use RxPY/aioreactive/etc.
-
----
-
-## Related Documentation
-
-- **Code Quality**: `documents/engineering/code_quality.md`
-- **Testing**: `documents/engineering/testing.md` (SSoT for all testing)
-- **Observability**: `documents/engineering/observability.md` (SSoT for metrics, monitoring, and alerting)
-- **Test Suite Audit**: `documents/testing/test_suite_audit.md`
-- **API Reference**: `documents/api/`
 
 ---
 
