@@ -7,6 +7,7 @@ import json
 from collections.abc import AsyncIterator, Iterator
 from datetime import date, datetime, timezone
 from uuid import UUID, uuid4
+from typing import Protocol, TypeGuard
 
 import asyncpg
 import pytest
@@ -40,6 +41,20 @@ def assert_frozen(obj: object, attr: str, value: object) -> None:
     """
     with pytest.raises(AttributeError):
         setattr(obj, attr, value)
+
+
+class SupportsAclose(Protocol):
+    async def aclose(self) -> None: ...
+
+
+def has_aclose(pubsub: object) -> TypeGuard[SupportsAclose]:
+    return hasattr(pubsub, "aclose")
+
+
+async def close_pubsub(pubsub: redis.client.PubSub | SupportsAclose) -> None:
+    """Close a Redis PubSub object safely."""
+    assert has_aclose(pubsub)
+    await pubsub.aclose()
 
 
 async def _init_connection(conn: asyncpg.Connection[asyncpg.Record]) -> None:
@@ -308,11 +323,59 @@ def sample_datetime() -> datetime:
     return datetime(2024, 1, 15, 10, 30, 0, tzinfo=timezone.utc)
 
 
+# Authorization fixtures
+@pytest.fixture
+async def unauthorized_doctor(
+    db_pool: asyncpg.Pool[asyncpg.Record],
+) -> tuple[UUID, UUID]:
+    """Seed a doctor who cannot prescribe (returns doctor_id, user_id)."""
+    unauthorized_doctor_id = UUID("99000000-0000-0000-0000-000000000001")
+    unauthorized_user_id = UUID("99000000-0000-0000-0000-000000000000")
+
+    from app.auth.password import hash_password
+
+    async with db_pool.acquire() as conn:
+        await conn.execute(
+            """
+            INSERT INTO users (id, email, password_hash, role, status, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            ON CONFLICT (id) DO NOTHING
+            """,
+            unauthorized_user_id,
+            "unauthorized@example.com",
+            hash_password("password123"),
+            "doctor",
+            "active",
+            datetime.now(timezone.utc),
+            datetime.now(timezone.utc),
+        )
+
+        await conn.execute(
+            """
+            INSERT INTO doctors (
+                id, user_id, first_name, last_name, specialization,
+                license_number, can_prescribe, created_at, updated_at
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            ON CONFLICT (id) DO NOTHING
+            """,
+            unauthorized_doctor_id,
+            unauthorized_user_id,
+            "Bob",
+            "Johnson",
+            "Dentistry",
+            "DDS-99999",
+            False,
+            datetime.now(timezone.utc),
+            datetime.now(timezone.utc),
+        )
+
+    return unauthorized_doctor_id, unauthorized_user_id
+
+
 # Integration test data setup fixtures
 @pytest.fixture
-async def seed_test_user(
-    db_pool: asyncpg.Pool[asyncpg.Record], sample_user_id: UUID, clean_db: None
-) -> UUID:
+async def seed_test_user(db_pool: asyncpg.Pool[asyncpg.Record], sample_user_id: UUID) -> UUID:
     """Seed a test user in the database."""
     from app.auth.password import hash_password
 
@@ -348,29 +411,34 @@ async def seed_test_patient(
 ) -> UUID:
     """Seed a test patient in the database."""
     async with db_pool.acquire() as conn:
-        await conn.execute(
-            """
-            INSERT INTO patients (
-                id, user_id, first_name, last_name, date_of_birth,
-                blood_type, allergies, insurance_id, emergency_contact,
-                phone, address, created_at, updated_at
-            )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-            """,
+        existing_patient = await conn.fetchval(
+            "SELECT 1 FROM patients WHERE id = $1",
             sample_patient_id,
-            seed_test_user,
-            "John",
-            "Doe",
-            sample_date_of_birth,
-            "O+",
-            [],
-            "INS-12345",
-            "Jane Doe: 555-0100",
-            "555-0123",
-            "123 Main St",
-            datetime.now(timezone.utc),
-            datetime.now(timezone.utc),
         )
+        if existing_patient is None:
+            await conn.execute(
+                """
+                INSERT INTO patients (
+                    id, user_id, first_name, last_name, date_of_birth,
+                    blood_type, allergies, insurance_id, emergency_contact,
+                    phone, address, created_at, updated_at
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                """,
+                sample_patient_id,
+                seed_test_user,
+                "John",
+                "Doe",
+                sample_date_of_birth,
+                "O+",
+                [],
+                "INS-12345",
+                "Jane Doe: 555-0100",
+                "555-0123",
+                "123 Main St",
+                datetime.now(timezone.utc),
+                datetime.now(timezone.utc),
+            )
 
     return sample_patient_id
 
@@ -379,7 +447,6 @@ async def seed_test_patient(
 async def seed_test_doctor(
     db_pool: asyncpg.Pool[asyncpg.Record],
     sample_doctor_id: UUID,
-    clean_db: None,
 ) -> UUID:
     """Seed a test doctor in the database."""
     # Create doctor user
@@ -387,37 +454,44 @@ async def seed_test_doctor(
     from app.auth.password import hash_password
 
     async with db_pool.acquire() as conn:
-        await conn.execute(
-            """
-            INSERT INTO users (id, email, password_hash, role, status, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            """,
-            doctor_user_id,
-            "doctor@example.com",
-            hash_password("password123"),
-            "doctor",
-            "active",
-            datetime.now(timezone.utc),
-            datetime.now(timezone.utc),
+        existing_doctor = await conn.fetchval(
+            "SELECT 1 FROM doctors WHERE id = $1",
+            sample_doctor_id,
         )
 
-        await conn.execute(
-            """
-            INSERT INTO doctors (
-                id, user_id, first_name, last_name, specialization,
-                license_number, can_prescribe, created_at, updated_at
+        if existing_doctor is None:
+            await conn.execute(
+                """
+                INSERT INTO users (id, email, password_hash, role, status, created_at, updated_at)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                ON CONFLICT (id) DO NOTHING
+                """,
+                doctor_user_id,
+                "doctor@example.com",
+                hash_password("password123"),
+                "doctor",
+                "active",
+                datetime.now(timezone.utc),
+                datetime.now(timezone.utc),
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-            """,
-            sample_doctor_id,
-            doctor_user_id,
-            "Jane",
-            "Smith",
-            "Cardiology",
-            "MD-12345",
-            True,
-            datetime.now(timezone.utc),
-            datetime.now(timezone.utc),
-        )
+
+            await conn.execute(
+                """
+                INSERT INTO doctors (
+                    id, user_id, first_name, last_name, specialization,
+                    license_number, can_prescribe, created_at, updated_at
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                """,
+                sample_doctor_id,
+                doctor_user_id,
+                "Jane",
+                "Smith",
+                "Cardiology",
+                "MD-12345",
+                True,
+                datetime.now(timezone.utc),
+                datetime.now(timezone.utc),
+            )
 
     return sample_doctor_id

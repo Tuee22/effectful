@@ -24,29 +24,35 @@ export function RemoteDataRenderer<T, E>({
   failure,
   onRetry,
 }: RemoteDataRendererProps<T, E>) {
-  switch (data.type) {
-    case 'NotAsked':
-      return <>{notAsked()}</>
+  const content = (() => {
+    switch (data.type) {
+      case 'NotAsked':
+        return notAsked()
 
-    case 'Loading':
-      return <>{loading()}</>
+      case 'Loading':
+        return loading()
 
-    case 'Success':
-      return <>{success(data.data)}</>
+      case 'Success':
+        return success(data.data)
 
-    case 'Failure': {
-      if (failure) {
-        return <>{failure(data.error)}</>
+      case 'Failure': {
+        if (failure) {
+          return failure(data.error)
+        }
+
+        const errorMessage =
+          data.error && typeof data.error === 'object' && 'message' in data.error
+            ? String((data.error as { message: unknown }).message)
+            : String(data.error)
+
+        return onRetry !== undefined ? (
+          <ErrorDisplay message={errorMessage} onRetry={onRetry} />
+        ) : (
+          <ErrorDisplay message={errorMessage} />
+        )
       }
-
-      const errorMessage =
-        data.error && typeof data.error === 'object' && 'message' in data.error
-          ? String((data.error as { message: unknown }).message)
-          : String(data.error)
-
-      return onRetry !== undefined
-        ? <ErrorDisplay message={errorMessage} onRetry={onRetry} />
-        : <ErrorDisplay message={errorMessage} />
     }
-  }
+  })()
+
+  return <div data-state={data.type}>{content}</div>
 }

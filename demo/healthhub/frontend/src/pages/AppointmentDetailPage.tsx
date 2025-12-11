@@ -26,7 +26,7 @@ export const AppointmentDetailPage = () => {
   }
 
   return (
-    <div className="appointment-detail-page">
+    <div className="appointment-detail-page" data-state={currentAppointment.type}>
       <div className="page-header">
         <Link to="/appointments" className="back-link">
           &larr; Back to Appointments

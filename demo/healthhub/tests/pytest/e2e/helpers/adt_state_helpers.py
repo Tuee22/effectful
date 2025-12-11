@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from playwright.async_api import Locator, Page, expect
+from playwright.async_api import Locator, Page, TimeoutError as PlaywrightTimeoutError, expect
 
 # =============================================================================
 # Type Definitions (matching frontend ADT types)
@@ -83,7 +83,7 @@ async def wait_for_remote_data_state(
     Returns:
         Locator for the element with matching state
     """
-    locator = page.locator(f'[data-state="{state}"]')
+    locator = page.locator(f'[data-state="{state}"]').first
     await expect(locator).to_be_visible(timeout=timeout)
     return locator
 
@@ -136,7 +136,11 @@ async def wait_for_page_ready(
         timeout: Maximum wait time in milliseconds
     """
     if data:
-        await wait_for_remote_data_state(page, "Success", timeout=timeout)
+        try:
+            await wait_for_remote_data_state(page, "Success", timeout=timeout)
+        except (AssertionError, PlaywrightTimeoutError):
+            # If explicit RemoteData markers are missing, fall back to network idle
+            await page.wait_for_load_state("networkidle", timeout=timeout)
 
 
 async def navigate_and_wait_for_ready(

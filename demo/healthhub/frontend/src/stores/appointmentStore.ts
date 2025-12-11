@@ -10,6 +10,7 @@ import { RemoteData, notAsked, loading, success, failure } from '../algebraic/Re
 import { Appointment } from '../models/Appointment'
 import { ApiError } from '../api/client'
 import {
+  getAppointments,
   getAppointment,
   createAppointment,
   transitionAppointmentStatus,
@@ -23,6 +24,7 @@ export interface AppointmentStore {
   appointmentList: RemoteData<Appointment[], ApiError>
 
   // Actions
+  fetchAppointments: (token: string, statusFilter?: string) => Promise<void>
   fetchAppointment: (appointmentId: string, token: string) => Promise<void>
   createAppointment: (data: CreateAppointmentRequest, token: string) => Promise<boolean>
   transitionStatus: (
@@ -41,6 +43,22 @@ export const useAppointmentStore = create<AppointmentStore>()(
     appointmentList: notAsked(),
 
     // Actions
+    fetchAppointments: async (token: string, statusFilter?: string) => {
+      set((draft) => {
+        draft.appointmentList = loading()
+      })
+
+      const result = await getAppointments(token, statusFilter)
+
+      set((draft) => {
+        if (isOk(result)) {
+          draft.appointmentList = success(result.value)
+        } else {
+          draft.appointmentList = failure(result.error)
+        }
+      })
+    },
+
     fetchAppointment: async (appointmentId: string, token: string) => {
       // Set loading
       set((draft) => {
@@ -80,6 +98,15 @@ export const useAppointmentStore = create<AppointmentStore>()(
           draft.currentAppointment = failure(result.error)
         }
       })
+
+      if (isOk(result)) {
+        const listResult = await getAppointments(token)
+        set((draft) => {
+          if (isOk(listResult)) {
+            draft.appointmentList = success(listResult.value)
+          }
+        })
+      }
 
       return isOk(result)
     },

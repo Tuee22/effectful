@@ -16,6 +16,8 @@ from collections.abc import Callable
 import pytest
 from playwright.async_api import Page, expect
 
+from tests.pytest.e2e.helpers.adt_state_helpers import wait_for_page_ready
+
 
 @pytest.mark.e2e
 @pytest.mark.asyncio
@@ -67,17 +69,16 @@ class TestPrescriptionCreation:
     ) -> None:
         """Test that doctor can see create prescription option."""
         await authenticated_doctor_page.goto(make_url("/prescriptions"))
-        await authenticated_doctor_page.wait_for_timeout(2000)
-
-        # Doctor should have create option
         await expect(authenticated_doctor_page).to_have_url(make_url("/prescriptions"))
+        await wait_for_page_ready(authenticated_doctor_page)
 
     async def test_prescription_form_has_required_fields(
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that prescription form has all required fields."""
         await authenticated_doctor_page.goto(make_url("/prescriptions"))
-        await authenticated_doctor_page.wait_for_timeout(2000)
+        await expect(authenticated_doctor_page).to_have_url(make_url("/prescriptions"))
+        await wait_for_page_ready(authenticated_doctor_page)
 
         # Try to find create button/link
         create_button = authenticated_doctor_page.locator(
@@ -88,24 +89,16 @@ class TestPrescriptionCreation:
         is_visible = await create_button.is_visible()
         if is_visible:
             await create_button.click()
-            await authenticated_doctor_page.wait_for_timeout(1000)
 
-            # Verify form fields are present
-            # Form should have medication name, dosage, duration fields
-            form_fields = authenticated_doctor_page.locator(
-                "input[name*='medication'], input[name*='drug'], "
-                "input[name*='dosage'], input[name*='dose'], "
-                "input[name*='duration'], select, textarea, "
-                "[data-testid='prescription-form'], form"
+            form = authenticated_doctor_page.locator(
+                ".prescription-form, [data-testid='prescription-form']"
             )
-            # Assert at least one form element is visible
-            count = await form_fields.count()
-            assert (
-                count > 0
-            ), "Expected prescription form fields to be visible after clicking create"
-            # Verify we navigated to a form page or modal appeared
-            await expect(
-                authenticated_doctor_page.locator(
-                    "form, [role='dialog'], [data-testid='prescription-form']"
-                ).first
-            ).to_be_visible(timeout=5000)
+            await expect(form.first).to_be_visible(timeout=5000)
+
+            # Verify core fields are present
+            await expect(form.locator("select[name='patientId']")).to_be_visible(timeout=5000)
+            await expect(form.locator("input[name='medication']")).to_be_visible(timeout=5000)
+            await expect(form.locator("input[name='dosage']")).to_be_visible(timeout=5000)
+            await expect(form.locator("input[name='frequency']")).to_be_visible(timeout=5000)
+            await expect(form.locator("input[name='durationDays']")).to_be_visible(timeout=5000)
+            await expect(form.locator("input[name='refills']")).to_be_visible(timeout=5000)

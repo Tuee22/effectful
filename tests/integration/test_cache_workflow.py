@@ -10,11 +10,8 @@ from uuid import UUID, uuid4
 
 import asyncpg
 import pytest
-from pytest_mock import MockerFixture
 from redis.asyncio import Redis
 
-from effectful.adapters.postgres import PostgresChatMessageRepository, PostgresUserRepository
-from effectful.adapters.redis_cache import RedisProfileCache
 from effectful.algebraic.result import Err, Ok
 from effectful.domain.cache_result import CacheHit, CacheMiss
 from effectful.domain.profile import ProfileData
@@ -28,11 +25,10 @@ from effectful.effects.cache import (
 )
 from effectful.effects.database import GetUserById
 from effectful.effects.websocket import SendText
-from effectful.infrastructure.repositories import ChatMessageRepository, UserRepository
-from effectful.infrastructure.websocket import WebSocketConnection
-from effectful.interpreters.composite import create_composite_interpreter
+from effectful.interpreters.composite import CompositeInterpreter
 from effectful.programs.program_types import AllEffects, EffectResult
 from effectful.programs.runners import run_ws_program
+from tests.integration.conftest import MockWebSocketConnection
 
 
 class TestCacheWorkflowIntegration:
@@ -40,24 +36,14 @@ class TestCacheWorkflowIntegration:
 
     @pytest.mark.asyncio
     async def test_put_and_get_profile_workflow(
-        self, clean_redis: Redis, mocker: MockerFixture
+        self,
+        interpreter_with_redis: tuple[CompositeInterpreter, MockWebSocketConnection],
+        clean_redis: Redis,
     ) -> None:
         """Workflow stores and retrieves profile from real Redis."""
+        interpreter, mock_ws = interpreter_with_redis
         user_id = uuid4()
         profile = ProfileData(id=str(user_id), name="Alice")
-
-        # Create interpreter with real Redis cache
-        mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-        mock_ws.is_open.return_value = True
-        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
-        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
-
-        interpreter = create_composite_interpreter(
-            websocket_connection=mock_ws,
-            user_repo=mock_user_repo,
-            message_repo=mock_msg_repo,
-            cache=RedisProfileCache(clean_redis),
-        )
 
         # Define workflow
         def put_get_profile_program(
@@ -86,7 +72,7 @@ class TestCacheWorkflowIntegration:
         match result:
             case Ok(name):
                 assert name == "Alice"
-                mock_ws.send_text.assert_called_once_with("Retrieved: Alice")
+                mock_ws.mock.send_text.assert_called_once_with("Retrieved: Alice")
 
                 # Verify in real Redis
                 key = f"profile:{user_id}"
@@ -96,22 +82,15 @@ class TestCacheWorkflowIntegration:
                 pytest.fail(f"Expected Ok, got Err({error})")
 
     @pytest.mark.asyncio
-    async def test_cache_miss_workflow(self, clean_redis: Redis, mocker: MockerFixture) -> None:
+    async def test_cache_miss_workflow(
+        self,
+        interpreter_with_redis: tuple[CompositeInterpreter, MockWebSocketConnection],
+        clean_redis: Redis,
+    ) -> None:
         """Workflow handles cache miss gracefully."""
         user_id = uuid4()  # No profile seeded
 
-        # Create interpreter
-        mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-        mock_ws.is_open.return_value = True
-        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
-        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
-
-        interpreter = create_composite_interpreter(
-            websocket_connection=mock_ws,
-            user_repo=mock_user_repo,
-            message_repo=mock_msg_repo,
-            cache=RedisProfileCache(clean_redis),
-        )
+        interpreter, mock_ws = interpreter_with_redis
 
         # Define workflow
         def cache_miss_program(
@@ -135,16 +114,16 @@ class TestCacheWorkflowIntegration:
         match result:
             case Ok(outcome):
                 assert outcome == "miss"
-                mock_ws.send_text.assert_called_once_with("Miss: not_found")
+                mock_ws.mock.send_text.assert_called_once_with("Miss: not_found")
             case Err(error):
                 pytest.fail(f"Expected Ok('miss'), got Err({error})")
 
     @pytest.mark.asyncio
     async def test_cache_with_database_fallback_workflow(
         self,
+        interpreter_with_postgres_and_redis: tuple[CompositeInterpreter, MockWebSocketConnection],
         clean_db: asyncpg.Connection,
         clean_redis: Redis,
-        mocker: MockerFixture,
     ) -> None:
         """Workflow: check cache, fallback to DB, populate cache."""
         # Seed user in database (not in cache)
@@ -156,16 +135,7 @@ class TestCacheWorkflowIntegration:
             "Bob",
         )
 
-        # Create interpreter with real DB and Redis
-        mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-        mock_ws.is_open.return_value = True
-
-        interpreter = create_composite_interpreter(
-            websocket_connection=mock_ws,
-            user_repo=PostgresUserRepository(clean_db),
-            message_repo=PostgresChatMessageRepository(clean_db),
-            cache=RedisProfileCache(clean_redis),
-        )
+        interpreter, mock_ws = interpreter_with_postgres_and_redis
 
         # Define cache-aware workflow
         def cache_fallback_program(
@@ -206,7 +176,7 @@ class TestCacheWorkflowIntegration:
         match result1:
             case Ok(outcome):
                 assert outcome == "db_hit"
-                mock_ws.send_text.assert_called_with("DB hit, cached: Bob")
+                mock_ws.mock.send_text.assert_called_with("DB hit, cached: Bob")
 
                 # Verify profile now in cache
                 key = f"profile:{user_id}"
@@ -225,30 +195,20 @@ class TestCacheWorkflowIntegration:
         match result2:
             case Ok(outcome):
                 assert outcome == "cache_hit"
-                mock_ws.send_text.assert_called_with("Cache hit: Bob")
+                mock_ws.mock.send_text.assert_called_with("Cache hit: Bob")
             case Err(error):
                 pytest.fail(f"Expected Ok('cache_hit'), got Err({error})")
 
     @pytest.mark.asyncio
     async def test_multiple_profiles_workflow(
-        self, clean_redis: Redis, mocker: MockerFixture
+        self,
+        interpreter_with_redis: tuple[CompositeInterpreter, MockWebSocketConnection],
+        clean_redis: Redis,
     ) -> None:
         """Workflow stores and retrieves multiple profiles."""
+        interpreter, mock_ws = interpreter_with_redis
         user_ids = [uuid4() for _ in range(3)]
         names = ["Alice", "Bob", "Charlie"]
-
-        # Create interpreter
-        mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-        mock_ws.is_open.return_value = True
-        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
-        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
-
-        interpreter = create_composite_interpreter(
-            websocket_connection=mock_ws,
-            user_repo=mock_user_repo,
-            message_repo=mock_msg_repo,
-            cache=RedisProfileCache(clean_redis),
-        )
 
         # Define workflow
         def multi_profile_program(
@@ -279,7 +239,7 @@ class TestCacheWorkflowIntegration:
         match result:
             case Ok(count):
                 assert count == 3
-                mock_ws.send_text.assert_called_once_with("Found 3 profiles")
+                mock_ws.mock.send_text.assert_called_once_with("Found 3 profiles")
 
                 # Verify all in Redis
                 for uid in user_ids:
@@ -291,24 +251,14 @@ class TestCacheWorkflowIntegration:
 
     @pytest.mark.asyncio
     async def test_invalidate_cache_workflow(
-        self, clean_redis: Redis, mocker: MockerFixture
+        self,
+        interpreter_with_redis: tuple[CompositeInterpreter, MockWebSocketConnection],
+        clean_redis: Redis,
     ) -> None:
         """Workflow invalidates cache entry in real Redis."""
+        interpreter, mock_ws = interpreter_with_redis
         user_id = uuid4()
         profile = ProfileData(id=str(user_id), name="To Invalidate")
-
-        # Create interpreter
-        mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-        mock_ws.is_open.return_value = True
-        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
-        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
-
-        interpreter = create_composite_interpreter(
-            websocket_connection=mock_ws,
-            user_repo=mock_user_repo,
-            message_repo=mock_msg_repo,
-            cache=RedisProfileCache(clean_redis),
-        )
 
         # Define workflow
         def invalidate_program(
@@ -361,24 +311,14 @@ class TestCacheWorkflowIntegration:
 
     @pytest.mark.asyncio
     async def test_get_cached_value_workflow(
-        self, clean_redis: Redis, mocker: MockerFixture
+        self,
+        interpreter_with_redis: tuple[CompositeInterpreter, MockWebSocketConnection],
+        clean_redis: Redis,
     ) -> None:
         """Workflow gets generic cached value from real Redis."""
+        interpreter, mock_ws = interpreter_with_redis
         key = f"test-key-{uuid4()}"
         value = b"test value bytes"
-
-        # Create interpreter
-        mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-        mock_ws.is_open.return_value = True
-        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
-        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
-
-        interpreter = create_composite_interpreter(
-            websocket_connection=mock_ws,
-            user_repo=mock_user_repo,
-            message_repo=mock_msg_repo,
-            cache=RedisProfileCache(clean_redis),
-        )
 
         # Define workflow
         def get_value_program(k: str, v: bytes) -> Generator[AllEffects, EffectResult, bool]:
@@ -406,29 +346,19 @@ class TestCacheWorkflowIntegration:
         match result:
             case Ok(success):
                 assert success is True
-                assert mock_ws.send_text.call_count == 2
+                assert mock_ws.mock.send_text.call_count == 2
             case Err(error):
                 pytest.fail(f"Expected Ok(True), got Err({error})")
 
     @pytest.mark.asyncio
     async def test_get_cached_value_miss_workflow(
-        self, clean_redis: Redis, mocker: MockerFixture
+        self,
+        interpreter_with_redis: tuple[CompositeInterpreter, MockWebSocketConnection],
+        clean_redis: Redis,
     ) -> None:
         """Workflow handles cache miss for generic value."""
+        interpreter, mock_ws = interpreter_with_redis
         key = f"nonexistent-key-{uuid4()}"
-
-        # Create interpreter
-        mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-        mock_ws.is_open.return_value = True
-        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
-        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
-
-        interpreter = create_composite_interpreter(
-            websocket_connection=mock_ws,
-            user_repo=mock_user_repo,
-            message_repo=mock_msg_repo,
-            cache=RedisProfileCache(clean_redis),
-        )
 
         # Define workflow
         def miss_program(k: str) -> Generator[AllEffects, EffectResult, str]:
@@ -450,30 +380,20 @@ class TestCacheWorkflowIntegration:
         match result:
             case Ok(outcome):
                 assert outcome == "miss"
-                mock_ws.send_text.assert_called_once_with("Miss: not_found")
+                mock_ws.mock.send_text.assert_called_once_with("Miss: not_found")
             case Err(error):
                 pytest.fail(f"Expected Ok('miss'), got Err({error})")
 
     @pytest.mark.asyncio
     async def test_put_cached_value_workflow(
-        self, clean_redis: Redis, mocker: MockerFixture
+        self,
+        interpreter_with_redis: tuple[CompositeInterpreter, MockWebSocketConnection],
+        clean_redis: Redis,
     ) -> None:
         """Workflow puts generic value in real Redis."""
+        interpreter, mock_ws = interpreter_with_redis
         key = f"put-test-{uuid4()}"
         value = b'{"data": "json bytes"}'
-
-        # Create interpreter
-        mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-        mock_ws.is_open.return_value = True
-        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
-        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
-
-        interpreter = create_composite_interpreter(
-            websocket_connection=mock_ws,
-            user_repo=mock_user_repo,
-            message_repo=mock_msg_repo,
-            cache=RedisProfileCache(clean_redis),
-        )
 
         # Define workflow
         def put_value_program(
@@ -505,23 +425,13 @@ class TestCacheWorkflowIntegration:
 
     @pytest.mark.asyncio
     async def test_invalidate_nonexistent_key_workflow(
-        self, clean_redis: Redis, mocker: MockerFixture
+        self,
+        interpreter_with_redis: tuple[CompositeInterpreter, MockWebSocketConnection],
+        clean_redis: Redis,
     ) -> None:
         """Workflow handles invalidation of non-existent key."""
+        interpreter, mock_ws = interpreter_with_redis
         key = f"nonexistent-{uuid4()}"
-
-        # Create interpreter
-        mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-        mock_ws.is_open.return_value = True
-        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
-        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
-
-        interpreter = create_composite_interpreter(
-            websocket_connection=mock_ws,
-            user_repo=mock_user_repo,
-            message_repo=mock_msg_repo,
-            cache=RedisProfileCache(clean_redis),
-        )
 
         # Define workflow
         def invalidate_missing_program(k: str) -> Generator[AllEffects, EffectResult, bool]:
@@ -539,30 +449,20 @@ class TestCacheWorkflowIntegration:
             case Ok(deleted):
                 # Should return False since key didn't exist
                 assert deleted is False
-                mock_ws.send_text.assert_called_once_with("Deleted: False")
+                mock_ws.mock.send_text.assert_called_once_with("Deleted: False")
             case Err(error):
                 pytest.fail(f"Expected Ok(False), got Err({error})")
 
     @pytest.mark.asyncio
     async def test_multiple_generic_values_workflow(
-        self, clean_redis: Redis, mocker: MockerFixture
+        self,
+        interpreter_with_redis: tuple[CompositeInterpreter, MockWebSocketConnection],
+        clean_redis: Redis,
     ) -> None:
         """Workflow stores and retrieves multiple generic values."""
+        interpreter, mock_ws = interpreter_with_redis
         keys = [f"multi-{uuid4()}" for _ in range(3)]
         values = [f"value-{i}".encode() for i in range(3)]
-
-        # Create interpreter
-        mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
-        mock_ws.is_open.return_value = True
-        mock_user_repo = mocker.AsyncMock(spec=UserRepository)
-        mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
-
-        interpreter = create_composite_interpreter(
-            websocket_connection=mock_ws,
-            user_repo=mock_user_repo,
-            message_repo=mock_msg_repo,
-            cache=RedisProfileCache(clean_redis),
-        )
 
         # Define workflow
         def multi_value_program(
@@ -592,6 +492,6 @@ class TestCacheWorkflowIntegration:
         match result:
             case Ok(count):
                 assert count == 3
-                mock_ws.send_text.assert_called_once_with("Found 3 values")
+                mock_ws.mock.send_text.assert_called_once_with("Found 3 values")
             case Err(error):
                 pytest.fail(f"Expected Ok(3), got Err({error})")

@@ -20,7 +20,7 @@ Quick links to key standards:
 | [Architecture](documents/engineering/architecture.md) | 5-layer architecture design |
 | [Code Quality](documents/engineering/code_quality.md) | Type safety + purity doctrines and anti-pattern routing |
 | [Testing](documents/engineering/testing.md) | 22 test anti-patterns |
-| [Testing Architecture](documents/engineering/testing_architecture.md) | Test organization and DRY doctrine |
+| [Testing Architecture](documents/engineering/testing_architecture.md) | Test organization and Test Terseness Doctrine |
 | [Docker Workflow](documents/engineering/docker_workflow.md) | All development in Docker |
 | [Command Reference](documents/engineering/command_reference.md) | Docker commands and test execution |
 | [Monitoring & Alerting](documents/engineering/monitoring_and_alerting.md) | Metric standards + alert policy |
@@ -80,7 +80,7 @@ See [documents/contributing.md](documents/contributing.md) for complete contribu
 - [Architecture](documents/engineering/architecture.md) - 5-layer design
 - [Code Quality](documents/engineering/code_quality.md) - Type safety + purity doctrines
 - [Testing](documents/engineering/testing.md) - 22 anti-patterns
-- [Testing Architecture](documents/engineering/testing_architecture.md) - Test organization and DRY doctrine
+- [Testing Architecture](documents/engineering/testing_architecture.md) - Test organization and Test Terseness Doctrine
 - [Docker Workflow](documents/engineering/docker_workflow.md) - All development in Docker
 
 ### Documentation
@@ -96,7 +96,7 @@ See [documents/contributing.md](documents/contributing.md) for complete contribu
 - [User Greeting](examples/02_user_greeting.py)
 - [Caching Workflow](examples/03_caching_workflow.py)
 - [Error Handling](examples/04_error_handling.py)
-- [Messaging Workflow](examples/05_messaging_workflow.py)
+- [Messaging Workflow](examples/06_messaging_workflow.py)
 
 ### Demo Applications
 

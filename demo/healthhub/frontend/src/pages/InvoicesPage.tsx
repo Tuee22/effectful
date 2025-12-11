@@ -11,7 +11,7 @@ export const InvoicesPage = () => {
   const { invoiceList } = useInvoices()
 
   return (
-    <div className="invoices-page">
+    <div className="invoices-page" data-state={invoiceList.type}>
       <div className="page-header">
         <h1>Invoices</h1>
       </div>

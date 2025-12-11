@@ -197,7 +197,7 @@ class TestPrescriptionWorkflow:
         page = authenticated_doctor_page
 
         # Navigate to prescriptions page
-        await navigate_and_wait_for_ready(page, make_url("/prescriptions"), data=False)
+        await navigate_and_wait_for_ready(page, make_url("/prescriptions"))
 
         # Seed data includes 2 prescriptions:
         # 1. Lisinopril for Alice Anderson
@@ -218,7 +218,7 @@ class TestPrescriptionWorkflow:
         page = authenticated_patient_page
 
         # Alice has one prescription: Lisinopril 10mg, Once daily
-        await navigate_and_wait_for_ready(page, make_url("/prescriptions"), data=False)
+        await navigate_and_wait_for_ready(page, make_url("/prescriptions"))
 
         # Verify prescription details are visible
         has_medication = await page.locator("text=Lisinopril").count() > 0

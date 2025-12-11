@@ -33,20 +33,6 @@ class TestOkConstruction:
             setattr(result, "value", 100)
 
 
-class TestOkPredicates:
-    """Test Ok type predicates."""
-
-    def test_ok_is_ok_returns_true(self) -> None:
-        """Ok.is_ok() should return True."""
-        result: Result[int, str] = Ok(42)
-        assert result.is_ok() is True
-
-    def test_ok_is_err_returns_false(self) -> None:
-        """Ok.is_err() should return False."""
-        result: Result[int, str] = Ok(42)
-        assert result.is_err() is False
-
-
 class TestOkFunctor:
     """Test Ok functor operations (map)."""
 
@@ -123,18 +109,21 @@ class TestErrConstruction:
             setattr(result, "error", "new error")
 
 
-class TestErrPredicates:
-    """Test Err type predicates."""
+class TestResultPredicates:
+    """Test predicate helpers across Ok and Err."""
 
-    def test_err_is_ok_returns_false(self) -> None:
-        """Err.is_ok() should return False."""
-        result: Result[int, str] = Err("error")
-        assert result.is_ok() is False
-
-    def test_err_is_err_returns_true(self) -> None:
-        """Err.is_err() should return True."""
-        result: Result[int, str] = Err("error")
-        assert result.is_err() is True
+    @pytest.mark.parametrize(
+        ("result", "predicate", "expected"),
+        [
+            (Ok(42), "is_ok", True),
+            (Ok(42), "is_err", False),
+            (Err("error"), "is_ok", False),
+            (Err("error"), "is_err", True),
+        ],
+    )
+    def test_predicates(self, result: Result[int, str], predicate: str, expected: bool) -> None:
+        """Result predicates should match variant semantics."""
+        assert getattr(result, predicate)() is expected
 
 
 class TestErrFunctor:

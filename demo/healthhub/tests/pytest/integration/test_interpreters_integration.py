@@ -14,7 +14,6 @@ from uuid import UUID, uuid4
 import asyncpg
 import pytest
 import redis.asyncio as redis
-from typing import Protocol, runtime_checkable, TypeGuard
 
 from app.domain.appointment import (
     Appointment,
@@ -66,23 +65,9 @@ from app.effects.notification import (
     NotificationValue,
     PublishWebSocketNotification,
 )
-from app.interpreters.healthcare_interpreter import HealthcareInterpreter
+from app.interpreters.composite_interpreter import CompositeInterpreter
 from app.interpreters.notification_interpreter import NotificationInterpreter
-from app.programs.runner import run_program
-
-
-@runtime_checkable
-class SupportsAclose(Protocol):
-    async def aclose(self) -> None: ...
-
-
-def has_aclose(pubsub: object) -> TypeGuard[SupportsAclose]:
-    return hasattr(pubsub, "aclose")
-
-
-async def close_pubsub(pubsub: redis.client.PubSub | SupportsAclose) -> None:
-    assert has_aclose(pubsub), "Redis PubSub missing aclose()"
-    await pubsub.aclose()
+from tests.conftest import close_pubsub
 
 
 @pytest.mark.asyncio
@@ -92,46 +77,44 @@ class TestHealthcareInterpreterIntegration:
     async def test_get_patient_by_id_round_trip(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
+        composite_interpreter: CompositeInterpreter,
         seed_test_patient: UUID,
     ) -> None:
         """Integration: GetPatientById returns seeded patient; unknown returns None."""
-        interpreter = HealthcareInterpreter(db_pool)
-
-        result = await interpreter.handle(GetPatientById(patient_id=seed_test_patient))
+        result = await composite_interpreter.handle(GetPatientById(patient_id=seed_test_patient))
         assert isinstance(result, PatientFound)
         assert result.patient.id == seed_test_patient
 
-        missing = await interpreter.handle(GetPatientById(patient_id=uuid4()))
+        missing = await composite_interpreter.handle(GetPatientById(patient_id=uuid4()))
         assert isinstance(missing, PatientMissingById)
 
     async def test_get_doctor_by_id_round_trip(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
+        composite_interpreter: CompositeInterpreter,
         seed_test_doctor: UUID,
     ) -> None:
         """Integration: GetDoctorById returns seeded doctor; unknown returns None."""
-        interpreter = HealthcareInterpreter(db_pool)
-
-        result = await interpreter.handle(GetDoctorById(doctor_id=seed_test_doctor))
+        result = await composite_interpreter.handle(GetDoctorById(doctor_id=seed_test_doctor))
         assert isinstance(result, DoctorFound)
         assert result.doctor.id == seed_test_doctor
 
-        missing = await interpreter.handle(GetDoctorById(doctor_id=uuid4()))
+        missing = await composite_interpreter.handle(GetDoctorById(doctor_id=uuid4()))
         assert isinstance(missing, DoctorMissingById)
 
     async def test_create_and_fetch_appointment(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
+        composite_interpreter: CompositeInterpreter,
         seed_test_patient: UUID,
         seed_test_doctor: UUID,
         sample_user_id: UUID,
     ) -> None:
         """Integration: CreateAppointment persists Requested status and can be fetched."""
-        interpreter = HealthcareInterpreter(db_pool)
         requested_time = datetime(2025, 1, 5, 15, 0, tzinfo=timezone.utc)
         reason = "Routine check"
 
-        created = await interpreter.handle(
+        created = await composite_interpreter.handle(
             CreateAppointment(
                 patient_id=seed_test_patient,
                 doctor_id=seed_test_doctor,
@@ -144,7 +127,7 @@ class TestHealthcareInterpreterIntegration:
         assert isinstance(created.status, Requested)
         assert created.reason == reason
 
-        fetched = await interpreter.handle(GetAppointmentById(appointment_id=created.id))
+        fetched = await composite_interpreter.handle(GetAppointmentById(appointment_id=created.id))
         assert isinstance(fetched, AppointmentFound)
         assert fetched.appointment.id == created.id
         assert isinstance(fetched.appointment.status, Requested)
@@ -157,13 +140,13 @@ class TestHealthcareInterpreterIntegration:
     async def test_transition_appointment_status_valid_and_invalid(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
+        composite_interpreter: CompositeInterpreter,
         seed_test_patient: UUID,
         seed_test_doctor: UUID,
         sample_user_id: UUID,
     ) -> None:
         """Integration: valid transition succeeds; invalid transition rejected without DB drift."""
-        interpreter = HealthcareInterpreter(db_pool)
-        appointment = await interpreter.handle(
+        appointment = await composite_interpreter.handle(
             CreateAppointment(
                 patient_id=seed_test_patient,
                 doctor_id=seed_test_doctor,
@@ -179,7 +162,7 @@ class TestHealthcareInterpreterIntegration:
             confirmed_at=datetime.now(timezone.utc),
             scheduled_time=datetime(2025, 1, 6, 10, 0, tzinfo=timezone.utc),
         )
-        transition_result = await interpreter.handle(
+        transition_result = await composite_interpreter.handle(
             TransitionAppointmentStatus(
                 appointment_id=appointment.id,
                 new_status=confirmed_status,
@@ -211,7 +194,7 @@ class TestHealthcareInterpreterIntegration:
                 appointment.id,
             )
 
-        invalid_result = await interpreter.handle(
+        invalid_result = await composite_interpreter.handle(
             TransitionAppointmentStatus(
                 appointment_id=appointment.id,
                 new_status=Requested(requested_at=datetime.now(timezone.utc)),
@@ -230,13 +213,12 @@ class TestHealthcareInterpreterIntegration:
     async def test_create_prescription_and_interactions(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
+        composite_interpreter: CompositeInterpreter,
         seed_test_patient: UUID,
         seed_test_doctor: UUID,
     ) -> None:
         """Integration: CreatePrescription persists and interaction checks return correct ADTs."""
-        interpreter = HealthcareInterpreter(db_pool)
-
-        prescription = await interpreter.handle(
+        prescription = await composite_interpreter.handle(
             CreatePrescription(
                 patient_id=seed_test_patient,
                 doctor_id=seed_test_doctor,
@@ -260,13 +242,13 @@ class TestHealthcareInterpreterIntegration:
             assert row["medication"] == "Lisinopril"
             assert row["dosage"] == "10mg"
 
-        warning = await interpreter.handle(
+        warning = await composite_interpreter.handle(
             CheckMedicationInteractions(medications=["Warfarin", "Aspirin"])
         )
         assert isinstance(warning, MedicationInteractionWarning)
         assert warning.severity == "severe"
 
-        safe = await interpreter.handle(
+        safe = await composite_interpreter.handle(
             CheckMedicationInteractions(medications=["Metformin", "Atorvastatin"])
         )
         assert isinstance(safe, NoInteractions)
@@ -275,13 +257,13 @@ class TestHealthcareInterpreterIntegration:
     async def test_create_and_fetch_lab_result(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
+        composite_interpreter: CompositeInterpreter,
         seed_test_patient: UUID,
         seed_test_doctor: UUID,
     ) -> None:
         """Integration: CreateLabResult persists JSONB payload and can be retrieved."""
-        interpreter = HealthcareInterpreter(db_pool)
         result_id = uuid4()
-        created = await interpreter.handle(
+        created = await composite_interpreter.handle(
             CreateLabResult(
                 result_id=result_id,
                 patient_id=seed_test_patient,
@@ -296,19 +278,18 @@ class TestHealthcareInterpreterIntegration:
         assert created.id == result_id
         assert created.test_type == "CBC"
 
-        fetched = await interpreter.handle(GetLabResultById(result_id=result_id))
+        fetched = await composite_interpreter.handle(GetLabResultById(result_id=result_id))
         assert isinstance(fetched, LabResultFound)
         assert fetched.lab_result.id == result_id
 
     async def test_invoice_lifecycle_with_real_db(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
+        composite_interpreter: CompositeInterpreter,
         seed_test_patient: UUID,
     ) -> None:
         """Integration: CreateInvoice, AddInvoiceLineItem, and UpdateInvoiceStatus persist correctly."""
-        interpreter = HealthcareInterpreter(db_pool)
-
-        invoice = await interpreter.handle(
+        invoice = await composite_interpreter.handle(
             CreateInvoice(
                 patient_id=seed_test_patient,
                 appointment_id=to_optional_value(None, reason="not_linked"),
@@ -319,7 +300,7 @@ class TestHealthcareInterpreterIntegration:
         assert isinstance(invoice, Invoice)
         assert invoice.status == "draft"
 
-        line_item = await interpreter.handle(
+        line_item = await composite_interpreter.handle(
             AddInvoiceLineItem(
                 invoice_id=invoice.id,
                 description="Labs",
@@ -330,7 +311,7 @@ class TestHealthcareInterpreterIntegration:
         assert isinstance(line_item, LineItem)
         assert line_item.invoice_id == invoice.id
 
-        paid_result = await interpreter.handle(
+        paid_result = await composite_interpreter.handle(
             UpdateInvoiceStatus(
                 invoice_id=invoice.id,
                 status="paid",
@@ -361,13 +342,10 @@ class TestNotificationInterpreterIntegration:
 
     async def test_publish_websocket_notification_to_redis(
         self,
-        db_pool: asyncpg.Pool[asyncpg.Record],
         redis_client: redis.Redis[bytes],
-        clean_db: None,
+        notification_interpreter: NotificationInterpreter,
     ) -> None:
         """Integration: PublishWebSocketNotification sends message to Redis pub/sub."""
-        interpreter = NotificationInterpreter(db_pool, redis_client)
-
         channel = f"user:{uuid4()}:notifications"
         pubsub = redis_client.pubsub()
         await pubsub.subscribe(channel)
@@ -376,7 +354,7 @@ class TestNotificationInterpreterIntegration:
             "type": "integration_notification",
             "content": "hello",
         }
-        result = await interpreter.handle(
+        result = await notification_interpreter.handle(
             PublishWebSocketNotification(
                 channel=channel,
                 message=message,
@@ -403,15 +381,13 @@ class TestNotificationInterpreterIntegration:
     async def test_log_audit_event_persists_to_db(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
-        redis_client: redis.Redis[bytes],
+        notification_interpreter: NotificationInterpreter,
         seed_test_user: UUID,
-        clean_db: None,
     ) -> None:
         """Integration: LogAuditEvent writes durable audit row."""
-        interpreter = NotificationInterpreter(db_pool, redis_client)
         resource_id = uuid4()
 
-        result = await interpreter.handle(
+        result = await notification_interpreter.handle(
             LogAuditEvent(
                 user_id=seed_test_user,
                 action="view_record",

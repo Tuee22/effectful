@@ -23,7 +23,7 @@ export const PrescriptionsPage = () => {
   }
 
   return (
-    <div className="prescriptions-page">
+    <div className="prescriptions-page" data-state={prescriptionList.type}>
       <div className="page-header">
         <h1>Prescriptions</h1>
         {isDoctor && (

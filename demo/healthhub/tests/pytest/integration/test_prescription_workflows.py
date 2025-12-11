@@ -20,7 +20,6 @@ from uuid import UUID
 import asyncpg
 import pytest
 import redis.asyncio as redis
-from typing import Protocol, runtime_checkable, TypeGuard
 
 from app.domain.prescription import MedicationInteractionWarning, NoInteractions, Prescription
 from app.interpreters.composite_interpreter import CompositeInterpreter
@@ -33,20 +32,7 @@ from app.programs.prescription_programs import (
     create_prescription_program,
 )
 from app.programs.runner import run_program
-
-
-@runtime_checkable
-class SupportsAclose(Protocol):
-    async def aclose(self) -> None: ...
-
-
-def has_aclose(pubsub: object) -> TypeGuard[SupportsAclose]:
-    return hasattr(pubsub, "aclose")
-
-
-async def close_pubsub(pubsub: redis.client.PubSub | SupportsAclose) -> None:
-    assert has_aclose(pubsub), "Redis PubSub missing aclose()"
-    await pubsub.aclose()
+from tests.conftest import close_pubsub
 
 
 class TestPrescriptionCreation:
@@ -56,8 +42,7 @@ class TestPrescriptionCreation:
     async def test_create_prescription_success_no_interactions(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
-        redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
         seed_test_patient: UUID,
         seed_test_doctor: UUID,
         sample_user_id: UUID,
@@ -70,17 +55,6 @@ class TestPrescriptionCreation:
         - Medication interaction check returns NoInteractions
         - Side effects validated (antipattern #13)
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Setup
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # Execute prescription creation
         result = await run_program(
             create_prescription_program(
@@ -95,7 +69,7 @@ class TestPrescriptionCreation:
                 actor_id=sample_user_id,
                 existing_medications=[],  # No existing medications
             ),
-            interpreter,
+            composite_interpreter,
         )
 
         assert isinstance(result, PrescriptionCreated)
@@ -128,8 +102,7 @@ class TestPrescriptionCreation:
     async def test_create_prescription_creates_audit_log(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
-        redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
         seed_test_patient: UUID,
         seed_test_doctor: UUID,
         sample_user_id: UUID,
@@ -142,17 +115,6 @@ class TestPrescriptionCreation:
         - Resource type and ID correct
         - Side effect validated (antipattern #13)
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Setup
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # Execute
         result = await run_program(
             create_prescription_program(
@@ -167,7 +129,7 @@ class TestPrescriptionCreation:
                 actor_id=sample_user_id,
                 existing_medications=[],
             ),
-            interpreter,
+            composite_interpreter,
         )
 
         assert isinstance(result, PrescriptionCreated)
@@ -197,8 +159,7 @@ class TestMedicationInteractionChecking:
     async def test_severe_interaction_blocks_prescription(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
-        redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
         seed_test_patient: UUID,
         seed_test_doctor: UUID,
         sample_user_id: UUID,
@@ -212,17 +173,6 @@ class TestMedicationInteractionChecking:
         - Error path tested (antipattern #12)
         - Side effects validated (antipattern #13)
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Setup
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # Execute with severe interaction (Warfarin + Aspirin)
         result = await run_program(
             create_prescription_program(
@@ -237,7 +187,7 @@ class TestMedicationInteractionChecking:
                 actor_id=sample_user_id,
                 existing_medications=["Aspirin"],  # Known severe interaction
             ),
-            interpreter,
+            composite_interpreter,
         )
 
         assert isinstance(result, PrescriptionBlocked)
@@ -277,7 +227,7 @@ class TestMedicationInteractionChecking:
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
         redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
         seed_test_patient: UUID,
         seed_test_doctor: UUID,
         sample_user_id: UUID,
@@ -290,17 +240,6 @@ class TestMedicationInteractionChecking:
         - Warning included in notification
         - Relaxed validation NOT applied (antipattern #14)
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Setup
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # Subscribe to patient notification channel
         pubsub = redis_client.pubsub()
         patient_channel = f"patient:{seed_test_patient}:notifications"
@@ -320,7 +259,7 @@ class TestMedicationInteractionChecking:
                 actor_id=sample_user_id,
                 existing_medications=["Lisinopril"],  # Known moderate interaction
             ),
-            interpreter,
+            composite_interpreter,
         )
 
         assert isinstance(result, PrescriptionCreated)
@@ -361,7 +300,7 @@ class TestMedicationInteractionChecking:
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
         redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
         seed_test_patient: UUID,
         seed_test_doctor: UUID,
         sample_user_id: UUID,
@@ -374,17 +313,6 @@ class TestMedicationInteractionChecking:
         - Warning severity = "minor"
         - Strict validation applied (antipattern #14)
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Setup
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # Execute with minor interaction
         result = await run_program(
             create_prescription_program(
@@ -399,7 +327,7 @@ class TestMedicationInteractionChecking:
                 actor_id=sample_user_id,
                 existing_medications=["Levothyroxine"],  # Known minor interaction
             ),
-            interpreter,
+            composite_interpreter,
         )
 
         assert isinstance(result, PrescriptionCreated)
@@ -424,8 +352,8 @@ class TestPrescriptionAuthorization:
     async def test_unauthorized_doctor_cannot_prescribe(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
-        redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
+        unauthorized_doctor: tuple[UUID, UUID],
         seed_test_patient: UUID,
         sample_user_id: UUID,
     ) -> None:
@@ -438,57 +366,7 @@ class TestPrescriptionAuthorization:
         - Error path tested (antipattern #12)
         - Authorization enforced (antipattern #14)
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Setup - Create doctor with can_prescribe=False
-        unauthorized_doctor_id = UUID("99000000-0000-0000-0000-000000000001")
-        unauthorized_user_id = UUID("99000000-0000-0000-0000-000000000000")
-
-        from app.auth.password import hash_password
-
-        async with db_pool.acquire() as conn:
-            # Create user
-            await conn.execute(
-                """
-                INSERT INTO users (id, email, password_hash, role, status, created_at, updated_at)
-                VALUES ($1, $2, $3, $4, $5, $6, $7)
-                """,
-                unauthorized_user_id,
-                "unauthorized@example.com",
-                hash_password("password123"),
-                "doctor",
-                "active",
-                datetime.now(timezone.utc),
-                datetime.now(timezone.utc),
-            )
-
-            # Create doctor with can_prescribe=False
-            await conn.execute(
-                """
-                INSERT INTO doctors (
-                    id, user_id, first_name, last_name, specialization,
-                    license_number, can_prescribe, created_at, updated_at
-                )
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-                """,
-                unauthorized_doctor_id,
-                unauthorized_user_id,
-                "Bob",
-                "Johnson",
-                "Dentistry",
-                "DDS-99999",
-                False,  # Cannot prescribe
-                datetime.now(timezone.utc),
-                datetime.now(timezone.utc),
-            )
-
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
+        unauthorized_doctor_id, _ = unauthorized_doctor
 
         # Attempt prescription creation
         result = await run_program(
@@ -504,7 +382,7 @@ class TestPrescriptionAuthorization:
                 actor_id=sample_user_id,
                 existing_medications=[],
             ),
-            interpreter,
+            composite_interpreter,
         )
 
         # Verify authorization error (antipattern #12, #14)
@@ -527,8 +405,7 @@ class TestPrescriptionAuthorization:
     async def test_nonexistent_patient_returns_error(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
-        redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
         seed_test_doctor: UUID,
         sample_user_id: UUID,
     ) -> None:
@@ -539,17 +416,6 @@ class TestPrescriptionAuthorization:
         - Prescription NOT created
         - Error path tested (antipattern #12)
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Setup
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # Use nonexistent patient ID
         nonexistent_patient_id = UUID("ffffffff-ffff-ffff-ffff-ffffffffffff")
 
@@ -566,7 +432,7 @@ class TestPrescriptionAuthorization:
                 actor_id=sample_user_id,
                 existing_medications=[],
             ),
-            interpreter,
+            composite_interpreter,
         )
 
         # Verify error returned (antipattern #12)
@@ -582,7 +448,7 @@ class TestPrescriptionNotifications:
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
         redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
         seed_test_patient: UUID,
         seed_test_doctor: UUID,
         sample_user_id: UUID,
@@ -595,17 +461,6 @@ class TestPrescriptionNotifications:
         - Ephemeral notification (fire-and-forget)
         - Side effect validated (antipattern #13)
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Setup
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # Subscribe to patient notification channel
         pubsub = redis_client.pubsub()
         patient_channel = f"patient:{seed_test_patient}:notifications"
@@ -625,7 +480,7 @@ class TestPrescriptionNotifications:
                 actor_id=sample_user_id,
                 existing_medications=[],
             ),
-            interpreter,
+            composite_interpreter,
         )
 
         assert isinstance(result, PrescriptionCreated)

@@ -11,7 +11,7 @@ export const LabResultsPage = () => {
   const { labResultList } = useLabResults()
 
   return (
-    <div className="lab-results-page">
+    <div className="lab-results-page" data-state={labResultList.type}>
       <div className="page-header">
         <h1>Lab Results</h1>
       </div>

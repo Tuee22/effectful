@@ -735,9 +735,123 @@ async def test_complete_user_workflow(clean_db: asyncpg.Connection) -> None:
 
 ---
 
-## Part 4: DRY Doctrine Framework
+## Part 4: Test Terseness Doctrine
 
-### Doctrine 1: Fixture-Level DRY (Infrastructure)
+**Core Philosophy**: Make individual tests as terse as possible by systematically eliminating verbatim repetitions through fixture-based abstraction and pytest idioms.
+
+This section presents:
+1. **Meta-Principle**: The "why" of test terseness (goal-setting)
+2. **Implementation Tactics**: The "how" of achieving terseness (5 tactics)
+3. **Anti-Patterns**: The "what not to do" (5 common mistakes)
+
+### Meta-Principle: Test Terseness Through Systematic DRY
+
+**Primary Goal**: Individual tests should be as terse as possible by systematically eliminating all verbatim repetitions across all test suites.
+
+**Core Philosophy**: Tests should read like specifications, not implementations. Setup, infrastructure, and boilerplate belong in fixtures and shared data; test functions should contain ONLY the logic unique to that test case.
+
+**Why Terseness Matters**:
+1. **Readability**: Shorter tests are easier to understand at a glance
+2. **Maintainability**: Less code means fewer places to update when requirements change
+3. **Focus**: Removes noise, highlights exactly what's being tested
+4. **Velocity**: Faster to write new tests by reusing well-crafted fixtures
+
+**Systematic Application**: Apply these tactics in order as a checklist:
+
+1. **Tactic 1 (Fixture-Level DRY)**: Infrastructure setup/cleanup → centralized fixture
+2. **Tactic 2 (Test-Level DRY)**: Repeated setup within file → local fixture
+3. **Tactic 3 (Suite-Level DRY)**: Repeated setup across files in suite → suite conftest.py
+4. **Tactic 4 (Cross-Suite DRY)**: Repeated data across all suites → tests/fixtures/base_state.py
+5. **Tactic 5 (Pytest Idiom DRY)**: Repeated test logic → parametrize, factories, autouse
+
+**Example: Terse vs Verbose Test**
+
+Verbose test with inline setup (45 lines):
+```python
+# file: tests/integration/test_cache_workflow.py
+# ❌ VERBOSE - Setup repeated in every test
+@pytest.mark.asyncio
+async def test_put_profile_workflow(clean_redis: Redis, mocker: MockerFixture) -> None:
+    """Test cache put workflow."""
+    # 9 lines of setup boilerplate (repeated 10+ times across file)
+    mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
+    mock_ws.is_open.return_value = True
+    mock_user_repo = mocker.AsyncMock(spec=UserRepository)
+    mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
+
+    interpreter = create_composite_interpreter(
+        websocket_connection=mock_ws,
+        user_repo=mock_user_repo,
+        message_repo=mock_msg_repo,
+        cache=RedisProfileCache(clean_redis),
+    )
+
+    # Actual test logic (16 lines)
+    user_id = uuid4()
+    profile = ProfileData(id=str(user_id), name="Alice")
+
+    def put_profile_program(uid: UUID, prof: ProfileData):
+        yield PutCachedProfile(user_id=uid, profile_data=prof, ttl_seconds=300)
+        yield SendText(text="Profile cached")
+        return "done"
+
+    result = await run_ws_program(put_profile_program(user_id, profile), interpreter)
+
+    match result:
+        case Ok(value):
+            assert value == "done"
+            mock_ws.send_text.assert_called_once_with("Profile cached")
+        case Err(error):
+            pytest.fail(f"Expected Ok, got Err({error})")
+```
+
+Terse test with fixture (18 lines):
+```python
+# file: tests/integration/test_cache_workflow.py
+# ✅ TERSE - Setup in fixture, only test logic here
+@pytest.mark.asyncio
+async def test_put_profile_workflow(
+    interpreter_with_redis: tuple[CompositeInterpreter, AsyncMock],
+) -> None:
+    """Test cache put workflow."""
+    interpreter, mock_ws = interpreter_with_redis  # 0 lines setup boilerplate
+
+    # Test logic starts immediately (16 lines - same as before)
+    user_id = uuid4()
+    profile = ProfileData(id=str(user_id), name="Alice")
+
+    def put_profile_program(uid: UUID, prof: ProfileData):
+        yield PutCachedProfile(user_id=uid, profile_data=prof, ttl_seconds=300)
+        yield SendText(text="Profile cached")
+        return "done"
+
+    result = await run_ws_program(put_profile_program(user_id, profile), interpreter)
+
+    match result:
+        case Ok(value):
+            assert value == "done"
+            mock_ws.send_text.assert_called_once_with("Profile cached")
+        case Err(error):
+            pytest.fail(f"Expected Ok, got Err({error})")
+```
+
+**Terseness improvement**: 45 lines → 18 lines (60% reduction), with setup boilerplate moved to reusable fixture.
+
+**Measurement**: Track these metrics to validate terseness improvements:
+- Lines of code per test function
+- Number of fixture reuses across test suite
+- Percentage of tests using parametrize for similar cases
+- Ratio of test logic to setup code (target: 100% logic, 0% setup)
+
+**See Also**: Implementation Tactics 1-5 below for detailed patterns and rationale.
+
+---
+
+### Implementation Tactics
+
+### Tactic 1: Fixture-Level DRY (Infrastructure)
+
+> **Meta-Goal**: See [Meta-Principle: Test Terseness Through Systematic DRY](#meta-principle-test-terseness-through-systematic-dry) for how this tactic contributes to overall test terseness.
 
 **Core Principle**: Test isolation and reproducibility should be enforced at the **fixture level** with a single idempotent base state across **all microservices**, rather than scattered across individual test files.
 
@@ -797,10 +911,110 @@ async def test_user_workflow(clean_db):
     # ... test logic
 ```
 
+**Pattern**: Interpreter fixture for integration tests
+
+**Problem identified in**: `tests/integration/test_cache_workflow.py`
+
+Every integration test repeats this 9-line interpreter setup:
+
+```python
+# file: tests/integration/test_cache_workflow.py (lines 50-60, 104-114, etc.)
+mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
+mock_ws.is_open.return_value = True
+mock_user_repo = mocker.AsyncMock(spec=UserRepository)
+mock_msg_repo = mocker.AsyncMock(spec=ChatMessageRepository)
+
+interpreter = create_composite_interpreter(
+    websocket_connection=mock_ws,
+    user_repo=mock_user_repo,
+    message_repo=mock_msg_repo,
+    cache=RedisProfileCache(clean_redis),
+)
+```
+
+This pattern is duplicated in:
+- `test_put_and_get_profile_workflow` (lines 50-60)
+- `test_cache_miss_workflow` (lines 104-114)
+- `test_cache_with_database_fallback_workflow` (lines 160-167)
+- Similar repetition across `test_database_workflow.py`, `test_messaging_workflow.py`
+
+**Impact**: 9 lines × ~30 integration tests = ~270 lines of boilerplate
+
+**Solution**: Suite-level fixture in `tests/integration/conftest.py`
+
+```python
+# file: tests/integration/conftest.py
+@pytest.fixture
+def mock_interpreter_deps(mocker: MockerFixture) -> dict[str, Any]:
+    """Provide mocked dependencies for composite interpreter."""
+    mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
+    mock_ws.is_open.return_value = True
+
+    return {
+        "websocket_connection": mock_ws,
+        "user_repo": mocker.AsyncMock(spec=UserRepository),
+        "message_repo": mocker.AsyncMock(spec=ChatMessageRepository),
+    }
+
+@pytest.fixture
+def interpreter_with_redis(
+    mock_interpreter_deps: dict[str, Any],
+    clean_redis: Redis,
+) -> tuple[CompositeInterpreter, AsyncMock]:
+    """Provide interpreter with real Redis cache and mocked other deps."""
+    interpreter = create_composite_interpreter(
+        **mock_interpreter_deps,
+        cache=RedisProfileCache(clean_redis),
+    )
+    return interpreter, mock_interpreter_deps["websocket_connection"]
+```
+
+**After**: Each test becomes terse
+
+```python
+# file: tests/integration/test_cache_workflow.py
+@pytest.mark.asyncio
+async def test_put_and_get_profile_workflow(
+    interpreter_with_redis: tuple[CompositeInterpreter, AsyncMock],
+) -> None:
+    """Workflow stores and retrieves profile from real Redis."""
+    interpreter, mock_ws = interpreter_with_redis
+
+    user_id = uuid4()
+    profile = ProfileData(id=str(user_id), name="Alice")
+
+    # Test logic starts immediately - no setup boilerplate
+    def put_get_profile_program(uid: UUID, prof: ProfileData):
+        yield PutCachedProfile(user_id=uid, profile_data=prof, ttl_seconds=300)
+        cached = yield GetCachedProfile(user_id=uid)
+        match cached:
+            case ProfileData() as cached_profile:
+                yield SendText(text=f"Retrieved: {cached_profile.name}")
+                return cached_profile.name
+            case CacheMiss():
+                return "miss"
+
+    result = await run_ws_program(put_get_profile_program(user_id, profile), interpreter)
+
+    match result:
+        case Ok(name):
+            assert name == "Alice"
+            mock_ws.send_text.assert_called_once_with("Retrieved: Alice")
+        case Err(error):
+            pytest.fail(f"Expected Ok, got Err({error})")
+```
+
+**Terseness improvement**:
+- Before: 25 lines per test (9 lines setup + 16 lines logic)
+- After: 16 lines per test (0 lines setup + 16 lines logic)
+- Reduction: 36% fewer lines per test
+
 **See Also**:
 - [Testing - Pattern 6: Fixture-Level Isolation](testing.md#pattern-6-fixture-level-isolation-dry-doctrine) for complete implementation example
 
-### Doctrine 2: Test-Level DRY (Within Single File)
+### Tactic 2: Test-Level DRY (Within Single File)
+
+> **Meta-Goal**: See [Meta-Principle: Test Terseness Through Systematic DRY](#meta-principle-test-terseness-through-systematic-dry) for how this tactic contributes to overall test terseness.
 
 **Core Principle**: Use fixtures instead of repeating setup code within each test in the same file.
 
@@ -860,7 +1074,9 @@ async def test_cache_get_workflow():
 - Tests focus on behavior, not setup
 - Type hints enable IDE autocomplete
 
-### Doctrine 3: Suite-Level DRY (Within unit OR integration OR e2e)
+### Tactic 3: Suite-Level DRY (Within unit OR integration OR e2e)
+
+> **Meta-Goal**: See [Meta-Principle: Test Terseness Through Systematic DRY](#meta-principle-test-terseness-through-systematic-dry) for how this tactic contributes to overall test terseness.
 
 **Core Principle**: Centralize fixtures used across multiple files in the same test suite using suite-specific `conftest.py`.
 
@@ -934,7 +1150,9 @@ def integration_interpreter(...):  # DUPLICATED
 - Clear ownership: integration tests own integration fixtures
 - No cross-suite pollution: unit tests can't accidentally use integration fixtures
 
-### Doctrine 4: Cross-Suite DRY (Across unit AND integration AND e2e)
+### Tactic 4: Cross-Suite DRY (Across unit AND integration AND e2e)
+
+> **Meta-Goal**: See [Meta-Principle: Test Terseness Through Systematic DRY](#meta-principle-test-terseness-through-systematic-dry) for how this tactic contributes to overall test terseness.
 
 **Core Principle**: Share common test data across ALL test suites via `tests/fixtures/base_state.py`.
 
@@ -1017,7 +1235,9 @@ ALICE = User(id=UUID("22222..."), email="alice@healthhub.com", name="Alice")  # 
 **See Also**:
 - `tests/fixtures/base_state.py` - Complete implementation with password hashes
 
-### Doctrine 5: Pytest Idiom DRY (Terseness Through Tools)
+### Tactic 5: Pytest Idiom DRY (Terseness Through Tools)
+
+> **Meta-Goal**: See [Meta-Principle: Test Terseness Through Systematic DRY](#meta-principle-test-terseness-through-systematic-dry) for how this tactic contributes to overall test terseness.
 
 **Core Principle**: Use pytest's built-in features (`@pytest.mark.parametrize`, fixture factories, autouse fixtures) to eliminate test duplication.
 
@@ -1069,6 +1289,105 @@ def test_email_validation_invalid_2():
 - Easy to add new test cases (one line)
 - Clear test matrix
 - Better test reports ("test_email_validation[alice@example.com-True]")
+
+#### Pattern 5a Examples from Codebase
+
+**Example 1: Immutability Tests**
+
+**Problem identified in**: `tests/unit/test_domain/test_user.py`
+
+Testing immutability of multiple fields requires separate test functions:
+
+```python
+# file: tests/unit/test_domain/test_user.py (lines 28-44)
+# ❌ VERBOSE - Separate test per field (42 lines total)
+def test_user_is_immutable() -> None:
+    """User should be frozen (immutable)."""
+    user = User(id=uuid4(), name="Alice", email="alice@example.com")
+    with pytest.raises(FrozenInstanceError):
+        setattr(user, "name", "Bob")
+
+def test_user_id_is_immutable() -> None:
+    """User id should be immutable."""
+    user = User(id=uuid4(), name="Alice", email="alice@example.com")
+    with pytest.raises(FrozenInstanceError):
+        setattr(user, "id", uuid4())
+
+def test_user_email_is_immutable() -> None:
+    """User email should be immutable."""
+    user = User(id=uuid4(), name="Alice", email="alice@example.com")
+    with pytest.raises(FrozenInstanceError):
+        setattr(user, "email", "bob@example.com")
+```
+
+**Solution**: Parametrize over field names
+
+```python
+# file: tests/unit/test_domain/test_user.py
+# ✅ TERSE - Parametrized test (14 lines total)
+@pytest.mark.parametrize("field,new_value", [
+    ("name", "Bob"),
+    ("id", uuid4()),
+    ("email", "bob@example.com"),
+])
+def test_user_fields_are_immutable(field: str, new_value: Any) -> None:
+    """User fields should be frozen (immutable)."""
+    user = User(id=uuid4(), name="Alice", email="alice@example.com")
+    with pytest.raises(FrozenInstanceError):
+        setattr(user, field, new_value)
+```
+
+**Terseness improvement**: 42 lines → 14 lines (67% reduction)
+
+**Example 2: Predicate Tests**
+
+**Problem pattern**: Testing boolean predicates on ADTs requires separate test per case:
+
+```python
+# file: tests/unit/test_algebraic/test_result.py (lines 39-47, 129-137)
+# ❌ VERBOSE - Separate test per predicate case
+def test_ok_is_ok_returns_true(self) -> None:
+    """Ok.is_ok() should return True."""
+    result: Result[int, str] = Ok(42)
+    assert result.is_ok() is True
+
+def test_ok_is_err_returns_false(self) -> None:
+    """Ok.is_err() should return False."""
+    result: Result[int, str] = Ok(42)
+    assert result.is_err() is False
+
+def test_err_is_ok_returns_false(self) -> None:
+    """Err.is_ok() should return False."""
+    result: Result[int, str] = Err("error")
+    assert result.is_ok() is False
+
+def test_err_is_err_returns_true(self) -> None:
+    """Err.is_err() should return True."""
+    result: Result[int, str] = Err("error")
+    assert result.is_err() is True
+```
+
+**Solution**: Parametrize over result type, predicate, and expected value
+
+```python
+# file: tests/unit/test_algebraic/test_result.py
+# ✅ TERSE - Parametrized test
+@pytest.mark.parametrize("result,predicate,expected", [
+    (Ok(42), "is_ok", True),
+    (Ok(42), "is_err", False),
+    (Err("error"), "is_ok", False),
+    (Err("error"), "is_err", True),
+])
+def test_result_predicates(result: Result, predicate: str, expected: bool) -> None:
+    """Result predicates return correct boolean values."""
+    assert getattr(result, predicate)() is expected
+```
+
+**Benefits demonstrated**:
+- **DRY**: One test function instead of 4
+- **Matrix clarity**: All test cases visible in parameter list
+- **Easy extension**: Add new predicates by adding one line
+- **Better reports**: pytest shows "test_result_predicates[Ok(42)-is_ok-True]"
 
 #### Pattern 5b: Fixture Factories
 

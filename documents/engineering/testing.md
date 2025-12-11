@@ -27,7 +27,7 @@ flowchart TB
 
 | Need | Link |
 |------|------|
-| Test organization + fixture architecture + DRY doctrines | [Testing Architecture](testing_architecture.md) |
+| Test organization + fixture architecture + Test Terseness Doctrine | [Testing Architecture](testing_architecture.md) |
 | Type safety + purity rules driving test shape | [Code Quality](code_quality.md) |
 | Container + infra contract | [Docker Workflow](docker_workflow.md#development-contract) |
 | Command prefixes for pytest | [Command Reference](command_reference.md#command-table) |
@@ -3344,7 +3344,7 @@ All code changes must meet these requirements:
 
 ## Part 9: Related Documentation
 
-- **Testing Architecture:** [testing_architecture.md](testing_architecture.md) - Test organization, fixture architecture, and DRY doctrine
+- **Testing Architecture:** [testing_architecture.md](testing_architecture.md) - Test organization, fixture architecture, and Test Terseness Doctrine
 - **Test Suite Audit:** `documents/testing/test_suite_audit.md` - Current test status and inventory
 - **Tutorial:** `documents/tutorials/testing_guide.md` - Step-by-step testing guide
 - **Code Quality:** `documents/engineering/code_quality.md` - Type safety + purity enforcement

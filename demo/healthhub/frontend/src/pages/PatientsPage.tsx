@@ -11,7 +11,7 @@ export const PatientsPage = () => {
   const { patientList } = usePatients()
 
   return (
-    <div className="patients-page">
+    <div className="patients-page" data-state={patientList.type}>
       <div className="page-header">
         <h1>Patients</h1>
       </div>

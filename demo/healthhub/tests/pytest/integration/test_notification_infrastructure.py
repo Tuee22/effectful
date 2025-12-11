@@ -17,9 +17,6 @@ from uuid import UUID, uuid4
 import asyncpg
 import pytest
 import redis.asyncio as redis
-from typing import Protocol, runtime_checkable, TypeGuard
-
-from redis.asyncio.client import PubSub
 
 from effectful.domain.optional_value import to_optional_value
 from app.effects.notification import (
@@ -29,20 +26,7 @@ from app.effects.notification import (
 )
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
 from app.programs.runner import run_program
-
-
-@runtime_checkable
-class SupportsAclose(Protocol):
-    async def aclose(self) -> None: ...
-
-
-def has_aclose(pubsub: object) -> TypeGuard[SupportsAclose]:
-    return hasattr(pubsub, "aclose")
-
-
-async def close_pubsub(pubsub: PubSub | SupportsAclose) -> None:
-    assert has_aclose(pubsub), "Redis PubSub missing aclose()"
-    await pubsub.aclose()
+from tests.conftest import close_pubsub
 
 
 def parse_jsonb_metadata(metadata_val: object) -> dict[str, str]:
@@ -74,9 +58,8 @@ class TestRedisPublishSubscribe:
     @pytest.mark.asyncio
     async def test_publish_notification_sends_redis_message(
         self,
-        db_pool: asyncpg.Pool[asyncpg.Record],
         redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
         sample_user_id: UUID,
     ) -> None:
         """Test PublishWebSocketNotification sends Redis pub/sub message.
@@ -87,17 +70,6 @@ class TestRedisPublishSubscribe:
         - Ephemeral (fire-and-forget) - no persistence
         - Side effect validated (antipattern #13)
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Create composite interpreter
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # Subscribe to channel
         pubsub = redis_client.pubsub()
         channel = f"user:{sample_user_id}:notifications"
@@ -118,7 +90,7 @@ class TestRedisPublishSubscribe:
             )
 
         # Execute program
-        await run_program(notification_program(), interpreter)
+        await run_program(notification_program(), composite_interpreter)
 
         # CRITICAL: Verify message received (antipattern #13)
         message = await pubsub.get_message(timeout=2.0)
@@ -148,9 +120,8 @@ class TestRedisPublishSubscribe:
     @pytest.mark.asyncio
     async def test_publish_to_multiple_channels(
         self,
-        db_pool: asyncpg.Pool[asyncpg.Record],
         redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
     ) -> None:
         """Test publishing to multiple channels simultaneously.
 
@@ -159,17 +130,6 @@ class TestRedisPublishSubscribe:
         - Each channel receives correct message
         - No cross-channel pollution
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Create composite interpreter
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # Subscribe to multiple channels
         user1_id = uuid4()
         user2_id = uuid4()
@@ -205,7 +165,7 @@ class TestRedisPublishSubscribe:
             )
 
         # Execute program
-        await run_program(multi_channel_program(), interpreter)
+        await run_program(multi_channel_program(), composite_interpreter)
 
         # Verify channel 1 received correct message
         msg1 = await pubsub1.get_message(timeout=2.0)
@@ -239,9 +199,8 @@ class TestRedisPublishSubscribe:
     @pytest.mark.asyncio
     async def test_ephemeral_message_lost_without_subscriber(
         self,
-        db_pool: asyncpg.Pool[asyncpg.Record],
         redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
     ) -> None:
         """Test Redis pub/sub message is lost if no subscriber listening.
 
@@ -250,17 +209,6 @@ class TestRedisPublishSubscribe:
         - Message not persisted if no listener
         - This is ACCEPTABLE for real-time notifications
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Create composite interpreter
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         user_id = uuid4()
         channel = f"user:{user_id}:notifications"
 
@@ -276,7 +224,7 @@ class TestRedisPublishSubscribe:
                 recipient_id=to_optional_value(user_id, reason="recipient"),
             )
 
-        await run_program(publish_program(), interpreter)
+        await run_program(publish_program(), composite_interpreter)
 
         # NOW subscribe (after publishing)
         pubsub = redis_client.pubsub()
@@ -303,8 +251,7 @@ class TestAuditLogging:
     async def test_audit_log_creates_db_record(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
-        redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
         sample_user_id: UUID,
     ) -> None:
         """Test LogAuditEvent creates database record.
@@ -315,17 +262,6 @@ class TestAuditLogging:
         - Durable storage (HIPAA requirement)
         - Side effect validated (antipattern #13)
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Setup
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # Define audit logging program
         resource_id = uuid4()
 
@@ -345,7 +281,7 @@ class TestAuditLogging:
             )
 
         # Execute program
-        await run_program(audit_program(), interpreter)
+        await run_program(audit_program(), composite_interpreter)
 
         # CRITICAL: Verify audit log persisted (antipattern #13)
         async with db_pool.acquire() as conn:
@@ -374,8 +310,7 @@ class TestAuditLogging:
     async def test_audit_log_supports_null_optional_fields(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
-        redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
         sample_user_id: UUID,
     ) -> None:
         """Test audit log allows NULL for optional fields.
@@ -385,17 +320,6 @@ class TestAuditLogging:
         - DB record created successfully
         - No relaxed validation (antipattern #14)
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Setup
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # Define audit logging program with NULL optional fields
         resource_id = uuid4()
 
@@ -412,7 +336,7 @@ class TestAuditLogging:
             )
 
         # Execute program
-        await run_program(audit_program(), interpreter)
+        await run_program(audit_program(), composite_interpreter)
 
         # Verify audit log created with NULL fields
         async with db_pool.acquire() as conn:
@@ -434,8 +358,7 @@ class TestAuditLogging:
     async def test_audit_log_multiple_entries_same_resource(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
-        redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
         sample_user_id: UUID,
     ) -> None:
         """Test multiple audit log entries for same resource.
@@ -446,17 +369,6 @@ class TestAuditLogging:
         - Audit trail maintained chronologically
         - HIPAA compliance (complete history)
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Setup
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # Define program with multiple audit events for same resource
         resource_id = uuid4()
 
@@ -495,7 +407,7 @@ class TestAuditLogging:
             )
 
         # Execute program
-        await run_program(multi_audit_program(), interpreter)
+        await run_program(multi_audit_program(), composite_interpreter)
 
         # Verify all audit entries created
         async with db_pool.acquire() as conn:
@@ -542,7 +454,7 @@ class TestNotificationIntegration:
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
         redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
         sample_user_id: UUID,
     ) -> None:
         """Test combined ephemeral notification and durable audit log.
@@ -553,17 +465,6 @@ class TestNotificationIntegration:
         - Both side effects validated (antipattern #13)
         - Separation of concerns (ephemeral vs durable)
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Setup
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # Subscribe to Redis channel
         pubsub = redis_client.pubsub()
         channel = f"user:{sample_user_id}:notifications"
@@ -597,7 +498,7 @@ class TestNotificationIntegration:
             )
 
         # Execute program
-        await run_program(combined_program(), interpreter)
+        await run_program(combined_program(), composite_interpreter)
 
         # CRITICAL: Verify Redis notification (antipattern #13)
         message = await pubsub.get_message(timeout=2.0)

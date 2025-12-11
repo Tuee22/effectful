@@ -18,7 +18,6 @@ from uuid import UUID, uuid4
 
 import asyncpg
 import pytest
-import redis.asyncio as redis
 
 from app.domain.invoice import Invoice, LineItem
 from app.domain.lookup_result import InvoiceFound
@@ -38,8 +37,7 @@ class TestInvoiceCreation:
     async def test_create_invoice_empty_line_items(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
-        redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
         seed_test_patient: UUID,
     ) -> None:
         """Test creating invoice with empty line items list.
@@ -50,17 +48,6 @@ class TestInvoiceCreation:
         - Empty line items stored
         - DB record persisted
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Setup interpreter
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # Execute CreateInvoice effect
         effect = CreateInvoice(
             patient_id=seed_test_patient,
@@ -68,7 +55,7 @@ class TestInvoiceCreation:
             line_items=[],
             due_date=to_optional_value(None, reason="not_provided"),
         )
-        invoice = await interpreter.handle(effect)
+        invoice = await composite_interpreter.handle(effect)
 
         # Verify invoice returned
         assert isinstance(invoice, Invoice)
@@ -90,8 +77,7 @@ class TestInvoiceCreation:
     async def test_create_invoice_with_line_items(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
-        redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
         seed_test_patient: UUID,
     ) -> None:
         """Test creating invoice with initial line items.
@@ -101,17 +87,6 @@ class TestInvoiceCreation:
         - Totals calculated correctly
         - Line items persisted in database
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Setup interpreter
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # Create line item
         line_item = LineItem(
             id=uuid4(),
@@ -130,7 +105,7 @@ class TestInvoiceCreation:
             line_items=[line_item],
             due_date=to_optional_value(date(2024, 12, 31), reason="provided"),
         )
-        invoice = await interpreter.handle(effect)
+        invoice = await composite_interpreter.handle(effect)
 
         # Verify invoice returned
         assert isinstance(invoice, Invoice)
@@ -166,8 +141,7 @@ class TestInvoiceLineItemManagement:
     async def test_add_line_item_updates_totals(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
-        redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
         seed_test_patient: UUID,
     ) -> None:
         """Test adding line item to invoice updates totals.
@@ -177,17 +151,6 @@ class TestInvoiceLineItemManagement:
         - Invoice totals recalculated
         - LineItem domain model returned
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Setup interpreter
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # First create an invoice
         create_effect = CreateInvoice(
             patient_id=seed_test_patient,
@@ -195,7 +158,7 @@ class TestInvoiceLineItemManagement:
             line_items=[],
             due_date=to_optional_value(None, reason="not_provided"),
         )
-        invoice = await interpreter.handle(create_effect)
+        invoice = await composite_interpreter.handle(create_effect)
         assert isinstance(invoice, Invoice)
 
         # Add line item
@@ -205,7 +168,7 @@ class TestInvoiceLineItemManagement:
             quantity=1,
             unit_price=Decimal("75.00"),
         )
-        line_item = await interpreter.handle(add_effect)
+        line_item = await composite_interpreter.handle(add_effect)
 
         # Verify line item returned
         assert isinstance(line_item, LineItem)
@@ -229,8 +192,7 @@ class TestInvoiceLineItemManagement:
     async def test_add_multiple_line_items(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
-        redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
         seed_test_patient: UUID,
     ) -> None:
         """Test adding multiple line items to invoice.
@@ -239,17 +201,6 @@ class TestInvoiceLineItemManagement:
         - Multiple line items can be added
         - Each line item persisted correctly
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Setup interpreter
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # Create invoice
         create_effect = CreateInvoice(
             patient_id=seed_test_patient,
@@ -257,11 +208,11 @@ class TestInvoiceLineItemManagement:
             line_items=[],
             due_date=to_optional_value(None, reason="not_provided"),
         )
-        invoice_result = await interpreter.handle(create_effect)
+        invoice_result = await composite_interpreter.handle(create_effect)
         assert isinstance(invoice_result, Invoice)
 
         # Add first line item
-        line_item1_result = await interpreter.handle(
+        line_item1_result = await composite_interpreter.handle(
             AddInvoiceLineItem(
                 invoice_id=invoice_result.id,
                 description="Office visit",
@@ -271,7 +222,7 @@ class TestInvoiceLineItemManagement:
         )
 
         # Add second line item
-        line_item2_result = await interpreter.handle(
+        line_item2_result = await composite_interpreter.handle(
             AddInvoiceLineItem(
                 invoice_id=invoice_result.id,
                 description="Lab work",
@@ -303,8 +254,7 @@ class TestInvoiceStatusManagement:
     async def test_update_invoice_status_to_sent(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
-        redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
         seed_test_patient: UUID,
     ) -> None:
         """Test updating invoice status from draft to sent.
@@ -314,17 +264,6 @@ class TestInvoiceStatusManagement:
         - Updated invoice returned
         - Timestamps updated correctly
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Setup interpreter
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # Create invoice
         create_effect = CreateInvoice(
             patient_id=seed_test_patient,
@@ -332,7 +271,7 @@ class TestInvoiceStatusManagement:
             line_items=[],
             due_date=to_optional_value(None, reason="not_provided"),
         )
-        invoice_result = await interpreter.handle(create_effect)
+        invoice_result = await composite_interpreter.handle(create_effect)
         assert isinstance(invoice_result, Invoice)
         assert invoice_result.status == "draft"
 
@@ -341,7 +280,7 @@ class TestInvoiceStatusManagement:
             invoice_id=invoice_result.id,
             status="sent",
         )
-        updated_invoice_result = await interpreter.handle(update_effect)
+        updated_invoice_result = await composite_interpreter.handle(update_effect)
 
         # Verify updated invoice returned
         assert isinstance(updated_invoice_result, InvoiceFound)
@@ -361,8 +300,7 @@ class TestInvoiceStatusManagement:
     async def test_update_invoice_status_to_paid(
         self,
         db_pool: asyncpg.Pool[asyncpg.Record],
-        redis_client: redis.Redis[bytes],
-        observability_interpreter: object,
+        composite_interpreter: CompositeInterpreter,
         seed_test_patient: UUID,
     ) -> None:
         """Test updating invoice status to paid.
@@ -371,17 +309,6 @@ class TestInvoiceStatusManagement:
         - Status updated to paid
         - paid_at timestamp set
         """
-        from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-        assert isinstance(observability_interpreter, ObservabilityInterpreter)
-
-        # Setup interpreter
-        interpreter = CompositeInterpreter(
-            pool=db_pool,
-            redis_client=redis_client,
-            observability_interpreter=observability_interpreter,
-        )
-
         # Create invoice
         create_effect = CreateInvoice(
             patient_id=seed_test_patient,
@@ -389,7 +316,7 @@ class TestInvoiceStatusManagement:
             line_items=[],
             due_date=to_optional_value(None, reason="not_provided"),
         )
-        invoice_result = await interpreter.handle(create_effect)
+        invoice_result = await composite_interpreter.handle(create_effect)
         assert isinstance(invoice_result, Invoice)
 
         # Update status to paid
@@ -397,7 +324,7 @@ class TestInvoiceStatusManagement:
             invoice_id=invoice_result.id,
             status="paid",
         )
-        updated_invoice_result = await interpreter.handle(update_effect)
+        updated_invoice_result = await composite_interpreter.handle(update_effect)
 
         # Verify updated invoice
         assert isinstance(updated_invoice_result, InvoiceFound)

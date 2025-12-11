@@ -22,6 +22,13 @@ import pytest
 from playwright.async_api import Page, expect
 
 from tests.pytest.e2e.helpers.adt_state_helpers import wait_for_page_ready
+from tests.pytest.e2e.helpers.navigation import (
+    appointments_list_locator,
+    goto_and_wait,
+    invoices_list_locator,
+    lab_results_list_locator,
+    prescriptions_list_locator,
+)
 
 
 # =============================================================================
@@ -50,16 +57,11 @@ class TestPatientAccess:
         self, authenticated_patient_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that patient can view their appointments."""
-        await authenticated_patient_page.goto(make_url("/appointments"))
-        await expect(authenticated_patient_page).to_have_url(make_url("/appointments"))
+        await goto_and_wait(authenticated_patient_page, make_url, "/appointments")
 
         # Page should load without access denied
         # Check for appointments content or empty state
-        appointments_content = authenticated_patient_page.locator(
-            "[data-testid='appointment-list'], "
-            "[data-testid='empty-state'], "
-            ".appointments-page"
-        )
+        appointments_content = appointments_list_locator(authenticated_patient_page)
         await expect(appointments_content).to_be_visible(timeout=10000)
 
     async def test_patient_cannot_access_patients_page(
@@ -71,12 +73,14 @@ class TestPatientAccess:
         Currently testing that page loads without JS errors.
         """
         await authenticated_patient_page.goto(make_url("/patients"))
-        await authenticated_patient_page.wait_for_timeout(2000)
+        current_url = authenticated_patient_page.url
+
+        if "/patients" in current_url:
+            await wait_for_page_ready(authenticated_patient_page)
 
         # Verify page loads without crashing - RBAC enforcement is frontend TODO
         # For now, just ensure the page is accessible (no 404/500 errors)
         # Full RBAC would redirect to /dashboard or show access denied
-        current_url = authenticated_patient_page.url
         # Either redirected OR page loaded - both acceptable for now
         assert "/patients" in current_url or "/dashboard" in current_url
 
@@ -84,23 +88,17 @@ class TestPatientAccess:
         self, authenticated_patient_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that patient can view their prescriptions."""
-        await authenticated_patient_page.goto(make_url("/prescriptions"))
-        await expect(authenticated_patient_page).to_have_url(make_url("/prescriptions"))
+        await goto_and_wait(authenticated_patient_page, make_url, "/prescriptions")
 
         # Page should load
-        prescriptions_content = authenticated_patient_page.locator(
-            "[data-testid='prescription-list'], "
-            "[data-testid='empty-state'], "
-            ".prescriptions-page"
-        )
+        prescriptions_content = prescriptions_list_locator(authenticated_patient_page)
         await expect(prescriptions_content).to_be_visible(timeout=10000)
 
     async def test_patient_cannot_create_prescriptions(
         self, authenticated_patient_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that patient does not see create prescription button."""
-        await authenticated_patient_page.goto(make_url("/prescriptions"))
-        await authenticated_patient_page.wait_for_timeout(2000)
+        await goto_and_wait(authenticated_patient_page, make_url, "/prescriptions")
 
         # Create button should NOT be visible for patients
         create_button = authenticated_patient_page.locator(
@@ -116,26 +114,20 @@ class TestPatientAccess:
         self, authenticated_patient_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that patient can view their lab results."""
-        await authenticated_patient_page.goto(make_url("/lab-results"))
-        await expect(authenticated_patient_page).to_have_url(make_url("/lab-results"))
+        await goto_and_wait(authenticated_patient_page, make_url, "/lab-results")
 
         # Page should load (list or empty)
-        lab_results_content = authenticated_patient_page.get_by_test_id("lab-result-list").or_(
-            authenticated_patient_page.get_by_test_id("lab-result-empty")
-        )
+        lab_results_content = lab_results_list_locator(authenticated_patient_page)
         await expect(lab_results_content).to_be_visible(timeout=10000)
 
     async def test_patient_can_view_own_invoices(
         self, authenticated_patient_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that patient can view their invoices."""
-        await authenticated_patient_page.goto(make_url("/invoices"))
-        await expect(authenticated_patient_page).to_have_url(make_url("/invoices"))
+        await goto_and_wait(authenticated_patient_page, make_url, "/invoices")
 
         # Page should load
-        invoices_content = authenticated_patient_page.locator(
-            "[data-testid='invoice-list'], " "[data-testid='empty-state'], " ".invoices-page"
-        )
+        invoices_content = invoices_list_locator(authenticated_patient_page)
         await expect(invoices_content).to_be_visible(timeout=10000)
 
 
@@ -160,8 +152,7 @@ class TestDoctorAccess:
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that doctor can access the patients list."""
-        await authenticated_doctor_page.goto(make_url("/patients"))
-        await expect(authenticated_doctor_page).to_have_url(make_url("/patients"))
+        await goto_and_wait(authenticated_doctor_page, make_url, "/patients")
 
         # Page should load with patient list
         patients_content = authenticated_doctor_page.locator(
@@ -173,22 +164,16 @@ class TestDoctorAccess:
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that doctor can view all appointments."""
-        await authenticated_doctor_page.goto(make_url("/appointments"))
-        await expect(authenticated_doctor_page).to_have_url(make_url("/appointments"))
+        await goto_and_wait(authenticated_doctor_page, make_url, "/appointments")
 
-        appointments_content = authenticated_doctor_page.locator(
-            "[data-testid='appointment-list'], "
-            "[data-testid='empty-state'], "
-            ".appointments-page"
-        )
+        appointments_content = appointments_list_locator(authenticated_doctor_page)
         await expect(appointments_content).to_be_visible(timeout=10000)
 
     async def test_doctor_can_create_prescriptions(
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that doctor can see create prescription button."""
-        await authenticated_doctor_page.goto(make_url("/prescriptions"))
-        await authenticated_doctor_page.wait_for_timeout(2000)
+        await goto_and_wait(authenticated_doctor_page, make_url, "/prescriptions")
 
         # Create button SHOULD be visible for doctors
         create_button = authenticated_doctor_page.locator(
@@ -207,32 +192,22 @@ class TestDoctorAccess:
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that doctor can view lab results."""
-        await authenticated_doctor_page.goto(make_url("/lab-results"))
-        await expect(authenticated_doctor_page).to_have_url(make_url("/lab-results"))
+        await goto_and_wait(authenticated_doctor_page, make_url, "/lab-results")
 
-        lab_results_content = authenticated_doctor_page.get_by_test_id("lab-result-list").or_(
-            authenticated_doctor_page.get_by_test_id("lab-result-empty")
-        )
+        lab_results_content = lab_results_list_locator(authenticated_doctor_page)
         await expect(lab_results_content).to_be_visible(timeout=10000)
 
     async def test_doctor_can_confirm_appointments(
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that doctor can see appointment action buttons."""
-        await authenticated_doctor_page.goto(make_url("/appointments"))
-        await authenticated_doctor_page.wait_for_timeout(2000)
-
-        # Doctor should have access to appointment management
-        # The actual confirm button availability depends on appointment state
-        # Just verify page loads correctly for doctor
-        await expect(authenticated_doctor_page).to_have_url(make_url("/appointments"))
+        await goto_and_wait(authenticated_doctor_page, make_url, "/appointments")
 
     async def test_doctor_cannot_create_invoices(
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that doctor cannot create invoices (admin only)."""
-        await authenticated_doctor_page.goto(make_url("/invoices"))
-        await authenticated_doctor_page.wait_for_timeout(2000)
+        await goto_and_wait(authenticated_doctor_page, make_url, "/invoices")
 
         # Create invoice button should NOT be visible for doctors
         create_button = authenticated_doctor_page.locator(
@@ -265,8 +240,7 @@ class TestAdminAccess:
         self, authenticated_admin_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that admin can access the patients list."""
-        await authenticated_admin_page.goto(make_url("/patients"))
-        await expect(authenticated_admin_page).to_have_url(make_url("/patients"))
+        await goto_and_wait(authenticated_admin_page, make_url, "/patients")
 
         patients_content = authenticated_admin_page.locator(
             "[data-testid='patient-list'], " "[data-testid='empty-state'], " ".patients-page"
@@ -277,38 +251,28 @@ class TestAdminAccess:
         self, authenticated_admin_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that admin can view all appointments."""
-        await authenticated_admin_page.goto(make_url("/appointments"))
-        await expect(authenticated_admin_page).to_have_url(make_url("/appointments"))
+        await goto_and_wait(authenticated_admin_page, make_url, "/appointments")
 
     async def test_admin_can_view_all_prescriptions(
         self, authenticated_admin_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that admin can view all prescriptions."""
-        await authenticated_admin_page.goto(make_url("/prescriptions"))
-        await expect(authenticated_admin_page).to_have_url(make_url("/prescriptions"))
+        await goto_and_wait(authenticated_admin_page, make_url, "/prescriptions")
 
     async def test_admin_can_view_all_lab_results(
         self, authenticated_admin_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that admin can view all lab results."""
-        await authenticated_admin_page.goto(make_url("/lab-results"))
-        await expect(authenticated_admin_page).to_have_url(make_url("/lab-results"))
+        await goto_and_wait(authenticated_admin_page, make_url, "/lab-results")
 
     async def test_admin_can_view_all_invoices(
         self, authenticated_admin_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that admin can view all invoices."""
-        await authenticated_admin_page.goto(make_url("/invoices"))
-        await expect(authenticated_admin_page).to_have_url(make_url("/invoices"))
+        await goto_and_wait(authenticated_admin_page, make_url, "/invoices")
 
     async def test_admin_can_create_invoices(
         self, authenticated_admin_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that admin can see create invoice button."""
-        await authenticated_admin_page.goto(make_url("/invoices"))
-        await authenticated_admin_page.wait_for_timeout(2000)
-
-        # Create invoice button SHOULD be visible for admins
-        # Note: This depends on actual UI implementation
-        # Just verify admin has full access to invoices page
-        await expect(authenticated_admin_page).to_have_url(make_url("/invoices"))
+        await goto_and_wait(authenticated_admin_page, make_url, "/invoices")

@@ -25,23 +25,19 @@ class TestUser:
         assert user.name == "Alice"
         assert user.email == "alice@example.com"
 
-    def test_user_is_immutable(self) -> None:
+    @pytest.mark.parametrize(
+        ("field", "new_value"),
+        [
+            ("name", "Bob"),
+            ("id", uuid4()),
+            ("email", "bob@example.com"),
+        ],
+    )
+    def test_user_fields_are_immutable(self, field: str, new_value: object) -> None:
         """User should be frozen (immutable)."""
         user = User(id=uuid4(), name="Alice", email="alice@example.com")
         with pytest.raises(FrozenInstanceError):
-            setattr(user, "name", "Bob")
-
-    def test_user_id_is_immutable(self) -> None:
-        """User id should be immutable."""
-        user = User(id=uuid4(), name="Alice", email="alice@example.com")
-        with pytest.raises(FrozenInstanceError):
-            setattr(user, "id", uuid4())
-
-    def test_user_email_is_immutable(self) -> None:
-        """User email should be immutable."""
-        user = User(id=uuid4(), name="Alice", email="alice@example.com")
-        with pytest.raises(FrozenInstanceError):
-            setattr(user, "email", "bob@example.com")
+            setattr(user, field, new_value)
 
     def test_user_equality(self) -> None:
         """Users with same values should be equal."""

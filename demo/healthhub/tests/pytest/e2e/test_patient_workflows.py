@@ -17,11 +17,19 @@ Each test starts with deterministic seed data (2 admins, 4 doctors, 5 patients).
 
 from __future__ import annotations
 
-import re
 from collections.abc import Callable
 
 import pytest
 from playwright.async_api import Page, expect
+
+from tests.pytest.e2e.helpers.adt_state_helpers import wait_for_page_ready
+from tests.pytest.e2e.helpers.navigation import (
+    appointments_list_locator,
+    goto_and_wait,
+    invoices_list_locator,
+    lab_results_list_locator,
+    prescriptions_list_locator,
+)
 
 
 @pytest.mark.e2e
@@ -74,7 +82,7 @@ class TestPatientAppointmentWorkflow:
         page = authenticated_patient_page
 
         # Navigate to appointments page
-        await page.goto(make_url("/appointments"))
+        await goto_and_wait(page, make_url, "/appointments")
 
         # Click "Request Appointment" button
         request_button = page.locator('button:has-text("Request Appointment")')
@@ -97,8 +105,7 @@ class TestPatientAppointmentWorkflow:
             if await submit_button.count() > 0:
                 await submit_button.click()
 
-                # Wait for appointment to appear in list
-                await page.wait_for_timeout(1000)  # Allow state update
+                await wait_for_page_ready(page, timeout=10000)
 
                 # Verify appointment appears with "Requested" status
                 await expect(page.locator("text=Requested")).to_be_visible(timeout=5000)
@@ -110,19 +117,16 @@ class TestPatientAppointmentWorkflow:
         page = authenticated_patient_page
 
         # Navigate to appointments page
-        await page.goto(make_url("/appointments"))
+        await goto_and_wait(page, make_url, "/appointments")
 
         # Seed data includes one confirmed appointment for alice.patient@example.com
         # appointment_id: 50000000-0000-0000-0000-000000000001
         # status: confirmed
         # reason: Annual cardiac checkup
 
-        # Wait for appointments to load
-        await page.wait_for_timeout(1000)
-
         # Verify at least one appointment is visible
         # Look for either the appointment reason or status
-        appointments_section = page.locator("[data-testid='appointments-list'], .appointments-list")
+        appointments_section = appointments_list_locator(page)
 
         # If appointments exist, at least one should be visible
         # Note: This is flexible to account for different UI implementations
@@ -144,7 +148,7 @@ class TestPatientMedicalRecords:
         page = authenticated_patient_page
 
         # Navigate to prescriptions page
-        await page.goto(make_url("/prescriptions"))
+        await goto_and_wait(page, make_url, "/prescriptions")
 
         # Seed data includes one prescription for alice.patient@example.com:
         # prescription_id: 60000000-0000-0000-0000-000000000001
@@ -152,13 +156,8 @@ class TestPatientMedicalRecords:
         # dosage: 10mg
         # frequency: Once daily
 
-        # Wait for prescriptions to load
-        await page.wait_for_timeout(1000)
-
         # Verify page loaded (look for prescription list container or medication name)
-        prescriptions_section = page.locator(
-            "[data-testid='prescriptions-list'], .prescriptions-list"
-        )
+        prescriptions_section = prescriptions_list_locator(page)
 
         # Check if prescriptions are visible
         has_prescriptions = await prescriptions_section.count() > 0
@@ -170,18 +169,15 @@ class TestPatientMedicalRecords:
         page = authenticated_patient_page
 
         # Navigate to lab results page
-        await page.goto(make_url("/lab-results"))
+        await goto_and_wait(page, make_url, "/lab-results")
 
         # Seed data includes one lab result for alice.patient@example.com:
         # lab_result_id: 70000000-0000-0000-0000-000000000001
         # test_type: Lipid Panel
         # reviewed: true
 
-        # Wait for lab results to load
-        await page.wait_for_timeout(1000)
-
         # Verify page loaded
-        lab_results_section = page.locator("[data-testid='lab-results-list'], .lab-results-list")
+        lab_results_section = lab_results_list_locator(page)
 
         # Check if lab results are visible
         has_lab_results = await lab_results_section.count() > 0
@@ -193,19 +189,14 @@ class TestPatientMedicalRecords:
         page = authenticated_patient_page
 
         # Navigate to invoices page
-        await page.goto(make_url("/invoices"))
+        await goto_and_wait(page, make_url, "/invoices")
 
         # Seed data does NOT include invoices for alice.patient@example.com
         # (Carol Carter has the invoice in seed data)
         # So this test just verifies the page loads
 
-        # Wait for page to load
-        await page.wait_for_timeout(1000)
-
         # Verify invoices page loaded (look for invoices section or empty state)
-        await expect(
-            page.locator("[data-testid='invoices-list'], .invoice-list, .invoice-list-empty").first
-        ).to_be_visible(timeout=5000)
+        await expect(invoices_list_locator(page).first).to_be_visible(timeout=5000)
 
 
 @pytest.mark.e2e
@@ -228,7 +219,7 @@ class TestPatientRBACEnforcement:
 
         for admin_url in admin_urls:
             await page.goto(make_url(admin_url))
-            await page.wait_for_timeout(500)
+            await page.wait_for_load_state("networkidle")
 
             # Should either:
             # 1. Redirect to dashboard/home
@@ -255,7 +246,7 @@ class TestPatientRBACEnforcement:
 
         # Attempt to view another patient's data via direct URL
         await page.goto(make_url(f"/patients/{bob_patient_id}"))
-        await page.wait_for_timeout(500)
+        await page.wait_for_load_state("networkidle")
 
         # Should either:
         # 1. Redirect to own patient page
@@ -283,15 +274,13 @@ class TestPatientNotifications:
 
         # Navigate to dashboard or notifications page
         await page.goto(make_url("/dashboard"))
+        await page.wait_for_load_state("networkidle")
 
         # Check for notifications indicator (badge, bell icon, etc.)
         # Note: Actual implementation depends on UI design
         notifications_indicator = page.locator(
             "[data-testid='notifications'], .notifications-badge"
         )
-
-        # Wait for page to load
-        await page.wait_for_timeout(1000)
 
         # If notifications exist, indicator should be visible
         has_notifications = await notifications_indicator.count() > 0
