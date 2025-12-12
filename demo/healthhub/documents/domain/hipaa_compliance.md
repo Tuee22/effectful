@@ -1,21 +1,19 @@
 # HIPAA Compliance
 
-**Status**: Authoritative source
-**Supersedes**: none **📖 Base Standard**: [hipaa_compliance.md](../../../../documents/domain/hipaa_compliance.md)
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub overlay deltas for Hipaa Compliance. **📖 Base Standard**: [hipaa_compliance.md](../../../../documents/domain/hipaa_compliance.md)
+> **Purpose**: HealthHub overlay deltas for HIPAA Compliance. See base SSoT for canonical controls and workflows.
+> **📖 Base Standard**: [hipaa_compliance.md](../../../../documents/domain/hipaa_compliance.md)
+> **📖 Authoritative Reference**: [hipaa_compliance.md](../../../../documents/domain/hipaa_compliance.md)
 
-## Canonical Guidance
+## Deltas
 
-- **Data handling**: Apply [Code Quality](../engineering/code_quality.md) purity and PHI handling rules; all PHI access and mutation go through typed effects with explicit audit trails.
-- **Minimum necessary**: Model domain types to carry only required identifiers; prefer opaque identifiers over raw PHI in logs, metrics, and messages.
-- **Storage + transport**: Enforce encryption-at-rest and in-transit via configuration SSoTs; never embed secrets or PHI in URLs or logs.
-- **Auditing**: Emit structured audit events for all PHI access paths; route to observability pipelines defined in the observability SSoT.
+- No additional deltas; inherits base standard.
 
 ## Cross-References
 
-- [Code Quality](../engineering/code_quality.md)
-- [Configuration](../engineering/configuration.md)
-- [Observability](../engineering/observability.md)
-- [Monitoring & Alerting](../engineering/monitoring_and_alerting.md)
+- [HealthHub Documentation Guide](../engineering/documentation_standards.md)
+- [HealthHub Documentation Hub](../readme.md)
+- [Medical State Machines](medical_state_machines.md)

@@ -776,6 +776,12 @@ async def test_metrics_workflow() -> None:
     assert 'appointments_created_total{doctor_specialization="cardiology"} 1.0' in metrics_output
 ```
 
+## See Also
+
+- [Monitoring & Alerting](./monitoring_and_alerting.md) - Metric naming conventions, labeling best practices, and alert rules
+- [Metrics API Reference](../api/metrics.md) - Complete metrics effects API
+- [Metrics Quickstart](../tutorials/metrics_quickstart.md) - Get started in 15 minutes
+
 ______________________________________________________________________
 
 ## Cross-References
@@ -789,11 +795,3 @@ ______________________________________________________________________
 > **Core Doctrine**: For testing strategies, see [testing.md](./testing.md)
 
 > **Core Doctrine**: For Docker integration, see [docker_workflow.md](./docker_workflow.md)
-
-______________________________________________________________________
-
-## See Also
-
-- [Monitoring & Alerting](./monitoring_and_alerting.md) - Metric naming conventions, labeling best practices, and alert rules
-- [Metrics API Reference](../api/metrics.md) - Complete metrics effects API
-- [Metrics Quickstart](../tutorials/metrics_quickstart.md) - Get started in 15 minutes

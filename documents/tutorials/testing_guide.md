@@ -92,6 +92,7 @@ poetry add --group dev pytest pytest-asyncio pytest-mock pytest-cov
 ### Project Structure
 
 ```text
+# minimal project layout
 your_project/
 ├── src/
 │   └── programs/
@@ -672,6 +673,7 @@ class TestSendMessageProgram:
 ### Directory Structure
 
 ```text
+# demo test suite layout
 tests/
 ├── test_demo/
 │   ├── __init__.py
@@ -727,6 +729,7 @@ ______________________________________________________________________
 1. **Test One Behavior Per Test**
 
    ```python
+   # unit tests should assert one outcome each
    def test_user_found_returns_ok() -> None:
        result = Ok(User(user_id=uuid4(), name="Alice"))
        assert isinstance(result, Ok)
@@ -743,6 +746,7 @@ ______________________________________________________________________
 1. **Verify Effect Properties**
 
    ```python
+   # inspect the yielded effect for correctness
    effect = next(gen)
    assert effect.__class__.__name__ == "GetUserById"
    assert effect.user_id == expected_user_id
@@ -751,6 +755,7 @@ ______________________________________________________________________
 1. **Use Pattern Matching or isinstance for Results**
 
    ```python
+   # pattern matching on Result ensures type safety
    # Pattern matching
    match result:
        case Ok(user): assert user.id == user_id
@@ -764,6 +769,7 @@ ______________________________________________________________________
 1. **Test Early Returns (Validation Errors)**
 
    ```python
+   # generator should stop immediately on validation failure
    gen = update_user_program(user_id=uuid4())  # No fields
    try:
        next(gen)  # Should stop immediately
@@ -775,66 +781,61 @@ ______________________________________________________________________
 ### ❌ DON'T
 
 1. **Don't Use Fakes or Test Doubles**
+
    ```python
+   # wrong: using interpreters/fakes in unit tests
+   interpreter = MessagingInterpreter(producer=FakeMessageProducer())
    ```
 
-# ❌ Forbidden
-
-interpreter = MessagingInterpreter(producer=FakeMessageProducer())
-
-# ✅ Use generator-based testing instead
-
-gen = send_message_program(user_id=uuid4(), text="hello")
-effect = next(gen)
-result = gen.send(mock_response)
-
-````
+   ```python
+   # right: drive the generator directly
+   gen = send_message_program(user_id=uuid4(), text="hello")
+   effect = next(gen)
+   result = gen.send(mock_response)
+   ```
 
 2. **Don't Skip Result Type Verification**
+
    ```python
-   # ❌ Missing Result type check
+   # wrong: assumes Ok without checking the Result type
    result = e.value
    assert result.value.id == user_id  # Assumes Ok
+   ```
 
-   # ✅ Verify Result type first
+   ```python
+   # right: verify the Result type first
    assert isinstance(result, Ok)
    assert result.value.id == user_id
-````
+   ```
 
 3. **Don't Test Multiple Behaviors in One Test**
 
-```python
-# ❌ Too much in one test
-def test_get_user() -> None:
-    # Tests both found AND not found - split into 2 tests!
-    result = get_user(user_id=uuid4())
-    assert isinstance(result, Ok)
-    missing = get_user(user_id=UUID("00000000-0000-0000-0000-000000000999"))
-    assert isinstance(missing, Err)
-```
+   ```python
+   # wrong: combines multiple behaviors in one test
+   def test_get_user() -> None:
+       # Tests both found AND not found - split into 2 tests!
+       result = get_user(user_id=uuid4())
+       assert isinstance(result, Ok)
+       missing = get_user(user_id=UUID("00000000-0000-0000-0000-000000000999"))
+       assert isinstance(missing, Err)
+   ```
 
 4. **Don't Use Real Infrastructure in Unit Tests**
 
    ```python
-   # ❌ Don't do this in unit tests
+   # wrong: hitting real services from unit tests
    db_conn = await asyncpg.connect(DATABASE_URL)
    redis_client = await aioredis.from_url(REDIS_URL)
    ```
 
-1. **Don't Use pytest.skip()**
+5. **Don't Use pytest.skip()**
 
    ```python
+   # wrong: skipping hides missing coverage
+   @pytest.mark.skip(reason="Not implemented yet")
+   def test_complex_workflow() -> None:
+       pytest.fail("Implement complex workflow test or remove it")
    ```
-
-# ❌ Forbidden - creates false confidence
-
-@pytest.mark.skip(reason="Not implemented yet")
-def test_complex_workflow() -> None:
-pytest.fail("Implement complex workflow test or remove it")
-
-# ✅ Let tests FAIL to expose gaps, or delete test
-
-````
 
 ---
 
@@ -851,49 +852,51 @@ Metrics effects follow the same testing patterns as other effects, with addition
 Test metrics effects like any other effect using generator-based mocking:
 
 ```python
+# unit test: increment counter success path
 from effectful.effects.metrics import IncrementCounter, ObserveHistogram
 from effectful.domain.metrics_result import MetricRecorded, MetricRecordingFailed
 
 def test_increment_counter_success() -> None:
- """Test incrementing counter metric succeeds."""
+    """Test incrementing counter metric succeeds."""
 
- # Program that records metric
- def track_task_completion(task_type: str) -> Generator[AllEffects, EffectResult, bool]:
-     result = yield IncrementCounter(
-         metric_name="tasks_completed_total",
-         labels={"task_type": task_type},
-         value=1.0,
-     )
+    # Program that records metric
+    def track_task_completion(task_type: str) -> Generator[AllEffects, EffectResult, bool]:
+        result = yield IncrementCounter(
+            metric_name="tasks_completed_total",
+            labels={"task_type": task_type},
+            value=1.0,
+        )
 
-     match result:
-         case MetricRecorded():
-             return True
-         case MetricRecordingFailed():
-             return False
+        match result:
+            case MetricRecorded():
+                return True
+            case MetricRecordingFailed():
+                return False
 
- # Execute program with mocked response
- gen = track_task_completion(task_type="email")
+    # Execute program with mocked response
+    gen = track_task_completion(task_type="email")
 
- # Program yields IncrementCounter effect
- effect = next(gen)
- assert isinstance(effect, IncrementCounter)
- assert effect.metric_name == "tasks_completed_total"
- assert effect.labels == {"task_type": "email"}
- assert effect.value == 1.0
+    # Program yields IncrementCounter effect
+    effect = next(gen)
+    assert isinstance(effect, IncrementCounter)
+    assert effect.metric_name == "tasks_completed_total"
+    assert effect.labels == {"task_type": "email"}
+    assert effect.value == 1.0
 
- # Mock successful recording
- with pytest.raises(StopIteration) as exc_info:
-     gen.send(MetricRecorded(timestamp=1706472000.0))
+    # Mock successful recording
+    with pytest.raises(StopIteration) as exc_info:
+        gen.send(MetricRecorded(timestamp=1706472000.0))
 
- # Program returns True (success)
- assert exc_info.value.value is True
-````
+    # Program returns True (success)
+    assert exc_info.value.value is True
+```
 
 ### Testing Metric Failures
 
 Test how programs handle metric recording failures:
 
-````python
+```python
+# unit test: generator continues after metric failure
 def test_increment_counter_handles_failure() -> None:
     """Test program handles metric recording failure gracefully."""
 
@@ -930,13 +933,14 @@ def test_increment_counter_handles_failure() -> None:
         gen.send(None)
 
     assert exc_info.value.value == "metric_failed_but_continued"
-```text
+```
 
 ### Testing Histogram Observations
 
 Test duration tracking with histograms:
 
 ```python
+# unit test: histogram observation succeeds
 def test_observe_histogram_duration() -> None:
     """Test observing duration in histogram."""
 
@@ -964,13 +968,14 @@ def test_observe_histogram_duration() -> None:
     # Mock successful observation
     with pytest.raises(StopIteration):
         gen.send(MetricRecorded(timestamp=1706472000.0))
-```text
+```
 
 ### Integration Testing with Metrics
 
 Use `ResetMetrics` effect in test fixtures for isolation:
 
 ```python
+# integration fixture: reset metrics and verify counter increments
 import pytest
 from effectful.effects.metrics import ResetMetrics
 
@@ -1022,13 +1027,14 @@ async def test_counter_increments(clean_metrics: None) -> None:
     # Run program (would use real interpreter in integration test)
     result = await run_ws_program(increment_twice(), metrics_interpreter)
     assert result is None
-```text
+```
 
 ### Testing Metric Validation
 
 Test that invalid metrics are rejected:
 
 ```python
+# unit tests: validation failures are surfaced
 def test_invalid_metric_name_rejected() -> None:
     """Test metric recording fails for unregistered metric."""
 
@@ -1080,13 +1086,14 @@ def test_missing_required_label_rejected() -> None:
 
     # Program receives specific error
     assert "missing_label" in exc_info.value.value
-```text
+```
 
 ### Testing Automatic Metrics
 
 Test that interpreters automatically record metrics:
 
 ```python
+# integration test: interpreter records automatic metrics
 from unittest.mock import AsyncMock
 
 @pytest.mark.asyncio
@@ -1105,10 +1112,10 @@ async def test_interpreter_records_automatic_metrics() -> None:
         metrics_collector=mock_collector,  # Inject mock
     )
 
-# Execute effect
-result = await interpreter.interpret(
-    GetUserById(user_id=UUID("00000000-0000-0000-0000-000000000123"))
-)
+    # Execute effect
+    result = await interpreter.interpret(
+        GetUserById(user_id=UUID("00000000-0000-0000-0000-000000000123"))
+    )
 
     # Verify interpreter recorded duration metric
     mock_collector.observe_histogram.assert_called_once()
@@ -1117,7 +1124,7 @@ result = await interpreter.interpret(
     assert call_args.kwargs["metric_name"] == "effectful_effect_duration_seconds"
     assert call_args.kwargs["labels"]["effect_type"] == "GetUserById"
     assert call_args.kwargs["value"] > 0  # Duration is positive
-```text
+```
 
 ### Best Practices
 
@@ -1166,4 +1173,3 @@ ______________________________________________________________________
 
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Standards](../engineering/README.md)
-````

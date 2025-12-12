@@ -205,6 +205,7 @@ def check_task_metrics() -> Generator[AllEffects, EffectResult, dict[str, float]
 **Output Example**:
 
 ```text
+# example metrics output
 📊 Metrics at 1706472000.0:
   tasks_processed_total{task_type="email",status="success"} = 142.0
 ```
@@ -383,6 +384,7 @@ async def main() -> None:
 **Expected Output**:
 
 ```text
+# expected run output
 ✅ All metrics recorded successfully
 Task 0: Ok(True)
 ✅ All metrics recorded successfully

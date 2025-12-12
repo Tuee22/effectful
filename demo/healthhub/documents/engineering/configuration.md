@@ -1,10 +1,11 @@
 # Configuration
 
-**Status**: Reference only\\
-**Supersedes**: none **📖 Base Standard**: [configuration.md](../../../../documents/engineering/configuration.md)
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub overlay deltas for Configuration. **📖 Base Standard**: [configuration.md](../../../../documents/engineering/configuration.md)
+> **Purpose**: HealthHub overlay deltas for Configuration. See base SSoT for canonical guidance.
+> **📖 Base Standard**: [configuration.md](../../../../documents/engineering/configuration.md)
 > **📖 Authoritative Reference**: [configuration.md](../../../../documents/engineering/configuration.md)
 
 ## Deltas

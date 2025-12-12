@@ -61,6 +61,7 @@ See [documents/contributing.md](documents/contributing.md) for complete contribu
 
 **Quick checklist**:
 - [ ] Code quality: `poetry run check-code` exits 0
+- [ ] Docs follow [documentation standards](documents/documentation_standards.md) and open items in [MIGRATION_PLAN.md](documents/MIGRATION_PLAN.md)
 - [ ] Tests for all features (unit + integration)
 - [ ] No forbidden constructs (Any/cast/type:ignore)
 - [ ] No anti-patterns (see [Code Quality](documents/engineering/code_quality.md#anti-pattern-index-routing-to-canonical-fixes))

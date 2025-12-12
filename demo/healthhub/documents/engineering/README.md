@@ -1,10 +1,11 @@
 # HealthHub Engineering Best Practices
 
-**Status**: Reference only\\
-**Supersedes**: none **📖 Base Standard**: [README.md](../../../../documents/engineering/README.md)
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub overlay deltas for Readme. **📖 Base Standard**: [README.md](../../../../documents/engineering/README.md)
+> **Purpose**: HealthHub overlay deltas for Engineering Standards. See base SSoT for canonical navigation and policies.
+> **📖 Base Standard**: [README.md](../../../../documents/engineering/README.md)
 > **📖 Authoritative Reference**: [README.md](../../../../documents/engineering/README.md)
 
 ______________________________________________________________________

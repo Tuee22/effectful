@@ -390,6 +390,7 @@ docker compose -f docker/docker-compose.yml logs grafana
 **Expected Output**:
 
 ```text
+# example docker compose ps output
 NAME         IMAGE                    STATUS    PORTS
 effectful    effectful:latest         Up        0.0.0.0:8000->8000/tcp
 prometheus   prom/prometheus:latest   Up        0.0.0.0:9090->9090/tcp

@@ -86,13 +86,13 @@ See [Docker Workflow](docker_workflow.md) for complete policy.
 ## Code Quality Validation
 
 - Run `poetry run check-code` inside the correct compose service (`effectful` for core, demo-specific for overlays).
-- Validate formatting, lint, types, markdown checks, and custom doc validators in a single invocation.
+- Validates formatting, lint, types, Markdown formatter/linter/link+spell checks, custom doc validators (filenames/headers/links/code blocks/Mermaid/demo overlays), and the functional catalogue in a single invocation.
 
 ## Poetry Entrypoints
 
 **Defined in pyproject.toml `[tool.poetry.scripts]`**:
 
-- `check-code` - Black formatter + MyPy strict type checking + documentation link verification (`tools/verify_links.py`)
+- `check-code` - Black → Ruff → MyPy → mdformat --check → pymarkdown → codespell → custom doc checks → `generate_functional_catalogue --check`
 - `test-unit` - Unit tests only (pytest-mock, no I/O)
 - `test-integration` - Integration tests (real PostgreSQL, Redis, MinIO, Pulsar)
 - `test-all` - Complete test suite

@@ -1,10 +1,11 @@
 # Messaging Effects
 
-**Status**: Reference only\\
-**Supersedes**: none **📖 Base Standard**: [messaging_effects.md](../../../../../documents/tutorials/00_library_deltas/messaging_effects.md)
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub overlay deltas for Messaging Effects. **📖 Base Standard**: [messaging_effects.md](../../../../../documents/tutorials/00_library_deltas/messaging_effects.md)
+> **Purpose**: HealthHub overlay deltas for Messaging Effects. See base SSoT for canonical guidance.
+> **📖 Base Standard**: [messaging_effects.md](../../../../../documents/tutorials/00_library_deltas/messaging_effects.md)
 > **📖 Authoritative Reference**: [messaging_effects.md](../../../../../documents/tutorials/00_library_deltas/messaging_effects.md)
 
 ## Deltas

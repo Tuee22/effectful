@@ -35,6 +35,24 @@ See [Decision Tree](#decision-tree-optional-vs-optionalvalue-vs-custom-adt) for 
 
 ______________________________________________________________________
 
+## Canonical ADT
+
+```mermaid
+flowchart TB
+  %% kind: ADT
+  %% id: effectful.domain.optional_value.OptionalValue
+  %% summary: Presence or explicit absence with a reason
+
+  OptionalValue[OptionalValue<T>]
+  OptionalValue -->|variant| OptionalValue_Provided
+  OptionalValue -->|variant| OptionalValue_Absent
+
+  OptionalValue_Provided["Provided(value: T)"]
+  OptionalValue_Absent["Absent(reason: str)"]
+```
+
+______________________________________________________________________
+
 ## API Reference
 
 ### Provided[T]

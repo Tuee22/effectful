@@ -1,10 +1,11 @@
 # Command Reference
 
-**Status**: Reference only\\
-**Supersedes**: none **📖 Base Standard**: [command_reference.md](../../../../documents/engineering/command_reference.md)
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub overlay deltas for Command Reference. **📖 Base Standard**: [command_reference.md](../../../../documents/engineering/command_reference.md)
+> **Purpose**: HealthHub overlay deltas for Command Reference. See base SSoT for canonical commands and workflows.
+> **📖 Base Standard**: [command_reference.md](../../../../documents/engineering/command_reference.md)
 > **📖 Authoritative Reference**: [command_reference.md](../../../../documents/engineering/command_reference.md)
 
 ## Deltas

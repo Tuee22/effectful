@@ -1,10 +1,11 @@
 # Authentication
 
-**Status**: Reference only\\
-**Supersedes**: none **📖 Base Standard**: [authentication.md](../../../../documents/engineering/authentication.md)
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub overlay deltas for Authentication. **📖 Base Standard**: [authentication.md](../../../../documents/engineering/authentication.md)
+> **Purpose**: HealthHub overlay deltas for Authentication. See base SSoT for canonical flows and controls.
+> **📖 Base Standard**: [authentication.md](../../../../documents/engineering/authentication.md)
 > **📖 Authoritative Reference**: [authentication.md](../../../../documents/engineering/authentication.md)
 
 ## Deltas

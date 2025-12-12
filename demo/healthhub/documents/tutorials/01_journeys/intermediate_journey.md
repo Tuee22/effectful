@@ -1,11 +1,16 @@
 # Intermediate Journey (HealthHub Delta)
 
 **Status**: Reference only
-**Supersedes**: none **📖 Base Standard**: [intermediate_journey.md](../../../../../documents/tutorials/01_journeys/intermediate_journey.md)
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
-> **Purpose**: HealthHub overlay deltas for Intermediate Journey. **📖 Base Standard**: [intermediate_journey.md](../../../../../documents/tutorials/01_journeys/intermediate_journey.md)
+> **Purpose**: HealthHub overlay deltas for Intermediate Journey. See base SSoT for canonical flow.
+> **📖 Base Standard**: [intermediate_journey.md](../../../../../documents/tutorials/01_journeys/intermediate_journey.md)
 > **📖 Authoritative Reference**: [intermediate_journey.md](../../../../../documents/tutorials/01_journeys/intermediate_journey.md)
+
+## Deltas
+
+- No additional deltas; inherits base standard.
 
 ## Base Tutorials
 

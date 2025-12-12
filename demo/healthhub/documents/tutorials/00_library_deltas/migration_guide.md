@@ -1,10 +1,11 @@
 # Tutorial 07: Migration Guide
 
-**Status**: Reference only\\
-**Supersedes**: none **📖 Base Standard**: [migration_guide.md](../../../../../documents/tutorials/00_library_deltas/migration_guide.md)
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub overlay deltas for Migration Guide. **📖 Base Standard**: [migration_guide.md](../../../../../documents/tutorials/00_library_deltas/migration_guide.md)
+> **Purpose**: HealthHub overlay deltas for Migration Guide. See base SSoT for canonical guidance.
+> **📖 Base Standard**: [migration_guide.md](../../../../../documents/tutorials/00_library_deltas/migration_guide.md)
 > **📖 Authoritative Reference**: [migration_guide.md](../../../../../documents/tutorials/00_library_deltas/migration_guide.md)
 
 ## Deltas

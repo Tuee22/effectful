@@ -1,11 +1,16 @@
 # Journey-Based Tutorials
 
 **Status**: Reference only
-**Supersedes**: none **📖 Base Standard**: [README.md](../../../../../documents/tutorials/01_journeys/README.md)
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
-> **Purpose**: HealthHub overlay deltas for Readme. **📖 Base Standard**: [README.md](../../../../../documents/tutorials/01_journeys/README.md)
+> **Purpose**: HealthHub overlay deltas for journeys. See base SSoT for canonical learning paths.
+> **📖 Base Standard**: [README.md](../../../../../documents/tutorials/01_journeys/README.md)
 > **📖 Authoritative Reference**: [README.md](../../../../../documents/tutorials/01_journeys/README.md)
+
+## Deltas
+
+- No additional deltas; inherits base standard.
 
 ______________________________________________________________________
 
@@ -116,6 +121,7 @@ ______________________________________________________________________
 ## Progression Chart
 
 ```text
+# journey progression
 Beginner Journey (1h)
 ├─ Login & Navigation
 ├─ View Data (Appointments/Prescriptions/Labs)

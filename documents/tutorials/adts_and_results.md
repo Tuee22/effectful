@@ -63,6 +63,20 @@ async def get_user(user_id: UUID) -> UserLookupResult:
     ...
 ```
 
+```mermaid
+flowchart TB
+  %% kind: ADT
+  %% id: effectful.domain.user.UserLookupResult
+  %% summary: Outcomes for looking up a user
+
+  UserLookupResult
+  UserLookupResult -->|variant| UserLookupResult_UserFound
+  UserLookupResult -->|variant| UserLookupResult_UserNotFound
+
+  UserLookupResult_UserFound["UserFound(user: User, source: str)"]
+  UserLookupResult_UserNotFound["UserNotFound(user_id: UUID, reason: str)"]
+```
+
 **Benefits:**
 
 - All cases **explicit** and **self-documenting**
@@ -130,6 +144,20 @@ async def get_profile(user_id: UUID) -> CacheLookupResult:
     if profile is not None:
         return CacheHit(value=profile, ttl_remaining=300)
     return CacheMiss(key=str(user_id), reason="not_found")
+```
+
+```mermaid
+flowchart TB
+  %% kind: ADT
+  %% id: effectful.domain.cache_result.CacheLookupResult
+  %% summary: Cache lookup outcomes
+
+  CacheLookupResult
+  CacheLookupResult -->|variant| CacheLookupResult_CacheHit
+  CacheLookupResult -->|variant| CacheLookupResult_CacheMiss
+
+  CacheLookupResult_CacheHit["CacheHit(value: ProfileData, ttl_remaining: int)"]
+  CacheLookupResult_CacheMiss["CacheMiss(key: str, reason: str)"]
 ```
 
 ## Step 3: Pattern match on ADTs
@@ -479,6 +507,20 @@ def get_profile_with_fallback(user_id: UUID) -> Generator[AllEffects, EffectResu
                     return ProfileFound(profile=profile, source="database")
 ```
 
+```mermaid
+flowchart TB
+  %% kind: ADT
+  %% id: effectful.domain.profile.ProfileLookupResult
+  %% summary: Outcomes for retrieving a profile
+
+  ProfileLookupResult
+  ProfileLookupResult -->|variant| ProfileLookupResult_ProfileFound
+  ProfileLookupResult -->|variant| ProfileLookupResult_ProfileNotFound
+
+  ProfileLookupResult_ProfileFound["ProfileFound(profile: ProfileData, source: str)"]
+  ProfileLookupResult_ProfileNotFound["ProfileNotFound(user_id: UUID, reason: str)"]
+```
+
 ______________________________________________________________________
 
 ## Step 6: OptionalValue - The Pre-Built ADT
@@ -539,6 +581,7 @@ match patient.blood_type:
 ### Decision Tree: When to Use What?
 
 ```text
+# optional type decision tree
 Does the field have domain-specific absence reasons?
 ├─ YES → Custom ADT (UserFound | UserNotFound | UserDeleted)
 └─ NO → Is it optional with generic "not provided" semantics?

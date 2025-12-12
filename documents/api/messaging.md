@@ -228,6 +228,20 @@ class MessageEnvelope:
 
 ADT for publish operation outcomes.
 
+```mermaid
+flowchart TB
+  %% kind: ADT
+  %% id: effectful.domain.message_envelope.PublishResult
+  %% summary: Outcomes for publishing a message
+
+  PublishResult
+  PublishResult -->|variant| PublishResult_PublishSuccess
+  PublishResult -->|variant| PublishResult_PublishFailure
+
+  PublishResult_PublishSuccess["PublishSuccess(message_id: str)"]
+  PublishResult_PublishFailure["PublishFailure(error: str)"]
+```
+
 ```python
 # file: examples/messaging.py
 type PublishResult = PublishSuccess | PublishFailure
@@ -260,6 +274,22 @@ match result:
 
 ADT for consume operation outcomes.
 
+```mermaid
+flowchart TB
+  %% kind: ADT
+  %% id: effectful.domain.message_envelope.ConsumeResult
+  %% summary: Outcomes for consuming a message
+
+  ConsumeResult
+  ConsumeResult -->|variant| ConsumeResult_MessageEnvelope
+  ConsumeResult -->|variant| ConsumeResult_ConsumeTimeout
+  ConsumeResult -->|variant| ConsumeResult_ConsumeFailure
+
+  ConsumeResult_MessageEnvelope["MessageEnvelope(message_id: str, topic: str, payload: bytes, properties: dict[str, str], publish_time: datetime)"]
+  ConsumeResult_ConsumeTimeout["ConsumeTimeout()"]
+  ConsumeResult_ConsumeFailure["ConsumeFailure(error: str)"]
+```
+
 ```python
 # file: examples/messaging.py
 type ConsumeResult = MessageEnvelope | ConsumeTimeout
@@ -267,6 +297,46 @@ type ConsumeResult = MessageEnvelope | ConsumeTimeout
 @dataclass(frozen=True)
 class ConsumeTimeout:
     pass
+
+@dataclass(frozen=True)
+class ConsumeFailure:
+    error: str
+```
+
+### AcknowledgeResult
+
+ADT for acknowledgment outcomes.
+
+```mermaid
+flowchart TB
+  %% kind: ADT
+  %% id: effectful.domain.message_envelope.AcknowledgeResult
+  %% summary: Outcomes for acknowledging a message
+
+  AcknowledgeResult
+  AcknowledgeResult -->|variant| AcknowledgeResult_AcknowledgeSuccess
+  AcknowledgeResult -->|variant| AcknowledgeResult_AcknowledgeFailure
+
+  AcknowledgeResult_AcknowledgeSuccess["AcknowledgeSuccess(message_id: str)"]
+  AcknowledgeResult_AcknowledgeFailure["AcknowledgeFailure(message_id: str, reason: str)"]
+```
+
+### NackResult
+
+ADT for negative-acknowledgment outcomes.
+
+```mermaid
+flowchart TB
+  %% kind: ADT
+  %% id: effectful.domain.message_envelope.NackResult
+  %% summary: Outcomes for nacking a message
+
+  NackResult
+  NackResult -->|variant| NackResult_NackSuccess
+  NackResult -->|variant| NackResult_NackFailure
+
+  NackResult_NackSuccess["NackSuccess(message_id: str)"]
+  NackResult_NackFailure["NackFailure(message_id: str, reason: str)"]
 ```
 
 **Pattern Matching:**

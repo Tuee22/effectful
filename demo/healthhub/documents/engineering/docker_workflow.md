@@ -1,10 +1,11 @@
 # Docker Workflow
 
-**Status**: Reference only\\
-**Supersedes**: none **📖 Base Standard**: [docker_workflow.md](../../../../documents/engineering/docker_workflow.md)
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub overlay deltas for Docker Workflow. **📖 Base Standard**: [docker_workflow.md](../../../../documents/engineering/docker_workflow.md)
+> **Purpose**: HealthHub overlay deltas for Docker Workflow. See base SSoT for canonical commands and topology.
+> **📖 Base Standard**: [docker_workflow.md](../../../../documents/engineering/docker_workflow.md)
 > **📖 Authoritative Reference**: [docker_workflow.md](../../../../documents/engineering/docker_workflow.md)
 
 ## Deltas

@@ -262,6 +262,22 @@ def hash_new_password(
 
 ADT for token validation outcomes.
 
+```mermaid
+flowchart TB
+  %% kind: ADT
+  %% id: effectful.domain.token_result.TokenValidationResult
+  %% summary: Outcomes for validating an access token
+
+  TokenValidationResult
+  TokenValidationResult -->|variant| TokenValidationResult_TokenValid
+  TokenValidationResult -->|variant| TokenValidationResult_TokenExpired
+  TokenValidationResult -->|variant| TokenValidationResult_TokenInvalid
+
+  TokenValidationResult_TokenValid["TokenValid(user_id: UUID, claims: dict[str, str])"]
+  TokenValidationResult_TokenExpired["TokenExpired(token: str, expired_at: datetime)"]
+  TokenValidationResult_TokenInvalid["TokenInvalid(token: str, reason: str)"]
+```
+
 ```python
 # file: examples/auth.py
 type TokenValidationResult = TokenValid | TokenExpired | TokenInvalid
@@ -305,6 +321,38 @@ match result:
 - `"revoked"` - Token was explicitly revoked
 - `"invalid_signature"` - Signature verification failed
 - `"malformed"` - Token structure is invalid
+
+### TokenRefreshResult
+
+ADT for refresh token outcomes.
+
+```mermaid
+flowchart TB
+  %% kind: ADT
+  %% id: effectful.domain.token_result.TokenRefreshResult
+  %% summary: Outcomes for refreshing a token
+
+  TokenRefreshResult
+  TokenRefreshResult -->|variant| TokenRefreshResult_TokenRefreshed
+  TokenRefreshResult -->|variant| TokenRefreshResult_TokenRefreshRejected
+
+  TokenRefreshResult_TokenRefreshed["TokenRefreshed(access_token: str, refresh_token: str)"]
+  TokenRefreshResult_TokenRefreshRejected["TokenRefreshRejected(reason: str)"]
+```
+
+```python
+# file: examples/auth.py
+type TokenRefreshResult = TokenRefreshed | TokenRefreshRejected
+
+@dataclass(frozen=True)
+class TokenRefreshed:
+    access_token: str
+    refresh_token: str
+
+@dataclass(frozen=True)
+class TokenRefreshRejected:
+    reason: str
+```
 
 ## Error Handling
 

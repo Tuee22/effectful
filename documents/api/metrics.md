@@ -57,6 +57,34 @@ type MetricResult = MetricRecorded | MetricRecordingFailed
 type MetricQueryResult = QuerySuccess | QueryFailure
 ```
 
+```mermaid
+flowchart TB
+  %% kind: ADT
+  %% id: effectful.domain.metrics_result.MetricResult
+  %% summary: Outcomes for recording a metric
+
+  MetricResult
+  MetricResult -->|variant| MetricResult_MetricRecorded
+  MetricResult -->|variant| MetricResult_MetricRecordingFailed
+
+  MetricResult_MetricRecorded["MetricRecorded(timestamp: datetime)"]
+  MetricResult_MetricRecordingFailed["MetricRecordingFailed(reason: str)"]
+```
+
+```mermaid
+flowchart TB
+  %% kind: ADT
+  %% id: effectful.domain.metrics_result.MetricQueryResult
+  %% summary: Outcomes for querying metrics
+
+  MetricQueryResult
+  MetricQueryResult -->|variant| MetricQueryResult_QuerySuccess
+  MetricQueryResult -->|variant| MetricQueryResult_QueryFailure
+
+  MetricQueryResult_QuerySuccess["QuerySuccess(results: dict[str, MetricValue])"]
+  MetricQueryResult_QueryFailure["QueryFailure(reason: str)"]
+```
+
 ______________________________________________________________________
 
 ## Effect Definitions
@@ -935,6 +963,13 @@ async def main() -> None:
             print(f"Error: {error}")
 ```
 
+## See Also
+
+- [Metrics Quickstart](../tutorials/metrics_quickstart.md) - Get started in 15 minutes
+- [Metric Types Guide](../tutorials/metric_types_guide.md) - When to use each metric type
+- [Prometheus Setup](../tutorials/prometheus_setup.md) - Docker integration
+- [Testing Guide](../tutorials/testing_guide.md) - Testing metrics effects
+
 ______________________________________________________________________
 
 ## Cross-References
@@ -944,12 +979,3 @@ ______________________________________________________________________
 > **Core Doctrine**: For metric naming standards, see [monitoring_and_alerting.md](../engineering/monitoring_and_alerting.md#monitoring-standards)
 
 > **Core Doctrine**: For alert rules, see [monitoring_and_alerting.md](../engineering/monitoring_and_alerting.md#alerting-policy)
-
-______________________________________________________________________
-
-## See Also
-
-- [Metrics Quickstart](../tutorials/metrics_quickstart.md) - Get started in 15 minutes
-- [Metric Types Guide](../tutorials/metric_types_guide.md) - When to use each metric type
-- [Prometheus Setup](../tutorials/prometheus_setup.md) - Docker integration
-- [Testing Guide](../tutorials/testing_guide.md) - Testing metrics effects

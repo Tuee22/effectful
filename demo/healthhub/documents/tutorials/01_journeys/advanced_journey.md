@@ -1,11 +1,16 @@
 # Advanced Journey (HealthHub Delta)
 
 **Status**: Reference only
-**Supersedes**: none **📖 Base Standard**: [advanced_journey.md](../../../../../documents/tutorials/01_journeys/advanced_journey.md)
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
-> **Purpose**: HealthHub overlay deltas for Advanced Journey. **📖 Base Standard**: [advanced_journey.md](../../../../../documents/tutorials/01_journeys/advanced_journey.md)
+> **Purpose**: HealthHub overlay deltas for Advanced Journey. See base SSoT for canonical flow.
+> **📖 Base Standard**: [advanced_journey.md](../../../../../documents/tutorials/01_journeys/advanced_journey.md)
 > **📖 Authoritative Reference**: [advanced_journey.md](../../../../../documents/tutorials/01_journeys/advanced_journey.md)
+
+## Deltas
+
+- No additional deltas; inherits base standard.
 
 ## Base Tutorials
 

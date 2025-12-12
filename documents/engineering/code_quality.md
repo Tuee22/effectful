@@ -69,12 +69,14 @@ Replace `Optional[T]` with explicit ADT unions that encode why a value may be ab
 1. **Optional[T]** (typing module) - ❌ Avoid for domain logic
 
    ```python
+   # anti-pattern: optional hides absence reasons
    user: Optional[User]  # Why None? Not found? Deleted? Error?
    ```
 
 1. **OptionalValue[T]** (effectful.domain) - ✅ Good for generic optional fields
 
    ```python
+   # example: generic optional value with reason
    metadata: OptionalValue[dict[str, str]]  # Absent(reason="not_provided")
    ```
 
@@ -83,6 +85,7 @@ Replace `Optional[T]` with explicit ADT unions that encode why a value may be ab
 1. **Custom Domain ADT** - ✅ Best for domain-specific semantics
 
    ```python
+   # example: explicit domain ADT for lookup outcomes
    type UserLookupResult = UserFound | UserNotFound | UserDeleted
    ```
 
@@ -163,9 +166,10 @@ ______________________________________________________________________
    - Type validation at instantiation
    - Clear contract for required vs optional fields
 
-1. **Lifespan-Scoped Creation**: Settings objects MUST be instantiated ONLY in the uvicorn/FastAPI lifespan context manager
+   1. **Lifespan-Scoped Creation**: Settings objects MUST be instantiated ONLY in the uvicorn/FastAPI lifespan context manager
 
    ```python
+   # fastapi lifespan keeps settings creation in app startup
    @asynccontextmanager
    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
        settings = Settings()  # ✅ ONLY HERE
@@ -182,6 +186,7 @@ ______________________________________________________________________
 1. **Immutability**: Settings MUST be frozen after creation
 
    ```python
+   # immutable settings object
    @dataclass(frozen=True)
    class Settings(BaseSettings):
        model_config = SettingsConfigDict(...)

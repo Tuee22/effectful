@@ -194,9 +194,41 @@ class S3Object:
 - `etag` - Entity tag for versioning/caching
 - `last_modified` - Last modification timestamp
 
+### GetObjectResult
+
+ADT for object retrieval outcomes.
+
+```mermaid
+flowchart TB
+  %% kind: ADT
+  %% id: effectful.domain.s3_object.GetObjectResult
+  %% summary: Outcomes for retrieving an object
+
+  GetObjectResult
+  GetObjectResult -->|variant| GetObjectResult_S3Object
+  GetObjectResult -->|variant| GetObjectResult_ObjectNotFound
+
+  GetObjectResult_S3Object["S3Object(content: bytes, content_type: str, etag: str, last_modified: datetime)"]
+  GetObjectResult_ObjectNotFound["ObjectNotFound(bucket: str, key: str)"]
+```
+
 ### PutResult
 
 ADT for put operation outcomes.
+
+```mermaid
+flowchart TB
+  %% kind: ADT
+  %% id: effectful.domain.s3_object.PutResult
+  %% summary: Outcomes for storing an object
+
+  PutResult
+  PutResult -->|variant| PutResult_PutSuccess
+  PutResult -->|variant| PutResult_PutFailure
+
+  PutResult_PutSuccess["PutSuccess(etag: str)"]
+  PutResult_PutFailure["PutFailure(error: str)"]
+```
 
 ```python
 # file: examples/storage.py

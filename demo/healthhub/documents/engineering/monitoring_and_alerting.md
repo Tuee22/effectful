@@ -1,10 +1,11 @@
 # Monitoring And Alerting
 
-**Status**: Reference only\\
-**Supersedes**: none **📖 Base Standard**: [monitoring_and_alerting.md](../../../../documents/engineering/monitoring_and_alerting.md)
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub overlay deltas for Monitoring And Alerting. **📖 Base Standard**: [monitoring_and_alerting.md](../../../../documents/engineering/monitoring_and_alerting.md)
+> **Purpose**: HealthHub overlay deltas for Monitoring And Alerting. See base SSoT for canonical practices.
+> **📖 Base Standard**: [monitoring_and_alerting.md](../../../../documents/engineering/monitoring_and_alerting.md)
 > **📖 Authoritative Reference**: [monitoring_and_alerting.md](../../../../documents/engineering/monitoring_and_alerting.md)
 
 ## Deltas

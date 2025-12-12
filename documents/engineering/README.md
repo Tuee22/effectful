@@ -204,11 +204,11 @@ All engineering documents marked with "**SSoT**" are authoritative. When conflic
 
 **How to update these standards:**
 
-1. Read [Documentation Guidelines](../documentation_standards.md) for standards
+1. Read [Documentation Guidelines](../documentation_standards.md) for standards and open items in [Documentation Migration Plan](../MIGRATION_PLAN.md)
 1. Make changes to appropriate SSoT document
 1. Confirm header metadata (Status/Supersedes/Referenced by/Purpose) is correct
 1. Update "Referenced by" list if adding new cross-references
-1. Run link verification: `docker compose -f docker/docker-compose.yml exec effectful poetry run python tools/verify_links.py`
+1. Run full gate: `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code` (black → ruff → mypy → mdformat/pymarkdown/codespell → custom doc checks → functional catalogue)
 1. Create pull request (see [Contributing](../contributing.md))
 
 **Naming convention**: All files lowercase with underscores, descriptive names (e.g., `code_quality.md` not `types.md`)

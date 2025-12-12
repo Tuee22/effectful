@@ -1,10 +1,11 @@
 # Docker
 
-**Status**: Reference only\\
-**Supersedes**: none **📖 Base Standard**: [docker.md](../../../../documents/engineering/docker.md)
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub overlay deltas for Docker. **📖 Base Standard**: [docker.md](../../../../documents/engineering/docker.md)
+> **Purpose**: HealthHub overlay deltas for Docker. See base SSoT for canonical workflow.
+> **📖 Base Standard**: [docker.md](../../../../documents/engineering/docker.md)
 > **📖 Authoritative Reference**: [docker.md](../../../../documents/engineering/docker.md)
 
 ## Deltas

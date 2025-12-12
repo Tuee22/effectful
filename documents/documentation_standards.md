@@ -46,9 +46,10 @@ Keep these scopes distinct:
 
 - A single entrypoint must run the full code + docs check suite:
 
-  ```bash
-  poetry run check-code
-  ```
+```bash
+# run full code + docs checks
+poetry run check-code
+```
 
 - `check-code` must run, at minimum:
 

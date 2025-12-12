@@ -450,6 +450,8 @@ We welcome contributions! See [CLAUDE.md](CLAUDE.md) for:
 - [Docker Workflow](documents/engineering/docker_workflow.md) - All development in Docker
 - [Testing](documents/engineering/testing.md) - Coverage and test patterns
 - [Code Quality](documents/engineering/code_quality.md) - Type safety + purity doctrines and anti-pattern routing
+- Quality gate: `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code` (black → ruff → mypy → mdformat/pymarkdown/codespell → custom doc checks → functional catalogue)
+- Documentation standards and migration status: see [documentation_standards.md](documents/documentation_standards.md) and [MIGRATION_PLAN.md](documents/MIGRATION_PLAN.md)
 
 ## License
 

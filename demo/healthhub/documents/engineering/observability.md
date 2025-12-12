@@ -1,10 +1,11 @@
 # Observability
 
-**Status**: Reference only\\
-**Supersedes**: none **📖 Base Standard**: [observability.md](../../../../documents/engineering/observability.md)
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub overlay deltas for Observability. **📖 Base Standard**: [observability.md](../../../../documents/engineering/observability.md)
+> **Purpose**: HealthHub overlay deltas for Observability. See base SSoT for canonical telemetry guidance.
+> **📖 Base Standard**: [observability.md](../../../../documents/engineering/observability.md)
 > **📖 Authoritative Reference**: [observability.md](../../../../documents/engineering/observability.md)
 
 ## Deltas

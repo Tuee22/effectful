@@ -39,6 +39,7 @@ ______________________________________________________________________
 ## What Is Versioned (Sources)
 
 - `pyproject.toml`, `package.json`, source code, schemas, docs.
+- **Generated documentation that is part of the SSoT (e.g., `documents/engineering/functional_catalogue.md`) stays in git alongside other docs**; it must carry the auto-generated banner (`<!-- AUTO-GENERATED FILE. DO NOT EDIT BY HAND. -->`) and be regenerated via `check-code`.
 - Minimal config needed to run deterministic builds inside containers.
 
 ## What Is Not Versioned (Artifacts)
@@ -89,25 +90,20 @@ ______________________________________________________________________
 
 - **Check gitignore**:
   ```bash
+  # verify gitignore catches common build artifacts
   git check-ignore -v poetry.lock package-lock.json dist/ build/
   ```
 - **Check docker context**:
   ```bash
+  # ensure docker build context excludes lockfiles
   docker build --progress=plain . | grep -E "poetry.lock|package-lock.json"
   # Expect: excluded from context
   ```
 - **No artifacts in git**:
   ```bash
+  # detect generated artifacts checked into git
   git status --short | grep -E "poetry.lock|package-lock.json|dist/|build/" && echo "Artifacts present (fix ignore rules)"
   ```
-
-______________________________________________________________________
-
-## Cross-References
-
-- Upstream doctrine: [Documentation Standards](../documentation_standards.md) — SSoT/link hygiene and ignore file commentary.
-- Build workflows: [Docker Workflow](docker_workflow.md) — container-only development contract.
-- Code quality gates: [Code Quality](code_quality.md) — enforcement pipeline that regenerates artifacts.
 
 ______________________________________________________________________
 
@@ -117,6 +113,14 @@ ______________________________________________________________________
   - New artifact types or build locations are introduced.
   - Ignore rules change materially.
   - Build pipelines add new stages affecting `/opt/**` outputs or lockfile handling.
+
+______________________________________________________________________
+
+## Cross-References
+
+- Upstream doctrine: [Documentation Standards](../documentation_standards.md) — SSoT/link hygiene and ignore file commentary.
+- Build workflows: [Docker Workflow](docker_workflow.md) — container-only development contract.
+- Code quality gates: [Code Quality](code_quality.md) — enforcement pipeline that regenerates artifacts.
 
 ______________________________________________________________________
 

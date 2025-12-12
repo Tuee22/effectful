@@ -1,10 +1,11 @@
 # Build Artifact Management
 
-**Status**: Reference only\\
-**Supersedes**: none **📖 Base Standard**: [build_artifact_management.md](../../../../documents/engineering/build_artifact_management.md)
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub overlay deltas for Build Artifact Management. **📖 Base Standard**: [build_artifact_management.md](../../../../documents/engineering/build_artifact_management.md)
+> **Purpose**: HealthHub overlay deltas for Build Artifact Management. See base SSoT for canonical rules.
+> **📖 Base Standard**: [build_artifact_management.md](../../../../documents/engineering/build_artifact_management.md)
 > **📖 Authoritative Reference**: [build_artifact_management.md](../../../../documents/engineering/build_artifact_management.md)
 
 ## Deltas

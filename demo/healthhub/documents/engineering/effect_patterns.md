@@ -1,10 +1,11 @@
 # Effect Patterns
 
-**Status**: Reference only\\
-**Supersedes**: none **📖 Base Standard**: [effect_patterns.md](../../../../documents/engineering/effect_patterns.md)
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub overlay deltas for Effect Patterns. **📖 Base Standard**: [effect_patterns.md](../../../../documents/engineering/effect_patterns.md)
+> **Purpose**: HealthHub overlay deltas for Effect Patterns. See base SSoT for canonical guidance.
+> **📖 Base Standard**: [effect_patterns.md](../../../../documents/engineering/effect_patterns.md)
 > **📖 Authoritative Reference**: [effect_patterns.md](../../../../documents/engineering/effect_patterns.md)
 
 ## Deltas

@@ -1,10 +1,11 @@
 # Code Quality
 
-**Status**: Reference only\\
-**Supersedes**: none **📖 Base Standard**: [code_quality.md](../../../../documents/engineering/code_quality.md)
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub overlay deltas for Code Quality. **📖 Base Standard**: [code_quality.md](../../../../documents/engineering/code_quality.md)
+> **Purpose**: HealthHub overlay deltas for Code Quality. See base SSoT for canonical policies.
+> **📖 Base Standard**: [code_quality.md](../../../../documents/engineering/code_quality.md)
 > **📖 Authoritative Reference**: [code_quality.md](../../../../documents/engineering/code_quality.md)
 
 ## Deltas

@@ -20,6 +20,8 @@ MD_EXTENSIONS = ["gfm"]
 
 def parse_canonical(path: Path) -> list[CanonicalDiagram]:
     diagrams: list[CanonicalDiagram] = []
+    if path.name == "documentation_standards.md":
+        return diagrams
     lines = path.read_text(encoding="utf-8").splitlines()
     for idx, lang, body in fenced_blocks(lines):
         if lang != "mermaid":

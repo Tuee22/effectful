@@ -1,10 +1,11 @@
 # Total Pure Modelling
 
-**Status**: Reference only\\
-**Supersedes**: none **📖 Base Standard**: [total_pure_modelling.md](../../../../documents/engineering/total_pure_modelling.md)
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub overlay deltas for Total Pure Modelling. **📖 Base Standard**: [total_pure_modelling.md](../../../../documents/engineering/total_pure_modelling.md)
+> **Purpose**: HealthHub overlay deltas for Total Pure Modelling. See base SSoT for canonical guidance.
+> **📖 Base Standard**: [total_pure_modelling.md](../../../../documents/engineering/total_pure_modelling.md)
 > **📖 Authoritative Reference**: [total_pure_modelling.md](../../../../documents/engineering/total_pure_modelling.md)
 
 ## Deltas

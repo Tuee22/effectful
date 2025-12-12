@@ -144,6 +144,7 @@ ______________________________________________________________________
 **Directory Structure**:
 
 ```text
+# tests directory layout
 tests/
 ├── conftest.py          # Root: imports and re-exports all fixtures
 ├── fixtures/
@@ -1764,6 +1765,7 @@ __all__ = [
 **Example**:
 
 ```text
+# fixture scoping examples
 tests/
 ├── conftest.py                    # Fixtures available to ALL tests
 ├── fixtures/

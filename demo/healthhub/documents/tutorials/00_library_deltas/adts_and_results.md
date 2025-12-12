@@ -1,10 +1,11 @@
 # ADTs and Result Types
 
-**Status**: Reference only\\
-**Supersedes**: none **📖 Base Standard**: [adts_and_results.md](../../../../../documents/tutorials/00_library_deltas/adts_and_results.md)
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub overlay deltas for Adts And Results. **📖 Base Standard**: [adts_and_results.md](../../../../../documents/tutorials/00_library_deltas/adts_and_results.md)
+> **Purpose**: HealthHub overlay deltas for Adts And Results. See base SSoT for canonical guidance.
+> **📖 Base Standard**: [adts_and_results.md](../../../../../documents/tutorials/00_library_deltas/adts_and_results.md)
 > **📖 Authoritative Reference**: [adts_and_results.md](../../../../../documents/tutorials/00_library_deltas/adts_and_results.md)
 
 ## Deltas
