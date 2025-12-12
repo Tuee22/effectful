@@ -1,7 +1,7 @@
 # Tutorial 10: Auth Effects
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/readme.md
 
 > **Purpose**: Tutorial covering authentication effects for JWT token management and password operations.
@@ -36,6 +36,7 @@ flowchart TB
 ```
 
 **Key properties:**
+
 - Token validation returns ADTs; no boolean flags.
 - Password handling is effectful; never inline hash/compare in programs.
 - Guard decisions must be explicit (token expired vs invalid vs revoked).
@@ -88,6 +89,7 @@ def manage_passwords(password: str, candidate: str) -> Generator[AllEffects, Eff
 - Consult full effect signatures in the [Auth API Reference](../api/auth.md).
 
 ## Cross-References
+
 - [Auth API Reference](../api/auth.md)
 - [Authentication](../engineering/authentication.md)
 - [Total Pure Modelling](../engineering/total_pure_modelling.md)

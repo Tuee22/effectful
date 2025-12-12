@@ -1,12 +1,12 @@
 # Docker Development Doctrine
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: CLAUDE.md, command_reference.md, configuration.md, development_workflow.md, engineering/README.md, README.md
 
 > **Purpose**: Single Source of Truth for all Docker development workflow and environment setup in effectful.
 
----
+______________________________________________________________________
 
 ## SSoT Link Map
 
@@ -27,12 +27,12 @@ flowchart TB
   Testing --> Docs
 ```
 
-| Need | Link |
-|------|------|
-| Exact command syntax | [Command Reference](command_reference.md) |
-| Daily loop | [Development Workflow](development_workflow.md) |
-| Environment variables | [Configuration](configuration.md) |
-| How to test | [Testing](testing.md#running-tests) |
+| Need                       | Link                                                     |
+| -------------------------- | -------------------------------------------------------- |
+| Exact command syntax       | [Command Reference](command_reference.md)                |
+| Daily loop                 | [Development Workflow](development_workflow.md)          |
+| Environment variables      | [Configuration](configuration.md)                        |
+| How to test                | [Testing](testing.md#running-tests)                      |
 | Documentation requirements | [Documentation Standards](../documentation_standards.md) |
 
 ## Development Contract
@@ -46,6 +46,7 @@ flowchart TB
 **ALL development commands MUST run inside the Docker container. NEVER run commands directly on the host machine.**
 
 This doctrine applies to:
+
 - Type checking (mypy)
 - Code formatting (black)
 - Testing (pytest)
@@ -58,17 +59,17 @@ This doctrine applies to:
 ### Why Docker-Only Development?
 
 1. **Environment Consistency**: Everyone uses the exact same Python version, dependencies, and system libraries
-2. **No Local Setup Required**: Contributors don't need to manage Python versions or virtual environments locally
-3. **Infrastructure Parity**: Tests run against the same PostgreSQL, Redis, MinIO, and Pulsar versions as production
-4. **Reproducible Builds**: Build artifacts are identical regardless of host OS (macOS, Linux, Windows)
-5. **Clean Host Machine**: No Poetry virtualenvs (enforced via `poetry.toml`), no Python version conflicts
+1. **No Local Setup Required**: Contributors don't need to manage Python versions or virtual environments locally
+1. **Infrastructure Parity**: Tests run against the same PostgreSQL, Redis, MinIO, and Pulsar versions as production
+1. **Reproducible Builds**: Build artifacts are identical regardless of host OS (macOS, Linux, Windows)
+1. **Clean Host Machine**: No Poetry virtualenvs (enforced via `poetry.toml`), no Python version conflicts
 
 ### Why NOT Local Development?
 
 1. **Dependency Hell**: Different Python versions cause subtle bugs
-2. **Missing Infrastructure**: Local tests can't connect to PostgreSQL/Redis/MinIO/Pulsar/Prometheus
-3. **False Confidence**: Tests pass locally but fail in CI due to environment differences
-4. **Onboarding Friction**: New contributors spend hours setting up local environments
+1. **Missing Infrastructure**: Local tests can't connect to PostgreSQL/Redis/MinIO/Pulsar/Prometheus
+1. **False Confidence**: Tests pass locally but fail in CI due to environment differences
+1. **Onboarding Friction**: New contributors spend hours setting up local environments
 
 ## Command Patterns
 
@@ -77,26 +78,28 @@ This doctrine applies to:
 All commands follow this structure:
 
 ```bash
+# snippet
 docker compose -f docker/docker-compose.yml exec effectful poetry run <command>
 ```
 
 ### Examples
 
-| Task | Correct Command |
-|------|-----------------|
-| Type check | `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code` |
-| All tests | `docker compose -f docker/docker-compose.yml exec effectful poetry run pytest` |
-| Unit tests | `docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tests/unit` |
-| Integration tests | `docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tests/integration` |
-| Python shell | `docker compose -f docker/docker-compose.yml exec effectful poetry run python` |
-| Add dependency | `docker compose -f docker/docker-compose.yml exec effectful poetry add <package>` |
-| Add dev dependency | `docker compose -f docker/docker-compose.yml exec effectful poetry add --group dev <package>` |
+| Task               | Correct Command                                                                                  |
+| ------------------ | ------------------------------------------------------------------------------------------------ |
+| Type check         | `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code`               |
+| All tests          | `docker compose -f docker/docker-compose.yml exec effectful poetry run pytest`                   |
+| Unit tests         | `docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tests/unit`        |
+| Integration tests  | `docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tests/integration` |
+| Python shell       | `docker compose -f docker/docker-compose.yml exec effectful poetry run python`                   |
+| Add dependency     | `docker compose -f docker/docker-compose.yml exec effectful poetry add <package>`                |
+| Add dev dependency | `docker compose -f docker/docker-compose.yml exec effectful poetry add --group dev <package>`    |
 
 ### Shell Alias (Optional)
 
 For convenience, add to your shell profile:
 
 ```bash
+# snippet
 alias eff='docker compose -f docker/docker-compose.yml exec effectful poetry run'
 ```
 
@@ -133,9 +136,9 @@ source .venv/bin/activate
 ### Why These Are Forbidden
 
 1. **Local pytest**: Won't have access to PostgreSQL, Redis, MinIO, Pulsar
-2. **Local poetry**: `poetry.toml` prevents virtualenv creation - commands will fail
-3. **Local mypy**: May use different Python version, give false positives/negatives
-4. **Local pip**: Pollutes global Python, causes conflicts
+1. **Local poetry**: `poetry.toml` prevents virtualenv creation - commands will fail
+1. **Local mypy**: May use different Python version, give false positives/negatives
+1. **Local pip**: Pollutes global Python, causes conflicts
 
 ## Development Workflow
 
@@ -200,6 +203,7 @@ in-project = false
 ```
 
 **Why This Matters**:
+
 - Running `poetry install` on host machine will fail (no virtualenv created)
 - Prevents accidental local dependency installation
 - Forces all development through Docker
@@ -230,28 +234,31 @@ The effectful Docker Compose stack includes multiple services that work together
 
 ### Service Overview
 
-| Service | Purpose | Internal Ports | Data Persistence |
-|---------|---------|----------------|------------------|
-| `effectful` | Main Python container | - | Code bind-mounted from host |
-| `postgres` | PostgreSQL 15+ | 5432 | Named volume `pgdata` |
-| `redis` | Redis 7+ cache | 6379 | Named volume `redisdata` |
-| `minio` | S3-compatible storage | 9000 (API), 9001 (Console) | Named volume `miniodata` |
-| `pulsar` | Apache Pulsar messaging | 6650 (broker), 8080 (HTTP) | Named volume `pulsardata` |
-| `prometheus` | Metrics collection | 9090 | Named volume `prometheusdata` |
-| `grafana` | Metrics visualization | 3000 | Named volume `grafanadata` |
+| Service      | Purpose                 | Internal Ports             | Data Persistence              |
+| ------------ | ----------------------- | -------------------------- | ----------------------------- |
+| `effectful`  | Main Python container   | -                          | Code bind-mounted from host   |
+| `postgres`   | PostgreSQL 15+          | 5432                       | Named volume `pgdata`         |
+| `redis`      | Redis 7+ cache          | 6379                       | Named volume `redisdata`      |
+| `minio`      | S3-compatible storage   | 9000 (API), 9001 (Console) | Named volume `miniodata`      |
+| `pulsar`     | Apache Pulsar messaging | 6650 (broker), 8080 (HTTP) | Named volume `pulsardata`     |
+| `prometheus` | Metrics collection      | 9090                       | Named volume `prometheusdata` |
+| `grafana`    | Metrics visualization   | 3000                       | Named volume `grafanadata`    |
 
 ### Effectful Container
 
 **Purpose**: Runs the effectful Python library code with all development tools.
 
 **Key Features**:
+
 - Python 3.12 with Poetry for dependency management
 - Two entrypoints: main (library development) and mock-client (integration testing)
 - Bind-mounted source code (`./effectful:/app/effectful`, `./tests:/app/tests`)
 - Connects to all infrastructure services
 
 **Environment Variables**:
+
 ```bash
+# snippet
 POSTGRES_HOST=postgres
 REDIS_HOST=redis
 MINIO_ENDPOINT=minio:9000
@@ -284,6 +291,7 @@ PROMETHEUS_URL=http://prometheus:9090
 **Version**: MinIO latest
 
 **Access**:
+
 - API: http://minio:9000 (inside Compose network only)
 - Console: http://minio:9001 (port-forward temporarily if you need the UI on host)
 - Credentials: `minioadmin` / `minioadmin`
@@ -297,6 +305,7 @@ PROMETHEUS_URL=http://prometheus:9090
 **Version**: Pulsar latest
 
 **Access**:
+
 - Broker: pulsar://pulsar:6650 (inside Compose network only)
 - HTTP: http://pulsar:8080 (port-forward temporarily if you need Pulsar admin from host)
 
@@ -309,6 +318,7 @@ PROMETHEUS_URL=http://prometheus:9090
 **Version**: Prometheus latest
 
 **Configuration**:
+
 - Config file: `docker/prometheus/prometheus.yml`
 - Alert rules: `docker/prometheus/alerts.yml`
 - Scrape interval: 15 seconds (default)
@@ -316,6 +326,7 @@ PROMETHEUS_URL=http://prometheus:9090
 **Access**: http://prometheus:9090 (internal-only; port-forward if you need the UI on host)
 
 **Key Features**:
+
 - Scrapes `/metrics` endpoint from effectful applications
 - Evaluates alert rules defined in `alerts.yml`
 - Forwards alerts to Alertmanager (if configured)
@@ -336,6 +347,7 @@ PROMETHEUS_URL=http://prometheus:9090
 **Default Credentials**: `admin` / `admin` (change on first login)
 
 **Key Features**:
+
 - Pre-configured Prometheus datasource
 - Dashboard provisioning from `docker/grafana/dashboards/`
 - Alert notification channels (Slack, PagerDuty, Email)
@@ -352,16 +364,16 @@ PROMETHEUS_URL=http://prometheus:9090
 The devcontainer support allows VS Code to run inside the Docker container:
 
 1. Install "Dev Containers" extension
-2. Open command palette: "Dev Containers: Reopen in Container"
-3. VS Code now runs all commands inside Docker automatically
+1. Open command palette: "Dev Containers: Reopen in Container"
+1. VS Code now runs all commands inside Docker automatically
 
 ### PyCharm
 
 Configure a remote Python interpreter pointing to the Docker container:
 
 1. Settings > Project > Python Interpreter
-2. Add Interpreter > Docker Compose
-3. Select `docker/docker-compose.yml` and service `effectful`
+1. Add Interpreter > Docker Compose
+1. Select `docker/docker-compose.yml` and service `effectful`
 
 ### Other Editors
 
@@ -397,6 +409,7 @@ docker compose -f docker/docker-compose.yml up -d
 Ensure all infrastructure services are running:
 
 ```bash
+# snippet
 docker compose -f docker/docker-compose.yml ps
 # Should show: effectful, postgres, redis, minio, pulsar, prometheus, grafana all "Up"
 ```
@@ -411,6 +424,7 @@ docker compose -f docker/docker-compose.yml ps
 - [Monitoring & Alerting](monitoring_and_alerting.md) - Metric/alert policy executed from Docker
 
 ## Cross-References
+
 - [Command Reference](command_reference.md)
 - [Development Workflow](development_workflow.md)
 - [Configuration](configuration.md)

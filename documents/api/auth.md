@@ -1,7 +1,7 @@
 # Auth Effects API Reference
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/api/README.md
 
 > **Purpose**: Reference for authentication effect types used for JWT token management and password operations.
@@ -20,11 +20,13 @@ class ValidateToken:
 ```
 
 **Parameters:**
+
 - `token` - The JWT token to validate
 
 **Returns:** `TokenValidationResult` (see Domain Models below)
 
 **Example:**
+
 ```python
 # file: examples/auth.py
 from effectful import ValidateToken, TokenValid, TokenExpired, TokenInvalid
@@ -59,6 +61,7 @@ class GenerateToken:
 ```
 
 **Parameters:**
+
 - `user_id` - UUID of the user to generate token for
 - `claims` - Claims to include (roles, permissions, metadata)
 - `ttl_seconds` - Token time-to-live in seconds
@@ -66,6 +69,7 @@ class GenerateToken:
 **Returns:** `str` (encoded JWT token)
 
 **Example:**
+
 ```python
 # file: examples/auth.py
 from effectful import GenerateToken
@@ -96,11 +100,13 @@ class RefreshToken:
 ```
 
 **Parameters:**
+
 - `refresh_token` - The refresh token to exchange
 
 **Returns:** `str | None` (new JWT token, or None if invalid/expired)
 
 **Example:**
+
 ```python
 # file: examples/auth.py
 from effectful import RefreshToken
@@ -129,11 +135,13 @@ class RevokeToken:
 ```
 
 **Parameters:**
+
 - `token` - The JWT token to revoke
 
 **Returns:** `None`
 
 **Example:**
+
 ```python
 # file: examples/auth.py
 from effectful import RevokeToken
@@ -156,11 +164,13 @@ class GetUserByEmail:
 ```
 
 **Parameters:**
+
 - `email` - Email address to search for
 
 **Returns:** `User | None`
 
 **Example:**
+
 ```python
 # file: examples/auth.py
 from effectful import GetUserByEmail, User
@@ -190,12 +200,14 @@ class ValidatePassword:
 ```
 
 **Parameters:**
+
 - `password` - Plain text password to validate
 - `password_hash` - Bcrypt hash to validate against
 
 **Returns:** `bool`
 
 **Example:**
+
 ```python
 # file: examples/auth.py
 from effectful import ValidatePassword
@@ -224,11 +236,13 @@ class HashPassword:
 ```
 
 **Parameters:**
+
 - `password` - Plain text password to hash
 
 **Returns:** `str` (bcrypt hash)
 
 **Example:**
+
 ```python
 # file: examples/auth.py
 from effectful import HashPassword
@@ -269,6 +283,7 @@ class TokenInvalid:
 ```
 
 **Pattern Matching:**
+
 ```python
 # file: examples/auth.py
 result = yield ValidateToken(token=token)
@@ -286,6 +301,7 @@ match result:
 ```
 
 **Reason Values for TokenInvalid:**
+
 - `"revoked"` - Token was explicitly revoked
 - `"invalid_signature"` - Signature verification failed
 - `"malformed"` - Token structure is invalid
@@ -427,8 +443,9 @@ def logout_flow(
 - [Interpreters](interpreters.md) - AuthInterpreter details
 - [Testing Guide](../tutorials/testing_guide.md) - Testing auth programs
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Architecture](../engineering/architecture.md)

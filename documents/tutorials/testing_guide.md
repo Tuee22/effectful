@@ -1,12 +1,13 @@
 # Tutorial 04: Testing Effect Programs
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/readme.md
 
 > **Purpose**: Tutorial on testing effect programs using generator-based mocking with pytest-mock.
 
 > **Core Doctrines**:
+>
 > - [Testing](../engineering/testing.md) - Coverage requirements and test patterns
 > - [Docker Workflow](../engineering/docker_workflow.md) - All commands run inside Docker
 
@@ -36,6 +37,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tes
 ## Learning Objectives
 
 By the end of this tutorial, you will:
+
 - Write unit tests using generator-based mocking (no interpreters needed)
 - Test success paths and error paths with explicit Result types
 - Mock effect responses step-by-step
@@ -58,10 +60,10 @@ flowchart TB
   Organization --> Coverage[Coverage Guidelines]
   Coverage --> End[Complete Ready to Test]
 
-  Simple --> SimpleNote[Instantiate effects No mocks]
-  Interpreter --> InterpNote[pytest mock infrastructure]
-  MultiStep --> MultiNote[Manual next and send]
-  Complex --> ComplexNote[run_ws_program with mocks]
+  Simple --> SimpleHint[Instantiate effects No mocks]
+  Interpreter --> InterpHint[pytest mock infrastructure]
+  MultiStep --> MultiHint[Manual next and send]
+  Complex --> ComplexHint[run_ws_program with mocks]
 ```
 
 ## Setup
@@ -102,7 +104,7 @@ your_project/
     └── conftest.py
 ```
 
----
+______________________________________________________________________
 
 ## Step 1: Generator-based testing pattern
 
@@ -159,13 +161,14 @@ flowchart TB
 ```
 
 **Test Execution Steps:**
+
 1. **Create generator**: Call program function to get generator instance
-2. **Get first effect**: Use `next(gen)` to yield first effect
-3. **Assert effect**: Verify effect type and parameters
-4. **Send mock response**: Use `gen.send(mock_value)` to provide mocked data
-5. **Repeat**: Continue for each effect in the program
-6. **Catch StopIteration**: Extract final return value from exception
-7. **Assert result**: Verify program returned expected Result type
+1. **Get first effect**: Use `next(gen)` to yield first effect
+1. **Assert effect**: Verify effect type and parameters
+1. **Send mock response**: Use `gen.send(mock_value)` to provide mocked data
+1. **Repeat**: Continue for each effect in the program
+1. **Catch StopIteration**: Extract final return value from exception
+1. **Assert result**: Verify program returned expected Result type
 
 **Example Test:**
 
@@ -237,13 +240,14 @@ class TestGetUserProgram:
 ```
 
 **Key Testing Patterns**:
-1. ✅ Use `next(gen)` to get the first effect
-2. ✅ Use `gen.send(mock_value)` to provide mock responses
-3. ✅ Catch `StopIteration` to extract the final `Result`
-4. ✅ Use pattern matching or `isinstance` to verify `Ok`/`Err`
-5. ✅ No interpreters, no async/await - just pure generators
 
----
+1. ✅ Use `next(gen)` to get the first effect
+1. ✅ Use `gen.send(mock_value)` to provide mock responses
+1. ✅ Catch `StopIteration` to extract the final `Result`
+1. ✅ Use pattern matching or `isinstance` to verify `Ok`/`Err`
+1. ✅ No interpreters, no async/await - just pure generators
+
+______________________________________________________________________
 
 ## Step 2: Testing multi-step programs
 
@@ -302,6 +306,7 @@ def update_user_program(
 ### Testing Multi-Step Success Path
 
 ```python
+# snippet
 def test_update_user_success(self, mocker: MockerFixture) -> None:
     """Test successfully updating a user."""
     # Setup
@@ -348,6 +353,7 @@ def test_update_user_success(self, mocker: MockerFixture) -> None:
 ### Testing Validation Errors (No Effects Yielded)
 
 ```python
+# snippet
 def test_update_user_no_fields(self, mocker: MockerFixture) -> None:
     """Test update fails when no fields provided."""
     # Create generator
@@ -382,7 +388,7 @@ def test_update_user_invalid_email(self, mocker: MockerFixture) -> None:
     assert "email" in result.error.message.lower()
 ```
 
----
+______________________________________________________________________
 
 ## Step 3: Testing complex workflows (all 6 infrastructure types)
 
@@ -490,6 +496,7 @@ def send_authenticated_message_with_storage_program(
 ### Testing the Complete Success Path
 
 ```python
+# snippet
 from effectful.domain.s3_object import PutSuccess
 
 def test_send_authenticated_message_success(self, mocker: MockerFixture) -> None:
@@ -561,13 +568,14 @@ def test_send_authenticated_message_success(self, mocker: MockerFixture) -> None
     assert result.value.text == message_text
 ```
 
----
+______________________________________________________________________
 
 ## Step 4: Testing early returns
 
 Programs can return early when encountering validation errors or missing data:
 
 ```python
+# snippet
 def test_send_authenticated_message_invalid_token(
     self, mocker: MockerFixture
 ) -> None:
@@ -597,7 +605,7 @@ def test_send_authenticated_message_invalid_token(
 
 **Key Pattern**: When a program returns `Err`, it stops immediately. No subsequent effects are yielded.
 
----
+______________________________________________________________________
 
 ## Step 5: Test organization
 
@@ -606,6 +614,7 @@ def test_send_authenticated_message_invalid_token(
 Group related tests in classes:
 
 ```python
+# snippet
 class TestSendMessageProgram:
     """Test suite for send_message_program."""
 
@@ -673,13 +682,14 @@ tests/
 └── conftest.py
 ```
 
----
+______________________________________________________________________
 
 ## Best Practices
 
 ### ✅ DO
 
 1. **Test Programs as Pure Generators**
+
    ```python
    # ✅ No interpreters, no infrastructure
    gen = get_user_program(user_id=user_id)
@@ -687,7 +697,8 @@ tests/
    result = gen.send(mock_value)
    ```
 
-2. **Use Result Types for Explicit Error Handling**
+1. **Use Result Types for Explicit Error Handling**
+
    ```python
    # ✅ Return Result[T, E] from programs
    from collections.abc import Generator
@@ -713,7 +724,8 @@ tests/
                return Err(error)
    ```
 
-3. **Test One Behavior Per Test**
+1. **Test One Behavior Per Test**
+
    ```python
    def test_user_found_returns_ok() -> None:
        result = Ok(User(user_id=uuid4(), name="Alice"))
@@ -728,14 +740,16 @@ tests/
        assert result.value.message == "Missing required field"
    ```
 
-4. **Verify Effect Properties**
+1. **Verify Effect Properties**
+
    ```python
    effect = next(gen)
    assert effect.__class__.__name__ == "GetUserById"
    assert effect.user_id == expected_user_id
    ```
 
-5. **Use Pattern Matching or isinstance for Results**
+1. **Use Pattern Matching or isinstance for Results**
+
    ```python
    # Pattern matching
    match result:
@@ -747,7 +761,8 @@ tests/
    assert isinstance(result.value, User)
    ```
 
-6. **Test Early Returns (Validation Errors)**
+1. **Test Early Returns (Validation Errors)**
+
    ```python
    gen = update_user_program(user_id=uuid4())  # No fields
    try:
@@ -761,14 +776,19 @@ tests/
 
 1. **Don't Use Fakes or Test Doubles**
    ```python
+   ```
+
 # ❌ Forbidden
+
 interpreter = MessagingInterpreter(producer=FakeMessageProducer())
 
 # ✅ Use generator-based testing instead
+
 gen = send_message_program(user_id=uuid4(), text="hello")
 effect = next(gen)
 result = gen.send(mock_response)
-```
+
+````
 
 2. **Don't Skip Result Type Verification**
    ```python
@@ -779,9 +799,10 @@ result = gen.send(mock_response)
    # ✅ Verify Result type first
    assert isinstance(result, Ok)
    assert result.value.id == user_id
-   ```
+````
 
 3. **Don't Test Multiple Behaviors in One Test**
+
 ```python
 # ❌ Too much in one test
 def test_get_user() -> None:
@@ -793,21 +814,27 @@ def test_get_user() -> None:
 ```
 
 4. **Don't Use Real Infrastructure in Unit Tests**
+
    ```python
    # ❌ Don't do this in unit tests
    db_conn = await asyncpg.connect(DATABASE_URL)
    redis_client = await aioredis.from_url(REDIS_URL)
    ```
 
-5. **Don't Use pytest.skip()**
+1. **Don't Use pytest.skip()**
+
    ```python
+   ```
+
 # ❌ Forbidden - creates false confidence
+
 @pytest.mark.skip(reason="Not implemented yet")
 def test_complex_workflow() -> None:
-    pytest.fail("Implement complex workflow test or remove it")
+pytest.fail("Implement complex workflow test or remove it")
 
-   # ✅ Let tests FAIL to expose gaps, or delete test
-   ```
+# ✅ Let tests FAIL to expose gaps, or delete test
+
+````
 
 ---
 
@@ -828,45 +855,45 @@ from effectful.effects.metrics import IncrementCounter, ObserveHistogram
 from effectful.domain.metrics_result import MetricRecorded, MetricRecordingFailed
 
 def test_increment_counter_success() -> None:
-    """Test incrementing counter metric succeeds."""
+ """Test incrementing counter metric succeeds."""
 
-    # Program that records metric
-    def track_task_completion(task_type: str) -> Generator[AllEffects, EffectResult, bool]:
-        result = yield IncrementCounter(
-            metric_name="tasks_completed_total",
-            labels={"task_type": task_type},
-            value=1.0,
-        )
+ # Program that records metric
+ def track_task_completion(task_type: str) -> Generator[AllEffects, EffectResult, bool]:
+     result = yield IncrementCounter(
+         metric_name="tasks_completed_total",
+         labels={"task_type": task_type},
+         value=1.0,
+     )
 
-        match result:
-            case MetricRecorded():
-                return True
-            case MetricRecordingFailed():
-                return False
+     match result:
+         case MetricRecorded():
+             return True
+         case MetricRecordingFailed():
+             return False
 
-    # Execute program with mocked response
-    gen = track_task_completion(task_type="email")
+ # Execute program with mocked response
+ gen = track_task_completion(task_type="email")
 
-    # Program yields IncrementCounter effect
-    effect = next(gen)
-    assert isinstance(effect, IncrementCounter)
-    assert effect.metric_name == "tasks_completed_total"
-    assert effect.labels == {"task_type": "email"}
-    assert effect.value == 1.0
+ # Program yields IncrementCounter effect
+ effect = next(gen)
+ assert isinstance(effect, IncrementCounter)
+ assert effect.metric_name == "tasks_completed_total"
+ assert effect.labels == {"task_type": "email"}
+ assert effect.value == 1.0
 
-    # Mock successful recording
-    with pytest.raises(StopIteration) as exc_info:
-        gen.send(MetricRecorded(timestamp=1706472000.0))
+ # Mock successful recording
+ with pytest.raises(StopIteration) as exc_info:
+     gen.send(MetricRecorded(timestamp=1706472000.0))
 
-    # Program returns True (success)
-    assert exc_info.value.value is True
-```
+ # Program returns True (success)
+ assert exc_info.value.value is True
+````
 
 ### Testing Metric Failures
 
 Test how programs handle metric recording failures:
 
-```python
+````python
 def test_increment_counter_handles_failure() -> None:
     """Test program handles metric recording failure gracefully."""
 
@@ -903,7 +930,7 @@ def test_increment_counter_handles_failure() -> None:
         gen.send(None)
 
     assert exc_info.value.value == "metric_failed_but_continued"
-```
+```text
 
 ### Testing Histogram Observations
 
@@ -937,7 +964,7 @@ def test_observe_histogram_duration() -> None:
     # Mock successful observation
     with pytest.raises(StopIteration):
         gen.send(MetricRecorded(timestamp=1706472000.0))
-```
+```text
 
 ### Integration Testing with Metrics
 
@@ -995,7 +1022,7 @@ async def test_counter_increments(clean_metrics: None) -> None:
     # Run program (would use real interpreter in integration test)
     result = await run_ws_program(increment_twice(), metrics_interpreter)
     assert result is None
-```
+```text
 
 ### Testing Metric Validation
 
@@ -1053,7 +1080,7 @@ def test_missing_required_label_rejected() -> None:
 
     # Program receives specific error
     assert "missing_label" in exc_info.value.value
-```
+```text
 
 ### Testing Automatic Metrics
 
@@ -1090,34 +1117,37 @@ result = await interpreter.interpret(
     assert call_args.kwargs["metric_name"] == "effectful_effect_duration_seconds"
     assert call_args.kwargs["labels"]["effect_type"] == "GetUserById"
     assert call_args.kwargs["value"] > 0  # Duration is positive
-```
+```text
 
 ### Best Practices
 
 **✅ DO**:
+
 - Test both success and failure cases for metrics
 - Use `ResetMetrics` in integration test fixtures
 - Mock `MetricRecorded` / `MetricRecordingFailed` in unit tests
 - Test validation errors (wrong labels, invalid names)
 
 **❌ DON'T**:
+
 - Skip testing metrics (they're part of your program contract)
 - Forget to test error paths (collector unavailable)
 - Use real Prometheus in unit tests (too slow)
 - Assert on exact metric values in unit tests (use mocks)
 
----
+______________________________________________________________________
 
 ## Next Steps
 
 - Explore the demo application in `/demo` for complete working examples
-- Read [HealthHub demo docs](/demo/healthhub/documents/readme.md) for comprehensive documentation
+- Read [HealthHub demo docs](../../demo/healthhub/documents/readme.md) for comprehensive documentation
 - Study real tests in `tests/test_demo/` (35 tests with 100% pass rate)
 - Review [architecture.md](../engineering/architecture.md) for system design
 
 ## Summary
 
 You learned how to:
+
 - ✅ Test effect programs using generator-based mocking
 - ✅ Use `next(gen)` and `gen.send()` to mock effect responses
 - ✅ Test multi-step programs with multiple effects
@@ -1130,8 +1160,10 @@ You learned how to:
 
 Happy testing! 🧪
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Standards](../engineering/README.md)
+````

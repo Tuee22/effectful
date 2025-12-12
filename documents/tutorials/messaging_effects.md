@@ -1,7 +1,7 @@
 # Messaging Effects
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/readme.md
 
 > **Purpose**: Tutorial covering messaging effects for Apache Pulsar publish/subscribe workflows in effectful.
@@ -39,6 +39,7 @@ flowchart TB
 ```
 
 **Key properties:**
+
 - At-least-once delivery: messages redelivered if not acknowledged.
 - Timeout is not an error: `ConsumeMessage` returns `None` when idle.
 - Redelivery control: `NegativeAcknowledge` supports `delay_ms` backoff.
@@ -101,14 +102,19 @@ def consume_once() -> Generator[AllEffects, EffectResult, str]:
 ## Next Steps
 
 - Build production-ready consumers with backoff policies in [Effect Patterns](../engineering/effect_patterns.md#state-machines).
+
 - Deep dive into observability for messaging flows in [Monitoring & Alerting](../engineering/monitoring_and_alerting.md).
+
 - Explore storage integrations next in [Tutorial 09: Storage Effects](storage_effects.md).
 
 - Unit-level: drive generators and assert yielded effects and return values.
+
 - Interpreter-level: mock producers/consumers with `mocker.AsyncMock` and assert retryability handling.
+
 - For full testing policy and timeout rules, see [Testing](../engineering/testing.md) and the broader [Testing Guide](testing_guide.md).
 
 ## Cross-References
+
 - [Messaging API Reference](../api/messaging.md)
 - [Architecture](../engineering/architecture.md#visual-data-flow)
 - [Effect Patterns](../engineering/effect_patterns.md#state-machines)

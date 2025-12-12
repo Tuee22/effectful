@@ -34,7 +34,6 @@ from typing import Protocol
 
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok, Result
-from effectful.domain.metrics_result import MetricRecorded
 from effectful.effects.base import Effect
 from effectful.infrastructure.metrics import MetricsCollector
 from effectful.interpreters.errors import InterpreterError, UnhandledEffectError

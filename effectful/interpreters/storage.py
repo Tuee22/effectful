@@ -118,7 +118,11 @@ class StorageInterpreter:
         """
         try:
             get_result: GetObjectResult = await self.storage.get_object(bucket, key)
-            return Ok(EffectReturn(value=get_result, effect_name="GetObject"))
+            match get_result:
+                case ObjectNotFound():
+                    return Ok(EffectReturn(value=get_result, effect_name="GetObject"))
+                case _:
+                    return Ok(EffectReturn(value=get_result, effect_name="GetObject"))
         except Exception as e:
             return Err(
                 StorageError(
@@ -149,10 +153,10 @@ class StorageInterpreter:
 
             # Pattern match on PutResult ADT
             match put_result:  # pragma: no branch
-                case PutSuccess(key=object_key):
+                case PutSuccess():
                     # Success - return the PutSuccess ADT
                     return Ok(EffectReturn(value=put_result, effect_name="PutObject"))
-                case PutFailure(key=failed_key, reason=reason):
+                case PutFailure(reason=reason):
                     # Domain failure - return error with retryability
                     is_retryable = self._is_retryable_put_failure(reason)
                     return Err(

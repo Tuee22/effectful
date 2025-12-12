@@ -1,7 +1,7 @@
 # ADTs and Result Types
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/readme.md
 
 > **Purpose**: Tutorial on using Algebraic Data Types (ADTs) and the Result type to write type-safe, self-documenting code.
@@ -35,6 +35,7 @@ async def get_user(user_id: UUID) -> Optional[User]:
 ```
 
 **Problems:**
+
 - Why is it `None`? Impossible to know without reading implementation
 - Caller can't handle different failure cases differently
 - No documentation of failure modes
@@ -63,6 +64,7 @@ async def get_user(user_id: UUID) -> UserLookupResult:
 ```
 
 **Benefits:**
+
 - All cases **explicit** and **self-documenting**
 - Caller **forced to handle** all cases (type checker enforces)
 - Easy to **add new cases** (type errors guide extensions)
@@ -72,6 +74,7 @@ async def get_user(user_id: UUID) -> UserLookupResult:
 > **Diagram**: See the ADT vs Optional comparison diagram in [Code Quality](../engineering/code_quality.md#2-adts-over-optional-types).
 
 **Key Differences:**
+
 - **Optional**: Single `None` value, many possible meanings (ambiguous)
 - **ADT**: Distinct types for each case, explicit data for each scenario
 - **Optional**: No guidance on why failure occurred
@@ -208,6 +211,7 @@ result = await divide(10, 0)  # Surprise exception!
 ```
 
 **Problems:**
+
 - Exceptions **not in signature** (invisible failure modes)
 - Easy to **forget error handling** (no type checker enforcement)
 - **Invisible control flow** (try/except archaeology)
@@ -234,6 +238,7 @@ match result:
 ```
 
 **Benefits:**
+
 - Errors **visible in type signature**
 - Type checker **enforces error handling**
 - **Explicit control flow** (no hidden exceptions)
@@ -474,7 +479,7 @@ def get_profile_with_fallback(user_id: UUID) -> Generator[AllEffects, EffectResu
                     return ProfileFound(profile=profile, source="database")
 ```
 
----
+______________________________________________________________________
 
 ## Step 6: OptionalValue - The Pre-Built ADT
 
@@ -509,10 +514,12 @@ class Patient:
 ### The OptionalValue ADT
 
 OptionalValue is a pre-built ADT with two variants:
+
 - `Provided[T]` - Value is present
 - `Absent[T]` - Value is intentionally missing with a reason
 
 ```python
+# snippet
 from effectful.domain.optional_value import OptionalValue, Provided, Absent, to_optional_value
 
 # Construction
@@ -531,7 +538,7 @@ match patient.blood_type:
 
 ### Decision Tree: When to Use What?
 
-```
+```text
 Does the field have domain-specific absence reasons?
 ├─ YES → Custom ADT (UserFound | UserNotFound | UserDeleted)
 └─ NO → Is it optional with generic "not provided" semantics?
@@ -541,16 +548,17 @@ Does the field have domain-specific absence reasons?
 
 **Examples:**
 
-| Field | Choice | Reason |
-|-------|--------|--------|
-| User lookup result | Custom ADT | Domain reasons: not_found, deleted, access_denied |
-| Blood type | OptionalValue[str] | Generic: provided or not_provided |
-| Effect metadata | OptionalValue[dict] | Generic optional parameter |
-| Patient age | int | Always present (not optional) |
+| Field              | Choice              | Reason                                            |
+| ------------------ | ------------------- | ------------------------------------------------- |
+| User lookup result | Custom ADT          | Domain reasons: not_found, deleted, access_denied |
+| Blood type         | OptionalValue[str]  | Generic: provided or not_provided                 |
+| Effect metadata    | OptionalValue[dict] | Generic optional parameter                        |
+| Patient age        | int                 | Always present (not optional)                     |
 
 ### Testing OptionalValue
 
 ```python
+# snippet
 def test_patient_with_blood_type() -> None:
     patient = Patient(id=uuid4(), name="Alice", blood_type=Provided(value="O+"))
 
@@ -587,7 +595,7 @@ class Patient:
 
 **See [OptionalValue API Reference](../api/optional_value.md) for complete documentation.**
 
----
+______________________________________________________________________
 
 ## Step 7: Test ADT-driven code
 
@@ -754,10 +762,11 @@ print(message.id)  # mypy error: EffectResult has no attribute 'id'
 - [Tutorial 05: Production Deployment](production_deployment.md) - Deploy to production
 - [API Reference: Result Type](../api/result.md) - Complete Result API
 
----
+______________________________________________________________________
 
 **Previous**: [Tutorial 02: Effect Types](effect_types.md) | **Next**: [Tutorial 04: Testing Patterns](testing_guide.md)
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Standards](../engineering/README.md)

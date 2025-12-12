@@ -1,7 +1,7 @@
 # Docker Workflow (Alias)
 
-**Status**: Reference only  
-**Supersedes**: none  
+**Status**: Reference only\
+**Supersedes**: none\
 **Referenced by**: legacy links
 
 > **Purpose**: Preserve backward compatibility while pointing readers to the Docker workflow SSoT.

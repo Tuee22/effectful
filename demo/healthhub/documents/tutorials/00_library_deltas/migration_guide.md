@@ -1,18 +1,20 @@
 # Tutorial 07: Migration Guide
 
-**Status**: Reference only  
-**Supersedes**: none  
+**Status**: Reference only\\
+**Supersedes**: none **📖 Base Standard**: [migration_guide.md](../../../../../documents/tutorials/00_library_deltas/migration_guide.md)
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub delta for the Migration Guide tutorial.
-> **📖 Authoritative Reference**: [migration_guide.md](../../../../../documents/tutorials/migration_guide.md)
+> **Purpose**: HealthHub overlay deltas for Migration Guide. **📖 Base Standard**: [migration_guide.md](../../../../../documents/tutorials/00_library_deltas/migration_guide.md)
+> **📖 Authoritative Reference**: [migration_guide.md](../../../../../documents/tutorials/00_library_deltas/migration_guide.md)
 
 ## Deltas
+
 - Base SSoT: [migration_guide.md](../../../../../documents/tutorials/migration_guide.md); apply all base steps and patterns.
 - No additional deltas beyond using the HealthHub compose stack and service name (`healthhub`).
 - Refer to the base document for canonical procedures; apply HealthHub-specific ports, credentials, and service names where applicable.
 
 ## Cross-References
+
 - [HealthHub Documentation Guide](../../../../../documents/readme.md)
 - [HealthHub Documentation Hub](../readme.md)
 - [Effectful Migration Guide](../../../../../documents/tutorials/migration_guide.md)

@@ -1,11 +1,11 @@
 # Effects Reference
 
-**Status**: Reference only  
-**Supersedes**: none  
+**Status**: Reference only\\
+**Supersedes**: none **📖 Base Standard**: [effects.md](../../../../documents/api/effects.md)
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub delta overlay for effects used in HealthHub; extends the base effects API reference.
-> **📖 Authoritative Reference**: [Effects API Reference](../../../../documents/api/effects.md)
+> **Purpose**: HealthHub overlay deltas for Effects. **📖 Base Standard**: [effects.md](../../../../documents/api/effects.md)
+> **📖 Authoritative Reference**: [effects.md](../../../../documents/api/effects.md)
 
 ## Deltas
 
@@ -14,6 +14,7 @@ This follows base with no changes beyond service name (`healthhub`) and compose 
 Refer to the base document for canonical procedures; apply HealthHub-specific ports, credentials, and service names where applicable.
 
 ## Cross-References
+
 - [HealthHub Documentation Guide](../documentation_standards.md)
 - [HealthHub Documentation Hub](../readme.md)
 - [Effectful Effects API Reference](../../../../documents/api/effects.md)

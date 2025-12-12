@@ -28,8 +28,6 @@ from effectful.interpreters.composite import create_composite_interpreter
 from effectful.programs.program_types import AllEffects, EffectResult
 from effectful.programs.runners import run_ws_program
 
-import pulsar
-
 
 class TestMessagingWorkflowIntegration:
     """Integration tests for messaging workflows with real Pulsar."""

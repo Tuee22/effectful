@@ -1,17 +1,17 @@
 # Documentation Standards (HealthHub Delta)
 
 **Status**: Reference only
-**Supersedes**: none
+**Supersedes**: none **📖 Base Standard**: [documentation_standards.md](../../../documents/documentation_standards.md)
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: Explain how HealthHub documentation follows the delta/SSoT pattern and what belongs where, with compliance-focused engineering alignment.  
-> **📖 Authoritative Reference**: ../../../documents/documentation_standards.md
+> **Purpose**: HealthHub overlay deltas for Documentation Standards. **📖 Base Standard**: [documentation_standards.md](../../../documents/documentation_standards.md)
+> **📖 Authoritative Reference**: [documentation_standards.md](../../../documents/documentation_standards.md)
 
----
+______________________________________________________________________
 
 ## Base SSoT
 
-- Follow `documents/documentation_standards.md` for all documentation rules (SSoT-first, DRY + linking, naming, header metadata, Mermaid standards, docstring/code example rigor, maintenance checklist).  
+- Follow `documents/documentation_standards.md` for all documentation rules (SSoT-first, DRY + linking, naming, header metadata, Mermaid standards, docstring/code example rigor, maintenance checklist).
 - Hierarchical structure is unchanged: framework standards → core SSoTs → patterns/how-tos → generated reference.
 
 ## Refactor Intent (must-keep outcomes)
@@ -30,7 +30,8 @@
 
 ### File Type Policy
 
-HealthHub follows the base [File Type Policy](../../../documents/documentation_standards.md#2a-file-type-policy) with no exceptions:
+HealthHub follows the base [File Type Policy](../../../documents/documentation_standards.md#3-file-type-policy-and-forbidden-artifacts) with no exceptions:
+
 - No backup files (`.bak`, `.bak2`, `.backup`, `.old`, `~`)
 - No temporary files (`.tmp`, `.temp`, `.swp`, `.swo`)
 - No `.txt` files (use `.md` for all documentation)

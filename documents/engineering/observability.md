@@ -8,7 +8,7 @@
 
 **effectful** - Pure functional observability through type-safe metrics effects.
 
----
+______________________________________________________________________
 
 ## SSoT Link Map
 
@@ -30,22 +30,23 @@ flowchart TB
   CodeQuality --> Architecture
 ```
 
-| Need | Link |
-|------|------|
-| Naming + label policy | [Monitoring & Alerting](monitoring_and_alerting.md#monitoring-standards) |
-| Alert rules + runbooks | [Monitoring & Alerting](monitoring_and_alerting.md#alerting-policy) |
-| Where observability fits in architecture | [Architecture](architecture.md#5-layer-architecture) |
-| Container and tooling setup | [Docker Workflow](docker_workflow.md) |
-| Testing metrics flows | [Testing](testing.md#part-5-testing-patterns) |
+| Need                                     | Link                                                                     |
+| ---------------------------------------- | ------------------------------------------------------------------------ |
+| Naming + label policy                    | [Monitoring & Alerting](monitoring_and_alerting.md#monitoring-standards) |
+| Alert rules + runbooks                   | [Monitoring & Alerting](monitoring_and_alerting.md#alerting-policy)      |
+| Where observability fits in architecture | [Architecture](architecture.md#5-layer-architecture)                     |
+| Container and tooling setup              | [Docker Workflow](docker_workflow.md)                                    |
+| Testing metrics flows                    | [Testing](testing.md#part-5-testing-patterns)                            |
 
 ## Overview
 
 Observability in effectful follows the same pure functional principles as all effect handling: metrics are **immutable data structures** that describe observations, not imperative side effects. This approach ensures type safety, testability, and composition.
 
 **Three Pillars of Observability:**
+
 1. **Metrics** - Numerical measurements over time (counters, gauges, histograms, summaries)
-2. **Logs** - Structured event records (future: via logging effects)
-3. **Traces** - Distributed request tracking (future: via tracing effects)
+1. **Logs** - Structured event records (future: via logging effects)
+1. **Traces** - Distributed request tracking (future: via tracing effects)
 
 This doctrine focuses on **metrics** as the primary observability mechanism, integrated with Prometheus for collection and Grafana for visualization.
 
@@ -55,7 +56,7 @@ This doctrine focuses on **metrics** as the primary observability mechanism, int
 
 This maintains effectful's purity doctrine while enabling production-grade observability.
 
----
+______________________________________________________________________
 
 ## Metrics Philosophy
 
@@ -64,9 +65,24 @@ This maintains effectful's purity doctrine while enabling production-grade obser
 All metrics are defined upfront in a **frozen, immutable registry**. This prevents:
 
 1. **Runtime cardinality explosion** - Label names fixed at compile time
-2. **Typos in metric names** - MyPy validates all references
-3. **Label mismatch errors** - Registry enforces label schema
-4. **Undocumented metrics** - Registry serves as self-documentation
+1. **Typos in metric names** - MyPy validates all references
+1. **Label mismatch errors** - Registry enforces label schema
+1. **Undocumented metrics** - Registry serves as self-documentation
+
+### Metrics Pipeline
+
+- Emit metrics through the registry in interpreters only; avoid emitting inside pure programs.
+- End-to-end path: effect program → interpreter → metrics registry → exporter (Prometheus).
+
+### Metrics Registry Pattern
+
+- Maintain a single registry per service; inject registries via dependency wiring.
+- Avoid ad-hoc metric creation; define metrics in one place and share across modules.
+
+### Metrics Publishing
+
+- Publishing happens in interpreters; programs remain pure.
+- Exporters (e.g., Prometheus client) run in the container with minimal configuration.
 
 **Example Registry:**
 
@@ -100,6 +116,7 @@ APP_METRICS = MetricsRegistry(
 ```
 
 **Type Safety Guarantees:**
+
 - `frozen=True` - Registry cannot be modified at runtime
 - `tuple` types - Immutable sequences for counters/gauges/histograms/summaries
 - `label_names: tuple[str, ...]` - Fixed label schema per metric
@@ -132,7 +149,7 @@ yield IncrementCounter(
 )
 ```
 
----
+______________________________________________________________________
 
 ## Four Metric Types
 
@@ -141,12 +158,14 @@ Effectful supports the four standard Prometheus metric types, each with distinct
 ### 1. Counter - Monotonically Increasing Values
 
 **Use Cases:**
+
 - Request counts (`http_requests_total`)
 - Error counts (`errors_total`)
 - Events processed (`messages_published_total`)
 - Items created (`appointments_created_total`)
 
 **Properties:**
+
 - Only increases (never decreases)
 - Resets to zero on restart
 - Rate calculation via `rate()` or `irate()` in PromQL
@@ -195,12 +214,14 @@ def create_appointment_program(
 ### 2. Gauge - Current State Values
 
 **Use Cases:**
+
 - Queue depth (`queue_depth_current`)
 - Active connections (`active_websockets`)
 - Memory usage (`memory_bytes`)
 - Temperature/humidity (`room_temperature_celsius`)
 
 **Properties:**
+
 - Can increase or decrease
 - Represents current value at scrape time
 - Set to specific value (not incremented)
@@ -247,12 +268,14 @@ def update_queue_depth_program(
 ### 3. Histogram - Distribution Tracking
 
 **Use Cases:**
+
 - Request latency (`http_request_duration_seconds`)
 - Response sizes (`response_size_bytes`)
 - Database query duration (`db_query_duration_seconds`)
 - Any distribution you want percentiles for
 
 **Properties:**
+
 - Tracks value distribution in configurable buckets
 - Automatically provides count and sum
 - Enables percentile queries (`histogram_quantile()`)
@@ -329,11 +352,13 @@ histogram_quantile(0.95,
 ### 4. Summary - Streaming Quantiles
 
 **Use Cases:**
+
 - Latency percentiles (when histograms too expensive)
 - Client-side percentile calculation
 - Custom quantiles (e.g., p50, p90, p99)
 
 **Properties:**
+
 - Calculates quantiles over sliding time window
 - More accurate than histogram for specific percentiles
 - Higher memory/CPU cost than histograms
@@ -357,10 +382,11 @@ class RecordSummary:
 ```
 
 **When to Use Summary vs Histogram:**
+
 - **Use Histogram**: Most cases (aggregatable, efficient, supports any percentile)
 - **Use Summary**: When you need exact percentiles client-side, small cardinality
 
----
+______________________________________________________________________
 
 ## Dual-Layer Architecture
 
@@ -371,6 +397,7 @@ Effectful provides two complementary approaches to metrics:
 **Purpose**: Track domain-specific business metrics that matter to your application.
 
 **Characteristics:**
+
 - Yielded explicitly in effect programs
 - Full control over labels and values
 - Domain-driven naming (e.g., `appointments_created_total`, `revenue_usd_total`)
@@ -401,6 +428,7 @@ def schedule_appointment_program(
 **Purpose**: Zero-code observability of effect system internals.
 
 **Characteristics:**
+
 - Automatically tracks effect executions
 - No code changes required
 - Consistent across all effectful applications
@@ -408,13 +436,13 @@ def schedule_appointment_program(
 
 **Default Metrics** (when instrumentation enabled):
 
-| Metric | Type | Labels | Description |
-|--------|------|--------|-------------|
-| `effectful_effects_total` | Counter | `effect_type`, `result` | Total effect executions (ok/error) |
-| `effectful_effect_duration_seconds` | Histogram | `effect_type` | Effect execution time distribution |
-| `effectful_effects_in_progress` | Gauge | `effect_type` | Currently executing effects |
-| `effectful_programs_total` | Counter | `program_name`, `result` | Total program executions (ok/error) |
-| `effectful_program_duration_seconds` | Histogram | `program_name` | Program execution time distribution |
+| Metric                               | Type      | Labels                   | Description                         |
+| ------------------------------------ | --------- | ------------------------ | ----------------------------------- |
+| `effectful_effects_total`            | Counter   | `effect_type`, `result`  | Total effect executions (ok/error)  |
+| `effectful_effect_duration_seconds`  | Histogram | `effect_type`            | Effect execution time distribution  |
+| `effectful_effects_in_progress`      | Gauge     | `effect_type`            | Currently executing effects         |
+| `effectful_programs_total`           | Counter   | `program_name`, `result` | Total program executions (ok/error) |
+| `effectful_program_duration_seconds` | Histogram | `program_name`           | Program execution time distribution |
 
 **Example Setup:**
 
@@ -431,16 +459,18 @@ composite_interpreter = create_instrumented_composite(
 ```
 
 **Benefits:**
+
 - Track effect error rates across system
 - Identify slow effects (p95/p99 latency)
 - Monitor effect concurrency
 - Debug production issues without code changes
 
 **When to Use Each Layer:**
+
 - **Explicit**: Business KPIs, SLOs, domain events
 - **Automatic**: System health, debugging, performance monitoring
 
----
+______________________________________________________________________
 
 ## Integration with 5-Layer Architecture
 
@@ -465,30 +495,35 @@ flowchart TB
 ### Layer Integration Details
 
 **Layer 1 (Application):**
+
 - Effect programs yield metrics effects alongside domain effects
 - Metrics treated as first-class effects (same semantics as database, cache, etc.)
 
 **Layer 2 (Program Runner):**
+
 - Standard runner for explicit metrics
 - `InstrumentedProgramRunner` for automatic program-level metrics
 
 **Layer 3 (Composite Interpreter):**
+
 - Routes `MetricsEffect` to `MetricsInterpreter`
 - Can be wrapped with `InstrumentedInterpreter` for effect-level metrics
 
 **Layer 4 (MetricsInterpreter):**
+
 - Handles all metrics effects via pattern matching
 - Returns `Result[EffectReturn[MetricRecordingResult], InterpreterError]`
 - Domain failures (metric not registered) → ADT in `Ok()`
 - Infrastructure failures (network error) → `Err(MetricsError)`
 
 **Layer 5 (PrometheusMetricsCollector):**
+
 - Implements `MetricsCollector` protocol
 - Wraps `prometheus_client.CollectorRegistry`
 - Validates metrics against registry
 - Exports metrics in Prometheus text format
 
----
+______________________________________________________________________
 
 ## Type Safety Guarantees
 
@@ -513,10 +548,11 @@ class MetricsRegistry:
 ```
 
 **Type Safety Properties:**
+
 1. `frozen=True` - Cannot modify after creation
-2. `tuple` types - Immutable sequences
-3. No `Any`, `cast()`, or `# type: ignore`
-4. MyPy strict compliance
+1. `tuple` types - Immutable sequences
+1. No `Any`, `cast()`, or `# type: ignore`
+1. MyPy strict compliance
 
 ### ADT Return Types
 
@@ -545,6 +581,7 @@ type MetricRecordingResult = MetricRecorded | MetricRecordingFailed
 ```
 
 **Error Handling:**
+
 - **Domain failures** (metric not found) → `Ok(MetricRecordingFailed(...))`
 - **Infrastructure failures** (network error) → `Err(MetricsError(...))`
 
@@ -570,7 +607,7 @@ match result:
         logger.warning(f"Metric recording failed: {reason} - {msg}")
 ```
 
----
+______________________________________________________________________
 
 ## Cardinality Management
 
@@ -608,6 +645,7 @@ CounterDefinition(
 ```
 
 **Validation:**
+
 - PrometheusMetricsCollector validates labels match schema
 - Returns `MetricRecordingFailed(reason="invalid_labels")` if mismatch
 
@@ -633,6 +671,7 @@ labels = {
 **Rule of Thumb**: Label cardinality product should be < 10,000 unique combinations.
 
 Example:
+
 - `doctor_specialization` (20 values) × `appointment_status` (5 values) = 100 combinations ✅
 - `patient_id` (1M values) × `doctor_id` (100 values) = 100M combinations ❌
 
@@ -652,7 +691,7 @@ match result:
 
 **Default Limit**: 10,000 unique label combinations per metric (configurable)
 
----
+______________________________________________________________________
 
 ## Testing Strategy
 
@@ -737,7 +776,7 @@ async def test_metrics_workflow() -> None:
     assert 'appointments_created_total{doctor_specialization="cardiology"} 1.0' in metrics_output
 ```
 
----
+______________________________________________________________________
 
 ## Cross-References
 
@@ -751,7 +790,7 @@ async def test_metrics_workflow() -> None:
 
 > **Core Doctrine**: For Docker integration, see [docker_workflow.md](./docker_workflow.md)
 
----
+______________________________________________________________________
 
 ## See Also
 

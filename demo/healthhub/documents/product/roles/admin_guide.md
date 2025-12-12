@@ -1,20 +1,15 @@
 # Admin Guide
 
 **Status**: Authoritative source
-**Supersedes**: none
+**Supersedes**: none **📖 Base Standard**: [admin_guide.md](../../../../../documents/product/roles/admin_guide.md)
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
-> **Purpose**: Complete guide for admin role capabilities, restrictions, and workflows in HealthHub.
-
-> **Core Doctrines**: For comprehensive patterns, see:
-> - [Beginner Journey](../01_journeys/beginner_journey.md)
-> - [Authentication Feature](../03_features/authentication.md)
-> - [Code Quality](../../../../../documents/engineering/code_quality.md)
+> **Purpose**: HealthHub overlay deltas for Admin Guide. **📖 Base Standard**: [admin_guide.md](../../../../../documents/product/roles/admin_guide.md)
 
 ## Prerequisites
 
 - Docker workflow running; commands executed via `docker compose -f docker/docker-compose.yml`.
-- Completed [Beginner Journey](../01_journeys/beginner_journey.md).
+- Completed [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md).
 - Access to HealthHub at `http://localhost:8851`.
 - Understanding of HIPAA compliance and audit logging.
 
@@ -33,7 +28,9 @@
 **Admin Role**: Admins have full system access for administrative, financial, and compliance operations. Admins can perform all operations that doctors can, plus additional administrative functions.
 
 **Authorization**: AdminAuthorized ADT variant
+
 ```python
+# snippet
 @dataclass(frozen=True)
 class AdminAuthorized:
     user_id: UUID
@@ -48,6 +45,7 @@ class AdminAuthorized:
 ### ✅ What Admins CAN Do
 
 **All Doctor Capabilities**:
+
 - View all patients and patient details
 - View all appointments, prescriptions, lab results
 - Confirm, start, complete, and cancel appointments
@@ -56,52 +54,54 @@ class AdminAuthorized:
 
 **Admin-Only Capabilities**:
 
-| Capability | Description | API Endpoint | Tutorial Reference |
-|------------|-------------|--------------|-------------------|
-| **Generate invoices** | Create invoices from completed appointments | `POST /api/invoices/generate-from-appointment/{id}` | [Invoices Feature](../03_features/invoices.md#invoice-generation-from-appointment) |
-| **View all invoices** | View all invoices for all patients | `GET /api/invoices` | [Invoices Feature](../03_features/invoices.md) |
-| **Mark invoices paid** | Update invoice status to Paid | `POST /api/invoices/{id}/mark-paid` | [Invoices Feature](../03_features/invoices.md#mark-invoice-as-paid) |
-| **View audit logs** | View HIPAA audit trail (all PHI access) | `GET /api/audit-logs` | - |
-| **Manage users** | Create, activate, deactivate users | `POST /api/users`, `PUT /api/users/{id}` | - |
-| **Update user roles** | Change user roles (patient, doctor, admin) | `PUT /api/users/{id}/role` | - |
-| **Update doctor privileges** | Toggle `can_prescribe` flag for doctors | `PUT /api/doctors/{id}/can-prescribe` | - |
-| **View system metrics** | View system usage, performance metrics | `GET /api/metrics` | - |
-| **Manage data retention** | Configure HIPAA-compliant data retention | `PUT /api/settings/retention` | - |
+| Capability                   | Description                                 | API Endpoint                                        | Tutorial Reference                                                                             |
+| ---------------------------- | ------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **Generate invoices**        | Create invoices from completed appointments | `POST /api/invoices/generate-from-appointment/{id}` | [Invoices Feature](../../engineering/features/invoices.md#invoice-generation-from-appointment) |
+| **View all invoices**        | View all invoices for all patients          | `GET /api/invoices`                                 | [Invoices Feature](../../engineering/features/invoices.md)                                     |
+| **Mark invoices paid**       | Update invoice status to Paid               | `POST /api/invoices/{id}/mark-paid`                 | [Invoices Feature](../../engineering/features/invoices.md#mark-invoice-as-paid)                |
+| **View audit logs**          | View HIPAA audit trail (all PHI access)     | `GET /api/audit-logs`                               | -                                                                                              |
+| **Manage users**             | Create, activate, deactivate users          | `POST /api/users`, `PUT /api/users/{id}`            | -                                                                                              |
+| **Update user roles**        | Change user roles (patient, doctor, admin)  | `PUT /api/users/{id}/role`                          | -                                                                                              |
+| **Update doctor privileges** | Toggle `can_prescribe` flag for doctors     | `PUT /api/doctors/{id}/can-prescribe`               | -                                                                                              |
+| **View system metrics**      | View system usage, performance metrics      | `GET /api/metrics`                                  | -                                                                                              |
+| **Manage data retention**    | Configure HIPAA-compliant data retention    | `PUT /api/settings/retention`                       | -                                                                                              |
 
 ### ❌ What Admins CANNOT Do (Intentional Restrictions)
 
-| Restriction | Reason | Policy |
-|-------------|--------|--------|
-| **Delete patient records** | HIPAA compliance | Data retention policy requires 7 years minimum |
-| **Modify audit logs** | Compliance integrity | Audit logs are append-only, no modifications allowed |
-| **Delete audit logs** | Compliance integrity | Audit logs retained for 7 years per HIPAA |
-| **View passwords** | Security | Passwords stored as bcrypt hashes, not reversible |
+| Restriction                | Reason               | Policy                                               |
+| -------------------------- | -------------------- | ---------------------------------------------------- |
+| **Delete patient records** | HIPAA compliance     | Data retention policy requires 7 years minimum       |
+| **Modify audit logs**      | Compliance integrity | Audit logs are append-only, no modifications allowed |
+| **Delete audit logs**      | Compliance integrity | Audit logs retained for 7 years per HIPAA            |
+| **View passwords**         | Security             | Passwords stored as bcrypt hashes, not reversible    |
 
 ## Admin Dashboard
 
 **Access**: `http://localhost:8851/dashboard` (after login as admin)
 
 **Sections**:
+
 1. **Welcome Banner**: "Welcome, Admin"
-2. **System Overview**:
+1. **System Overview**:
    - Total Patients
    - Total Doctors
    - Total Appointments (by status)
    - Total Prescriptions
-3. **Pending Tasks**:
+1. **Pending Tasks**:
    - Appointments needing invoice generation
    - Unpaid invoices past due
    - New user registrations awaiting approval
-4. **Recent Activity**:
+1. **Recent Activity**:
    - Recent audit log entries
    - Recent invoices generated
    - Recent payments received
-5. **System Alerts**:
+1. **System Alerts**:
    - Critical system errors
    - Security alerts (failed login attempts)
    - Compliance alerts (audit log gaps)
 
 **Navigation Sidebar**:
+
 - **Dashboard** (overview)
 - **Patients** (all patients)
 - **Doctors** (all doctors)
@@ -124,20 +124,23 @@ class AdminAuthorized:
 
 1. **Navigate to Appointments**: Click "Appointments" in sidebar
 
-2. **Filter to Completed**: Select "Completed" status filter
+1. **Filter to Completed**: Select "Completed" status filter
 
-3. **Identify Unbilled Appointments**: Look for appointments without linked invoices
+1. **Identify Unbilled Appointments**: Look for appointments without linked invoices
+
    - Badge: "Invoice Needed" displayed on unbilled completed appointments
 
-4. **Click Appointment**: View appointment details
+1. **Click Appointment**: View appointment details
+
    - Patient: Name and demographics
    - Doctor: Name and specialization
    - Scheduled Time: Date and time
    - Status: Completed (with completion notes)
 
-5. **Click "Generate Invoice"** button
+1. **Click "Generate Invoice"** button
 
-6. **System Calculates Charges**:
+1. **System Calculates Charges**:
+
    - **Office Visit**: Base charge based on specialization
      - Cardiology: $250.00
      - Pediatrics: $150.00
@@ -149,7 +152,8 @@ class AdminAuthorized:
    - **Tax**: 7% of subtotal
    - **Total**: Subtotal + Tax
 
-7. **Review Invoice Preview**:
+1. **Review Invoice Preview**:
+
    ```
    Invoice Preview:
 
@@ -168,15 +172,17 @@ class AdminAuthorized:
    Due Date: 2025-12-20 (30 days from issue)
    ```
 
-8. **Confirm Invoice Generation**: Click "Generate Invoice"
+1. **Confirm Invoice Generation**: Click "Generate Invoice"
 
-9. **Expected Result**:
+1. **Expected Result**:
+
    - Invoice created with status "Sent"
    - Patient notified via notification
    - Invoice visible to patient in "Invoices" section
    - Invoice appears in admin invoice list
 
 **RBAC Enforcement**:
+
 ```python
 # Backend validation
 match auth_state:
@@ -199,35 +205,40 @@ match auth_state:
 
 1. **Navigate to Invoices**: Click "Invoices" in sidebar
 
-2. **Filter to Unpaid**: Select "Sent" or "Overdue" status filter
+1. **Filter to Unpaid**: Select "Sent" or "Overdue" status filter
 
-3. **Click Invoice**: View invoice details
+1. **Click Invoice**: View invoice details
+
    - Patient: Name and contact info
    - Total: Amount due
    - Due Date: Payment deadline
    - Status: Sent or Overdue
    - Line Items: Itemized charges
 
-4. **Receive Payment** (external process):
+1. **Receive Payment** (external process):
+
    - Patient pays via credit card, check, or online portal
    - Payment reference number obtained (e.g., "CH_abc123xyz")
 
-5. **Click "Mark as Paid"** button
+1. **Click "Mark as Paid"** button
 
-6. **Enter Payment Details**:
+1. **Enter Payment Details**:
+
    - **Payment Method**: Credit Card, Check, Cash, Online Portal
    - **Payment Reference**: Transaction ID or check number
    - **Payment Date**: Date payment received (defaults to today)
 
-7. **Confirm Payment**: Click "Mark as Paid"
+1. **Confirm Payment**: Click "Mark as Paid"
 
-8. **Expected Result**:
+1. **Expected Result**:
+
    - Invoice status updated: Sent/Overdue → Paid
    - Payment date recorded
    - Payment log entry created (for audit trail)
    - Invoice no longer appears in unpaid invoices list
 
 **RBAC Enforcement**:
+
 ```python
 # Backend validation
 match auth_state:
@@ -252,7 +263,8 @@ match auth_state:
 
 1. **Navigate to Audit Logs**: Click "Audit Logs" in sidebar **[Admin-only]**
 
-2. **View Audit Log List**:
+1. **View Audit Log List**:
+
    - **Timestamp**: When action occurred
    - **User**: Who accessed PHI (email)
    - **Action**: Type of access (appointment_viewed, prescription_created, etc.)
@@ -260,13 +272,15 @@ match auth_state:
    - **IP Address**: Source IP address
    - **User Agent**: Browser/device information
 
-3. **Filter Options**:
+1. **Filter Options**:
+
    - **User**: Filter by specific user email
    - **Action Type**: Filter by action (appointment_created, prescription_viewed, etc.)
    - **Date Range**: Filter by date range
    - **Resource**: Filter by patient_id or specific resource
 
-4. **Example Audit Log Entries**:
+1. **Example Audit Log Entries**:
+
    ```
    2025-11-15 14:32:10 | alice.patient@example.com | appointment_created
    Resource: appointment_id=50000000-0000-0000-0000-000000000001
@@ -285,7 +299,8 @@ match auth_state:
    IP: 192.168.1.100 | User Agent: Mozilla/5.0 (Macintosh...)
    ```
 
-5. **Audit Log Actions**:
+1. **Audit Log Actions**:
+
    - `appointment_created` - New appointment created
    - `appointment_viewed` - Appointment details viewed
    - `appointment_updated` - Appointment status changed
@@ -299,18 +314,21 @@ match auth_state:
    - `invoice_generated` - Invoice created
    - `invoice_viewed` - Invoice details viewed
 
-6. **Investigate Suspicious Activity**:
+1. **Investigate Suspicious Activity**:
+
    - Multiple failed login attempts from same IP
    - PHI access outside business hours
    - Excessive PHI access by single user
    - Access to unrelated patients (no clinical justification)
 
-7. **Export Audit Logs** (for compliance reporting):
+1. **Export Audit Logs** (for compliance reporting):
+
    - Click "Export to CSV"
    - Select date range
    - Download CSV file for regulatory reporting
 
 **RBAC Enforcement**:
+
 ```python
 # Backend validation
 match auth_state:
@@ -322,6 +340,7 @@ match auth_state:
 ```
 
 **HIPAA Compliance**:
+
 - **Retention**: Audit logs retained for 7 years
 - **Immutability**: Audit logs cannot be modified or deleted
 - **Completeness**: All PHI access logged (no gaps)
@@ -341,23 +360,26 @@ match auth_state:
 
 1. **Navigate to Users**: Click "Users" in sidebar **[Admin-only]**
 
-2. **Click "Create New User"** button
+1. **Click "Create New User"** button
 
-3. **Fill out User Form**:
+1. **Fill out User Form**:
+
    - **Email**: User's email address (username)
    - **Role**: Patient, Doctor, or Admin
    - **Temporary Password**: Initial password (user must change on first login)
    - **First Name**: User's first name
    - **Last Name**: User's last name
 
-4. **Role-Specific Fields**:
+1. **Role-Specific Fields**:
+
    - **Patient**: Date of birth, blood type, allergies
    - **Doctor**: Specialization, can_prescribe flag
    - **Admin**: No additional fields
 
-5. **Submit**: Click "Create User"
+1. **Submit**: Click "Create User"
 
-6. **Expected Result**:
+1. **Expected Result**:
+
    - User account created
    - User appears in user list
    - User can log in with temporary password
@@ -366,13 +388,14 @@ match auth_state:
 
 1. **Navigate to Users**: Click "Users" in sidebar
 
-2. **Select User**: Click user email
+1. **Select User**: Click user email
 
-3. **Click "Deactivate User"** button
+1. **Click "Deactivate User"** button
 
-4. **Confirm Deactivation**: Click "Confirm"
+1. **Confirm Deactivation**: Click "Confirm"
 
-5. **Expected Result**:
+1. **Expected Result**:
+
    - User account deactivated (is_active=false)
    - User cannot log in
    - User data retained (HIPAA compliance)
@@ -382,20 +405,22 @@ match auth_state:
 
 1. **Navigate to Users**: Click "Users" in sidebar
 
-2. **Filter to Inactive**: Select "Inactive" filter
+1. **Filter to Inactive**: Select "Inactive" filter
 
-3. **Select User**: Click user email
+1. **Select User**: Click user email
 
-4. **Click "Reactivate User"** button
+1. **Click "Reactivate User"** button
 
-5. **Confirm Reactivation**: Click "Confirm"
+1. **Confirm Reactivation**: Click "Confirm"
 
-6. **Expected Result**:
+1. **Expected Result**:
+
    - User account reactivated (is_active=true)
    - User can log in again
    - Audit log entry created
 
 **RBAC Enforcement**:
+
 ```python
 # Backend validation
 match auth_state:
@@ -420,20 +445,23 @@ match auth_state:
 
 1. **Navigate to Doctors**: Click "Doctors" in sidebar
 
-2. **Select Doctor**: Click doctor name
+1. **Select Doctor**: Click doctor name
 
-3. **View Doctor Profile**:
+1. **View Doctor Profile**:
+
    - **Name**: Doctor's full name
    - **Email**: Doctor's email
    - **Specialization**: Medical specialty
    - **can_prescribe**: Current flag value (true/false)
    - **License Number**: Medical license number (if available)
 
-4. **Toggle Prescription Privileges**:
+1. **Toggle Prescription Privileges**:
+
    - **If can_prescribe=false**: Click "Grant Prescription Privileges"
    - **If can_prescribe=true**: Click "Revoke Prescription Privileges"
 
-5. **Confirm Change**: Enter reason for change (for audit trail)
+1. **Confirm Change**: Enter reason for change (for audit trail)
+
    ```
    Example reasons:
    - "Doctor obtained DEA registration"
@@ -441,15 +469,17 @@ match auth_state:
    - "Doctor under investigation, revoking privileges pending review"
    ```
 
-6. **Submit**: Click "Confirm"
+1. **Submit**: Click "Confirm"
 
-7. **Expected Result**:
+1. **Expected Result**:
+
    - `can_prescribe` flag updated in database
    - Doctor's next JWT token will reflect new flag value
    - Doctor can/cannot create prescriptions accordingly
    - Audit log entry created with reason
 
 **RBAC Enforcement**:
+
 ```python
 # Backend validation
 match auth_state:
@@ -469,6 +499,7 @@ match auth_state:
 **Access**: Click "System Metrics" in sidebar **[Admin-only]**
 
 **Metrics Displayed**:
+
 - **User Metrics**:
   - Total users (by role)
   - Active users (logged in within 30 days)
@@ -500,6 +531,7 @@ match auth_state:
   - Error rate (4xx, 5xx responses)
 
 **Use Cases**:
+
 - Monitor system health
 - Identify performance bottlenecks
 - Track business metrics (revenue, appointments)
@@ -508,17 +540,20 @@ match auth_state:
 ## Security and Privacy
 
 **Admin Access Scope**:
+
 - **Full System Access**: Admins can perform all operations
 - **HIPAA Audit Logging**: All admin actions logged for compliance
 - **Separation of Duties**: Financial operations (invoices) restricted to admin role
 
 **Best Practices**:
+
 - Use admin access only when necessary
 - Do not share admin credentials
 - Log out when not actively using admin features
 - Review audit logs regularly for suspicious activity
 
 **Password Policy**:
+
 - Minimum 12 characters
 - Must include uppercase, lowercase, number, special character
 - Cannot reuse last 5 passwords
@@ -527,6 +562,7 @@ match auth_state:
 ## Demo Users
 
 **Admin User** - Featured in tutorials
+
 - Email: `admin@healthhub.com`
 - Password: `password123`
 - Full system access
@@ -536,28 +572,31 @@ match auth_state:
 **Issue**: Cannot generate invoice
 
 **Possible Causes**:
+
 - Appointment not in "Completed" status
 - Invoice already generated for appointment
 - Network error
 
 **Solution**: Verify appointment status is "Completed". Check if invoice already exists for appointment.
 
----
+______________________________________________________________________
 
 **Issue**: Cannot view audit logs
 
 **Possible Causes**:
+
 - Not logged in as admin
 - Network error
 - Audit log service unavailable
 
 **Solution**: Verify admin role in JWT token. Check system status.
 
----
+______________________________________________________________________
 
 **Issue**: User deactivation fails
 
 **Possible Causes**:
+
 - User has active appointments or prescriptions
 - Network error
 
@@ -566,6 +605,7 @@ match auth_state:
 ## Summary
 
 **Admin role characteristics**:
+
 - ✅ Full system access (all doctor capabilities + admin-only features)
 - ✅ Generate and manage invoices
 - ✅ View HIPAA audit logs for compliance
@@ -581,11 +621,11 @@ match auth_state:
 
 ## Cross-References
 
-- [Beginner Journey - Admin Login](../01_journeys/beginner_journey.md#step-7-login-as-admin)
-- [Authentication Feature](../03_features/authentication.md)
-- [Appointments Feature](../03_features/appointments.md)
-- [Prescriptions Feature](../03_features/prescriptions.md)
-- [Lab Results Feature](../03_features/lab_results.md)
-- [Invoices Feature](../03_features/invoices.md)
+- [Beginner Journey - Admin Login](../../tutorials/01_journeys/beginner_journey.md#step-7-login-as-admin)
+- [Authentication Feature](../../engineering/features/authentication.md)
+- [Appointments Feature](../../engineering/features/appointments.md)
+- [Prescriptions Feature](../../engineering/features/prescriptions.md)
+- [Lab Results Feature](../../engineering/features/lab_results.md)
+- [Invoices Feature](../../engineering/features/invoices.md)
 - [Patient Guide](patient_guide.md)
 - [Doctor Guide](doctor_guide.md)

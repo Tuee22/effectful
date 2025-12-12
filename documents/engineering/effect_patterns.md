@@ -1,7 +1,7 @@
 # Effect Program Patterns
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: engineering/README.md
 
 > **Purpose**: SSoT for effect program composition, error handling, and real-world code examples in effectful.
@@ -21,12 +21,12 @@ flowchart TB
   CodeQuality --> Architecture
 ```
 
-| Need | Link |
-|------|------|
-| Purity + type doctrine backing patterns | [Code Quality](code_quality.md) |
-| Type signatures and unions | [Code Quality](code_quality.md#type-safety-doctrines) |
-| How to test programs | [Testing](testing.md#generator-testing-flow-layer-3) |
-| Where patterns sit in layers | [Architecture](architecture.md#core-abstractions) |
+| Need                                    | Link                                                         |
+| --------------------------------------- | ------------------------------------------------------------ |
+| Purity + type doctrine backing patterns | [Code Quality](code_quality.md)                              |
+| Type signatures and unions              | [Code Quality](code_quality.md#type-safety-doctrines)        |
+| How to test programs                    | [Testing](testing.md#part-4-four-layer-testing-architecture) |
+| Where patterns sit in layers            | [Architecture](architecture.md#core-abstractions)            |
 
 ## Overview
 
@@ -86,6 +86,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, bool]:
 ```
 
 **Key Points**:
+
 - **Type signature**: `Generator[AllEffects, EffectResult, ReturnType]`
 - **Yield pattern**: `result = yield Effect(...)`
 - **Type narrowing**: Use `isinstance()` checks before using result
@@ -93,7 +94,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, bool]:
 
 **See**: [Code Quality](code_quality.md#6-type-narrowing-for-union-types) - Doctrine 6: Type Narrowing for Union Types.
 
----
+______________________________________________________________________
 
 ## Pattern 2: Fail-Fast Error Propagation
 
@@ -117,6 +118,7 @@ async def execute() -> None:
 ```
 
 **Key Points**:
+
 - **First effect failure stops program**: No partial execution
 - **Error type is union**: `DatabaseError | WebSocketClosedError | ...`
 - **Pattern match required**: Caller must handle Ok and Err cases
@@ -126,7 +128,7 @@ async def execute() -> None:
 
 **See**: [Code Quality](code_quality.md#3-result-type-for-error-handling) - Doctrine 3: Result Type for Error Handling.
 
----
+______________________________________________________________________
 
 ## Pattern 3: Composing Programs
 
@@ -166,6 +168,7 @@ def greet_with_caching(user_id: UUID) -> Generator[AllEffects, EffectResult, str
 ```
 
 **Key Points**:
+
 - **yield from**: Delegates to sub-program
 - **Reusable sub-programs**: `lookup_and_cache_profile` can be used anywhere
 - **Type safety**: Sub-program return type flows through
@@ -175,7 +178,7 @@ def greet_with_caching(user_id: UUID) -> Generator[AllEffects, EffectResult, str
 
 **See**: [Code Quality](code_quality.md#purity-doctrines) for functional composition patterns.
 
----
+______________________________________________________________________
 
 ## Pattern 4: Recording Metrics (Don't Fail on Metric Errors)
 
@@ -231,6 +234,7 @@ def process_task_with_metrics(
 ```
 
 **Key Points**:
+
 - **Metrics effects return ADT**: `MetricRecorded | MetricRecordingFailed`
 - **Don't fail on metric errors**: Business logic proceeds even if metrics fail
 - **Pattern match results**: Exhaustive handling of metric outcomes
@@ -240,7 +244,7 @@ def process_task_with_metrics(
 
 **See**: [Observability](observability.md) for complete metrics philosophy.
 
----
+______________________________________________________________________
 
 ## Pattern 5: Exhaustive Pattern Matching
 
@@ -279,6 +283,7 @@ def handle_user_lookup(user_id: UUID) -> Generator[AllEffects, EffectResult, str
 ```
 
 **Key Points**:
+
 - **All cases handled**: MyPy enforces exhaustiveness
 - **Nested pattern matching**: Extract fields from ADT variants
 - **Type narrowing**: After match, type is narrowed to specific variant
@@ -288,13 +293,14 @@ def handle_user_lookup(user_id: UUID) -> Generator[AllEffects, EffectResult, str
 
 **See**: [Code Quality](code_quality.md#5-exhaustive-pattern-matching) - Doctrine 5: Exhaustive Pattern Matching.
 
----
+______________________________________________________________________
 
 ## Common Mistakes
 
 ### Mistake 1: Forgetting Type Narrowing
 
 **❌ WRONG**:
+
 ```python
 # file: examples/effect_patterns.py
 def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
@@ -304,6 +310,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 ```
 
 **✅ CORRECT**:
+
 ```python
 # file: examples/effect_patterns.py
 def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
@@ -319,6 +326,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 ### Mistake 2: Calling Infrastructure Directly
 
 **❌ WRONG**:
+
 ```python
 # file: examples/effect_patterns.py
 async def greet_user(user_id: UUID, db: UserRepository) -> str:
@@ -327,6 +335,7 @@ async def greet_user(user_id: UUID, db: UserRepository) -> str:
 ```
 
 **✅ CORRECT**:
+
 ```python
 # file: examples/effect_patterns.py
 def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
@@ -339,6 +348,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 ### Mistake 3: Ignoring Effect Results
 
 **❌ WRONG**:
+
 ```python
 # file: examples/effect_patterns.py
 def save_message(user_id: UUID, text: str) -> Generator[AllEffects, EffectResult, None]:
@@ -347,6 +357,7 @@ def save_message(user_id: UUID, text: str) -> Generator[AllEffects, EffectResult
 ```
 
 **✅ CORRECT**:
+
 ```python
 # file: examples/effect_patterns.py
 def save_message(user_id: UUID, text: str) -> Generator[AllEffects, EffectResult, bool]:
@@ -358,13 +369,14 @@ def save_message(user_id: UUID, text: str) -> Generator[AllEffects, EffectResult
     return True
 ```
 
----
+______________________________________________________________________
 
 ## Pattern 6: Boundary Normalization for OptionalValue
 
 ### The Problem: Ergonomic APIs vs Type Safety
 
 Users want ergonomic APIs when constructing effects:
+
 ```python
 # Ergonomic: pass dict directly, or None, or OptionalValue
 yield PutObject(bucket="x", key="y", content=b"z", metadata={"k": "v"})
@@ -379,6 +391,7 @@ But effects should store normalized OptionalValue[T] internally for type safety 
 **CANONICAL PATTERN** - Replicate this in your effects:
 
 ```python
+# snippet
 from dataclasses import dataclass
 from effectful.domain.optional_value import OptionalValue, Provided, Absent, to_optional_value
 
@@ -423,12 +436,14 @@ class PutObject:
 ### Why Local (Not Shared)?
 
 **This is NOT duplication to fix.** Each normalization function:
+
 1. **Type-specific** - Handles concrete types (dict[str, str], int, str)
-2. **Simple** - 4 lines, single isinstance check
-3. **Local** - Used only in one module's __init__ methods
-4. **Pattern** - Intentionally replicated, like frozen=True
+1. **Simple** - 4 lines, single isinstance check
+1. **Local** - Used only in one module's __init__ methods
+1. **Pattern** - Intentionally replicated, like frozen=True
 
 Extracting to shared utility would:
+
 - Lose type specificity (requires complex generics)
 - Add unnecessary indirection
 - Create import dependencies
@@ -437,6 +452,7 @@ Extracting to shared utility would:
 ### Testing Pattern
 
 ```python
+# snippet
 def test_put_object_normalizes_metadata() -> None:
     # Test with dict (normalized to Provided)
     effect = PutObject(bucket="b", key="k", content=b"", metadata={"x": "y"})
@@ -456,6 +472,7 @@ def test_put_object_normalizes_metadata() -> None:
 ### When to Use This Pattern
 
 Use local normalization when:
+
 - Effect has optional parameters
 - Want ergonomic API (allow T, None, or OptionalValue[T])
 - Need type-safe storage (always OptionalValue[T] internally)
@@ -463,7 +480,7 @@ Use local normalization when:
 
 **See**: [OptionalValue API Reference](../api/optional_value.md#pattern-3-effect-parameters-the-canonical-normalization-pattern) for complete documentation.
 
----
+______________________________________________________________________
 
 ## See Also
 
@@ -471,9 +488,10 @@ Use local normalization when:
 - [Testing](testing.md) - Generator testing and anti-patterns
 - [Observability](observability.md) - Metrics and monitoring
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Code Quality](code_quality.md)
 - [Testing](testing.md)
 - [Architecture](architecture.md)

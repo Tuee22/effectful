@@ -20,13 +20,7 @@ from uuid import UUID
 
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok, Result
-from effectful.domain.token_result import (
-    TokenExpired,
-    TokenInvalid,
-    TokenRefreshRejected,
-    TokenRefreshed,
-    TokenValid,
-)
+from effectful.domain.token_result import TokenRefreshRejected, TokenRefreshed
 from effectful.domain.user import UserFound, UserNotFound
 from effectful.effects.auth import (
     GenerateToken,

@@ -1,10 +1,10 @@
 # Appointment Workflows
 
 **Status**: Authoritative source
-**Supersedes**: none
+**Supersedes**: none **📖 Base Standard**: [appointment_workflows.md](../../../../documents/domain/appointment_workflows.md)
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: SSoT for HealthHub appointment lifecycle workflows (scheduling, rescheduling, cancellation, follow-up) using the medical state machine patterns.
+> **Purpose**: HealthHub overlay deltas for Appointment Workflows. **📖 Base Standard**: [appointment_workflows.md](../../../../documents/domain/appointment_workflows.md)
 
 ## Canonical Guidance
 
@@ -14,6 +14,7 @@
 - **Error handling**: Surface scheduling conflicts as domain errors through `Err` results; do not encode failures as terminal states unless they are part of the business process.
 
 ## Cross-References
+
 - [Medical State Machines](medical_state_machines.md)
 - [Effect Patterns — State Machines](../engineering/effect_patterns.md#state-machines)
 - [Architecture](../engineering/architecture.md)

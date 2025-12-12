@@ -25,12 +25,12 @@ flowchart TB
   Docker --> Commands
 ```
 
-| Need | Link |
-|------|------|
-| Container topology | [Docker Workflow](docker_workflow.md) |
-| Command prefixes | [Command Reference](command_reference.md) |
-| Database lifecycle | [Development Workflow](development_workflow.md#database-management) |
-| Observability endpoints | [Observability](observability.md#metrics-publishing) |
+| Need                    | Link                                                                |
+| ----------------------- | ------------------------------------------------------------------- |
+| Container topology      | [Docker Workflow](docker_workflow.md)                               |
+| Command prefixes        | [Command Reference](command_reference.md)                           |
+| Database lifecycle      | [Development Workflow](development_workflow.md#database-management) |
+| Observability endpoints | [Observability](observability.md#metrics-publishing)                |
 
 ## Configuration Topology
 
@@ -59,6 +59,7 @@ flowchart TB
 ### PostgreSQL Configuration
 
 ```bash
+# snippet
 POSTGRES_HOST=postgres
 POSTGRES_PORT=5432
 POSTGRES_DB=effectful_test
@@ -73,6 +74,7 @@ POSTGRES_PASSWORD=effectful_pass
 ### Redis Configuration
 
 ```bash
+# snippet
 REDIS_HOST=redis
 REDIS_PORT=6379
 ```
@@ -84,6 +86,7 @@ REDIS_PORT=6379
 ### MinIO S3 Configuration
 
 ```bash
+# snippet
 MINIO_ENDPOINT=minio:9000
 MINIO_ACCESS_KEY=minioadmin
 MINIO_SECRET_KEY=minioadmin
@@ -97,6 +100,7 @@ MINIO_BUCKET=effectful-test
 ### Apache Pulsar Configuration
 
 ```bash
+# snippet
 PULSAR_URL=pulsar://pulsar:6650
 ```
 
@@ -109,6 +113,7 @@ PULSAR_URL=pulsar://pulsar:6650
 **Location**: `docker/docker-compose.yml`
 
 **Services defined**:
+
 - `effectful` - Python 3.12 + Poetry container
 - `postgres` - PostgreSQL 15+
 - `redis` - Redis 7+
@@ -116,6 +121,7 @@ PULSAR_URL=pulsar://pulsar:6650
 - `pulsar` - Apache Pulsar messaging
 
 **Named volumes** (recommended):
+
 - `pgdata:/var/lib/postgresql/data` - PostgreSQL data
 - `redisdata:/data` - Redis persistence
 - `miniodata:/data` - MinIO object storage
@@ -128,6 +134,7 @@ See [Docker Workflow](docker_workflow.md) for rationale on named volumes vs bind
 **WARNING**: Configuration above is for **development only**.
 
 **Production requirements**:
+
 - ✅ Strong passwords (not defaults)
 - ✅ TLS/SSL for all connections
 - ✅ Network isolation (private networks)
@@ -141,6 +148,7 @@ See [Observability](observability.md) for production monitoring standards.
 ## Connection Pooling
 
 **PostgreSQL** (asyncpg):
+
 ```python
 # file: examples/configuration.py
 pool = await asyncpg.create_pool(
@@ -155,6 +163,7 @@ pool = await asyncpg.create_pool(
 ```
 
 **Redis** (redis-py):
+
 ```python
 # file: examples/configuration.py
 pool = redis.ConnectionPool(
@@ -170,9 +179,10 @@ pool = redis.ConnectionPool(
 - [Development Workflow](development_workflow.md) - Database management
 - [Observability](observability.md) - Production monitoring
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Docker Workflow](docker_workflow.md)
 - [Command Reference](command_reference.md)
 - [Development Workflow](development_workflow.md)

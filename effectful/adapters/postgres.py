@@ -143,7 +143,7 @@ class PostgresUserRepository(UserRepository):
         # Build query with pure pattern - tuple of optional parts
         query_parts = (
             "SELECT id, email, name FROM users ORDER BY name",
-            f" LIMIT $1" if limit is not None else "",
+            " LIMIT $1" if limit is not None else "",
             f" OFFSET ${2 if limit is not None else 1}" if offset is not None else "",
         )
         query = "".join(query_parts)

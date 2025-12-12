@@ -50,7 +50,7 @@ from typing import Protocol
 
 from effectful.domain.optional_value import OptionalValue
 
-from effectful.domain.s3_object import GetObjectResult, PutResult, S3Object
+from effectful.domain.s3_object import GetObjectResult, PutResult
 
 
 class ObjectStorage(Protocol):

@@ -1,7 +1,7 @@
 # Effectful Engineering Standards
 
-**Status**: Reference only  
-**Supersedes**: none  
+**Status**: Reference only\
+**Supersedes**: none\
 **Referenced by**: documents/readme.md, CLAUDE.md, contributing.md
 
 > **Purpose**: Navigation hub for engineering practices, coding standards, and development workflows.
@@ -37,46 +37,51 @@ flowchart TB
   Docker --> CommandRef
 ```
 
-| What do you need? | SSoT Document |
-|-------------------|---------------|
-| Understand system design | [Architecture](architecture.md) |
-| Model authentication flows | [Authentication](authentication.md) |
-| Write type-safe, pure code | [Code Quality](code_quality.md) |
-| Test programs correctly | [Testing](testing.md) |
-| Organize test suites and fixtures | [Testing Architecture](testing_architecture.md) |
-| Set up development environment | [Docker Workflow](docker_workflow.md) |
-| Run quality checks | [Code Quality](code_quality.md#detection-and-enforcement) |
-| Add metrics/observability | [Observability](observability.md) |
-| Monitoring + alerting policy | [Monitoring & Alerting](monitoring_and_alerting.md) |
-| Write documentation | [Documentation Standards](../documentation_standards.md) |
+| What do you need?                 | SSoT Document                                             |
+| --------------------------------- | --------------------------------------------------------- |
+| Understand system design          | [Architecture](architecture.md)                           |
+| Model authentication flows        | [Authentication](authentication.md)                       |
+| Write type-safe, pure code        | [Code Quality](code_quality.md)                           |
+| Test programs correctly           | [Testing](testing.md)                                     |
+| Organize test suites and fixtures | [Testing Architecture](testing_architecture.md)           |
+| Set up development environment    | [Docker Workflow](docker_workflow.md)                     |
+| Run quality checks                | [Code Quality](code_quality.md#detection-and-enforcement) |
+| Add metrics/observability         | [Observability](observability.md)                         |
+| Monitoring + alerting policy      | [Monitoring & Alerting](monitoring_and_alerting.md)       |
+| Write documentation               | [Documentation Standards](../documentation_standards.md)  |
 
 ## Core Standards
 
 **[Architecture](architecture.md)** (614 lines)
+
 - 5-layer architecture (Application → Runner → Composite → Interpreters → Infrastructure)
 - Separation of concerns
 - Effect system design decisions
 - Why pure functional programming for Python
 
 **[Code Quality](code_quality.md)** (Type safety + purity, consolidated)
+
 - Eight type safety doctrines (zero escape hatches, ADTs over Optional, Result for errors, immutable/frozen dataclasses)
 - Six purity doctrines (effects as data, yield-don't-call, exhaustive matches)
 - Generator rules and anti-pattern routing
 - Detection + remediation workflow (check-code, MyPy strict, link verification)
 
 **[Testing](testing.md)** (3,761 lines)
+
 - Test execution and service-specific patterns
 - 22 test anti-patterns with examples
 - Generator testing patterns
 - Zero skipped tests policy
 
 **[Testing Architecture](testing_architecture.md)** (~900 lines)
+
 - Test suite boundaries (Unit/Integration/E2E)
 - Fixture architecture and cleanup patterns
 - Four-layer testing architecture
 - DRY doctrine framework (5 doctrines)
 
 **[Docker Workflow](docker_workflow.md)** (496 lines)
+
 - Docker-only development policy
 - Container architecture
 - Named volumes vs bind mounts
@@ -86,6 +91,7 @@ flowchart TB
 ## Development Guides
 
 **[Documentation Guidelines](../documentation_standards.md)** (500+ lines)
+
 - SSoT (Single Source of Truth) enforcement
 - DRY (Don't Repeat Yourself) principles
 - Mermaid diagram best practices (GitHub + VSCode compatibility)
@@ -94,23 +100,27 @@ flowchart TB
 - Writing style guidelines
 
 **[Build Artifact Management](build_artifact_management.md)** (new)
+
 - SSoT for what is versioned vs regenerated
 - Treats lockfiles (`poetry.lock`, `package-lock.json`) as build artifacts (not versioned)
 - Artifacts remain inside containers under `/opt/**`; never copied back to host/images
 
 **[Command Reference](command_reference.md)** (157 lines)
+
 - All Docker compose commands
 - Test execution patterns
 - Test statistics (current counts from `rg "def test_" tests`)
 - Output capture techniques
 
 **[Code Quality](code_quality.md)** (combined)
+
 - check-code workflow (Black → MyPy → doc link verification)
 - Universal success criteria
 - Purity + type safety doctrines and generators
 - Anti-pattern routing and remediation
 
 **[Development Workflow](development_workflow.md)** (271 lines)
+
 - Daily development loop
 - Adding new effects (9-step procedure)
 - Adding new domain models (5-step procedure)
@@ -118,6 +128,7 @@ flowchart TB
 - Integration test setup
 
 **[Configuration](configuration.md)** (183 lines)
+
 - Environment variables for all services
 - PostgreSQL configuration
 - Redis configuration
@@ -125,6 +136,7 @@ flowchart TB
 - Apache Pulsar configuration
 
 **[Effect Patterns](effect_patterns.md)** (373 lines)
+
 - Generator-based DSL pattern
 - Fail-fast error propagation
 - Composing programs with yield from
@@ -134,12 +146,14 @@ flowchart TB
 ## Observability Standards
 
 **[Observability](observability.md)** (710 lines)
+
 - Metrics philosophy (dual-layer architecture)
 - Recording vs alerting separation
 - Cardinality management
 - What to measure and why
 
 **[Monitoring & Alerting](monitoring_and_alerting.md)** (combined)
+
 - Metric naming conventions, label standards, default framework metrics
 - Cardinality rules and registry pattern
 - Alert severity levels, runbook requirements, routing patterns
@@ -148,16 +162,19 @@ flowchart TB
 ## Relationship to Other Documentation
 
 ### Engineering → Tutorials
+
 - **Engineering** defines standards and patterns (HOW)
 - **Tutorials** teach how to apply them step-by-step (LEARN)
 - Example: [Code Quality](code_quality.md) (standard) → [tutorials/adts_and_results.md](../tutorials/adts_and_results.md) (tutorial)
 
 ### Engineering → API
+
 - **Engineering** explains architectural decisions (WHY)
 - **API** documents specific functions and types (WHAT)
 - Example: [Architecture](architecture.md) (design) → [api/programs.md](../api/programs.md) (reference)
 
 ### Engineering → Contributing
+
 - **Engineering** defines what is required
 - **[Contributing](../contributing.md)** explains the contribution process
 - Both must be satisfied for pull requests
@@ -171,10 +188,10 @@ All engineering decisions flow from this principle. Every standard, pattern, and
 ### Core Principles
 
 1. **Type Safety First**: If it type-checks with MyPy strict, it's likely correct
-2. **Purity by Default**: Effects as data, not execution
-3. **Test to Find Problems**: Tests exist to catch bugs, not provide false confidence
-4. **DRY Documentation**: Link liberally, duplicate never
-5. **SSoT Enforcement**: Each piece of knowledge lives in exactly one place
+1. **Purity by Default**: Effects as data, not execution
+1. **Test to Find Problems**: Tests exist to catch bugs, not provide false confidence
+1. **DRY Documentation**: Link liberally, duplicate never
+1. **SSoT Enforcement**: Each piece of knowledge lives in exactly one place
 
 ## Document Status
 
@@ -186,12 +203,13 @@ All engineering documents marked with "**SSoT**" are authoritative. When conflic
 ## Meta-Documentation
 
 **How to update these standards:**
+
 1. Read [Documentation Guidelines](../documentation_standards.md) for standards
-2. Make changes to appropriate SSoT document
-3. Confirm header metadata (Status/Supersedes/Referenced by/Purpose) is correct
-4. Update "Referenced by" list if adding new cross-references
-5. Run link verification: `docker compose -f docker/docker-compose.yml exec effectful poetry run python tools/verify_links.py`
-6. Create pull request (see [Contributing](../contributing.md))
+1. Make changes to appropriate SSoT document
+1. Confirm header metadata (Status/Supersedes/Referenced by/Purpose) is correct
+1. Update "Referenced by" list if adding new cross-references
+1. Run link verification: `docker compose -f docker/docker-compose.yml exec effectful poetry run python tools/verify_links.py`
+1. Create pull request (see [Contributing](../contributing.md))
 
 **Naming convention**: All files lowercase with underscores, descriptive names (e.g., `code_quality.md` not `types.md`)
 

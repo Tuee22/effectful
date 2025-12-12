@@ -1,7 +1,7 @@
 # Tutorial 06: Advanced Composition
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/readme.md
 
 > **Purpose**: Tutorial on building complex workflows by composing smaller, reusable program components.
@@ -18,6 +18,7 @@
 ## Learning Objectives
 
 By the end of this tutorial, you will:
+
 - Build reusable program components
 - Compose programs with `yield from`
 - Implement conditional workflows and branching
@@ -25,7 +26,7 @@ By the end of this tutorial, you will:
 - Design retry mechanisms with exponential backoff
 - Structure complex multi-step workflows
 
----
+______________________________________________________________________
 
 ## Step 1: Reusable components
 
@@ -102,12 +103,13 @@ def greet_and_cache(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 ```
 
 **Benefits**:
+
 - Single Responsibility: Each component does one thing
 - Testable: Test components independently
 - Reusable: Compose components in different workflows
 - Type-Safe: Return types preserved through composition
 
----
+______________________________________________________________________
 
 ## Step 2: Conditional workflows
 
@@ -189,7 +191,7 @@ def handle_user_request(
                     return "error_unknown_request"
 ```
 
----
+______________________________________________________________________
 
 ## Step 3: Error recovery patterns
 
@@ -273,6 +275,7 @@ flowchart TB
 ```
 
 **Algorithm Properties:**
+
 - **Exponential backoff**: Delay doubles each retry (1s → 2s → 4s → 8s...)
 - **Retryability check**: Only retries if error has `is_retryable=True`
 - **Max attempts**: Fails after exhausting retry limit
@@ -340,7 +343,7 @@ match result:
         print(f"Failed after retries: {error}")
 ```
 
----
+______________________________________________________________________
 
 ## Step 4: Batch operations
 
@@ -398,7 +401,7 @@ async def process_users_parallel(
     return results
 ```
 
----
+______________________________________________________________________
 
 ## Step 5: Multi-step workflows
 
@@ -440,6 +443,7 @@ flowchart TB
 ```
 
 **Key Features:**
+
 - **Early returns**: Validation failures exit pipeline immediately
 - **Sequential steps**: Each step depends on previous step success
 - **Composed helpers**: Uses `yield from` to delegate to reusable components
@@ -553,7 +557,7 @@ def workflow_with_checkpoints(
             return checkpoints
 ```
 
----
+______________________________________________________________________
 
 ## Step 6: Advanced patterns
 
@@ -717,13 +721,14 @@ saga_steps = [
 result = yield from execute_saga(saga_steps)
 ```
 
----
+______________________________________________________________________
 
 ## Best Practices
 
 ### ✅ DO
 
 1. **Extract Reusable Components**
+
    ```python
    # file: examples/06_advanced_composition.py
    # ✅ Small, focused, reusable
@@ -732,14 +737,16 @@ result = yield from execute_saga(saga_steps)
        return user if isinstance(user, User) else None
    ```
 
-2. **Use `yield from` for Composition**
+1. **Use `yield from` for Composition**
+
    ```python
    # file: examples/06_advanced_composition.py
    # ✅ Delegate to sub-programs
    user = yield from lookup_user(user_id)
    ```
 
-3. **Pattern Match for Branching**
+1. **Pattern Match for Branching**
+
    ```python
    # file: examples/06_advanced_composition.py
    # ✅ Exhaustive matching
@@ -752,7 +759,8 @@ result = yield from execute_saga(saga_steps)
            pass
    ```
 
-4. **Separate Critical from Optional**
+1. **Separate Critical from Optional**
+
    ```python
    # file: examples/06_advanced_composition.py
    # ✅ Critical failure stops workflow
@@ -768,7 +776,8 @@ result = yield from execute_saga(saga_steps)
    # Continue regardless of cache result
    ```
 
-5. **Use Type-Safe Builders**
+1. **Use Type-Safe Builders**
+
    ```python
    # file: examples/06_advanced_composition.py
    # ✅ Fluent API with type safety
@@ -783,6 +792,7 @@ result = yield from execute_saga(saga_steps)
 ### ❌ DON'T
 
 1. **Don't Duplicate Logic**
+
    ```python
    # file: examples/06_advanced_composition.py
    # ❌ Repeated user lookup logic
@@ -798,7 +808,8 @@ result = yield from execute_saga(saga_steps)
    user = yield from lookup_user(user_id)
    ```
 
-2. **Don't Swallow Errors Silently**
+1. **Don't Swallow Errors Silently**
+
    ```python
    # file: examples/06_advanced_composition.py
    # ❌ Silent failure
@@ -814,7 +825,8 @@ result = yield from execute_saga(saga_steps)
            logger.error(f"Lookup failed: {error}")
    ```
 
-3. **Don't Mix Abstraction Levels**
+1. **Don't Mix Abstraction Levels**
+
    ```python
    # file: examples/06_advanced_composition.py
    # ❌ High-level and low-level mixed
@@ -828,7 +840,8 @@ result = yield from execute_saga(saga_steps)
        yield from notify_user("Hello")  # High-level
    ```
 
-4. **Don't Hardcode Retry Logic**
+1. **Don't Hardcode Retry Logic**
+
    ```python
    # file: examples/06_advanced_composition.py
    # ❌ Hardcoded retry in every program
@@ -844,7 +857,7 @@ result = yield from execute_saga(saga_steps)
    )
    ```
 
----
+______________________________________________________________________
 
 ## Next Steps
 
@@ -855,6 +868,7 @@ result = yield from execute_saga(saga_steps)
 ## Summary
 
 You learned how to:
+
 - ✅ Build reusable program components
 - ✅ Compose programs with `yield from`
 - ✅ Implement conditional workflows and branching
@@ -865,8 +879,9 @@ You learned how to:
 
 Your programs are now composable and maintainable! 🎯
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Standards](../engineering/README.md)

@@ -23,13 +23,7 @@ from effectful.domain.metrics_result import (
     QueryFailure,
     QuerySuccess,
 )
-from effectful.observability import (
-    MetricsRegistry,
-    validate_histogram_buckets,
-    validate_label_names,
-    validate_metric_name,
-    validate_summary_quantiles,
-)
+from effectful.observability import MetricsRegistry
 
 
 @dataclass(frozen=True)

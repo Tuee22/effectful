@@ -5,7 +5,7 @@ All tests use AsyncMock with spec to ensure type safety.
 """
 
 from datetime import UTC, datetime
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from pytest_mock import MockerFixture
@@ -16,7 +16,7 @@ from effectful.adapters.postgres import (
     PostgresUserRepository,
 )
 from effectful.domain.message import ChatMessage
-from effectful.domain.user import User, UserFound, UserNotFound
+from effectful.domain.user import UserFound, UserNotFound
 
 
 class TestPostgresUserRepository:

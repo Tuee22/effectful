@@ -1,20 +1,15 @@
 # Authentication Feature
 
 **Status**: Authoritative source
-**Supersedes**: none
+**Supersedes**: none **📖 Base Standard**: [authentication.md](../../../../../documents/engineering/features/authentication.md)
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
-> **Purpose**: Complete reference for HealthHub authentication system: JWT authentication, AuthorizationState ADT, RBAC enforcement, and session management.
-
-> **Core Doctrines**: For comprehensive patterns, see:
-> - [ADTs and Result Types](../../../../../documents/tutorials/adts_and_results.md)
-> - [Code Quality](../../../../../documents/engineering/code_quality.md)
-> - [Authentication Engineering](../../engineering/authentication.md)
+> **Purpose**: HealthHub overlay deltas for Authentication. **📖 Base Standard**: [authentication.md](../../../../../documents/engineering/features/authentication.md)
 
 ## Prerequisites
 
 - Docker workflow running; commands executed via `docker compose -f docker/docker-compose.yml`.
-- Completed [Beginner Journey](../01_journeys/beginner_journey.md).
+- Completed [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md).
 - Familiarity with JWT, bcrypt, Python type hints, pattern matching.
 
 ## Learning Objectives
@@ -29,6 +24,7 @@
 ## Overview
 
 **Authentication System Architecture**:
+
 - **Frontend**: React + JWT stored in localStorage
 - **Backend**: FastAPI + bcrypt password hashing + JWT token generation
 - **Token Storage**: JWT in localStorage as `healthhub-auth`
@@ -36,13 +32,14 @@
 - **Authorization**: AuthorizationState ADT determines user capabilities
 
 **Authentication Flow**:
+
 1. User submits email/password to `/api/auth/login`
-2. Backend verifies password hash (bcrypt)
-3. Backend generates JWT with user_id, role, and role-specific context
-4. Frontend stores JWT in localStorage
-5. Frontend includes JWT in `Authorization: Bearer <token>` header for all API requests
-6. Backend validates JWT and extracts AuthorizationState
-7. API endpoints pattern match on AuthorizationState to enforce RBAC
+1. Backend verifies password hash (bcrypt)
+1. Backend generates JWT with user_id, role, and role-specific context
+1. Frontend stores JWT in localStorage
+1. Frontend includes JWT in `Authorization: Bearer <token>` header for all API requests
+1. Backend validates JWT and extracts AuthorizationState
+1. API endpoints pattern match on AuthorizationState to enforce RBAC
 
 ## Domain Models
 
@@ -162,12 +159,14 @@ type AuthorizationState = (
 ```
 
 **Why 4 variants?**
+
 1. **PatientAuthorized**: Carries `patient_id` for querying patient-specific data
-2. **DoctorAuthorized**: Carries `doctor_id`, `specialization`, `can_prescribe` for doctor features
-3. **AdminAuthorized**: Full access, no additional context needed beyond `user_id`
-4. **Unauthorized**: Carries `reason` for error handling and user feedback
+1. **DoctorAuthorized**: Carries `doctor_id`, `specialization`, `can_prescribe` for doctor features
+1. **AdminAuthorized**: Full access, no additional context needed beyond `user_id`
+1. **Unauthorized**: Carries `reason` for error handling and user feedback
 
 **Benefits over string roles**:
+
 - **Type-safe**: MyPy enforces exhaustive pattern matching
 - **Self-documenting**: Each variant carries role-specific context
 - **Explicit**: All auth states visible in type definition
@@ -180,7 +179,9 @@ type AuthorizationState = (
 **Endpoint**: `POST /api/auth/login`
 
 **Request**:
+
 ```json
+// snippet
 {
   "email": "alice.patient@example.com",
   "password": "password123"
@@ -315,7 +316,9 @@ def login_program(email: str, password: str) -> Generator[Effect, Result, Result
 ```
 
 **Response** (200 OK):
+
 ```json
+// snippet
 {
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
@@ -327,6 +330,7 @@ def login_program(email: str, password: str) -> Generator[Effect, Result, Result
 ```
 
 **Frontend Storage**:
+
 ```javascript
 // Store JWT in localStorage
 localStorage.setItem('healthhub-auth', JSON.stringify({
@@ -396,6 +400,7 @@ async def get_auth_state(
 ```
 
 **Usage in API endpoints**:
+
 ```python
 # file: demo/healthhub/backend/app/api/patients.py
 from fastapi import APIRouter, Depends, HTTPException
@@ -432,13 +437,16 @@ async def get_patients(
 **Endpoint**: `POST /api/auth/refresh`
 
 **Request**:
+
 ```json
+// snippet
 {
   "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
 
 **Backend Program**:
+
 ```python
 # file: demo/healthhub/backend/app/programs/auth_programs.py
 def refresh_token_program(refresh_token: str) -> Generator[Effect, Result, Result[dict]]:
@@ -497,6 +505,7 @@ def refresh_token_program(refresh_token: str) -> Generator[Effect, Result, Resul
 **Endpoint**: `POST /api/auth/logout`
 
 **Frontend**:
+
 ```javascript
 // Remove JWT from localStorage
 localStorage.removeItem('healthhub-auth');
@@ -542,6 +551,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
 ```
 
 **Usage**:
+
 ```typescript
 // file: demo/healthhub/frontend/src/App.tsx
 <Route
@@ -651,6 +661,7 @@ async def create_prescription(
 ## Password Hashing (Bcrypt)
 
 **Registration Program**:
+
 ```python
 # file: demo/healthhub/backend/app/programs/auth_programs.py
 import bcrypt
@@ -686,6 +697,7 @@ def register_user_program(
 ```
 
 **Security Properties**:
+
 - **Salt**: Unique per password (prevents rainbow table attacks)
 - **Cost factor**: 12 rounds (2^12 = 4096 iterations)
 - **Slow hashing**: ~250ms per hash (protects against brute force)
@@ -750,6 +762,7 @@ async def test_doctor_login_includes_can_prescribe(clean_healthhub_state, postgr
 ## Summary
 
 **You have learned**:
+
 - ✅ JWT authentication flow (login → token → validation → refresh → logout)
 - ✅ AuthorizationState ADT with 4 variants (type-safe RBAC)
 - ✅ Pattern matching for RBAC enforcement (frontend + backend)
@@ -758,18 +771,19 @@ async def test_doctor_login_includes_can_prescribe(clean_healthhub_state, postgr
 - ✅ E2E testing for auth workflows
 
 **Key Takeaways**:
+
 1. **ADT > String Roles**: Type-safe, exhaustive, self-documenting
-2. **JWT Stateless**: No server-side session storage needed
-3. **Dependency Injection**: Centralized auth validation in FastAPI
-4. **Pattern Matching**: Compiler-enforced RBAC coverage
-5. **Bcrypt**: Slow hashing protects against brute force
-6. **Context in ADT**: Each role variant carries role-specific data
+1. **JWT Stateless**: No server-side session storage needed
+1. **Dependency Injection**: Centralized auth validation in FastAPI
+1. **Pattern Matching**: Compiler-enforced RBAC coverage
+1. **Bcrypt**: Slow hashing protects against brute force
+1. **Context in ADT**: Each role variant carries role-specific data
 
 ## Cross-References
 
-- [Beginner Journey - AuthorizationState ADT](../01_journeys/beginner_journey.md#step-2-login-as-patient)
+- [Beginner Journey - AuthorizationState ADT](../../tutorials/01_journeys/beginner_journey.md#step-2-login-as-patient)
 - [HealthHub Authentication Engineering](../../engineering/authentication.md)
 - [ADTs and Result Types](../../../../../documents/tutorials/adts_and_results.md)
 - [Code Quality - Type Safety](../../../../../documents/engineering/code_quality.md#type-safety-doctrines)
-- [Patient Guide](../02_roles/patient_guide.md)
-- [Doctor Guide](../02_roles/doctor_guide.md)
+- [Patient Guide](../../product/roles/patient_guide.md)
+- [Doctor Guide](../../product/roles/doctor_guide.md)

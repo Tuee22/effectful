@@ -6,7 +6,7 @@
 
 > **Purpose**: Single Source of Truth for authentication flows and modelling across frontend and backend. Based on the pure ADT workflow from `engineering/total_pure_modelling.md`. Applies to all services and clients unless a delta overrides with additional, system-specific constraints.
 
----
+______________________________________________________________________
 
 ## Scope
 
@@ -17,36 +17,40 @@
 - Anti-patterns and verification guidance
 
 Non-goals:
+
 - Business-role definitions (see domain/product authZ docs)
 - Secrets management and infra hardening (see configuration/ops docs)
 
----
+______________________________________________________________________
 
 ## Core Model (from Total Pure Modelling)
 
 ### Frontend ADTs
+
 - `AuthReadiness`: `Initializing | Hydrating | Ready(AuthenticatedOrNot) | Failed`
 - `AuthenticatedOrNot`: `Authenticated | Unauthenticated | SessionRestoring | SessionExpired`
 - `GuardDecision` (pure): `AwaitAuth | RedirectToLogin(reason) | Denied(userId) | Authorized(userId, roles)`
 
 ### Backend ADTs
+
 - Auth outcome: `Authenticated(user) | AuthFailure(reason)`
 - Guard: `AwaitAuth | RedirectToLogin | Denied | Authorized`
 
 ### Principles
+
 - Make illegal states impossible; every variant must reach a decision (no endless hydrations).
 - Compute pure decisions first; then perform effects (redirects, renders, WS connects).
 - Keep frontend/backends in lockstep on meanings (401 redirect vs 403 deny).
 - No timing hacks or environment flags; solve with explicit states instead.
 
----
+______________________________________________________________________
 
 ## Lifecycle: Frontend
 
-1) **Boot**: Start at `Initializing`; UI does not imply auth.
-2) **Hydrate**: If no persisted session, jump to `Ready(Unauthenticated)`. If something is stored, go to `Ready(SessionRestoring)` and immediately refresh.
-3) **Refresh**: Success → `Authenticated`. Expired/missing → `SessionExpired` and redirect. Network failures end deterministically (redirect to login) instead of spinning.
-4) **Guard**: `computeGuardDecision(readiness, requiredRoles)` drives: loading gate, redirect, deny, or authorize (then render and connect sockets).
+1. **Boot**: Start at `Initializing`; UI does not imply auth.
+1. **Hydrate**: If no persisted session, jump to `Ready(Unauthenticated)`. If something is stored, go to `Ready(SessionRestoring)` and immediately refresh.
+1. **Refresh**: Success → `Authenticated`. Expired/missing → `SessionExpired` and redirect. Network failures end deterministically (redirect to login) instead of spinning.
+1. **Guard**: `computeGuardDecision(readiness, requiredRoles)` drives: loading gate, redirect, deny, or authorize (then render and connect sockets).
 
 ### Guard Decision Template
 
@@ -75,13 +79,13 @@ def compute_guard_decision(
     # MyPy enforces exhaustiveness - no assert_never needed
 ```
 
----
+______________________________________________________________________
 
 ## Lifecycle: Backend Request
 
-1) **Authenticate**: Validate or refresh tokens; return `Authenticated(user)` with roles or typed `AuthFailure` (expired, invalid, redirect).
-2) **Authorize**: `authorize(user, required_roles)` returns guard decision matching frontend semantics (401 vs 403 vs success).
-3) **Respond**: Map `RedirectToLogin` → 401 with hint, `Denied` → 403, `Authorized` → domain work (optionally rotate tokens). `AwaitAuth` should be transient and resolved before responding.
+1. **Authenticate**: Validate or refresh tokens; return `Authenticated(user)` with roles or typed `AuthFailure` (expired, invalid, redirect).
+1. **Authorize**: `authorize(user, required_roles)` returns guard decision matching frontend semantics (401 vs 403 vs success).
+1. **Respond**: Map `RedirectToLogin` → 401 with hint, `Denied` → 403, `Authorized` → domain work (optionally rotate tokens). `AwaitAuth` should be transient and resolved before responding.
 
 ### Backend Mapping Template
 
@@ -103,7 +107,7 @@ def authenticate_and_authorize(
             return Authorized(user.id, roles=user.roles)
 ```
 
----
+______________________________________________________________________
 
 ## Time & Resilience
 
@@ -112,7 +116,7 @@ def authenticate_and_authorize(
 - On network failure during restore, fail fast to login with a clear state.
 - All branches must be idempotent and retry-safe (e.g., refresh).
 
----
+______________________________________________________________________
 
 ## Anti-Patterns
 
@@ -121,7 +125,7 @@ def authenticate_and_authorize(
 - Mixing redirect vs deny semantics (401 vs 403) between tiers.
 - Implicit timing flags or “loading forever” states instead of explicit ADTs.
 
----
+______________________________________________________________________
 
 ## Verification
 
@@ -130,7 +134,7 @@ def authenticate_and_authorize(
 - Contract tests: frontend and backend guard decisions align on the same inputs.
 - Clock skew tests: near-expiry handling produces deterministic outcomes.
 
----
+______________________________________________________________________
 
 ## Related Documentation
 
@@ -139,7 +143,7 @@ def authenticate_and_authorize(
 - Code quality/purity: [code_quality.md](code_quality.md)
 - Effect patterns: [effect_patterns.md](effect_patterns.md)
 
----
+______________________________________________________________________
 
 ## Maintenance
 
@@ -148,6 +152,7 @@ def authenticate_and_authorize(
 - Update anti-patterns as new failure modes are discovered.
 
 ## Cross-References
+
 - [Total Pure Modelling](total_pure_modelling.md)
 - [Code Quality](code_quality.md)
 - [Effect Patterns](effect_patterns.md)

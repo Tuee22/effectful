@@ -1,0 +1,21 @@
+{
+  "plugins": [],
+  "extensions": [],
+  "stack_trace": false,
+  "log_level": "info",
+  "use_main_requirements": true,
+  "plugins_dir": [],
+  "disable_rules": ["md013", "md036"],
+  "enable_rules": [],
+  "extensions_dir": [],
+  "rules": {
+    "md013": {
+      "line_length": 120,
+      "code_block_line_length": 100,
+      "heading_line_length": 120
+    },
+    "md033": {
+      "allowed_elements": []
+    }
+  }
+}

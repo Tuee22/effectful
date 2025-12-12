@@ -19,7 +19,6 @@ from pytest_mock import MockerFixture
 
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok
-from effectful.domain.optional_value import Absent, Provided
 from effectful.domain.metrics_result import (
     MetricRecorded,
     MetricRecordingFailed,

@@ -1,7 +1,7 @@
 # API Reference
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/readme.md
 
 > **Purpose**: Navigation hub for all effectful API reference content.
@@ -13,12 +13,13 @@ Complete API documentation for the effectful package.
 The effectful package provides a type-safe, testable effect system for Python using algebraic data types (ADTs) and the Result type pattern.
 
 **Core Concepts**:
+
 - **Effects**: Declarative descriptions of side effects (I/O operations)
 - **Programs**: Python generators that yield effects and return values
 - **Interpreters**: Execute effects by implementing actual side effects
 - **Result Type**: Explicit error handling with `Result[T, E]`
 
----
+______________________________________________________________________
 
 ## API Documentation
 
@@ -27,6 +28,7 @@ The effectful package provides a type-safe, testable effect system for Python us
 Effect types for WebSocket, database, and cache operations.
 
 **Topics Covered**:
+
 - WebSocket Effects (`SendText`, `ReceiveText`, `Close`)
 - Database Effects (`GetUserById`, `SaveChatMessage`)
 - Cache Effects (`GetCachedProfile`, `PutCachedProfile`)
@@ -35,13 +37,14 @@ Effect types for WebSocket, database, and cache operations.
 
 **Start Here If**: You need to understand what effects are available and how to use them in programs.
 
----
+______________________________________________________________________
 
 ### [Result Type API](./result.md)
 
 The `Result[T, E]` type for explicit error handling.
 
 **Topics Covered**:
+
 - `Ok[T]` and `Err[E]` variants
 - Pattern matching with `match` statements
 - Methods (`map`, `flat_map`, `unwrap`, `unwrap_or`, etc.)
@@ -50,13 +53,14 @@ The `Result[T, E]` type for explicit error handling.
 
 **Start Here If**: You need to handle errors explicitly or chain operations that can fail.
 
----
+______________________________________________________________________
 
 ### [OptionalValue API](./optional_value.md)
 
 The `OptionalValue[T]` type for representing optional values with explicit reasons for absence.
 
 **Topics Covered**:
+
 - `Provided[T]` and `Absent[T]` variants
 - Helper functions (`to_optional_value`, `from_optional_value`)
 - Canonical patterns (domain models, effect parameters, boundary conversion)
@@ -66,24 +70,27 @@ The `OptionalValue[T]` type for representing optional values with explicit reaso
 - Common mistakes and anti-patterns
 
 **When to use**:
+
 - Generic optional fields in domain models
 - Effect parameters that may be absent
 - Any field with "present or absent" semantics (no domain-specific reasons)
 
 **When NOT to use**:
+
 - Domain-specific absence reasons (use custom ADT instead)
 - Always-present fields (use concrete type)
 - External API boundaries (convert to Optional with `from_optional_value`)
 
 **Start Here If**: You need to represent optional values with more semantics than `None`, but don't need a full custom ADT.
 
----
+______________________________________________________________________
 
 ### [Interpreters API](./interpreters.md)
 
 Interpreter types, error types, and production configuration.
 
 **Topics Covered**:
+
 - `create_composite_interpreter` factory function
 - Individual interpreters (`WebSocketInterpreter`, `DatabaseInterpreter`, `CacheInterpreter`)
 - Error types (`DatabaseError`, `WebSocketClosedError`, `CacheError`, `UnhandledEffectError`)
@@ -93,13 +100,14 @@ Interpreter types, error types, and production configuration.
 
 **Start Here If**: You need to execute programs, configure interpreters, or handle interpreter errors.
 
----
+______________________________________________________________________
 
 ### [Programs API](./programs.md)
 
 Program execution, types, and composition patterns.
 
 **Topics Covered**:
+
 - `run_ws_program` function for executing programs
 - Program types (`AllEffects`, `EffectResult`, `WSProgram`)
 - Execution behavior (sequential effects, fail-fast error propagation)
@@ -110,13 +118,14 @@ Program execution, types, and composition patterns.
 
 **Start Here If**: You need to write programs, compose programs, or understand program execution.
 
----
+______________________________________________________________________
 
 ### [Testing Standards](../engineering/testing.md)
 
 Testing utilities, matchers, and strategies.
 
 **Topics Covered**:
+
 - Test matchers (`assert_ok`, `assert_err`, `unwrap_ok`, `unwrap_err`)
 - pytest-mock patterns with `spec=` for type safety
 - Testing strategies (success paths, error paths, sequential returns, stateful behavior, composition)
@@ -125,7 +134,7 @@ Testing utilities, matchers, and strategies.
 
 **Start Here If**: You need to write tests for programs or understand testing patterns.
 
----
+______________________________________________________________________
 
 ## Quick Reference
 
@@ -210,7 +219,7 @@ match result:
         print(f"Failed: {error}")
 ```
 
----
+______________________________________________________________________
 
 ## Type Safety
 
@@ -243,16 +252,17 @@ def process(user_id):  # Missing type hints
     return user.name  # Unsafe - could be None!
 ```
 
----
+______________________________________________________________________
 
 ## See Also
 
 - [Tutorials](../tutorials/) - Step-by-step guides for learning effectful
-- [Examples](/examples/) - Real-world example programs
+- [Examples](../../examples/) - Real-world example programs
 - [Architecture](../engineering/architecture.md) - Design principles and architecture overview
 - [Docker Workflow](../engineering/docker_workflow.md) - Development workflow (SSoT)
-- [CLAUDE.md](/CLAUDE.md) - Complete development reference
+- [CLAUDE.md](../../CLAUDE.md) - Complete development reference
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Architecture](../engineering/architecture.md)

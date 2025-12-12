@@ -1,7 +1,7 @@
 # Interpreters API Reference
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/api/README.md
 
 > **Purpose**: Reference for effect interpreters and interpreter error types.
@@ -21,6 +21,7 @@ Interpreters execute effects by implementing the actual side effects described b
 Create a composite interpreter that delegates to specialized sub-interpreters.
 
 **Type Signature**:
+
 ```python
 # file: examples/interpreters.py
 def create_composite_interpreter(
@@ -36,6 +37,7 @@ def create_composite_interpreter(
 ```
 
 **Parameters**:
+
 - `websocket_connection: WebSocketConnection` - WebSocket protocol implementation
 - `user_repo: UserRepository` - User data repository
 - `message_repo: ChatMessageRepository` - Message data repository
@@ -48,6 +50,7 @@ def create_composite_interpreter(
 **Returns**: `CompositeInterpreter` - Fully configured interpreter
 
 **Usage**:
+
 ```python
 # file: examples/interpreters.py
 from effectful import create_composite_interpreter, run_ws_program
@@ -103,12 +106,13 @@ flowchart TB
 ```
 
 **Routing Logic:**
+
 - CompositeInterpreter uses exhaustive pattern matching on effect type
 - Each specialized interpreter handles effects for its domain
 - Unknown effects return `UnhandledEffectError`
 - All interpreters return `Result[EffectReturn, InterpreterError]`
 
----
+______________________________________________________________________
 
 ## Individual Interpreters
 
@@ -117,6 +121,7 @@ flowchart TB
 Handles WebSocket communication effects.
 
 **Type Signature**:
+
 ```python
 # file: examples/interpreters.py
 class WebSocketInterpreter:
@@ -130,11 +135,13 @@ class WebSocketInterpreter:
 ```
 
 **Supported Effects**:
+
 - `SendText` → sends text message
 - `ReceiveText` → receives text message
 - `Close` → closes connection
 
 **Usage**:
+
 ```python
 # file: examples/interpreters.py
 from effectful.interpreters.websocket import WebSocketInterpreter
@@ -152,13 +159,14 @@ match result:
         print(f"Failed: {error}")
 ```
 
----
+______________________________________________________________________
 
 ### DatabaseInterpreter
 
 Handles database persistence effects.
 
 **Type Signature**:
+
 ```python
 # file: examples/interpreters.py
 class DatabaseInterpreter:
@@ -177,10 +185,12 @@ class DatabaseInterpreter:
 ```
 
 **Supported Effects**:
+
 - `GetUserById` → queries user repository
 - `SaveChatMessage` → persists message
 
 **Usage**:
+
 ```python
 # file: examples/interpreters.py
 from effectful.interpreters.database import DatabaseInterpreter
@@ -204,13 +214,14 @@ match result:
         print(f"Database error: {error}")
 ```
 
----
+______________________________________________________________________
 
 ### CacheInterpreter
 
 Handles cache operations.
 
 **Type Signature**:
+
 ```python
 # file: examples/interpreters.py
 class CacheInterpreter:
@@ -224,10 +235,12 @@ class CacheInterpreter:
 ```
 
 **Supported Effects**:
+
 - `GetCachedProfile` → retrieves from cache
 - `PutCachedProfile` → stores in cache
 
 **Usage**:
+
 ```python
 # file: examples/interpreters.py
 from effectful.interpreters.cache import CacheInterpreter
@@ -248,7 +261,7 @@ match result:
         print(f"Cache error: {error}")
 ```
 
----
+______________________________________________________________________
 
 ## Error Types
 
@@ -269,13 +282,14 @@ type InterpreterError = (
 )
 ```
 
----
+______________________________________________________________________
 
 ### DatabaseError
 
 Database operation failures.
 
 **Type Signature**:
+
 ```python
 # file: examples/interpreters.py
 @dataclass(frozen=True)
@@ -286,17 +300,20 @@ class DatabaseError:
 ```
 
 **Fields**:
+
 - `effect: DatabaseEffect` - The effect that failed
 - `db_error: str` - Error message from database
 - `is_retryable: bool` - Whether retry might succeed
 
 **Common Causes**:
+
 - Connection timeout
 - Query syntax error
 - Constraint violation
 - Transaction deadlock
 
 **Usage**:
+
 ```python
 # file: examples/interpreters.py
 from effectful import run_ws_program, Err
@@ -315,13 +332,14 @@ match result:
         print(f"Success: {value}")
 ```
 
----
+______________________________________________________________________
 
 ### WebSocketClosedError
 
 WebSocket connection closed.
 
 **Type Signature**:
+
 ```python
 # file: examples/interpreters.py
 @dataclass(frozen=True)
@@ -332,17 +350,20 @@ class WebSocketClosedError:
 ```
 
 **Fields**:
+
 - `effect: WebSocketEffect` - The effect that failed
 - `close_code: int` - WebSocket close code (e.g., 1000, 1006)
 - `reason: str` - Close reason message
 
 **Common Close Codes**:
+
 - `1000` - Normal closure
 - `1001` - Going away
 - `1006` - Abnormal closure (no close frame)
 - `1008` - Policy violation
 
 **Usage**:
+
 ```python
 # file: examples/interpreters.py
 from effectful import run_ws_program, Err
@@ -361,13 +382,14 @@ match result:
         print(f"Success: {value}")
 ```
 
----
+______________________________________________________________________
 
 ### CacheError
 
 Cache operation failures.
 
 **Type Signature**:
+
 ```python
 # file: examples/interpreters.py
 @dataclass(frozen=True)
@@ -378,17 +400,20 @@ class CacheError:
 ```
 
 **Fields**:
+
 - `effect: CacheEffect` - The effect that failed
 - `cache_error: str` - Error message from cache
 - `is_retryable: bool` - Whether retry might succeed
 
 **Common Causes**:
+
 - Connection timeout
 - Out of memory
 - Network partition
 - Serialization error
 
 **Usage**:
+
 ```python
 # file: examples/interpreters.py
 from effectful import run_ws_program, Err
@@ -409,13 +434,14 @@ match result:
         print(f"Success: {value}")
 ```
 
----
+______________________________________________________________________
 
 ### UnhandledEffectError
 
 Interpreter received an effect type it doesn't support.
 
 **Type Signature**:
+
 ```python
 # file: examples/interpreters.py
 @dataclass(frozen=True)
@@ -425,6 +451,7 @@ class UnhandledEffectError:
 ```
 
 **Fields**:
+
 - `effect: Effect` - The unsupported effect
 - `available_interpreters: list[str]` - List of interpreter names that were tried
 
@@ -442,7 +469,7 @@ match result:
         raise RuntimeError(f"Interpreter configuration error")
 ```
 
----
+______________________________________________________________________
 
 ## Infrastructure Protocols
 
@@ -469,9 +496,10 @@ class WebSocketConnection(Protocol):
 ```
 
 **Implementations**:
+
 - `RealWebSocketConnection` - WebSocket adapter for real connections
 
----
+______________________________________________________________________
 
 ### UserRepository
 
@@ -485,6 +513,7 @@ class UserRepository(Protocol):
 ```
 
 **Return Type**:
+
 ```python
 # file: examples/interpreters.py
 type UserLookupResult = UserFound | UserNotFound
@@ -501,9 +530,10 @@ class UserNotFound:
 ```
 
 **Implementations**:
+
 - `PostgresUserRepository` - PostgreSQL adapter
 
----
+______________________________________________________________________
 
 ### ChatMessageRepository
 
@@ -517,9 +547,10 @@ class ChatMessageRepository(Protocol):
 ```
 
 **Implementations**:
+
 - `PostgresChatMessageRepository` - PostgreSQL adapter
 
----
+______________________________________________________________________
 
 ### ProfileCache
 
@@ -538,6 +569,7 @@ class ProfileCache(Protocol):
 ```
 
 **Return Type**:
+
 ```python
 # file: examples/interpreters.py
 type CacheLookupResult = CacheHit | CacheMiss
@@ -554,9 +586,10 @@ class CacheMiss:
 ```
 
 **Implementations**:
+
 - `RedisProfileCache` - Redis adapter
 
----
+______________________________________________________________________
 
 ## Custom Interpreters
 
@@ -626,7 +659,7 @@ class MetricsInterpreter(EffectInterpreter):
         return result
 ```
 
----
+______________________________________________________________________
 
 ## Production Configuration
 
@@ -709,7 +742,7 @@ except asyncio.TimeoutError:
     alert_ops_team("program timeout after 30s")
 ```
 
----
+______________________________________________________________________
 
 ## See Also
 
@@ -718,8 +751,9 @@ except asyncio.TimeoutError:
 - [Programs API](./programs.md) - Running programs with interpreters
 - [Testing Standards](../engineering/testing.md) - Testing with mock interpreters
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Architecture](../engineering/architecture.md)

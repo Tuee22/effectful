@@ -12,8 +12,6 @@ time and UUID generation explicit and testable.
 """
 
 from dataclasses import dataclass
-from datetime import datetime
-from uuid import UUID
 
 
 @dataclass(frozen=True)

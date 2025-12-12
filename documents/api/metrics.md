@@ -1,7 +1,7 @@
 # Metrics API Reference
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/api/README.md
 
 > **Purpose**: Reference for metrics effects, ADT return types, and observability primitives in effectful.
@@ -12,33 +12,34 @@
 
 > **Core Doctrine**: For metric naming and labeling standards, see [monitoring_and_alerting.md](../engineering/monitoring_and_alerting.md#monitoring-standards)
 
----
+______________________________________________________________________
 
 ## Overview
 
 The metrics API provides **type-safe, compile-time validated** observability primitives for Prometheus/Grafana integration.
 
 **Key Features**:
+
 - **6 Effect Types**: Counter, Gauge, Histogram, Summary, Query, Reset
 - **ADT Return Types**: Explicit success/failure cases (no exceptions)
 - **Cardinality Protection**: Registry pattern prevents metric explosion
 - **Frozen Dataclasses**: All metrics immutable (thread-safe)
 - **Protocol-Based**: Infrastructure-agnostic (Prometheus, testing, custom collectors)
 
----
+______________________________________________________________________
 
 ## Quick Reference
 
 ### Effect Types
 
-| Effect | Purpose | Returns | Idempotent? |
-|--------|---------|---------|-------------|
-| `IncrementCounter` | Monotonically increasing count | `MetricRecorded \| MetricRecordingFailed` | No |
-| `RecordGauge` | Point-in-time value | `MetricRecorded \| MetricRecordingFailed` | Yes |
-| `ObserveHistogram` | Duration/size distribution | `MetricRecorded \| MetricRecordingFailed` | No |
-| `RecordSummary` | Streaming quantiles (p50, p95, p99) | `MetricRecorded \| MetricRecordingFailed` | No |
-| `QueryMetrics` | Retrieve current metric values | `QuerySuccess \| QueryFailure` | Yes |
-| `ResetMetrics` | Clear all metrics (testing only) | `MetricRecorded \| MetricRecordingFailed` | No |
+| Effect             | Purpose                             | Returns                                   | Idempotent? |
+| ------------------ | ----------------------------------- | ----------------------------------------- | ----------- |
+| `IncrementCounter` | Monotonically increasing count      | `MetricRecorded \| MetricRecordingFailed` | No          |
+| `RecordGauge`      | Point-in-time value                 | `MetricRecorded \| MetricRecordingFailed` | Yes         |
+| `ObserveHistogram` | Duration/size distribution          | `MetricRecorded \| MetricRecordingFailed` | No          |
+| `RecordSummary`    | Streaming quantiles (p50, p95, p99) | `MetricRecorded \| MetricRecordingFailed` | No          |
+| `QueryMetrics`     | Retrieve current metric values      | `QuerySuccess \| QueryFailure`            | Yes         |
+| `ResetMetrics`     | Clear all metrics (testing only)    | `MetricRecorded \| MetricRecordingFailed` | No          |
 
 ### ADT Return Types
 
@@ -56,7 +57,7 @@ type MetricResult = MetricRecorded | MetricRecordingFailed
 type MetricQueryResult = QuerySuccess | QueryFailure
 ```
 
----
+______________________________________________________________________
 
 ## Effect Definitions
 
@@ -80,6 +81,7 @@ class IncrementCounter:
 ```
 
 **Parameters**:
+
 - `metric_name: str` - Registered counter name (must end with `_total`)
 - `labels: dict[str, str]` - Label key-value pairs (must match registry definition)
 - `value: float` - Amount to increment (default: 1.0, must be > 0)
@@ -87,6 +89,7 @@ class IncrementCounter:
 **Returns**: `MetricRecorded | MetricRecordingFailed`
 
 **Example**:
+
 ```python
 # file: examples/metrics.py
 from collections.abc import Generator
@@ -110,6 +113,7 @@ def track_appointment_created(
 ```
 
 **Validation Rules**:
+
 - Metric name must exist in registry
 - Metric must be registered as `CounterDefinition`
 - All label keys must match registry definition
@@ -117,6 +121,7 @@ def track_appointment_created(
 - Value must be positive (> 0)
 
 **Common Errors**:
+
 ```python
 # file: examples/metrics.py
 # ❌ Metric not registered
@@ -135,7 +140,7 @@ MetricRecordingFailed(reason="unexpected_label: patient_id")
 MetricRecordingFailed(reason="invalid_value: must be > 0")
 ```
 
----
+______________________________________________________________________
 
 ### RecordGauge
 
@@ -154,6 +159,7 @@ class RecordGauge:
 ```
 
 **Parameters**:
+
 - `metric_name: str` - Registered gauge name
 - `labels: dict[str, str]` - Label key-value pairs
 - `value: float` - Current value (can be negative)
@@ -161,6 +167,7 @@ class RecordGauge:
 **Returns**: `MetricRecorded | MetricRecordingFailed`
 
 **Example**:
+
 ```python
 # file: examples/metrics.py
 def track_active_websocket_connections(
@@ -180,6 +187,7 @@ def track_active_websocket_connections(
 ```
 
 **Validation Rules**:
+
 - Metric name must exist in registry
 - Metric must be registered as `GaugeDefinition`
 - All label keys must match registry definition
@@ -187,7 +195,7 @@ def track_active_websocket_connections(
 
 **Idempotency**: Safe to call multiple times with same value.
 
----
+______________________________________________________________________
 
 ### ObserveHistogram
 
@@ -206,6 +214,7 @@ class ObserveHistogram:
 ```
 
 **Parameters**:
+
 - `metric_name: str` - Registered histogram name (must end with `_seconds`, `_bytes`, etc.)
 - `labels: dict[str, str]` - Label key-value pairs
 - `value: float` - Observed value (duration in seconds, size in bytes)
@@ -213,6 +222,7 @@ class ObserveHistogram:
 **Returns**: `MetricRecorded | MetricRecordingFailed`
 
 **Example**:
+
 ```python
 # file: examples/metrics.py
 import time
@@ -243,11 +253,13 @@ def measure_effect_duration(
 **Buckets**: Defined in `HistogramDefinition` at registry time.
 
 **Validation Rules**:
+
 - Metric name must exist in registry
 - Metric must be registered as `HistogramDefinition`
 - Value must be non-negative (>= 0)
 
 **Prometheus Output**:
+
 ```text
 # file: examples/metrics_histogram_output.txt
 effect_duration_seconds_bucket{effect_type="GetUserById",le="0.1"} 45
@@ -258,7 +270,7 @@ effect_duration_seconds_sum{effect_type="GetUserById"} 42.5
 effect_duration_seconds_count{effect_type="GetUserById"} 100
 ```
 
----
+______________________________________________________________________
 
 ### RecordSummary
 
@@ -277,6 +289,7 @@ class RecordSummary:
 ```
 
 **Parameters**:
+
 - `metric_name: str` - Registered summary name
 - `labels: dict[str, str]` - Label key-value pairs
 - `value: float` - Observed value
@@ -284,6 +297,7 @@ class RecordSummary:
 **Returns**: `MetricRecorded | MetricRecordingFailed`
 
 **Example**:
+
 ```python
 # file: examples/metrics.py
 def track_request_size(
@@ -299,17 +313,17 @@ def track_request_size(
 
 **Histogram vs Summary**:
 
-| Aspect | Histogram | Summary |
-|--------|-----------|---------|
-| **Aggregation** | Server-side (PromQL) | Client-side (library) |
-| **Quantiles** | Approximate (`histogram_quantile`) | Exact (but expensive) |
-| **Buckets** | Pre-defined at registration | N/A |
-| **Cardinality** | Low (buckets fixed) | High (per-label timeseries) |
-| **Recommendation** | ✅ Prefer for latency | ⚠️ Use sparingly |
+| Aspect             | Histogram                          | Summary                     |
+| ------------------ | ---------------------------------- | --------------------------- |
+| **Aggregation**    | Server-side (PromQL)               | Client-side (library)       |
+| **Quantiles**      | Approximate (`histogram_quantile`) | Exact (but expensive)       |
+| **Buckets**        | Pre-defined at registration        | N/A                         |
+| **Cardinality**    | Low (buckets fixed)                | High (per-label timeseries) |
+| **Recommendation** | ✅ Prefer for latency              | ⚠️ Use sparingly            |
 
 **Recommendation**: Use `ObserveHistogram` unless you need exact quantiles.
 
----
+______________________________________________________________________
 
 ### QueryMetrics
 
@@ -327,12 +341,14 @@ class QueryMetrics:
 ```
 
 **Parameters**:
+
 - `metric_name: str | None` - Filter by metric name (None = all metrics)
 - `labels: dict[str, str] | None` - Filter by labels (None = all label combinations)
 
 **Returns**: `QuerySuccess | QueryFailure`
 
 **Example**:
+
 ```python
 # file: examples/metrics.py
 def check_metrics_health() -> Generator[AllEffects, EffectResult, dict[str, float]]:
@@ -350,6 +366,7 @@ def check_metrics_health() -> Generator[AllEffects, EffectResult, dict[str, floa
 ```
 
 **QuerySuccess Structure**:
+
 ```python
 # file: examples/metrics.py
 @dataclass(frozen=True)
@@ -360,6 +377,7 @@ class QuerySuccess:
 ```
 
 **Example Response**:
+
 ```python
 # file: examples/metrics.py
 QuerySuccess(
@@ -371,7 +389,7 @@ QuerySuccess(
 )
 ```
 
----
+______________________________________________________________________
 
 ### ResetMetrics
 
@@ -390,6 +408,7 @@ class ResetMetrics:
 **Returns**: `MetricRecorded | MetricRecordingFailed`
 
 **Example**:
+
 ```python
 # file: examples/metrics.py
 @pytest.fixture
@@ -405,7 +424,7 @@ def reset_all_metrics() -> Generator[AllEffects, EffectResult, None]:
 
 **⚠️ WARNING**: NEVER use ResetMetrics in production. Metrics are append-only in production systems.
 
----
+______________________________________________________________________
 
 ## ADT Return Types
 
@@ -422,9 +441,11 @@ class MetricRecorded:
 ```
 
 **Fields**:
+
 - `timestamp: float` - Unix timestamp when metric was recorded (UTC)
 
 **Usage**:
+
 ```python
 # file: examples/metrics.py
 match result:
@@ -432,7 +453,7 @@ match result:
         print(f"Recorded at {datetime.fromtimestamp(ts)}")
 ```
 
----
+______________________________________________________________________
 
 ### MetricRecordingFailed
 
@@ -447,9 +468,11 @@ class MetricRecordingFailed:
 ```
 
 **Fields**:
+
 - `reason: str` - Human-readable error message
 
 **Common Reasons**:
+
 - `"metric_not_registered"` - Metric name not found in registry
 - `"type_mismatch"` - Wrong effect type for metric definition
 - `"missing_label: <key>"` - Required label not provided
@@ -458,6 +481,7 @@ class MetricRecordingFailed:
 - `"collector_error: <message>"` - Infrastructure error (Prometheus unreachable)
 
 **Usage**:
+
 ```python
 # file: examples/metrics.py
 match result:
@@ -470,7 +494,7 @@ match result:
             pass
 ```
 
----
+______________________________________________________________________
 
 ### QuerySuccess
 
@@ -486,10 +510,12 @@ class QuerySuccess:
 ```
 
 **Fields**:
+
 - `metrics: dict[str, float]` - Metric name (with labels) → current value
 - `timestamp: float` - Query execution timestamp
 
 **Example**:
+
 ```python
 # file: examples/metrics.py
 QuerySuccess(
@@ -501,7 +527,7 @@ QuerySuccess(
 )
 ```
 
----
+______________________________________________________________________
 
 ### QueryFailure
 
@@ -516,14 +542,16 @@ class QueryFailure:
 ```
 
 **Fields**:
+
 - `reason: str` - Human-readable error message
 
 **Common Reasons**:
+
 - `"metric_not_found"` - No metrics match query
 - `"collector_unavailable"` - Prometheus unreachable
 - `"invalid_query: <reason>"` - Malformed query parameters
 
----
+______________________________________________________________________
 
 ## Registry Types
 
@@ -546,6 +574,7 @@ class MetricsRegistry:
 ```
 
 **Example**:
+
 ```python
 # file: examples/metrics.py
 from effectful.observability import (
@@ -589,7 +618,7 @@ APP_METRICS = MetricsRegistry(
 
 **Why Frozen?**: Prevents runtime modifications that could cause cardinality explosion.
 
----
+______________________________________________________________________
 
 ### CounterDefinition
 
@@ -606,11 +635,13 @@ class CounterDefinition:
 ```
 
 **Fields**:
+
 - `name: str` - Metric name (must end with `_total`)
 - `help_text: str` - Human-readable description
 - `label_names: tuple[str, ...]` - Fixed label keys (empty tuple = no labels)
 
 **Example**:
+
 ```python
 # file: examples/metrics.py
 CounterDefinition(
@@ -621,11 +652,12 @@ CounterDefinition(
 ```
 
 **Validation**:
+
 - Name must end with `_total`
 - Label names must be valid identifiers
 - No duplicate label names
 
----
+______________________________________________________________________
 
 ### GaugeDefinition
 
@@ -644,6 +676,7 @@ class GaugeDefinition:
 **Fields**: Same as `CounterDefinition`
 
 **Example**:
+
 ```python
 # file: examples/metrics.py
 GaugeDefinition(
@@ -653,7 +686,7 @@ GaugeDefinition(
 )
 ```
 
----
+______________________________________________________________________
 
 ### HistogramDefinition
 
@@ -671,12 +704,14 @@ class HistogramDefinition:
 ```
 
 **Fields**:
+
 - `name: str` - Metric name (should include unit: `_seconds`, `_bytes`)
 - `help_text: str` - Human-readable description
 - `label_names: tuple[str, ...]` - Fixed label keys
 - `buckets: tuple[float, ...]` - Bucket boundaries (must be sorted ascending)
 
 **Example**:
+
 ```python
 # file: examples/metrics.py
 HistogramDefinition(
@@ -688,11 +723,12 @@ HistogramDefinition(
 ```
 
 **Bucket Design**:
+
 - Cover expected range (p1 to p99+)
 - Use exponential distribution (~2x each step)
 - Include SLO thresholds (e.g., 0.5s, 1.0s)
 
----
+______________________________________________________________________
 
 ### SummaryDefinition
 
@@ -710,9 +746,11 @@ class SummaryDefinition:
 ```
 
 **Fields**:
+
 - `quantiles: tuple[float, ...]` - Quantiles to track (0.0-1.0, e.g., 0.5, 0.95, 0.99)
 
 **Example**:
+
 ```python
 # file: examples/metrics.py
 SummaryDefinition(
@@ -723,7 +761,7 @@ SummaryDefinition(
 )
 ```
 
----
+______________________________________________________________________
 
 ## MetricsCollector Protocol
 
@@ -787,10 +825,11 @@ class MetricsCollector(Protocol):
 ```
 
 **Implementations**:
+
 - `PrometheusMetricsCollector` - Production (Prometheus client)
 - `InMemoryMetricsCollector` - Testing (dict-based storage)
 
----
+______________________________________________________________________
 
 ## Complete Example
 
@@ -896,7 +935,7 @@ async def main() -> None:
             print(f"Error: {error}")
 ```
 
----
+______________________________________________________________________
 
 ## Cross-References
 
@@ -906,7 +945,7 @@ async def main() -> None:
 
 > **Core Doctrine**: For alert rules, see [monitoring_and_alerting.md](../engineering/monitoring_and_alerting.md#alerting-policy)
 
----
+______________________________________________________________________
 
 ## See Also
 

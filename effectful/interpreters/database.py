@@ -9,7 +9,7 @@ from uuid import UUID
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok, Result
 from effectful.domain.optional_value import OptionalValue, from_optional_value
-from effectful.domain.user import User, UserFound, UserNotFound
+from effectful.domain.user import UserFound, UserNotFound
 from effectful.effects.base import Effect
 from effectful.effects.database import (
     CreateUser,

@@ -14,6 +14,7 @@ All effects are immutable (frozen dataclasses).
 
 from dataclasses import dataclass
 from typing import TypeVar
+from uuid import UUID
 
 from effectful.domain.optional_value import Absent, OptionalValue, Provided, to_optional_value
 
@@ -26,9 +27,6 @@ def _normalize_optional_value(
     if isinstance(value, (Provided, Absent)):
         return value
     return to_optional_value(value)
-
-
-from uuid import UUID
 
 
 @dataclass(frozen=True)

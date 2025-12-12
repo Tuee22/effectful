@@ -1,14 +1,12 @@
 # Workflow-Based Tutorials
 
 **Status**: Authoritative source
-**Supersedes**: none
+**Supersedes**: none **📖 Base Standard**: [README.md](../../../../../documents/product/workflows/README.md)
 **Referenced by**: demo/healthhub/documents/readme.md, demo/healthhub/documents/tutorials/README.md, demo/healthhub/documents/product/README.md
 
-> **Purpose**: Multi-feature integration tutorials demonstrating complete healthcare workflows from start to finish.
+> **Purpose**: HealthHub overlay deltas for Readme. **📖 Base Standard**: [README.md](../../../../../documents/product/workflows/README.md)
 
-> **Recommended for**: Understanding end-to-end data flow, testing multi-feature integration, learning complete user journeys.
-
----
+______________________________________________________________________
 
 ## Overview
 
@@ -18,7 +16,7 @@ Workflow tutorials demonstrate how multiple HealthHub features work together in 
 
 **Difference from Feature Tutorials**: Feature tutorials deep-dive into one feature. Workflow tutorials show how features integrate.
 
----
+______________________________________________________________________
 
 ## Workflows
 
@@ -29,6 +27,7 @@ Workflow tutorials demonstrate how multiple HealthHub features work together in 
 **Workflow**: Registration → First Appointment → Prescription → Invoice
 
 **Features Involved**:
+
 - Authentication (registration, login)
 - Appointments (request, doctor confirms, complete)
 - Prescriptions (doctor creates after appointment)
@@ -39,6 +38,7 @@ Workflow tutorials demonstrate how multiple HealthHub features work together in 
 **Duration**: ~1.5 hours
 
 **Learning Outcomes**:
+
 - Complete patient journey from registration to billing
 - Data flow across authentication → appointments → prescriptions → invoices
 - Patient perspective throughout entire process
@@ -47,7 +47,7 @@ Workflow tutorials demonstrate how multiple HealthHub features work together in 
 
 **Prerequisites**: [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md)
 
----
+______________________________________________________________________
 
 ### 2. Appointment Lifecycle
 
@@ -56,6 +56,7 @@ Workflow tutorials demonstrate how multiple HealthHub features work together in 
 **Workflow**: Request → Confirm → Start → Complete → Invoice → Patient Views
 
 **Features Involved**:
+
 - Appointments (state machine: Requested → Confirmed → InProgress → Completed)
 - Notifications (state transition alerts)
 - Invoices (generation from completed appointment)
@@ -65,6 +66,7 @@ Workflow tutorials demonstrate how multiple HealthHub features work together in 
 **Duration**: ~1 hour
 
 **Learning Outcomes**:
+
 - Complete appointment state machine progression
 - Notification triggers at each state transition
 - Invoice generation workflow
@@ -74,7 +76,7 @@ Workflow tutorials demonstrate how multiple HealthHub features work together in 
 
 **Prerequisites**: [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md)
 
----
+______________________________________________________________________
 
 ### 3. Prescription Workflow
 
@@ -83,6 +85,7 @@ Workflow tutorials demonstrate how multiple HealthHub features work together in 
 **Workflow**: Diagnosis → Patient Lookup → Medication Interaction Check → Create Prescription → Patient Views
 
 **Features Involved**:
+
 - Appointments (context: doctor appointment with patient)
 - Patient Management (doctor searches/views patient history)
 - Prescriptions (creation with interaction checking)
@@ -93,6 +96,7 @@ Workflow tutorials demonstrate how multiple HealthHub features work together in 
 **Duration**: ~1 hour
 
 **Learning Outcomes**:
+
 - Complete prescription creation workflow
 - Medication interaction checking against allergies and existing prescriptions
 - Doctor-patient data flow
@@ -102,7 +106,7 @@ Workflow tutorials demonstrate how multiple HealthHub features work together in 
 
 **Prerequisites**: [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md)
 
----
+______________________________________________________________________
 
 ### 4. Lab Result Workflow
 
@@ -111,6 +115,7 @@ Workflow tutorials demonstrate how multiple HealthHub features work together in 
 **Workflow**: Order → Lab Submits → Critical Alert → Doctor Review → Patient Notification → Patient Views
 
 **Features Involved**:
+
 - Lab Results (submission, critical flag detection)
 - Notifications (critical value alerts to doctor and patient)
 - Doctor Review (add notes, mark as reviewed)
@@ -120,6 +125,7 @@ Workflow tutorials demonstrate how multiple HealthHub features work together in 
 **Duration**: ~1 hour
 
 **Learning Outcomes**:
+
 - Complete lab result processing workflow
 - Critical value alert system
 - Doctor review and annotation workflow
@@ -129,62 +135,67 @@ Workflow tutorials demonstrate how multiple HealthHub features work together in 
 
 **Prerequisites**: [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md)
 
----
+______________________________________________________________________
 
 ## Workflow Comparison
 
-| Workflow | Features | Roles | Duration | Complexity |
-|----------|----------|-------|----------|------------|
-| **Patient Onboarding** | Auth, Appointments, Prescriptions, Invoices | Patient, Doctor, Admin | 1.5h | High |
-| **Appointment Lifecycle** | Appointments, Notifications, Invoices | Patient, Doctor | 1h | Medium |
-| **Prescription Workflow** | Appointments, Patients, Prescriptions, Notifications | Doctor, Patient | 1h | Medium |
-| **Lab Result Workflow** | Labs, Notifications, Doctor Review | Doctor, Patient | 1h | Medium |
+| Workflow                  | Features                                             | Roles                  | Duration | Complexity |
+| ------------------------- | ---------------------------------------------------- | ---------------------- | -------- | ---------- |
+| **Patient Onboarding**    | Auth, Appointments, Prescriptions, Invoices          | Patient, Doctor, Admin | 1.5h     | High       |
+| **Appointment Lifecycle** | Appointments, Notifications, Invoices                | Patient, Doctor        | 1h       | Medium     |
+| **Prescription Workflow** | Appointments, Patients, Prescriptions, Notifications | Doctor, Patient        | 1h       | Medium     |
+| **Lab Result Workflow**   | Labs, Notifications, Doctor Review                   | Doctor, Patient        | 1h       | Medium     |
 
----
+______________________________________________________________________
 
 ## Integration Points
 
 ### Feature-to-Feature Data Flow
 
 **Appointments → Invoices**:
+
 - Completed appointment triggers invoice generation
 - Appointment details populate invoice line items
 - Invoice references appointment ID
 
 **Prescriptions → Notifications**:
+
 - New prescription triggers patient notification
 - Medication interactions trigger warnings
 - Refill reminders trigger scheduled notifications
 
 **Lab Results → Notifications → Doctor Review**:
+
 - Critical lab result triggers immediate doctor notification
 - Doctor review triggers patient notification
 - Review notes visible to patient
 
 **Authentication → All Features**:
+
 - AuthorizationState ADT used by all features for RBAC
 - User ID links all patient/doctor data
 - Role determines feature access
 
----
+______________________________________________________________________
 
 ## Workflow Tutorial Structure
 
 Each workflow tutorial follows this pattern:
 
 1. **Workflow Overview**: Complete flow diagram with feature touchpoints
-2. **Step-by-Step Execution**: Detailed instructions with demo data
-3. **Integration Points**: Where features connect and data flows
-4. **Code Tracing**: Follow data through effect programs across features
-5. **State Transitions**: Track state changes across workflow
-6. **Verification**: Expected outcomes at each step
-7. **E2E Test References**: Corresponding test scenarios
+1. **Step-by-Step Execution**: Detailed instructions with demo data
+1. **Integration Points**: Where features connect and data flows
+1. **Code Tracing**: Follow data through effect programs across features
+1. **State Transitions**: Track state changes across workflow
+1. **Verification**: Expected outcomes at each step
+1. **E2E Test References**: Corresponding test scenarios
 
----
+______________________________________________________________________
 
 ## Related Content
 
 **For feature deep dives**:
+
 - [Authentication](../../engineering/features/authentication.md)
 - [Appointments](../../engineering/features/appointments.md)
 - [Prescriptions](../../engineering/features/prescriptions.md)
@@ -192,16 +203,18 @@ Each workflow tutorial follows this pattern:
 - [Invoices](../../engineering/features/invoices.md)
 
 **For role perspectives**:
+
 - [Patient Guide](../roles/patient_guide.md)
 - [Doctor Guide](../roles/doctor_guide.md)
 - [Admin Guide](../roles/admin_guide.md)
 
 **For progressive learning**:
+
 - [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md)
 - [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md)
 - [Advanced Journey](../../tutorials/01_journeys/advanced_journey.md)
 
----
+______________________________________________________________________
 
 ## Cross-References
 

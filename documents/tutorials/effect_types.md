@@ -1,7 +1,7 @@
 # Effect Types
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/readme.md
 
 > **Purpose**: Tutorial covering all available effect types in effectful and how to use them.
@@ -25,17 +25,18 @@
 effectful provides six categories of effects:
 
 1. **WebSocket Effects** - Real-time communication
-2. **Database Effects** - Data persistence
-3. **Cache Effects** - Performance optimization
-4. **Messaging Effects** - Pub/sub messaging
-5. **Storage Effects** - Object storage
-6. **Auth Effects** - Authentication
+1. **Database Effects** - Data persistence
+1. **Cache Effects** - Performance optimization
+1. **Messaging Effects** - Pub/sub messaging
+1. **Storage Effects** - Object storage
+1. **Auth Effects** - Authentication
 
 ### Effect Type Hierarchy
 
 > **Diagram**: See the complete Effect Type Hierarchy diagram in [architecture.md](../engineering/architecture.md#effect-type-hierarchy).
 
 **Key Points:**
+
 - All effects are frozen dataclasses (immutable)
 - `AllEffects` is a type union of all effect categories
 - Each effect yields a specific return type when interpreted
@@ -57,6 +58,7 @@ def send_greeting() -> Generator[AllEffects, EffectResult, None]:
 ```
 
 **Effect Signature:**
+
 ```python
 # file: examples/02_effect_types.py
 @dataclass(frozen=True)
@@ -89,6 +91,7 @@ def receive_and_echo() -> Generator[AllEffects, EffectResult, str]:
 ```
 
 **Effect Signature:**
+
 ```python
 # file: examples/02_effect_types.py
 @dataclass(frozen=True)
@@ -115,6 +118,7 @@ def goodbye() -> Generator[AllEffects, EffectResult, None]:
 ```
 
 **Effect Signature:**
+
 ```python
 # file: examples/02_effect_types.py
 @dataclass(frozen=True)
@@ -168,6 +172,7 @@ def lookup_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 ```
 
 **Effect Signature:**
+
 ```python
 # file: examples/02_effect_types.py
 @dataclass(frozen=True)
@@ -180,6 +185,7 @@ class GetUserById:
 **Errors:** `DatabaseError` if query fails
 
 **User Model:**
+
 ```python
 # file: examples/02_effect_types.py
 @dataclass(frozen=True)
@@ -209,6 +215,7 @@ def save_user_message(user_id: UUID, text: str) -> Generator[AllEffects, EffectR
 ```
 
 **Effect Signature:**
+
 ```python
 # file: examples/02_effect_types.py
 @dataclass(frozen=True)
@@ -222,6 +229,7 @@ class SaveChatMessage:
 **Errors:** `DatabaseError` if save fails
 
 **ChatMessage Model:**
+
 ```python
 # file: examples/02_effect_types.py
 @dataclass(frozen=True)
@@ -257,6 +265,7 @@ def get_profile(user_id: UUID) -> Generator[AllEffects, EffectResult, ProfileDat
 ```
 
 **Effect Signature:**
+
 ```python
 # file: examples/02_effect_types.py
 @dataclass(frozen=True)
@@ -269,6 +278,7 @@ class GetCachedProfile:
 **Errors:** `CacheError` if cache access fails
 
 **ProfileData Model:**
+
 ```python
 # file: examples/02_effect_types.py
 @dataclass(frozen=True)
@@ -298,6 +308,7 @@ def cache_profile(user_id: UUID, profile: ProfileData) -> Generator[AllEffects, 
 ```
 
 **Effect Signature:**
+
 ```python
 # file: examples/02_effect_types.py
 @dataclass(frozen=True)
@@ -334,12 +345,14 @@ flowchart TB
 ```
 
 **Pattern Benefits:**
+
 - **Performance**: Cache hits avoid database queries
 - **TTL Control**: Automatic expiration with `ttl_seconds`
 - **Explicit**: Cache miss logic is clear in code
 - **Type Safe**: Pattern matching ensures all cases handled
 
 **Example Implementation:**
+
 ```python
 # file: examples/02_effect_types.py
 def get_profile_cached(user_id: UUID) -> Generator[AllEffects, EffectResult, ProfileData | None]:
@@ -389,6 +402,7 @@ def publish_notification(event: str) -> Generator[AllEffects, EffectResult, str]
 ```
 
 **Effect Signature:**
+
 ```python
 # file: examples/02_effect_types.py
 @dataclass(frozen=True)
@@ -429,6 +443,7 @@ def process_notification() -> Generator[AllEffects, EffectResult, str]:
 ```
 
 **Effect Signature:**
+
 ```python
 # file: examples/02_effect_types.py
 @dataclass(frozen=True)
@@ -471,6 +486,7 @@ def upload_document(filename: str, content: bytes) -> Generator[AllEffects, Effe
 ```
 
 **Effect Signature:**
+
 ```python
 # file: examples/02_effect_types.py
 @dataclass(frozen=True)
@@ -510,6 +526,7 @@ def download_document(key: str) -> Generator[AllEffects, EffectResult, bytes]:
 ```
 
 **Effect Signature:**
+
 ```python
 # file: examples/02_effect_types.py
 @dataclass(frozen=True)
@@ -549,12 +566,14 @@ flowchart TB
 ```
 
 **Pattern Benefits:**
+
 - **Idempotent Storage**: PutObject overwrites existing objects
 - **Explicit Missing**: GetObject returns None for missing objects (not error)
 - **Metadata Tracking**: Attach custom metadata for provenance
 - **Type Safety**: Pattern matching ensures all cases handled
 
 **Example Implementation:**
+
 ```python
 # file: examples/02_effect_types.py
 def process_document(input_key: str) -> Generator[AllEffects, EffectResult, str]:
@@ -608,6 +627,7 @@ def authenticate(token: str) -> Generator[AllEffects, EffectResult, UUID | None]
 ```
 
 **Effect Signature:**
+
 ```python
 # file: examples/02_effect_types.py
 @dataclass(frozen=True)
@@ -639,6 +659,7 @@ def create_session(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 ```
 
 **Effect Signature:**
+
 ```python
 # file: examples/02_effect_types.py
 @dataclass(frozen=True)
@@ -786,6 +807,7 @@ def failing_program() -> Generator[AllEffects, EffectResult, str]:
 ```
 
 When run:
+
 ```python
 # file: examples/02_effect_types.py
 result = await run_ws_program(failing_program(), interpreter)
@@ -878,13 +900,15 @@ flowchart TB
 **Type Narrowing Techniques:**
 
 1. **isinstance assertion**: Best for single-type narrowing
+
    ```python
    # file: examples/02_effect_types.py
    assert isinstance(message, ChatMessage)
    # Now mypy knows message is ChatMessage
    ```
 
-2. **Pattern matching**: Best for ADT with multiple variants
+1. **Pattern matching**: Best for ADT with multiple variants
+
    ```python
    # file: examples/02_effect_types.py
    match user_result:
@@ -923,10 +947,11 @@ def program() -> Generator[AllEffects, EffectResult, str]:
 - [Tutorial 04: Testing Patterns](testing_guide.md) - Write comprehensive tests
 - [API Reference](../api/effects.md) - Complete effect API documentation
 
----
+______________________________________________________________________
 
 **Previous**: [Tutorial 01: Quickstart](quickstart.md) | **Next**: [Tutorial 03: ADTs and Result Types](adts_and_results.md)
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Standards](../engineering/README.md)

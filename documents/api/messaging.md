@@ -1,7 +1,7 @@
 # Messaging Effects API Reference
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/api/README.md
 
 > **Purpose**: Reference for messaging effect types used for pub/sub communication with brokers like Apache Pulsar.
@@ -24,6 +24,7 @@ class PublishMessage:
 ```
 
 **Parameters:**
+
 - `topic` - The topic/queue name to publish to
 - `payload` - Message content as bytes
 - `properties` - Optional metadata key-value pairs
@@ -31,6 +32,7 @@ class PublishMessage:
 **Returns:** `PublishResult` (see Domain Models below)
 
 **Example:**
+
 ```python
 # file: examples/messaging.py
 import json
@@ -70,6 +72,7 @@ class ConsumeMessage:
 ```
 
 **Parameters:**
+
 - `topic` - The topic/queue name to consume from
 - `subscription` - Subscription name for this consumer
 - `timeout_ms` - Timeout in milliseconds (default: 5000)
@@ -77,6 +80,7 @@ class ConsumeMessage:
 **Returns:** `ConsumeResult` (see Domain Models below)
 
 **Example:**
+
 ```python
 # file: examples/messaging.py
 from effectful import ConsumeMessage, MessageEnvelope, ConsumeTimeout
@@ -119,12 +123,14 @@ class AcknowledgeMessage:
 ```
 
 **Parameters:**
+
 - `message_id` - The ID of the message to acknowledge
 - `topic` - The topic the message came from
 
 **Returns:** `None`
 
 **Example:**
+
 ```python
 # file: examples/messaging.py
 from effectful import AcknowledgeMessage, MessageEnvelope
@@ -155,12 +161,14 @@ class NegativeAcknowledge:
 ```
 
 **Parameters:**
+
 - `message_id` - The ID of the message to nack
 - `topic` - The topic the message came from
 
 **Returns:** `None`
 
 **Example:**
+
 ```python
 # file: examples/messaging.py
 from effectful import NegativeAcknowledge, MessageEnvelope
@@ -209,6 +217,7 @@ class MessageEnvelope:
 ```
 
 **Fields:**
+
 - `message_id` - Unique identifier for the message
 - `topic` - Topic the message was consumed from
 - `payload` - Message content as bytes
@@ -233,6 +242,7 @@ class PublishFailure:
 ```
 
 **Pattern Matching:**
+
 ```python
 # file: examples/messaging.py
 result = yield PublishMessage(topic="events", payload=data)
@@ -260,6 +270,7 @@ class ConsumeTimeout:
 ```
 
 **Pattern Matching:**
+
 ```python
 # file: examples/messaging.py
 result = yield ConsumeMessage(topic="events", subscription="sub")
@@ -373,8 +384,9 @@ def event_processor() -> Generator[AllEffects, EffectResult, dict[str, int]]:
 - [Interpreters](interpreters.md) - MessagingInterpreter details
 - [Tutorial: Messaging Effects](../tutorials/messaging_effects.md) - Step-by-step guide
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Architecture](../engineering/architecture.md)

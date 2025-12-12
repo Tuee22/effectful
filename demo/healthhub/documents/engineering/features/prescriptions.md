@@ -1,20 +1,15 @@
 # Prescriptions Feature
 
-**Status**: Authoritative source (HealthHub tutorial patterns)
-**Supersedes**: none
+**Status**: Authoritative source
+**Supersedes**: none **📖 Base Standard**: [prescriptions.md](../../../../../documents/engineering/features/prescriptions.md)
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
-> **Purpose**: Complete reference for HealthHub prescription system: prescription domain model, medication interaction checking, doctor-only creation with can_prescribe flag, and RBAC enforcement.
-
-> **Core Doctrines**: For comprehensive patterns, see:
-> - [ADTs and Result Types](../../../../../documents/tutorials/adts_and_results.md)
-> - [Code Quality](../../../../../documents/engineering/code_quality.md)
-> - [Effect Patterns](../../../../../documents/engineering/effect_patterns.md)
+> **Purpose**: HealthHub overlay deltas for Prescriptions. **📖 Base Standard**: [prescriptions.md](../../../../../documents/engineering/features/prescriptions.md)
 
 ## Prerequisites
 
 - Docker workflow running; commands executed via `docker compose -f docker/docker-compose.yml`.
-- Completed [Intermediate Journey](../01_journeys/intermediate_journey.md).
+- Completed [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md).
 - Familiarity with healthcare prescriptions, ADTs, Python type hints, pattern matching.
 
 ## Learning Objectives
@@ -30,6 +25,7 @@
 ## Overview
 
 **Prescription System Architecture**:
+
 - **Creation**: Doctors only (with `can_prescribe=true` flag)
 - **Interaction Checking**: Automated validation against allergies and existing prescriptions
 - **Expiration**: Prescriptions expire after specified duration
@@ -37,6 +33,7 @@
 - **Viewing**: Patients see own prescriptions, doctors see all prescriptions
 
 **Safety Features**:
+
 - **Allergy checking**: Block prescriptions that interact with patient allergies
 - **Drug interaction checking**: Warn about interactions with current prescriptions
 - **Controlled substance tracking**: Flag controlled substances for DEA compliance
@@ -274,7 +271,9 @@ def _check_drug_pair_interaction(med1: str, med2: str) -> InteractionWarning | N
 **Endpoint**: `POST /api/prescriptions`
 
 **Request**:
+
 ```json
+// snippet
 {
   "patient_id": "30000000-0000-0000-0000-000000000001",
   "medication": "Lisinopril",
@@ -383,6 +382,7 @@ def create_prescription_with_interaction_check(
 ```
 
 **API Endpoint with RBAC**:
+
 ```python
 # file: demo/healthhub/backend/app/api/prescriptions.py
 from fastapi import APIRouter, Depends, HTTPException
@@ -443,9 +443,10 @@ async def create_prescription(
 ```
 
 **RBAC Enforcement**:
+
 1. **Doctor-only**: Only `DoctorAuthorized` variant can create prescriptions
-2. **can_prescribe flag**: Doctor must have `can_prescribe=true` in database
-3. **Pattern matching**: MyPy enforces exhaustive case coverage
+1. **can_prescribe flag**: Doctor must have `can_prescribe=true` in database
+1. **Pattern matching**: MyPy enforces exhaustive case coverage
 
 ## Viewing Prescriptions
 
@@ -454,6 +455,7 @@ async def create_prescription(
 **Endpoint**: `GET /api/prescriptions` (as patient)
 
 **Program**:
+
 ```python
 # file: demo/healthhub/backend/app/programs/prescription_programs.py
 def get_patient_prescriptions(patient_id: UUID) -> Generator[Effect, Result, Result[list[dict]]]:
@@ -493,6 +495,7 @@ def get_patient_prescriptions(patient_id: UUID) -> Generator[Effect, Result, Res
 ```
 
 **API Endpoint**:
+
 ```python
 # file: demo/healthhub/backend/app/api/prescriptions.py
 @router.get("/")
@@ -532,6 +535,7 @@ async def get_prescriptions(
 **Endpoint**: `GET /api/prescriptions?patient_id=<uuid>` (as doctor)
 
 **Program**:
+
 ```python
 # file: demo/healthhub/backend/app/programs/prescription_programs.py
 def get_all_prescriptions(
@@ -592,6 +596,7 @@ def get_all_prescriptions(
 **Endpoint**: `POST /api/prescriptions/{prescription_id}/refill`
 
 **Program**:
+
 ```python
 # file: demo/healthhub/backend/app/programs/prescription_programs.py
 def refill_prescription(prescription_id: UUID) -> Generator[Effect, Result, Result[dict]]:
@@ -727,6 +732,7 @@ async def test_patient_can_only_view_own_prescriptions(clean_healthhub_state, po
 ## Summary
 
 **You have learned**:
+
 - ✅ Prescription domain model (medication, dosage, frequency, duration, refills)
 - ✅ Doctor-only creation with `can_prescribe` flag RBAC enforcement
 - ✅ Medication interaction checking (allergies and drug interactions)
@@ -736,18 +742,19 @@ async def test_patient_can_only_view_own_prescriptions(clean_healthhub_state, po
 - ✅ E2E testing for creation, viewing, and RBAC
 
 **Key Takeaways**:
+
 1. **Medication Safety**: Automated interaction checking prevents dangerous prescriptions
-2. **RBAC Enforcement**: `can_prescribe` flag controls prescription creation access
-3. **Pattern Matching**: AuthorizationState ADT enforces role-based access
-4. **Warnings vs Errors**: Low/medium warnings inform, critical warnings block
-5. **Expiration Tracking**: Automatic expiration based on duration
-6. **Refill Management**: Prevent over-refill, enforce doctor review
+1. **RBAC Enforcement**: `can_prescribe` flag controls prescription creation access
+1. **Pattern Matching**: AuthorizationState ADT enforces role-based access
+1. **Warnings vs Errors**: Low/medium warnings inform, critical warnings block
+1. **Expiration Tracking**: Automatic expiration based on duration
+1. **Refill Management**: Prevent over-refill, enforce doctor review
 
 ## Cross-References
 
-- [Intermediate Journey - Prescription Creation](../01_journeys/intermediate_journey.md#step-3-create-prescription-with-interaction-checking)
+- [Intermediate Journey - Prescription Creation](../../tutorials/01_journeys/intermediate_journey.md#step-3-create-prescription-with-interaction-checking)
 - [Authentication - can_prescribe Flag](authentication.md#pattern-3-feature-flags-doctor-prescription-access)
 - [ADTs and Result Types](../../../../../documents/tutorials/adts_and_results.md)
 - [Code Quality](../../../../../documents/engineering/code_quality.md)
-- [Doctor Guide](../02_roles/doctor_guide.md)
-- [Prescription Workflow](../04_workflows/prescription_workflow.md)
+- [Doctor Guide](../../product/roles/doctor_guide.md)
+- [Prescription Workflow](../../product/workflows/prescription_workflow.md)

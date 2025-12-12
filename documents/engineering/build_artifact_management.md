@@ -1,12 +1,12 @@
 # Build Artifact Management
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: engineering/README.md
 
 > **Purpose**: Authoritative rules for what counts as a build artifact, where it lives, and why it must never be versioned or copied out of the container.
 
----
+______________________________________________________________________
 
 ## Executive Summary
 
@@ -14,65 +14,76 @@
 - **All build outputs live under `/opt` inside containers** and **stay there** (not copied back to the host or image layers beyond `/opt`).
 - **Lockfiles (`poetry.lock`, `package-lock.json`) are treated as build artifacts in this repo**: they are not tracked in git and are excluded from Docker contexts.
 
----
+______________________________________________________________________
 
 ## Doctrine
 
 ### Core Principle
+
 **Only source-of-truth files are versioned. Everything produced by a build step is an artifact and must be ignored.**
 
 ### Locations
+
 - **Container-only outputs**: `/opt/**` (backend + frontend build products). These remain inside the container; do not copy them into the final image or host.
 - **Lockfiles as artifacts**: `poetry.lock`, `package-lock.json` are regenerated as part of dependency resolution and are not versioned.
 
 ### Rationale
-1. **Reproducibility**: Deterministic builds from `pyproject.toml`/`package.json` without stale lockfiles.
-2. **Security**: Prevent leaking secrets embedded in compiled outputs or npm/yarn caches.
-3. **Repo health**: Avoid churn/bloat from compiled assets or lockfile drift.
-4. **CI parity**: CI regenerates artifacts exactly as local Docker builds do.
 
----
+1. **Reproducibility**: Deterministic builds from `pyproject.toml`/`package.json` without stale lockfiles.
+1. **Security**: Prevent leaking secrets embedded in compiled outputs or npm/yarn caches.
+1. **Repo health**: Avoid churn/bloat from compiled assets or lockfile drift.
+1. **CI parity**: CI regenerates artifacts exactly as local Docker builds do.
+
+______________________________________________________________________
 
 ## What Is Versioned (Sources)
+
 - `pyproject.toml`, `package.json`, source code, schemas, docs.
 - Minimal config needed to run deterministic builds inside containers.
 
 ## What Is Not Versioned (Artifacts)
+
 - **Lockfiles**: `poetry.lock`, `package-lock.json` (regenerated during builds).
 - **Container build outputs**: Anything under `/opt/**` created during Docker builds.
 - **Caches/binaries**: `__pycache__/`, `.mypy_cache/`, `.pytest_cache/`, `dist/`, `build/`, `*.egg-info/`.
 
----
+______________________________________________________________________
 
 ## Ignore Policy
 
 ### .gitignore (host)
+
 - **Exclude**: `poetry.lock`, `package-lock.json`, build/caches (`dist/`, `build/`, `*.egg-info/`, `__pycache__/`, `.mypy_cache/`, `.pytest_cache/`).
 - **Comment rules**: Every new pattern must state what/why/how to regenerate (see [Documentation Standards](../documentation_standards.md#gitignore-and-dockerignore-rules)).
 
 ### .dockerignore (build context)
+
 - **Exclude**: `poetry.lock`, `package-lock.json`, host caches/build outputs (`dist/`, `build/`, `*.egg-info/`, `__pycache__/`, `.mypy_cache/`, `.pytest_cache/`).
 - **Include**: Only source-of-truth inputs required to rebuild artifacts inside the container.
 
----
+______________________________________________________________________
 
 ## Regeneration Workflow
 
 Backend (inside container):
+
 ```bash
+# snippet
 docker compose -f docker/docker-compose.yml exec effectful poetry install
 docker compose -f docker/docker-compose.yml exec healthhub poetry install
 ```
 
 Frontend (inside container):
+
 ```bash
+# snippet
 docker compose -f demo/healthhub/docker/docker-compose.yml exec healthhub npm ci
 docker compose -f demo/healthhub/docker/docker-compose.yml exec healthhub npm run build
 ```
 
 Artifacts produced in these steps stay under `/opt/**` in the container; do not copy them to the host or commit them.
 
----
+______________________________________________________________________
 
 ## Verification
 
@@ -90,7 +101,7 @@ Artifacts produced in these steps stay under `/opt/**` in the container; do not 
   git status --short | grep -E "poetry.lock|package-lock.json|dist/|build/" && echo "Artifacts present (fix ignore rules)"
   ```
 
----
+______________________________________________________________________
 
 ## Cross-References
 
@@ -98,7 +109,7 @@ Artifacts produced in these steps stay under `/opt/**` in the container; do not 
 - Build workflows: [Docker Workflow](docker_workflow.md) — container-only development contract.
 - Code quality gates: [Code Quality](code_quality.md) — enforcement pipeline that regenerates artifacts.
 
----
+______________________________________________________________________
 
 ## Maintenance
 
@@ -107,6 +118,6 @@ Artifacts produced in these steps stay under `/opt/**` in the container; do not 
   - Ignore rules change materially.
   - Build pipelines add new stages affecting `/opt/**` outputs or lockfile handling.
 
----
+______________________________________________________________________
 
 **SSoT**: This file supersedes any other guidance on build artifact handling in this repository. All other docs must link here when referring to artifact/versioning rules.

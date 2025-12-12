@@ -1,14 +1,12 @@
 # Feature-Based Tutorials
 
 **Status**: Authoritative source
-**Supersedes**: none
+**Supersedes**: none **📖 Base Standard**: [README.md](../../../../../documents/engineering/features/README.md)
 **Referenced by**: demo/healthhub/documents/readme.md, demo/healthhub/documents/tutorials/README.md, demo/healthhub/documents/engineering/README.md
 
-> **Purpose**: Deep dive into specific HealthHub features. These tutorials are the Single Source of Truth for HealthHub-specific feature documentation.
+> **Purpose**: HealthHub overlay deltas for Readme. **📖 Base Standard**: [README.md](../../../../../documents/engineering/features/README.md)
 
-> **Recommended for**: Developers working on specific features, debugging, feature enhancement, API documentation reference.
-
----
+______________________________________________________________________
 
 ## Overview
 
@@ -16,7 +14,7 @@ Feature tutorials provide comprehensive documentation for each HealthHub feature
 
 **Pattern**: Each tutorial covers domain models, state machines, effect programs, RBAC enforcement, and e2e tests for one feature.
 
----
+______________________________________________________________________
 
 ## Features
 
@@ -25,6 +23,7 @@ Feature tutorials provide comprehensive documentation for each HealthHub feature
 **Tutorial**: [authentication.md](authentication.md)
 
 **Topics**:
+
 - JWT authentication flow (login → token issue → refresh)
 - AuthorizationState ADT (PatientAuthorized | DoctorAuthorized | AdminAuthorized | Unauthorized)
 - RBAC enforcement (route guards, API protection)
@@ -39,13 +38,14 @@ Feature tutorials provide comprehensive documentation for each HealthHub feature
 
 **Use Cases**: Implementing protected routes, auth state management, role-based access
 
----
+______________________________________________________________________
 
 ### 2. Appointments
 
 **Tutorial**: [appointments.md](appointments.md)
 
 **Topics**:
+
 - AppointmentStatus state machine (6 variants)
 - Valid state transitions (Requested → Confirmed → InProgress → Completed | Cancelled)
 - Transition validation (prevent invalid state changes)
@@ -56,7 +56,8 @@ Feature tutorials provide comprehensive documentation for each HealthHub feature
 **Domain Models**: Appointment, AppointmentStatus ADT
 
 **State Machine**:
-```
+
+```text
 Requested → Confirmed → InProgress → Completed
     ↓           ↓           ↓
 Cancelled   Cancelled   Cancelled
@@ -68,13 +69,14 @@ Cancelled   Cancelled   Cancelled
 
 **Use Cases**: Appointment management, state machine implementation, workflow validation
 
----
+______________________________________________________________________
 
 ### 3. Prescriptions
 
 **Tutorial**: [prescriptions.md](prescriptions.md)
 
 **Topics**:
+
 - Prescription domain model (medication, dosage, frequency, duration, refills)
 - Doctor-only creation (RBAC enforcement via can_prescribe flag)
 - Medication interaction checking (simulate drug database lookup)
@@ -92,13 +94,14 @@ Cancelled   Cancelled   Cancelled
 
 **Use Cases**: Prescription management, medication safety, RBAC patterns
 
----
+______________________________________________________________________
 
 ### 4. Lab Results
 
 **Tutorial**: [lab_results.md](lab_results.md)
 
 **Topics**:
+
 - Lab result domain model (test_type, result_data, critical flag)
 - Critical value alerts (automatic notification triggers)
 - Doctor review workflow (reviewed_by_doctor flag + notes)
@@ -115,13 +118,14 @@ Cancelled   Cancelled   Cancelled
 
 **Use Cases**: Lab result processing, critical alerts, doctor-patient communication
 
----
+______________________________________________________________________
 
 ### 5. Invoices
 
 **Tutorial**: [invoices.md](invoices.md)
 
 **Topics**:
+
 - Invoice domain model (status, subtotal, tax, total, due_date)
 - Invoice generation from completed appointments
 - Line item management (description, quantity, unit price)
@@ -139,53 +143,56 @@ Cancelled   Cancelled   Cancelled
 
 **Use Cases**: Billing workflows, invoice management, payment tracking
 
----
+______________________________________________________________________
 
 ## Feature Comparison
 
-| Feature | State Machine | RBAC | Notifications | Critical Alerts |
-|---------|---------------|------|---------------|-----------------|
-| **Authentication** | ❌ | ✅ (core) | ❌ | ❌ |
-| **Appointments** | ✅ (6 states) | ✅ | ✅ | ❌ |
-| **Prescriptions** | ❌ | ✅ (doctor-only) | ✅ | ❌ |
-| **Lab Results** | ❌ | ✅ | ✅ | ✅ (critical flag) |
-| **Invoices** | ❌ | ✅ (admin-only) | ❌ | ❌ |
+| Feature            | State Machine | RBAC             | Notifications | Critical Alerts    |
+| ------------------ | ------------- | ---------------- | ------------- | ------------------ |
+| **Authentication** | ❌            | ✅ (core)        | ❌            | ❌                 |
+| **Appointments**   | ✅ (6 states) | ✅               | ✅            | ❌                 |
+| **Prescriptions**  | ❌            | ✅ (doctor-only) | ✅            | ❌                 |
+| **Lab Results**    | ❌            | ✅               | ✅            | ✅ (critical flag) |
+| **Invoices**       | ❌            | ✅ (admin-only)  | ❌            | ❌                 |
 
----
+______________________________________________________________________
 
 ## Tutorial Structure
 
 Each feature tutorial follows this pattern:
 
 1. **Domain Model Definition**: Dataclasses, ADTs, type definitions
-2. **Effect Programs**: Generator-based programs using effects
-3. **State Machines** (if applicable): Valid transitions, terminal states
-4. **RBAC Enforcement**: Role restrictions, authorization checks
-5. **Code Examples**: From backend/app/programs/, backend/app/domain/
-6. **Test Examples**: From tests/pytest/e2e/
-7. **Cross-References**: Links to role guides, workflows, engineering docs
+1. **Effect Programs**: Generator-based programs using effects
+1. **State Machines** (if applicable): Valid transitions, terminal states
+1. **RBAC Enforcement**: Role restrictions, authorization checks
+1. **Code Examples**: From backend/app/programs/, backend/app/domain/
+1. **Test Examples**: From tests/pytest/e2e/
+1. **Cross-References**: Links to role guides, workflows, engineering docs
 
----
+______________________________________________________________________
 
 ## Related Content
 
 **For role-specific usage**:
+
 - [Patient Guide](../../product/roles/patient_guide.md)
 - [Doctor Guide](../../product/roles/doctor_guide.md)
 - [Admin Guide](../../product/roles/admin_guide.md)
 
 **For multi-feature integration**:
+
 - [Appointment Lifecycle](../../product/workflows/appointment_lifecycle.md)
 - [Prescription Workflow](../../product/workflows/prescription_workflow.md)
 - [Lab Result Workflow](../../product/workflows/lab_result_workflow.md)
 - [Patient Onboarding](../../product/workflows/patient_onboarding.md)
 
 **For progressive learning**:
+
 - [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md)
 - [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md)
 - [Advanced Journey](../../tutorials/01_journeys/advanced_journey.md)
 
----
+______________________________________________________________________
 
 ## Cross-References
 

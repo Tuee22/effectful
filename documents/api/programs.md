@@ -1,7 +1,7 @@
 # Programs API Reference
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/api/README.md
 
 > **Purpose**: Reference for program execution helpers and program types.
@@ -19,6 +19,7 @@ Programs are Python generators that yield effects and return values. They descri
 Execute an effect program to completion with fail-fast error handling.
 
 **Type Signature**:
+
 ```python
 # file: examples/programs.py
 async def run_ws_program[T] (
@@ -28,17 +29,21 @@ async def run_ws_program[T] (
 ```
 
 **Type Parameters**:
+
 - `T` - The program's return type
 
 **Parameters**:
+
 - `program: Generator[AllEffects, EffectResult, T]` - The program to execute
 - `interpreter: EffectInterpreter` - The interpreter that executes effects
 
 **Returns**: `Result[T, InterpreterError]`
+
 - `Ok(value: T)` - Program completed successfully with return value
 - `Err(error: InterpreterError)` - First effect failure
 
 **Usage**:
+
 ```python
 # file: examples/programs.py
 from effectful import run_ws_program, SendText, GetUserById, Ok, Err
@@ -66,7 +71,7 @@ match result:
         print(f"Program failed: {error}")
 ```
 
----
+______________________________________________________________________
 
 ## Execution Behavior
 
@@ -125,7 +130,7 @@ match result:
         ...
 ```
 
----
+______________________________________________________________________
 
 ## Program Types
 
@@ -147,6 +152,7 @@ type AllEffects = (
 ```
 
 **Usage**:
+
 ```python
 # file: examples/programs.py
 from collections.abc import Generator
@@ -159,7 +165,7 @@ def my_program() -> Generator[AllEffects, EffectResult, str]:
     return "done"
 ```
 
----
+______________________________________________________________________
 
 ### EffectResult
 
@@ -199,6 +205,7 @@ type EffectResult = (
 ```
 
 **Components**:
+
 - `str` - From `ReceiveText`, `HashPassword`, `GenerateToken`
 - `User | UserNotFound` - From `GetUserById` (ADT for explicit semantics)
 - `ChatMessage` - From `SaveChatMessage`
@@ -241,7 +248,7 @@ def program() -> Generator[AllEffects, EffectResult, str]:
             return "Not found"
 ```
 
----
+______________________________________________________________________
 
 ### WSProgram
 
@@ -253,6 +260,7 @@ type WSProgram = Generator[AllEffects, EffectResult, None]
 ```
 
 **Usage**:
+
 ```python
 # file: examples/programs.py
 def simple_greeting() -> WSProgram:
@@ -269,7 +277,7 @@ def simple_greeting() -> Generator[AllEffects, EffectResult, None]:
     return None
 ```
 
----
+______________________________________________________________________
 
 ## Program Patterns
 
@@ -384,7 +392,7 @@ def error_aware_program(
             return "not_found"
 ```
 
----
+______________________________________________________________________
 
 ## Program Composition
 
@@ -482,7 +490,7 @@ def retry_with_backoff[T] (
     raise RuntimeError("Max retries exceeded")
 ```
 
----
+______________________________________________________________________
 
 ## Advanced Patterns
 
@@ -588,7 +596,7 @@ def complete_workflow(
             }
 ```
 
----
+______________________________________________________________________
 
 ## Performance Considerations
 
@@ -643,7 +651,7 @@ def optimized_program(
                     return "User not found"
 ```
 
----
+______________________________________________________________________
 
 ## Debugging Programs
 
@@ -684,7 +692,7 @@ Access effect names for tracing:
 # Can be used for distributed tracing, metrics, etc.
 ```
 
----
+______________________________________________________________________
 
 ## See Also
 
@@ -693,8 +701,9 @@ Access effect names for tracing:
 - [Interpreters API](./interpreters.md) - Executing programs
 - [Testing Standards](../engineering/testing.md) - Testing programs
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Architecture](../engineering/architecture.md)

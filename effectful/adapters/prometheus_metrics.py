@@ -24,7 +24,6 @@ from effectful.domain.metrics_result import (
     MetricRecordingFailed,
     MetricResult,
     QueryFailure,
-    QuerySuccess,
 )
 from effectful.observability import MetricsRegistry
 

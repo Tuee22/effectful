@@ -10,14 +10,12 @@ when connected to actual infrastructure.
 """
 
 import asyncio
-from datetime import UTC, datetime
 from uuid import uuid4
 
 import asyncpg
 import pytest
 from redis.asyncio import Redis
 
-import boto3
 from effectful.adapters.postgres import PostgresChatMessageRepository, PostgresUserRepository
 from effectful.adapters.redis_cache import RedisProfileCache
 from effectful.adapters.s3_storage import S3ObjectStorage
@@ -25,7 +23,7 @@ from effectful.domain.optional_value import Absent, Provided, to_optional_value
 from effectful.domain.cache_result import CacheHit, CacheMiss
 from effectful.domain.profile import ProfileData
 from effectful.domain.s3_object import ObjectNotFound, PutSuccess, S3Object
-from effectful.domain.user import User, UserFound, UserNotFound
+from effectful.domain.user import UserFound, UserNotFound
 
 
 class TestPostgresUserRepository:

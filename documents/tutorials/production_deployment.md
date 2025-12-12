@@ -1,7 +1,7 @@
 # Tutorial 05: Production Deployment
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/readme.md
 
 > **Purpose**: Tutorial for deploying effectful programs to production with proper infrastructure configuration.
@@ -18,19 +18,21 @@
 ## Learning Objectives
 
 By the end of this tutorial, you will:
+
 - Configure production infrastructure (PostgreSQL, Redis, WebSocket)
 - Use connection pooling for scalability
 - Implement error monitoring and logging
 - Configure timeouts and retries
 - Deploy with Docker
 
----
+______________________________________________________________________
 
 ## Step 1: Infrastructure setup
 
 ### PostgreSQL Configuration
 
 **Install Dependencies**:
+
 ```bash
 # For library users adding effectful to YOUR application
 poetry add asyncpg
@@ -40,6 +42,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry add asyncpg
 ```
 
 **Connection Pool Setup**:
+
 ```python
 # file: examples/05_production_deployment.py
 # src/infrastructure/database.py
@@ -82,6 +85,7 @@ async def get_db_connection() -> AsyncIterator[asyncpg.Connection]:
 ### Redis Configuration
 
 **Install Dependencies**:
+
 ```bash
 # For library users adding effectful to YOUR application
 poetry add redis[hiredis]
@@ -91,6 +95,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry add redis[hire
 ```
 
 **Connection Pool Setup**:
+
 ```python
 # file: examples/05_production_deployment.py
 # src/infrastructure/cache.py
@@ -124,7 +129,7 @@ def get_redis() -> aioredis.Redis:
     return redis_pool
 ```
 
----
+______________________________________________________________________
 
 ## Step 2: FastAPI integration
 
@@ -212,7 +217,7 @@ async def websocket_chat_endpoint(websocket: WebSocket) -> None:
         await websocket.close(code=1011, reason="Internal error")
 ```
 
----
+______________________________________________________________________
 
 ## Step 3: Error monitoring
 
@@ -243,11 +248,14 @@ def setup_logging(level: str = "INFO") -> None:
 ### Sentry Integration
 
 **Install Dependencies**:
+
 ```bash
+# snippet
 poetry add sentry-sdk
 ```
 
 **Configuration**:
+
 ```python
 # file: examples/05_production_deployment.py
 # src/monitoring.py
@@ -270,6 +278,7 @@ def init_sentry(dsn: str, environment: str = "production") -> None:
 ```
 
 **Error Reporting**:
+
 ```python
 # file: examples/05_production_deployment.py
 from effectful import run_ws_program, Err
@@ -286,7 +295,7 @@ match result:
         logger.info(f"Program succeeded: {value}")
 ```
 
----
+______________________________________________________________________
 
 ## Step 4: Environment configuration
 
@@ -325,6 +334,7 @@ settings = Settings()
 ```
 
 **Environment File (.env)**:
+
 ```bash
 # Database
 DATABASE_URL=postgresql://user:password@db:5432/mydb
@@ -344,7 +354,7 @@ PROGRAM_TIMEOUT_SECONDS=300.0
 SENTRY_DSN=https://your-sentry-dsn@sentry.io/project
 ```
 
----
+______________________________________________________________________
 
 ## Step 5: Docker deployment
 
@@ -422,11 +432,13 @@ volumes:
 ```
 
 **Start Services**:
+
 ```bash
+# snippet
 docker-compose up -d
 ```
 
----
+______________________________________________________________________
 
 ## Step 6: Performance tuning
 
@@ -435,6 +447,7 @@ docker-compose up -d
 **Formula**: `connections = (core_count * 2) + effective_spindle_count`
 
 For web application:
+
 ```python
 # file: examples/05_production_deployment.py
 # 4 CPU cores
@@ -466,7 +479,7 @@ CACHE_TTL_SESSION = 3600    # 1 hour
 CACHE_TTL_STATIC = 86400    # 24 hours
 ```
 
----
+______________________________________________________________________
 
 ## Step 7: Health checks
 
@@ -511,7 +524,7 @@ async def health_check() -> JSONResponse:
     )
 ```
 
----
+______________________________________________________________________
 
 ## Step 8: Deployment checklist
 
@@ -539,38 +552,43 @@ async def health_check() -> JSONResponse:
 - [ ] No memory leaks (stable memory usage)
 - [ ] CPU usage < 70%
 
----
+______________________________________________________________________
 
 ## Best Practices
 
 ### ✅ DO
 
 1. **Use Connection Pools**
+
    ```python
    # file: examples/05_production_deployment.py
    db_pool = await asyncpg.create_pool(dsn=DATABASE_URL, min_size=5, max_size=20)
    ```
 
-2. **Configure Timeouts**
+1. **Configure Timeouts**
+
    ```python
    # file: examples/05_production_deployment.py
    result = await asyncio.wait_for(run_ws_program(...), timeout=300.0)
    ```
 
-3. **Monitor Errors**
+1. **Monitor Errors**
+
    ```python
    # file: examples/05_production_deployment.py
    sentry_sdk.capture_exception(Exception(str(error)))
    ```
 
-4. **Validate Health**
+1. **Validate Health**
+
    ```python
    # file: examples/05_production_deployment.py
    @app.get("/health")
    async def health_check() -> JSONResponse: ...
    ```
 
-5. **Use Environment Variables**
+1. **Use Environment Variables**
+
    ```python
    # file: examples/05_production_deployment.py
    settings = Settings()  # Loads from .env
@@ -579,13 +597,15 @@ async def health_check() -> JSONResponse:
 ### ❌ DON'T
 
 1. **Don't Create Connections Per Request**
+
    ```python
    # file: examples/05_production_deployment.py
    # ❌ Creates new connection every request
    conn = await asyncpg.connect(DATABASE_URL)
    ```
 
-2. **Don't Skip Error Monitoring**
+1. **Don't Skip Error Monitoring**
+
    ```python
    # file: examples/05_production_deployment.py
    # ❌ Silent failures
@@ -593,14 +613,15 @@ async def health_check() -> JSONResponse:
        case Err(_): pass
    ```
 
-3. **Don't Use Hardcoded Secrets**
+1. **Don't Use Hardcoded Secrets**
+
    ```python
    # file: examples/05_production_deployment.py
    # ❌ Security risk
    DATABASE_URL = "postgresql://user:password@localhost/db"
    ```
 
----
+______________________________________________________________________
 
 ## Next Steps
 
@@ -611,6 +632,7 @@ async def health_check() -> JSONResponse:
 ## Summary
 
 You learned how to:
+
 - ✅ Configure production infrastructure (PostgreSQL, Redis)
 - ✅ Use connection pooling for scalability
 - ✅ Integrate with FastAPI and WebSocket
@@ -620,8 +642,9 @@ You learned how to:
 
 Your application is production-ready! 🚀
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Standards](../engineering/README.md)

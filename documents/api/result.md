@@ -1,7 +1,7 @@
 # Result Type API Reference
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/api/README.md
 
 > **Purpose**: Reference for the `Result[T, E]` type and related utilities.
@@ -20,6 +20,7 @@ type Result[T, E] = Ok[T] | Err[E]
 ```
 
 **Type Parameters**:
+
 - `T` - The success value type
 - `E` - The error type
 
@@ -46,6 +47,7 @@ flowchart TB
 ```
 
 **Key Properties:**
+
 - **Sum Type**: A Result is exactly one of two variants (Ok or Err)
 - **Immutable**: Both variants are frozen dataclasses
 - **Type Safe**: Pattern matching ensures all cases handled
@@ -158,7 +160,7 @@ result = Ok(42)
 # result.unwrap_err()  # Raises ValueError
 ```
 
----
+______________________________________________________________________
 
 ## Err[E] - Failure Variant
 
@@ -261,7 +263,7 @@ error = result.unwrap_err()
 assert error == "failed"
 ```
 
----
+______________________________________________________________________
 
 ## Pattern Matching
 
@@ -310,7 +312,7 @@ def incomplete(result: Result[int, str]) -> int:
     # Missing Err case - type checker catches this!
 ```
 
----
+______________________________________________________________________
 
 ## EffectReturn[T] Wrapper
 
@@ -362,7 +364,7 @@ doubled = result.map(lambda x: x * 2)
 assert doubled == EffectReturn(84, "GetCount")
 ```
 
----
+______________________________________________________________________
 
 ## Utility Functions
 
@@ -386,6 +388,7 @@ assert process_value(Err("failed")) == 0
 ```
 
 **Type Signature**:
+
 ```python
 # file: examples/result.py
 def fold_result[T, E, R] (
@@ -395,7 +398,7 @@ def fold_result[T, E, R] (
 ) -> R
 ```
 
----
+______________________________________________________________________
 
 ## Common Patterns
 
@@ -508,7 +511,7 @@ assert create_user("bad") == Err("Invalid email: missing @")
 assert create_user("a@b") == Err("Invalid email: too short")
 ```
 
----
+______________________________________________________________________
 
 ## Type Safety
 
@@ -579,7 +582,7 @@ def map_twice[T] (result: Result[T, str]) -> Result[T, str]:
 int_result = map_twice(Ok(42))
 ```
 
----
+______________________________________________________________________
 
 ## See Also
 
@@ -588,8 +591,9 @@ int_result = map_twice(Ok(42))
 - [Programs API](./programs.md) - Program execution with Result types
 - [Testing Standards](../engineering/testing.md) - Testing Result values
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Architecture](../engineering/architecture.md)

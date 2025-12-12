@@ -1,7 +1,7 @@
 # Development Workflow
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: engineering/README.md
 
 > **Purpose**: SSoT for daily development procedures, adding features, and database management in effectful.
@@ -26,21 +26,21 @@ flowchart TB
   Testing --> Docs
 ```
 
-| Need | Link |
-|------|------|
-| Container policy | [Docker Workflow](docker_workflow.md) |
-| Exact command syntax | [Command Reference](command_reference.md) |
-| Environment variables | [Configuration](configuration.md) |
-| Documentation rules | [Documentation Standards](../documentation_standards.md) |
-| Test sequencing | [Testing](testing.md#running-tests) |
+| Need                  | Link                                                     |
+| --------------------- | -------------------------------------------------------- |
+| Container policy      | [Docker Workflow](docker_workflow.md)                    |
+| Exact command syntax  | [Command Reference](command_reference.md)                |
+| Environment variables | [Configuration](configuration.md)                        |
+| Documentation rules   | [Documentation Standards](../documentation_standards.md) |
+| Test sequencing       | [Testing](testing.md#running-tests)                      |
 
 ## Daily Development Loop
 
 1. Start services (see [Command Reference](command_reference.md#docker-service-management))
-2. Make code changes
-3. Run code quality checks (see [Command Reference](command_reference.md#code-quality-validation))
-4. Run tests (see [Command Reference](command_reference.md#running-tests))
-5. Leave changes uncommitted (see [Git Workflow Policy](#git-workflow-policy) below)
+1. Make code changes
+1. Run code quality checks (see [Command Reference](command_reference.md#code-quality-validation))
+1. Run tests (see [Command Reference](command_reference.md#running-tests))
+1. Leave changes uncommitted (see [Git Workflow Policy](#git-workflow-policy) below)
 
 All commands follow the Docker pattern. See [Command Reference](command_reference.md) for complete command table.
 
@@ -49,11 +49,13 @@ All commands follow the Docker pattern. See [Command Reference](command_referenc
 **9-step procedure** for introducing new effect types to the system:
 
 1. **Define immutable effect dataclass** in `effectful/effects/`
+
    - Use `@dataclass(frozen=True)`
    - Include all parameters needed for execution
    - Follow naming convention: verb-noun (e.g., `GetUserById`, `SendText`)
 
-2. **Add effect to AllEffects union** in `effectful/programs/program_types.py`
+1. **Add effect to AllEffects union** in `effectful/programs/program_types.py`
+
    ```python
    # file: effectful/programs/program_types.py
    type AllEffects = (
@@ -64,7 +66,8 @@ All commands follow the Docker pattern. See [Command Reference](command_referenc
    )
    ```
 
-3. **Update EffectResult union** if effect returns new type
+1. **Update EffectResult union** if effect returns new type
+
    ```python
    # file: effectful/programs/program_types.py
    type EffectResult = (
@@ -75,31 +78,37 @@ All commands follow the Docker pattern. See [Command Reference](command_referenc
    )
    ```
 
-4. **Create specialized interpreter** in `effectful/interpreters/`
+1. **Create specialized interpreter** in `effectful/interpreters/`
+
    - Inherit from `BaseInterpreter`
    - Implement `handle()` method returning `Result[T, E]`
    - Follow fail-fast error handling pattern
 
-5. **Register interpreter** in `CompositeInterpreter`
+1. **Register interpreter** in `CompositeInterpreter`
+
    - Add to interpreter list during initialization
    - Ensure correct handler precedence
 
-6. **Create real adapter** in `effectful/adapters/` (if needed)
+1. **Create real adapter** in `effectful/adapters/` (if needed)
+
    - Implement infrastructure protocol
    - Handle real I/O (database, network, etc.)
    - Follow adapter naming: `PostgresXRepository`, `RedisXCache`
 
-7. **Write unit tests** with pytest-mock
+1. **Write unit tests** with pytest-mock
+
    - Test interpreter logic with mocked infrastructure
    - See [Testing](testing.md) for anti-patterns to avoid
    - Use `mocker.AsyncMock(spec=Protocol)` for type safety
 
-8. **Write integration tests** with real infrastructure
+1. **Write integration tests** with real infrastructure
+
    - Test against real PostgreSQL/Redis/MinIO/Pulsar
    - Validate actual infrastructure operations
    - Ensure TRUNCATE + seed in fixtures for isolation
 
-9. **Update documentation** in `documents/`
+1. **Update documentation** in `documents/`
+
    - Add to API reference: `documents/api/effects.md`
    - Add tutorial if complex: `documents/tutorials/`
    - Update README.md if user-facing
@@ -109,11 +118,13 @@ All commands follow the Docker pattern. See [Command Reference](command_referenc
 **5-step procedure** for introducing new domain types:
 
 1. **Create ADT types** in `effectful/domain/`
+
    - All dataclasses `frozen=True`
    - Use union types for variants: `type Result = Success | Failure`
    - Follow naming convention: noun-based (e.g., `User`, `ChatMessage`)
 
-2. **Update EffectResult** if model is returned from effects
+1. **Update EffectResult** if model is returned from effects
+
    ```python
    # file: effectful/programs/program_types.py
    type EffectResult = (
@@ -123,17 +134,20 @@ All commands follow the Docker pattern. See [Command Reference](command_referenc
    )
    ```
 
-3. **Write exhaustive pattern matching examples**
+1. **Write exhaustive pattern matching examples**
+
    - Demonstrate handling all cases
    - Show type narrowing patterns
    - Include in docstrings or tests
 
-4. **Add tests for domain model validation**
+1. **Add tests for domain model validation**
+
    - Test frozen dataclass behavior
    - Test field validation if applicable
    - Test ADT variant construction
 
-5. **Update API documentation**
+1. **Update API documentation**
+
    - Add to `documents/api/` reference
    - Include usage examples
    - Document all fields and types
@@ -147,15 +161,17 @@ All commands follow the Docker pattern. See [Command Reference](command_referenc
 **Schema definition**: created dynamically in `tests/fixtures/database.py` inside the `postgres_connection` fixture.
 
 **Migration process**:
+
 1. Update the fixture DDL (or add explicit migrations if introduced)
-2. Restart containers: `docker compose -f docker/docker-compose.yml down -v && docker compose -f docker/docker-compose.yml up -d`
-3. Run integration tests to verify schema
+1. Restart containers: `docker compose -f docker/docker-compose.yml down -v && docker compose -f docker/docker-compose.yml up -d`
+1. Run integration tests to verify schema
 
 ### Test Data Seeding
 
 **Auto-seeded before each integration test** (with TRUNCATE for isolation).
 
 **Fixture pattern**:
+
 ```python
 # file: examples/development_workflow.py
 @pytest.fixture
@@ -173,7 +189,9 @@ async def seed_database(db_connection):
 ### Database Reset
 
 **Full reset** (removes all data):
+
 ```bash
+# snippet
 docker compose -f docker/docker-compose.yml down -v
 docker compose -f docker/docker-compose.yml up -d
 ```
@@ -204,25 +222,32 @@ docker compose -f docker/docker-compose.yml up -d
 ## Integration Test Setup
 
 **Docker services required**:
+
 - PostgreSQL 15+ (`postgres`)
 - Redis 7+ (`redis`)
 - MinIO S3 (`minio`)
 - Apache Pulsar (`pulsar`)
 
 **Start all services**:
+
 ```bash
+# snippet
 docker compose -f docker/docker-compose.yml up -d
 ```
 
 **Verify services**:
+
 ```bash
+# snippet
 docker compose -f docker/docker-compose.yml ps
 ```
 
 All services should show "Up" status.
 
 **Run integration tests**:
+
 ```bash
+# snippet
 docker compose -f docker/docker-compose.yml exec effectful poetry run test-integration
 ```
 
@@ -233,16 +258,21 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run test-integ
 **CRITICAL**: `poetry.toml` prevents virtualenv creation (`create = false`).
 
 **Add runtime dependency**:
+
 ```bash
+# snippet
 docker compose -f docker/docker-compose.yml exec effectful poetry add <package>
 ```
 
 **Add dev dependency**:
+
 ```bash
+# snippet
 docker compose -f docker/docker-compose.yml exec effectful poetry add --group dev <package>
 ```
 
 **Forbidden**:
+
 - ❌ No manual pip/pipx usage
 - ❌ No `poetry install` outside Docker
 - ❌ No requirements.txt files
@@ -257,9 +287,10 @@ docker compose -f docker/docker-compose.yml exec effectful poetry add --group de
 - [Testing](testing.md) - Testing standards and anti-patterns
 - [Docker Workflow](docker_workflow.md) - Complete Docker policy
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Docker Workflow](docker_workflow.md)
 - [Command Reference](command_reference.md)
 - [Configuration](configuration.md)

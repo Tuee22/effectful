@@ -1,17 +1,19 @@
 # ADTs and Result Types
 
-**Status**: Reference only  
-**Supersedes**: none  
+**Status**: Reference only\\
+**Supersedes**: none **📖 Base Standard**: [adts_and_results.md](../../../../../documents/tutorials/00_library_deltas/adts_and_results.md)
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: HealthHub delta for the ADTs and Result Types tutorial.
-> **📖 Authoritative Reference**: [adts_and_results.md](../../../../../documents/tutorials/adts_and_results.md)
+> **Purpose**: HealthHub overlay deltas for Adts And Results. **📖 Base Standard**: [adts_and_results.md](../../../../../documents/tutorials/00_library_deltas/adts_and_results.md)
+> **📖 Authoritative Reference**: [adts_and_results.md](../../../../../documents/tutorials/00_library_deltas/adts_and_results.md)
 
 ## Deltas
+
 - Base SSoT: [adts_and_results.md](../../../../../documents/tutorials/adts_and_results.md); apply all base steps and patterns.
 - No additional deltas beyond using the HealthHub compose stack and service name (`healthhub`).
 - Refer to the base document for canonical procedures; apply HealthHub-specific ports, credentials, and service names where applicable.
 
 ## Cross-References
+
 - [HealthHub Documentation Hub](../../readme.md)
 - [Effectful ADTs and Results Tutorial](../../../../../documents/tutorials/adts_and_results.md)

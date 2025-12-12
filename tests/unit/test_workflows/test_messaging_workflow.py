@@ -12,7 +12,6 @@ with both fake and failing implementations, testing both success and error paths
 
 from collections.abc import Generator
 from datetime import UTC, datetime
-from uuid import uuid4
 
 import pytest
 from pytest_mock import MockerFixture
@@ -374,10 +373,10 @@ class TestMessagingWorkflowIntegration:
         def failing_workflow() -> Generator[AllEffects, EffectResult, str]:
             """Try to publish, fail, verify subsequent effects not executed."""
             # This will fail
-            message_id1 = yield PublishMessage(topic="topic-1", payload=b"data-1")
+            yield PublishMessage(topic="topic-1", payload=b"data-1")
 
             # Never reached (fail-fast)
-            message_id2 = yield PublishMessage(topic="topic-2", payload=b"data-2")
+            yield PublishMessage(topic="topic-2", payload=b"data-2")
             return "success"
 
         # Act

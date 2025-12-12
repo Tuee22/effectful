@@ -1,7 +1,7 @@
 # Prometheus Setup
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/readme.md
 
 > **Purpose**: Tutorial for setting up Prometheus and Grafana with Docker for effectful applications.
@@ -12,7 +12,7 @@
 
 > **Core Doctrine**: For observability architecture, see [observability.md](../engineering/observability.md)
 
----
+______________________________________________________________________
 
 ## Prerequisites
 
@@ -25,14 +25,14 @@
 By the end of this tutorial, you will:
 
 1. ✅ Add Prometheus and Grafana to Docker Compose
-2. ✅ Configure Prometheus to scrape metrics endpoints
-3. ✅ Expose `/metrics` endpoint from effectful applications
-4. ✅ Query metrics in Prometheus UI
-5. ✅ Understand scrape intervals and retention
+1. ✅ Configure Prometheus to scrape metrics endpoints
+1. ✅ Expose `/metrics` endpoint from effectful applications
+1. ✅ Query metrics in Prometheus UI
+1. ✅ Understand scrape intervals and retention
 
 **Time**: 20 minutes
 
----
+______________________________________________________________________
 
 ## Architecture Overview
 
@@ -47,12 +47,13 @@ flowchart TB
 ```
 
 **Data Flow**:
-1. Effectful application exposes `/metrics` HTTP endpoint (Prometheus text format)
-2. Prometheus scrapes `/metrics` every 15 seconds
-3. Prometheus stores time-series data locally
-4. Grafana queries Prometheus for visualization
 
----
+1. Effectful application exposes `/metrics` HTTP endpoint (Prometheus text format)
+1. Prometheus scrapes `/metrics` every 15 seconds
+1. Prometheus stores time-series data locally
+1. Grafana queries Prometheus for visualization
+
+______________________________________________________________________
 
 ## Step 1: Add Services to Docker Compose
 
@@ -133,12 +134,13 @@ volumes:
 ```
 
 **Key Configuration**:
+
 - Prometheus port: `9090` (web UI + API)
 - Grafana port: `3000` (web UI)
 - Data retention: `30d` (30 days of metrics)
 - Named volumes for data persistence
 
----
+______________________________________________________________________
 
 ## Step 2: Configure Prometheus Scrape Targets
 
@@ -190,12 +192,13 @@ scrape_configs:
 ```
 
 **Configuration Breakdown**:
+
 - `scrape_interval: 15s` - How often to scrape metrics (balance between freshness and overhead)
 - `targets: ['effectful:8000']` - Docker service name + port
 - `metrics_path: '/metrics'` - HTTP endpoint path (standard)
 - `scrape_timeout: 10s` - Fail if scrape takes > 10 seconds
 
----
+______________________________________________________________________
 
 ## Step 3: Create Alert Rules File
 
@@ -242,7 +245,7 @@ groups:
 
 **See Also**: [Alert Rules Tutorial](./alert_rules.md) for complete guide.
 
----
+______________________________________________________________________
 
 ## Step 4: Configure Grafana Data Source
 
@@ -284,13 +287,14 @@ providers:
       path: /etc/grafana/provisioning/dashboards
 ```
 
----
+______________________________________________________________________
 
 ## Step 5: Expose /metrics Endpoint in Application
 
 Add metrics endpoint to your FastAPI application:
 
 ```python
+# snippet
 from fastapi import FastAPI
 from prometheus_client import (
     CollectorRegistry,
@@ -347,6 +351,7 @@ async def health() -> dict[str, str]:
 ```
 
 **Metrics Endpoint Output**:
+
 ```text
 # file: examples/13_prometheus_metrics_output.txt
 # HELP effectful_effects_total Total effects executed
@@ -364,7 +369,7 @@ effectful_effect_duration_seconds_sum{effect_type="GetUserById"} 12.34
 effectful_effect_duration_seconds_count{effect_type="GetUserById"} 145.0
 ```
 
----
+______________________________________________________________________
 
 ## Step 6: Start Services
 
@@ -383,6 +388,7 @@ docker compose -f docker/docker-compose.yml logs grafana
 ```
 
 **Expected Output**:
+
 ```text
 NAME         IMAGE                    STATUS    PORTS
 effectful    effectful:latest         Up        0.0.0.0:8000->8000/tcp
@@ -392,7 +398,7 @@ postgres     postgres:15              Up        5432/tcp
 redis        redis:7                  Up        6379/tcp
 ```
 
----
+______________________________________________________________________
 
 ## Step 7: Verify Prometheus is Scraping
 
@@ -403,10 +409,11 @@ Open http://localhost:9090
 ### Check Targets
 
 1. Navigate to **Status → Targets**
-2. Verify `effectful` job shows **UP** state
-3. Check "Last Scrape" timestamp (should be recent)
+1. Verify `effectful` job shows **UP** state
+1. Check "Last Scrape" timestamp (should be recent)
 
 **Healthy Target**:
+
 ```text
 # file: docs/prometheus_target_status.txt
 Job: effectful
@@ -417,6 +424,7 @@ Scrape Duration: 15ms
 ```
 
 **Unhealthy Target** (troubleshoot):
+
 ```text
 # file: docs/prometheus_target_status.txt
 Job: effectful
@@ -427,11 +435,12 @@ Error: Get "http://effectful:8000/metrics": connection refused
 ### Query Metrics
 
 1. Navigate to **Graph** tab
-2. Enter query: `effectful_effects_total`
-3. Click **Execute**
-4. View table or graph output
+1. Enter query: `effectful_effects_total`
+1. Click **Execute**
+1. View table or graph output
 
 **Example Queries**:
+
 ```promql
 # file: examples/13_prometheus_setup.promql
 # All effects
@@ -448,37 +457,37 @@ histogram_quantile(0.95,
 )
 ```
 
----
+______________________________________________________________________
 
 ## Step 8: Access Grafana
 
 ### Login
 
 1. Open http://localhost:3000
-2. Login with `admin` / `admin`
-3. (Optional) Change password when prompted
+1. Login with `admin` / `admin`
+1. (Optional) Change password when prompted
 
 ### Verify Data Source
 
 1. Navigate to **Configuration → Data Sources**
-2. Click **Prometheus** (should be green with "Data source is working")
-3. Test query: `up`
+1. Click **Prometheus** (should be green with "Data source is working")
+1. Test query: `up`
 
 ### Create First Dashboard
 
 1. Navigate to **Create → Dashboard**
-2. Click **Add new panel**
-3. Enter query: `rate(effectful_effects_total[5m])`
-4. Configure panel:
+1. Click **Add new panel**
+1. Enter query: `rate(effectful_effects_total[5m])`
+1. Configure panel:
    - Title: "Effect Execution Rate"
    - Legend: `{{effect_type}} - {{result}}`
    - Unit: ops/sec
-5. Click **Apply**
-6. Save dashboard
+1. Click **Apply**
+1. Save dashboard
 
 **See Also**: [Grafana Dashboards Tutorial](./grafana_dashboards.md) for complete guide.
 
----
+______________________________________________________________________
 
 ## Configuration Reference
 
@@ -513,28 +522,28 @@ alerting:
 
 ### Scrape Interval Guidelines
 
-| Interval | Use Case | Pros | Cons |
-|----------|----------|------|------|
-| `5s` | High-frequency monitoring | Fresh data, catch spikes | High overhead, storage |
-| `15s` | **Recommended default** | Good balance | - |
-| `30s` | Low-traffic services | Lower overhead | May miss short spikes |
-| `60s` | Batch jobs | Minimal overhead | Coarse granularity |
+| Interval | Use Case                  | Pros                     | Cons                   |
+| -------- | ------------------------- | ------------------------ | ---------------------- |
+| `5s`     | High-frequency monitoring | Fresh data, catch spikes | High overhead, storage |
+| `15s`    | **Recommended default**   | Good balance             | -                      |
+| `30s`    | Low-traffic services      | Lower overhead           | May miss short spikes  |
+| `60s`    | Batch jobs                | Minimal overhead         | Coarse granularity     |
 
 **Recommendation**: Start with `15s`, increase if needed.
 
 ### Retention Guidelines
 
-| Retention | Storage (rough) | Use Case |
-|-----------|-----------------|----------|
-| `7d` | ~500MB | Development |
-| `15d` | ~1GB | Staging |
-| `30d` | ~2GB | **Recommended** |
-| `90d` | ~6GB | Compliance |
-| `1y` | ~24GB | Long-term analysis |
+| Retention | Storage (rough) | Use Case           |
+| --------- | --------------- | ------------------ |
+| `7d`      | ~500MB          | Development        |
+| `15d`     | ~1GB            | Staging            |
+| `30d`     | ~2GB            | **Recommended**    |
+| `90d`     | ~6GB            | Compliance         |
+| `1y`      | ~24GB           | Long-term analysis |
 
 **Formula**: `storage ≈ samples_per_second × scrape_interval × retention × 1.5 bytes`
 
----
+______________________________________________________________________
 
 ## Troubleshooting
 
@@ -543,11 +552,13 @@ alerting:
 **Symptom**: Target shows `DOWN`, error: "connection refused"
 
 **Causes**:
+
 - Application not exposing `/metrics` endpoint
 - Application not listening on `0.0.0.0` (listening on `127.0.0.1` only)
 - Port mismatch in `prometheus.yml`
 
 **Solution**:
+
 ```python
 # Ensure FastAPI listens on 0.0.0.0
 if __name__ == "__main__":
@@ -566,11 +577,13 @@ if __name__ == "__main__":
 **Symptom**: Prometheus scrapes successfully, but queries return empty
 
 **Causes**:
+
 - Metrics not being recorded (no effects executed)
 - Metric name mismatch between code and query
 - No data in time range
 
 **Solution**:
+
 ```bash
 # Check /metrics endpoint directly
 curl http://localhost:8000/metrics
@@ -584,11 +597,13 @@ curl http://localhost:8000/metrics
 **Symptom**: Data source test fails
 
 **Causes**:
+
 - Prometheus not running
 - Wrong URL in datasource config
 - Network isolation
 
 **Solution**:
+
 ```yaml
 # file: configs/13_prometheus_setup.yaml
 # Use Docker service name, not localhost
@@ -601,11 +616,13 @@ url: http://localhost:9090   # ❌ Wrong (from Grafana container)
 **Symptom**: Docker volume `prometheusdata` consuming lots of disk
 
 **Causes**:
+
 - High cardinality metrics (too many label combinations)
 - Long retention period
 - High scrape frequency
 
 **Solution**:
+
 ```bash
 # Check volume size
 docker volume inspect prometheusdata
@@ -619,13 +636,14 @@ command:
 docker compose -f docker/docker-compose.yml restart prometheus
 ```
 
----
+______________________________________________________________________
 
 ## Production Considerations
 
 ### Security
 
 **Authentication**:
+
 ```yaml
 # file: configs/13_prometheus_setup.yaml
 # prometheus.yml - Basic auth for scrape targets
@@ -639,6 +657,7 @@ scrape_configs:
 ```
 
 **Network Isolation**:
+
 ```yaml
 # file: configs/13_prometheus_setup.yaml
 # docker-compose.yml
@@ -659,17 +678,20 @@ services:
 ### High Availability
 
 **Prometheus HA**:
+
 - Run 2+ Prometheus instances scraping same targets
 - Use external storage (Thanos, Cortex) for long-term retention
 - Configure federation for multi-cluster setups
 
 **Grafana HA**:
+
 - Use external database (PostgreSQL) for dashboard storage
 - Run multiple Grafana instances behind load balancer
 
 ### Alerting
 
 **Alertmanager Configuration**:
+
 ```yaml
 # file: configs/13_prometheus_setup.yaml
 # alertmanager.yml
@@ -697,20 +719,23 @@ receivers:
 - Exposed `/metrics` from the effectful app and validated ingestion and dashboards.
 - Reviewed production hardening: auth, network isolation, HA, and Alertmanager routing.
 
----
+______________________________________________________________________
 
 ## Next Steps
 
 1. **Create Alert Rules** - Set up alerts for high error rates, slow queries
+
    - See [alert_rules.md](./alert_rules.md)
 
-2. **Build Grafana Dashboards** - Visualize metrics with beautiful dashboards
+1. **Build Grafana Dashboards** - Visualize metrics with beautiful dashboards
+
    - See [grafana_dashboards.md](./grafana_dashboards.md)
 
-3. **Integrate with Applications** - Add metrics to your effectful programs
+1. **Integrate with Applications** - Add metrics to your effectful programs
+
    - See [metrics_quickstart.md](./metrics_quickstart.md)
 
----
+______________________________________________________________________
 
 ## Complete Directory Structure
 
@@ -730,7 +755,7 @@ docker/
 └── Dockerfile
 ```
 
----
+______________________________________________________________________
 
 ## See Also
 
@@ -739,8 +764,9 @@ docker/
 - [Alert Rules Tutorial](./alert_rules.md) - Creating alerts
 - [Grafana Dashboards](./grafana_dashboards.md) - Building dashboards
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Standards](../engineering/README.md)

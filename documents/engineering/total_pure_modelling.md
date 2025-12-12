@@ -7,6 +7,7 @@
 > **Purpose**: A friendly, practical guide for modelling domain state with total, pure ADTs and state machines that match reality. Illegal states must be impossible to represent, and timing tricks or env toggles are off-limits. By separating pure decisions from side effects, we keep frontend and backend in lockstep, avoid ghost states, and stay resilient when real networks and devices misbehave.
 
 ## Why this exists
+
 Pure modelling keeps the software and the real world in sync. When every legitimate state is explicit—and impossible states simply cannot be represented—we avoid whole classes of bugs: stuck spinners, ghost sessions, flaky tests, and security gaps from “truthy enough” checks. Without these guardrails, apps drift into partial states: a page shows “Welcome Alice” while the next API call 401s, or a websocket connects with a dead token because the UI assumed a role was present. Enforcing total models matters because auth is the foundation for everything else: if it drifts, every feature inherits intermittent 401s, confused UIs, and hard-to-reproduce failures. A boring, total model means predictable behavior, reliable rollback paths, and tests that mirror production reality instead of a happy-path mock.
 
 ## Auth concepts in plain language
@@ -16,6 +17,7 @@ Pure modelling keeps the software and the real world in sync. When every legitim
 Key auth concepts: Hydration (check stored session), Session restoring (refresh token window), Guard (pure decision driving UI/WS), and Near expiry handling. See [authentication.md](authentication.md) for complete definitions and patterns.
 
 ## Principles (plainly)
+
 - Model only what can really happen; impossible states do not exist in the types.
 - Every variant must reach a decision; no “stuck” states like eternal Hydrating.
 - No timing hacks or env flags to paper over gaps—solve the model instead.
@@ -23,22 +25,28 @@ Key auth concepts: Hydration (check stored session), Session restoring (refresh 
 - Compute pure decisions first; then perform redirects, renders, and connects.
 
 ## Meet the auth ADTs
+
 ### Frontend / Backend
+
 - Full ADT definitions and guard pipeline are in [authentication.md](authentication.md); do not duplicate here.
 
 ## The user journey (frontend)
-1) **Boot**: Start at `Initializing`; no UI should imply auth yet.
-2) **Hydrate**: If nothing is persisted, jump straight to `Ready(Unauthenticated)` so the user can act (e.g., hit login) without waiting. If a session is stored, go to `Ready(SessionRestoring)` and immediately attempt a refresh.
-3) **Refresh**: A successful refresh yields `Authenticated`. Expired or missing tokens become `SessionExpired` and trigger a redirect instead of silently downgrading the user. Network failures also end deterministically: redirect to login so the user regains control.
-4) **Guard**: `computeGuardDecision(readiness, requiredRoles)` drives what the UI does: loading gate, redirect, deny page, or full render with websocket connect. The component does not guess or pre-render; it follows the guard.
+
+1. **Boot**: Start at `Initializing`; no UI should imply auth yet.
+1. **Hydrate**: If nothing is persisted, jump straight to `Ready(Unauthenticated)` so the user can act (e.g., hit login) without waiting. If a session is stored, go to `Ready(SessionRestoring)` and immediately attempt a refresh.
+1. **Refresh**: A successful refresh yields `Authenticated`. Expired or missing tokens become `SessionExpired` and trigger a redirect instead of silently downgrading the user. Network failures also end deterministically: redirect to login so the user regains control.
+1. **Guard**: `computeGuardDecision(readiness, requiredRoles)` drives what the UI does: loading gate, redirect, deny page, or full render with websocket connect. The component does not guess or pre-render; it follows the guard.
 
 ## The request journey (backend)
-1) **Authenticate**: Validate or refresh tokens; return `Authenticated(user)` with roles or a typed `AuthFailure` that names the reason (expired, invalid, redirect to login).
-2) **Authorize**: Run `authorize(user, required_roles)` and return a guard decision that matches the frontend meanings so that both tiers agree on 401 vs 403 vs success.
-3) **Respond**: Map `RedirectToLogin` to 401 with a clear hint, `Denied` to 403, and `Authorized` to domain work (optionally rotating tokens). `AwaitAuth` should be transient and resolved before responding so clients are never left hanging.
+
+1. **Authenticate**: Validate or refresh tokens; return `Authenticated(user)` with roles or a typed `AuthFailure` that names the reason (expired, invalid, redirect to login).
+1. **Authorize**: Run `authorize(user, required_roles)` and return a guard decision that matches the frontend meanings so that both tiers agree on 401 vs 403 vs success.
+1. **Respond**: Map `RedirectToLogin` to 401 with a clear hint, `Denied` to 403, and `Authorized` to domain work (optionally rotating tokens). `AwaitAuth` should be transient and resolved before responding so clients are never left hanging.
 
 ## Mermaid maps
+
 ### Frontend state and guard
+
 ```mermaid
 flowchart TB
     A[App Boot] -->|initialize| B[Auth Readiness Initializing]
@@ -60,6 +68,7 @@ flowchart TB
 ```
 
 ### Backend auth + authz pipeline
+
 ```mermaid
 flowchart TB
     Request[HTTP request with cookies]
@@ -90,6 +99,7 @@ flowchart TB
 ```
 
 ## Concrete stories
+
 - **Fresh visitor**: Nothing stored → `Ready(Unauthenticated)` → guard says `RedirectToLogin` → redirect happens immediately, no endless spinner.
 - **Happy path session**: Stored session → `SessionRestoring` → refresh succeeds → `Authenticated` → guard `Authorized` → page renders and WS connects with token.
 - **Network hiccup**: Stored session → refresh hits a network error → guard maps to `RedirectToLogin`. We do not pretend to be logged in; the user simply signs in again.
@@ -100,6 +110,7 @@ flowchart TB
 - **Avoiding stuck AwaitAuth**: Any lingering `AwaitAuth` is treated as a bug; code transitions quickly to a concrete decision or redirects.
 
 ## Where models drift from reality (and cause bugs)
+
 - **Missing “expired but cached” state**: If the model jumps from Authenticated straight to Unauthenticated, a cached-but-dead token may keep WS connects alive briefly, leading to 401 storms and flaky e2e tests. Add an explicit `SessionExpired` and gate WS on it so sockets never connect with bad credentials.
 - **No “refresh in flight” branch**: Treating refresh as synchronous can hide race conditions where two tabs race refresh and one overwrites tokens. Model `SessionRestoring` and serialize refreshes to avoid dual-issue tokens and mismatched cookies.
 - **Assuming role data always present**: A model with `roles: string[]` but no `roles_missing` variant will treat `[]` and `None` the same, giving accidental access or blanket denial. Use a `RoleLookupFailed` or make `roles` part of the guard ADT, not a nullable field, so decisions stay explicit.
@@ -111,6 +122,7 @@ flowchart TB
 - **Browser-specific blind spots**: We repeatedly saw e2e suites pass on Chrome and Firefox but fail on WebKit. Investigating root causes (different cookie persistence rules, stricter storage quotas, slightly different timing on navigation) led us to remove timeout hacks and instead model explicit states for “storage read failed,” “refresh in flight,” and “redirect after navigation.” Once the model captured those realities, a single pure guard path worked cleanly across all three browsers.
 
 ## Patterns to embrace
+
 - Exhaustive matches on every ADT; MyPy enforces completeness, no default branches that hide work. Readers should see every variant handled on one screen.
 - Deterministic hydration: empty storage jumps to `Ready(Unauthenticated)` with no delay; stored sessions always attempt one refresh and then resolve.
 - Let `GuardDecision` drive everything: rendering, redirects, and whether WS connects. Avoid ad-hoc checks like `if (user) render`.
@@ -118,6 +130,7 @@ flowchart TB
 - Tests use fixtures or monkeypatches for cookies and tickets so production code stays deterministic. Include fixtures for happy paths, expiry, missing roles, and storage failures.
 
 ## Pitfalls to avoid
+
 - Truthy shortcuts like `if (state.loading)` or `if (user.roles)` that skip explicit variants; they hide missing cases until production.
 - Hydrating forever when no user exists; users should see login immediately on a clean boot.
 - Sleeping or polling to “eventually” resolve auth; replace with explicit refresh outcomes.
@@ -125,7 +138,9 @@ flowchart TB
 - Any WS connection attempt outside `Authorized`; sockets must follow the same guard as pages.
 
 ## Small code postcards
+
 ### Hydration (frontend)
+
 ```ts
 // file: examples/total_pure_modelling.ts
 // WRONG: can stick in Hydrating with no exit
@@ -138,6 +153,7 @@ const toReady = persistedUser
 ```
 
 ### Guard (frontend)
+
 ```ts
 // file: examples/total_pure_modelling.ts
 // WRONG: implicit access via truthy roles
@@ -151,6 +167,7 @@ return <Admin />;
 ```
 
 ### Backend AuthZ
+
 ```python
 # file: examples/total_pure_modelling.py
 # WRONG: truthy/None role checks
@@ -166,6 +183,7 @@ match decision:
 ```
 
 ### WS Connection
+
 ```ts
 // file: examples/total_pure_modelling.ts
 // WRONG: connect regardless of guard
@@ -180,6 +198,7 @@ if (guardDecision.type === 'Authorized') {
 ```
 
 ## Cross-References
+
 - [Authentication](authentication.md)
 - [Code Quality](code_quality.md)
 - [Testing](testing.md)

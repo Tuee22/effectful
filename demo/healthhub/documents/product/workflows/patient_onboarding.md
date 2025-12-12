@@ -1,20 +1,15 @@
 # Patient Onboarding Workflow
 
 **Status**: Authoritative source
-**Supersedes**: none
+**Supersedes**: none **📖 Base Standard**: [patient_onboarding.md](../../../../../documents/product/workflows/patient_onboarding.md)
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
-> **Purpose**: Complete patient onboarding workflow demonstrating multi-feature integration from registration through billing.
-
-> **Core Doctrines**: For comprehensive patterns, see:
-> - [Intermediate Journey](../01_journeys/intermediate_journey.md)
-> - [Effect Patterns](../../../../../documents/engineering/effect_patterns.md)
-> - [Code Quality](../../../../../documents/engineering/code_quality.md)
+> **Purpose**: HealthHub overlay deltas for Patient Onboarding. **📖 Base Standard**: [patient_onboarding.md](../../../../../documents/product/workflows/patient_onboarding.md)
 
 ## Prerequisites
 
 - Docker workflow running; commands executed via `docker compose -f docker/docker-compose.yml`.
-- Completed [Intermediate Journey](../01_journeys/intermediate_journey.md).
+- Completed [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md).
 - Access to HealthHub at `http://localhost:8851`.
 
 ## Learning Objectives
@@ -32,10 +27,11 @@
 **Duration**: ~1.5 hours (following the complete workflow)
 
 **Features Involved**:
+
 1. **Authentication**: User registration and login
-2. **Appointments**: Request → Confirm → Start → Complete
-3. **Prescriptions**: Doctor creates after appointment
-4. **Invoices**: Generated from completed appointment
+1. **Appointments**: Request → Confirm → Start → Complete
+1. **Prescriptions**: Doctor creates after appointment
+1. **Invoices**: Generated from completed appointment
 
 **Demo User**: emily.patient@example.com (new patient)
 
@@ -43,7 +39,7 @@
 
 ## Workflow Diagram
 
-```
+```text
 Step 1: Patient Registration
    ↓ (creates User + Patient records)
 Step 2: Patient Login
@@ -74,7 +70,8 @@ Step 9: Patient Views Invoice
 
 1. **Navigate to Registration**: `http://localhost:8851/register`
 
-2. **Fill out Registration Form**:
+1. **Fill out Registration Form**:
+
    - **Email**: `emily.patient@example.com`
    - **Password**: `password123`
    - **Confirm Password**: `password123`
@@ -86,9 +83,10 @@ Step 9: Patient Views Invoice
    - **Phone**: (555) 123-4567
    - **Address**: 123 Main St, Anytown, ST 12345
 
-3. **Submit Registration**: Click "Register"
+1. **Submit Registration**: Click "Register"
 
-4. **Backend Processing**:
+1. **Backend Processing**:
+
    ```python
    # Effect program: register_patient
    def register_patient(registration_data):
@@ -110,13 +108,15 @@ Step 9: Patient Views Invoice
        return Ok({"user_id": user_id, "patient_id": patient_id})
    ```
 
-5. **Expected Result**:
+1. **Expected Result**:
+
    - User account created with role "patient"
    - Patient record created with demographics
    - Redirect to login page
    - Success message: "Registration successful. Please log in."
 
 **Data Created**:
+
 - `users` table: user_id, email, password_hash (bcrypt), role="patient", is_active=true
 - `patients` table: patient_id, user_id, first_name, last_name, dob, blood_type, allergies
 
@@ -132,13 +132,15 @@ Step 9: Patient Views Invoice
 
 1. **Navigate to Login**: `http://localhost:8851/login`
 
-2. **Enter Credentials**:
+1. **Enter Credentials**:
+
    - **Email**: `emily.patient@example.com`
    - **Password**: `password123`
 
-3. **Click "Login"**
+1. **Click "Login"**
 
-4. **Backend Processing**:
+1. **Backend Processing**:
+
    ```python
    # Effect program: login
    def login(email, password):
@@ -180,14 +182,17 @@ Step 9: Patient Views Invoice
        return Ok({"token": token, "user": {...}})
    ```
 
-5. **Expected Result**:
+1. **Expected Result**:
+
    - JWT token issued
    - Token stored in localStorage as `healthhub-auth`
    - Redirect to patient dashboard
    - Welcome message: "Welcome, Emily Evans"
 
 **AuthorizationState**:
+
 ```python
+# snippet
 PatientAuthorized(
     user_id=UUID("..."),
     patient_id=UUID("..."),
@@ -208,16 +213,18 @@ PatientAuthorized(
 
 1. **Navigate to Appointments**: Click "Appointments" in sidebar
 
-2. **Click "Request Appointment"**
+1. **Click "Request Appointment"**
 
-3. **Fill out Appointment Form**:
+1. **Fill out Appointment Form**:
+
    - **Doctor**: Select "Dr. Sarah Smith (Cardiology)"
    - **Scheduled Time**: Select date/time (e.g., 2025-12-10 14:00)
    - **Reason**: "Initial consultation for cardiac health assessment"
 
-4. **Submit Request**: Click "Submit Request"
+1. **Submit Request**: Click "Submit Request"
 
-5. **Backend Processing**:
+1. **Backend Processing**:
+
    ```python
    # Effect program: request_appointment
    def request_appointment(patient_id, doctor_id, scheduled_time, reason):
@@ -253,13 +260,15 @@ PatientAuthorized(
        return Ok({"appointment_id": appointment_id, "status": initial_status})
    ```
 
-6. **Expected Result**:
+1. **Expected Result**:
+
    - Appointment created with status "Requested"
    - Doctor notified via alert
    - Appointment appears in patient dashboard under "Upcoming Appointments"
    - Status badge: Yellow "Requested"
 
 **Data Created**:
+
 - `appointments` table: appointment_id, patient_id, doctor_id, scheduled_time, reason, status (Requested), created_at
 
 **Test Coverage**: `test_complete_care_episode.py::test_patient_request_appointment`
@@ -274,16 +283,18 @@ PatientAuthorized(
 
 1. **Navigate to Dashboard**: View "Pending Appointment Confirmations"
 
-2. **Click Emily's Appointment**: View details
+1. **Click Emily's Appointment**: View details
 
-3. **Review Patient History**:
+1. **Review Patient History**:
+
    - New patient (no previous appointments)
    - Allergies: Peanuts
    - Blood type: O-
 
-4. **Click "Confirm Appointment"**
+1. **Click "Confirm Appointment"**
 
-5. **Backend Processing**:
+1. **Backend Processing**:
+
    ```python
    # Effect program: confirm_appointment
    def confirm_appointment(appointment_id, doctor_id):
@@ -319,13 +330,15 @@ PatientAuthorized(
        return Ok({"appointment_id": appointment_id, "status": new_status})
    ```
 
-6. **Expected Result**:
+1. **Expected Result**:
+
    - Appointment status transitions: Requested → Confirmed
    - Emily notified via notification
    - Appointment status badge: Green "Confirmed"
    - Appointment appears in doctor's "Today's Appointments" (if today)
 
 **State Transition**:
+
 - **Before**: Requested(requested_at=2025-12-09T10:00:00Z)
 - **After**: Confirmed(confirmed_at=2025-12-09T10:15:00Z, confirmed_by_doctor_id=UUID("..."))
 
@@ -341,11 +354,12 @@ PatientAuthorized(
 
 1. **Navigate to Appointments**: Click "Appointments" in sidebar
 
-2. **Click Emily's Appointment**: View details
+1. **Click Emily's Appointment**: View details
 
-3. **Click "Start Appointment"**
+1. **Click "Start Appointment"**
 
-4. **Backend Processing**:
+1. **Backend Processing**:
+
    ```python
    # Effect program: start_appointment
    def start_appointment(appointment_id):
@@ -361,12 +375,14 @@ PatientAuthorized(
        return Ok({"appointment_id": appointment_id, "status": new_status})
    ```
 
-5. **Expected Result**:
+1. **Expected Result**:
+
    - Appointment status transitions: Confirmed → InProgress
    - Status badge: Blue "In Progress"
    - Timer starts (for appointment duration tracking)
 
 **State Transition**:
+
 - **Before**: Confirmed(confirmed_at=2025-12-09T10:15:00Z, confirmed_by_doctor_id=UUID("..."))
 - **After**: InProgress(started_at=2025-12-10T14:00:00Z)
 
@@ -382,7 +398,8 @@ PatientAuthorized(
 
 1. **Click "Complete Appointment"**
 
-2. **Add Clinical Notes**:
+1. **Add Clinical Notes**:
+
    ```
    Chief Complaint: Patient seeking initial cardiac health assessment.
 
@@ -402,9 +419,10 @@ PatientAuthorized(
    Follow-up: 1 year for routine cardiac checkup
    ```
 
-3. **Submit Notes**: Click "Complete Appointment"
+1. **Submit Notes**: Click "Complete Appointment"
 
-4. **Backend Processing**:
+1. **Backend Processing**:
+
    ```python
    # Effect program: complete_appointment
    def complete_appointment(appointment_id, notes):
@@ -429,7 +447,8 @@ PatientAuthorized(
        return Ok({"appointment_id": appointment_id, "status": new_status})
    ```
 
-5. **Expected Result**:
+1. **Expected Result**:
+
    - Appointment status transitions: InProgress → Completed (terminal state)
    - Notes saved and visible to Emily
    - Emily notified via notification
@@ -437,6 +456,7 @@ PatientAuthorized(
    - Appointment ready for invoice generation
 
 **State Transition**:
+
 - **Before**: InProgress(started_at=2025-12-10T14:00:00Z)
 - **After**: Completed(completed_at=2025-12-10T14:45:00Z, notes="...")
 
@@ -452,11 +472,12 @@ PatientAuthorized(
 
 1. **Navigate to Patients**: Click "Patients" in sidebar
 
-2. **Select Emily Evans**: Click name
+1. **Select Emily Evans**: Click name
 
-3. **Click "Prescribe Medication"**
+1. **Click "Prescribe Medication"**
 
-4. **Fill out Prescription Form**:
+1. **Fill out Prescription Form**:
+
    - **Medication**: Lisinopril
    - **Dosage**: 10mg
    - **Frequency**: Once daily
@@ -464,14 +485,16 @@ PatientAuthorized(
    - **Refills**: 2
    - **Instructions**: "Take in the morning with water. Monitor blood pressure."
 
-5. **System Checks Interactions**:
+1. **System Checks Interactions**:
+
    - **Allergy Check**: Lisinopril vs Peanuts → No interaction
    - **Drug Interaction Check**: No current prescriptions → No interactions
    - **Result**: Safe to prescribe
 
-6. **Submit Prescription**: Click "Create Prescription"
+1. **Submit Prescription**: Click "Create Prescription"
 
-7. **Backend Processing**:
+1. **Backend Processing**:
+
    ```python
    # Effect program: create_prescription_with_interaction_check
    def create_prescription_with_interaction_check(patient_id, doctor_id, medication, ...):
@@ -504,12 +527,14 @@ PatientAuthorized(
        return Ok({"prescription_id": prescription_id, "warnings": []})
    ```
 
-8. **Expected Result**:
+1. **Expected Result**:
+
    - Prescription created successfully
    - Emily notified via notification
    - Prescription visible to Emily in "Prescriptions" section
 
 **Data Created**:
+
 - `prescriptions` table: prescription_id, patient_id, doctor_id, medication (Lisinopril), dosage (10mg), frequency (Once daily), duration_days (90), refills (2), notes, created_at, expires_at
 
 **Test Coverage**: `test_complete_care_episode.py::test_doctor_create_prescription`
@@ -524,13 +549,14 @@ PatientAuthorized(
 
 1. **Navigate to Appointments**: Click "Appointments" in sidebar
 
-2. **Filter to Completed**: Select "Completed" status filter
+1. **Filter to Completed**: Select "Completed" status filter
 
-3. **Select Emily's Appointment**: Click appointment
+1. **Select Emily's Appointment**: Click appointment
 
-4. **Click "Generate Invoice"**
+1. **Click "Generate Invoice"**
 
-5. **Backend Processing**:
+1. **Backend Processing**:
+
    ```python
    # Effect program: generate_invoice_from_appointment
    def generate_invoice_from_appointment(appointment_id):
@@ -572,12 +598,14 @@ PatientAuthorized(
        return Ok({"invoice_id": invoice_id, "total": total, "due_date": due_date})
    ```
 
-6. **Expected Result**:
+1. **Expected Result**:
+
    - Invoice created with status "Sent"
    - Emily notified via notification
    - Invoice visible to Emily in "Invoices" section
 
 **Data Created**:
+
 - `invoices` table: invoice_id, patient_id, appointment_id, status ("Sent"), subtotal ($300.00), tax ($21.00), total ($321.00), due_date (2026-01-09), issued_date (2025-12-10)
 - `invoice_line_items` table: 2 line items (Office Visit, Initial Assessment)
 
@@ -593,9 +621,10 @@ PatientAuthorized(
 
 1. **Navigate to Invoices**: Click "Invoices" in sidebar
 
-2. **View Invoice List**: See newly generated invoice
+1. **View Invoice List**: See newly generated invoice
 
-3. **Click Invoice**: View details
+1. **Click Invoice**: View details
+
    ```
    Invoice #50000000-0000-0000-0000-000000000001
    Issued: 2025-12-10
@@ -611,7 +640,8 @@ PatientAuthorized(
    Total: $321.00
    ```
 
-4. **Expected Result**:
+1. **Expected Result**:
+
    - Emily sees itemized charges
    - Due date displayed (30 days from issue)
    - Payment instructions displayed
@@ -624,21 +654,25 @@ PatientAuthorized(
 **Feature-to-Feature Data Flow**:
 
 1. **Authentication → Appointments**:
+
    - JWT contains `patient_id` from authentication
    - Appointment creation uses `patient_id` from AuthorizationState
    - RBAC enforced via pattern matching on AuthorizationState
 
-2. **Appointments → Prescriptions**:
+1. **Appointments → Prescriptions**:
+
    - Prescription references completed appointment in doctor notes
    - Doctor creates prescription during/after appointment
    - Prescription notification sent after creation
 
-3. **Appointments → Invoices**:
+1. **Appointments → Invoices**:
+
    - Invoice references completed appointment (appointment_id foreign key)
    - Line items populated from appointment details (specialization, reason)
    - Invoice cannot be generated until appointment status is Completed
 
-4. **Notifications Throughout**:
+1. **Notifications Throughout**:
+
    - Appointment confirmed → Patient notified
    - Appointment completed → Patient notified
    - Prescription created → Patient notified
@@ -651,19 +685,21 @@ PatientAuthorized(
 **Test Function**: `test_complete_patient_journey`
 
 **Test Steps**:
+
 1. Register new patient (Emily)
-2. Login as Emily
-3. Request appointment with Dr. Smith
-4. Login as Dr. Smith
-5. Confirm Emily's appointment
-6. Start appointment
-7. Complete appointment with notes
-8. Create prescription for Emily
-9. Login as admin
-10. Generate invoice from completed appointment
-11. Verify invoice created and visible to Emily
+1. Login as Emily
+1. Request appointment with Dr. Smith
+1. Login as Dr. Smith
+1. Confirm Emily's appointment
+1. Start appointment
+1. Complete appointment with notes
+1. Create prescription for Emily
+1. Login as admin
+1. Generate invoice from completed appointment
+1. Verify invoice created and visible to Emily
 
 **Assertions**:
+
 - Patient record created
 - Appointment status transitions: Requested → Confirmed → InProgress → Completed
 - Prescription created with no interactions
@@ -671,13 +707,16 @@ PatientAuthorized(
 - All notifications triggered
 
 **Run Test**:
+
 ```bash
+# snippet
 docker compose -f docker/docker-compose.yml exec healthhub poetry run pytest tests/pytest/e2e/test_complete_care_episode.py::test_complete_patient_journey -v
 ```
 
 ## Summary
 
 **You have successfully**:
+
 - ✅ Registered new patient account
 - ✅ Authenticated and obtained JWT token
 - ✅ Requested first appointment
@@ -688,22 +727,23 @@ docker compose -f docker/docker-compose.yml exec healthhub poetry run pytest tes
 - ✅ Viewed invoice as patient
 
 **Key Takeaways**:
+
 1. **Multi-Feature Integration**: Complete workflow spans authentication, appointments, prescriptions, invoices
-2. **State Machine Enforcement**: Appointment status transitions enforced by ADT validation
-3. **Notification Cascade**: Patient notified at each major workflow step
-4. **RBAC Throughout**: AuthorizationState ADT enforces role-based access at every API call
-5. **Data Flow**: patient_id flows from authentication through all features
-6. **E2E Test Coverage**: Complete workflow verified programmatically
+1. **State Machine Enforcement**: Appointment status transitions enforced by ADT validation
+1. **Notification Cascade**: Patient notified at each major workflow step
+1. **RBAC Throughout**: AuthorizationState ADT enforces role-based access at every API call
+1. **Data Flow**: patient_id flows from authentication through all features
+1. **E2E Test Coverage**: Complete workflow verified programmatically
 
 **Workflow Duration**: ~1.5 hours from registration to invoice viewing
 
 ## Cross-References
 
-- [Intermediate Journey](../01_journeys/intermediate_journey.md)
-- [Authentication Feature](../03_features/authentication.md)
-- [Appointments Feature](../03_features/appointments.md)
-- [Prescriptions Feature](../03_features/prescriptions.md)
-- [Invoices Feature](../03_features/invoices.md)
-- [Patient Guide](../02_roles/patient_guide.md)
-- [Doctor Guide](../02_roles/doctor_guide.md)
-- [Admin Guide](../02_roles/admin_guide.md)
+- [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md)
+- [Authentication Feature](../../engineering/features/authentication.md)
+- [Appointments Feature](../../engineering/features/appointments.md)
+- [Prescriptions Feature](../../engineering/features/prescriptions.md)
+- [Invoices Feature](../../engineering/features/invoices.md)
+- [Patient Guide](../../product/roles/patient_guide.md)
+- [Doctor Guide](../../product/roles/doctor_guide.md)
+- [Admin Guide](../../product/roles/admin_guide.md)

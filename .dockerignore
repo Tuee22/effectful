@@ -1,7 +1,8 @@
 # Poetry virtual environment
 .venv/
 *.egg-info/
-poetry.lock
+/poetry.lock
+/.python-poetry.lock
 package-lock.json
 
 # Python

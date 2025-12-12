@@ -1,82 +1,84 @@
 #!/usr/bin/env python3
-"""Code quality checker: Black (formatter) → MyPy (strict type checker) → link verification.
+"""Comprehensive code + documentation gate.
 
-This script runs formatting, type checking, and documentation link verification in sequence
-with fail-fast behavior. All checks must pass (exit code 0) for the script to succeed.
-
-Execution order:
-1. Black: Code formatting (auto-formats)
-2. MyPy --strict: Type checking with zero tolerance for type safety violations
-3. Link verification: `tools/verify_links.py` over all markdown content
-
-Usage:
-    poetry run check-code
-    python -m tools.check_code
+Order:
+1) black
+2) ruff
+3) mypy
+4) mdformat --check
+5) pymarkdown scan
+6) codespell
+7) Custom doc validators
+8) Functional catalogue check
 """
+
+from __future__ import annotations
 
 import subprocess
 import sys
 from pathlib import Path
+from typing import Sequence
 
 
 ROOT = Path(__file__).resolve().parent.parent
-TOOLS_DIR = ROOT / "tools"
+
+
+def run_step(name: str, command: Sequence[str]) -> int:
+    print("=" * 80)
+    print(name)
+    print("=" * 80)
+    result = subprocess.run(command, check=False)
+    if result.returncode != 0:
+        print(f"\n❌ {name} failed.")
+    else:
+        print(f"\n✅ {name} passed.")
+    return result.returncode
 
 
 def main() -> int:
-    """Run Black formatting, MyPy strict type checking, and link verification.
-
-    Returns:
-        int: Exit code (0 for success, non-zero for failure)
-    """
-    print("=" * 80)
-    print("STEP 1/3: Black code formatting")
-    print("=" * 80)
-
-    black_result = subprocess.run(
-        ["black", "effectful", "tests", "tools"],
-        check=False,
-    )
-
-    if black_result.returncode != 0:
-        print("\n❌ Black failed!")
-        print("=" * 80)
-        return black_result.returncode
-
-    print("\n✅ Black passed!")
-    print("\n" + "=" * 80)
-    print("STEP 2/3: MyPy strict type checking")
-    print("=" * 80)
-
-    mypy_result = subprocess.run(
-        ["mypy", "effectful", "tests", "tools"],
-        check=False,
-    )
-
-    if mypy_result.returncode != 0:
-        print("\n❌ MyPy failed! Fix type errors before proceeding.")
-        print("=" * 80)
-        return mypy_result.returncode
-
-    print("\n✅ MyPy passed!")
-    print("\n" + "=" * 80)
-    print("STEP 3/3: Documentation link verification")
-    print("=" * 80)
-
-    verify_script = TOOLS_DIR / "verify_links.py"
-    verify_result = subprocess.run(
-        [sys.executable, str(verify_script)],
-        check=False,
-    )
-
-    if verify_result.returncode != 0:
-        print("\n❌ Link verification failed! Fix documentation links before proceeding.")
-        print("=" * 80)
-        return verify_result.returncode
-
+    pymarkdown_config = ROOT / "configs" / ".pymarkdown.json"
+    codespell_config = ROOT / "configs" / ".codespellrc"
+    steps: list[tuple[str, list[str]]] = [
+        ("STEP 1/8: Black", ["black", "effectful", "tests", "tools"]),
+        ("STEP 2/8: Ruff", ["ruff", "check", "effectful", "tests", "tools"]),
+        ("STEP 3/8: MyPy", ["mypy", "effectful", "tests", "tools"]),
+        (
+            "STEP 4/8: mdformat",
+            [
+                "mdformat",
+                "--check",
+                "documents",
+                "demo",
+            ],
+        ),
+        (
+            "STEP 5/8: PyMarkdown",
+            [
+                "pymarkdown",
+                "--config",
+                str(pymarkdown_config),
+                "--disable-rules",
+                "md013,md036",
+                "scan",
+                "documents",
+                "demo",
+            ],
+        ),
+        (
+            "STEP 6/8: codespell",
+            ["codespell", "--config", str(codespell_config), "documents", "demo"],
+        ),
+        ("STEP 7/8: Custom doc checks", ["python", "-m", "tools.run_doc_checks"]),
+        (
+            "STEP 8/8: Functional catalogue",
+            ["python", "-m", "tools.generate_functional_catalogue", "--check"],
+        ),
+    ]
+    for name, command in steps:
+        code = run_step(name, command)
+        if code != 0:
+            return code
     print("\n✅ ALL CHECKS PASSED!")
-    print("=" * 80)
-
     return 0
 
 

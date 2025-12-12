@@ -200,8 +200,6 @@ class TestSystemWorkflowIntegration:
     @pytest.mark.asyncio
     async def test_time_progression_workflow(self, mocker: MockerFixture) -> None:
         """Workflow demonstrates time progression between calls."""
-        import asyncio
-
         # Create interpreter
         mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
         mock_ws.is_open.return_value = True

@@ -1,10 +1,10 @@
 # Medical State Machines
 
 **Status**: Authoritative source
-**Supersedes**: none
+**Supersedes**: none **📖 Base Standard**: [medical_state_machines.md](../../../../documents/domain/medical_state_machines.md)
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: SSoT for HealthHub healthcare-specific state machines and lifecycle modelling; extends the base effect patterns for long-running workflows.
+> **Purpose**: HealthHub overlay deltas for Medical State Machines. **📖 Base Standard**: [medical_state_machines.md](../../../../documents/domain/medical_state_machines.md)
 
 ## Canonical Guidance
 
@@ -14,6 +14,7 @@
 - **Observability**: Emit domain metrics at transitions (e.g., escalation counts, triage throughput) using the observability SSoT; prefer counters/histograms with clear labels.
 
 ## Cross-References
+
 - [Effect Patterns — State Machines](../engineering/effect_patterns.md#state-machines)
 - [Architecture](../engineering/architecture.md)
 - [Code Quality](../engineering/code_quality.md)

@@ -23,14 +23,14 @@ All development commands follow the pattern `docker compose -f docker/docker-com
 
 **Before contributing, read these engineering standards**:
 
-| Standard | Purpose |
-|----------|---------|
-| [Engineering Standards](engineering/README.md) | Master index of all standards |
-| [Architecture](engineering/architecture.md) | 5-layer architecture design |
-| [Code Quality](engineering/code_quality.md) | Type safety + purity doctrines and anti-pattern routing |
-| [Testing](engineering/testing.md) | Testing standards and 22 anti-patterns |
-| [Testing Architecture](engineering/testing_architecture.md) | Test organization and DRY doctrine |
-| [Docker Workflow](engineering/docker_workflow.md) | All development in Docker |
+| Standard                                                    | Purpose                                                 |
+| ----------------------------------------------------------- | ------------------------------------------------------- |
+| [Engineering Standards](engineering/README.md)              | Master index of all standards                           |
+| [Architecture](engineering/architecture.md)                 | 5-layer architecture design                             |
+| [Code Quality](engineering/code_quality.md)                 | Type safety + purity doctrines and anti-pattern routing |
+| [Testing](engineering/testing.md)                           | Testing standards and 22 anti-patterns                  |
+| [Testing Architecture](engineering/testing_architecture.md) | Test organization and DRY doctrine                      |
+| [Docker Workflow](engineering/docker_workflow.md)           | All development in Docker                               |
 
 ## Contributing Checklist
 
@@ -62,6 +62,7 @@ python3 scripts/check_optional_value_pattern.py
 ```
 
 **Checks**:
+
 - No Optional[] in domain/effects (use OptionalValue or ADTs)
 - Normalization functions present in effects
 - No escape hatches (Any, cast, type: ignore)
@@ -96,11 +97,11 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest
 ## How to Contribute
 
 1. Fork the repository and create a branch for your change
-2. Ensure Docker services are running (`docker compose -f docker/docker-compose.yml up -d`)
-3. **Run validation checks** (see section above)
-4. Update documentation and links if you add or move modules
-5. Run pre-commit hooks: `pre-commit run --all-files`
-6. Open a PR with:
+1. Ensure Docker services are running (`docker compose -f docker/docker-compose.yml up -d`)
+1. **Run validation checks** (see section above)
+1. Update documentation and links if you add or move modules
+1. Run pre-commit hooks: `pre-commit run --all-files`
+1. Open a PR with:
    - Concise description of changes
    - List of commands you ran
    - Confirmation all validation checks passed

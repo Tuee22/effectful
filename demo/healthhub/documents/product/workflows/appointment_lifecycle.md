@@ -1,20 +1,15 @@
 # Appointment Lifecycle Workflow
 
 **Status**: Authoritative source
-**Supersedes**: none
+**Supersedes**: none **📖 Base Standard**: [appointment_lifecycle.md](../../../../../documents/product/workflows/appointment_lifecycle.md)
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
-> **Purpose**: Complete appointment lifecycle workflow demonstrating state machine progression from request through completion and billing.
-
-> **Core Doctrines**: For comprehensive patterns, see:
-> - [Intermediate Journey](../01_journeys/intermediate_journey.md)
-> - [Appointments Feature](../03_features/appointments.md)
-> - [Effect Patterns - State Machines](../../../../../documents/engineering/effect_patterns.md#state-machines)
+> **Purpose**: HealthHub overlay deltas for Appointment Lifecycle. **📖 Base Standard**: [appointment_lifecycle.md](../../../../../documents/product/workflows/appointment_lifecycle.md)
 
 ## Prerequisites
 
 - Docker workflow running; commands executed via `docker compose -f docker/docker-compose.yml`.
-- Completed [Intermediate Journey](../01_journeys/intermediate_journey.md).
+- Completed [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md).
 - Access to HealthHub at `http://localhost:8851`.
 - Understanding of state machines and ADTs.
 
@@ -34,11 +29,13 @@
 **Duration**: ~1 hour
 
 **Features Involved**:
+
 1. **Appointments**: Complete state machine (5 states, 4 transitions)
-2. **Notifications**: Triggered at each state transition
-3. **Invoices**: Generated from completed appointment
+1. **Notifications**: Triggered at each state transition
+1. **Invoices**: Generated from completed appointment
 
 **Demo Users**:
+
 - Patient: david.patient@example.com
 - Doctor: dr.williams@healthhub.com
 - Admin: admin@healthhub.com
@@ -47,7 +44,7 @@
 
 ## Workflow Diagram
 
-```
+```text
 Step 1: Patient Requests Appointment
    ↓ (State: Requested, notification to doctor)
 Step 2: Doctor Confirms Appointment
@@ -67,7 +64,8 @@ Step 6: Patient Views Invoice and Appointment Notes
 **States**: Requested, Confirmed, InProgress, Completed, Cancelled
 
 **Valid Transitions**:
-```
+
+```text
 Requested → Confirmed, Cancelled
 Confirmed → InProgress, Cancelled
 InProgress → Completed, Cancelled
@@ -76,7 +74,9 @@ Cancelled → (terminal, no transitions)
 ```
 
 **State Variants**:
+
 ```python
+# snippet
 @dataclass(frozen=True)
 class Requested:
     requested_at: datetime
@@ -111,6 +111,7 @@ type AppointmentStatus = Requested | Confirmed | InProgress | Completed | Cancel
 **Actor**: David Davis (patient)
 
 **Login**:
+
 - Email: `david.patient@example.com`
 - Password: `password123`
 
@@ -118,16 +119,18 @@ type AppointmentStatus = Requested | Confirmed | InProgress | Completed | Cancel
 
 1. **Navigate to Appointments**: Click "Appointments" in sidebar
 
-2. **Click "Request Appointment"**
+1. **Click "Request Appointment"**
 
-3. **Fill out Form**:
+1. **Fill out Form**:
+
    - **Doctor**: Dr. John Williams (Pediatrics)
    - **Scheduled Time**: 2025-12-15 10:00 AM
    - **Reason**: "Annual wellness checkup for adolescent"
 
-4. **Submit Request**: Click "Submit Request"
+1. **Submit Request**: Click "Submit Request"
 
-5. **Backend Processing**:
+1. **Backend Processing**:
+
    ```python
    def request_appointment_program(patient_id, doctor_id, scheduled_time, reason):
        # Validate patient and doctor exist
@@ -154,7 +157,8 @@ type AppointmentStatus = Requested | Confirmed | InProgress | Completed | Cancel
        return Ok({"appointment_id": appointment_id, "status": initial_status})
    ```
 
-6. **Expected Result**:
+1. **Expected Result**:
+
    - **Appointment Created**: appointment_id generated
    - **Status**: Requested(requested_at=2025-12-09T15:00:00Z)
    - **Notification**: Dr. Williams receives alert
@@ -162,11 +166,14 @@ type AppointmentStatus = Requested | Confirmed | InProgress | Completed | Cancel
    - **Doctor Dashboard**: Appointment appears in "Pending Confirmations" section
 
 **State**:
+
 ```python
+# snippet
 Requested(requested_at=datetime(2025, 12, 9, 15, 0, 0, tzinfo=timezone.utc))
 ```
 
 **Notification Sent**:
+
 - **Recipient**: Dr. Williams
 - **Type**: "appointment_requested"
 - **Urgency**: Medium
@@ -181,6 +188,7 @@ Requested(requested_at=datetime(2025, 12, 9, 15, 0, 0, tzinfo=timezone.utc))
 **Actor**: Dr. John Williams (doctor)
 
 **Login**:
+
 - Email: `dr.williams@healthhub.com`
 - Password: `password123`
 
@@ -188,19 +196,22 @@ Requested(requested_at=datetime(2025, 12, 9, 15, 0, 0, tzinfo=timezone.utc))
 
 1. **Navigate to Dashboard**: View "Pending Appointment Confirmations"
 
-2. **Click David's Appointment**: View request details
+1. **Click David's Appointment**: View request details
+
    - **Patient**: David Davis (AB+, allergies: Aspirin, Bee stings)
    - **Scheduled Time**: 2025-12-15 10:00 AM
    - **Reason**: "Annual wellness checkup for adolescent"
    - **Current Status**: Requested
 
-3. **Review Patient History** (optional):
+1. **Review Patient History** (optional):
+
    - Click "View Patient" to see medical history
    - Previous appointments, prescriptions, lab results
 
-4. **Click "Confirm Appointment"**
+1. **Click "Confirm Appointment"**
 
-5. **Backend Processing**:
+1. **Backend Processing**:
+
    ```python
    def confirm_appointment_program(appointment_id, doctor_id):
        # Fetch appointment
@@ -238,17 +249,20 @@ Requested(requested_at=datetime(2025, 12, 9, 15, 0, 0, tzinfo=timezone.utc))
        return Ok({"appointment_id": appointment_id, "status": new_status})
    ```
 
-6. **Expected Result**:
+1. **Expected Result**:
+
    - **Status Transition**: Requested → Confirmed
    - **Notification**: David receives confirmation notification
    - **Patient Dashboard**: Appointment badge changes to green "Confirmed"
    - **Doctor Dashboard**: Appointment moves to "Today's Appointments" (if today)
 
 **State Transition**:
+
 - **Before**: Requested(requested_at=2025-12-09T15:00:00Z)
 - **After**: Confirmed(confirmed_at=2025-12-09T15:10:00Z, confirmed_by_doctor_id=UUID("..."))
 
 **Notification Sent**:
+
 - **Recipient**: David Davis
 - **Type**: "appointment_confirmed"
 - **Message**: "Your appointment with Dr. John Williams has been confirmed for 2025-12-15 10:00"
@@ -265,13 +279,14 @@ Requested(requested_at=datetime(2025, 12, 9, 15, 0, 0, tzinfo=timezone.utc))
 
 1. **Navigate to Appointments**: Click "Appointments" in sidebar
 
-2. **Filter to Confirmed**: Select "Confirmed" status filter
+1. **Filter to Confirmed**: Select "Confirmed" status filter
 
-3. **Click David's Appointment**: View details
+1. **Click David's Appointment**: View details
 
-4. **Click "Start Appointment"**
+1. **Click "Start Appointment"**
 
-5. **Backend Processing**:
+1. **Backend Processing**:
+
    ```python
    def start_appointment_program(appointment_id):
        # Fetch appointment
@@ -296,13 +311,15 @@ Requested(requested_at=datetime(2025, 12, 9, 15, 0, 0, tzinfo=timezone.utc))
        return Ok({"appointment_id": appointment_id, "status": new_status})
    ```
 
-6. **Expected Result**:
+1. **Expected Result**:
+
    - **Status Transition**: Confirmed → InProgress
    - **Patient Dashboard**: Appointment badge changes to blue "In Progress"
    - **Doctor Dashboard**: Timer starts (appointment duration tracking)
    - **No Notification**: Patient not notified when appointment starts (in-person event)
 
 **State Transition**:
+
 - **Before**: Confirmed(confirmed_at=2025-12-09T15:10:00Z, confirmed_by_doctor_id=UUID("..."))
 - **After**: InProgress(started_at=2025-12-15T10:00:00Z)
 
@@ -320,7 +337,8 @@ Requested(requested_at=datetime(2025, 12, 9, 15, 0, 0, tzinfo=timezone.utc))
 
 1. **Click "Complete Appointment"**
 
-2. **Add Clinical Notes**:
+1. **Add Clinical Notes**:
+
    ```
    Chief Complaint: Annual wellness checkup for adolescent patient (age 14).
 
@@ -348,9 +366,10 @@ Requested(requested_at=datetime(2025, 12, 9, 15, 0, 0, tzinfo=timezone.utc))
    Follow-up: 1 year for next annual wellness checkup
    ```
 
-3. **Submit Notes**: Click "Complete Appointment"
+1. **Submit Notes**: Click "Complete Appointment"
 
-4. **Backend Processing**:
+1. **Backend Processing**:
+
    ```python
    def complete_appointment_program(appointment_id, notes):
        # Fetch appointment
@@ -378,7 +397,8 @@ Requested(requested_at=datetime(2025, 12, 9, 15, 0, 0, tzinfo=timezone.utc))
        return Ok({"appointment_id": appointment_id, "status": new_status})
    ```
 
-5. **Expected Result**:
+1. **Expected Result**:
+
    - **Status Transition**: InProgress → Completed (TERMINAL)
    - **Notification**: David receives completion notification
    - **Patient Dashboard**: Appointment badge changes to gray "Completed"
@@ -386,12 +406,14 @@ Requested(requested_at=datetime(2025, 12, 9, 15, 0, 0, tzinfo=timezone.utc))
    - **Invoice Eligibility**: Appointment ready for invoice generation
 
 **State Transition**:
+
 - **Before**: InProgress(started_at=2025-12-15T10:00:00Z)
 - **After**: Completed(completed_at=2025-12-15T10:30:00Z, notes="...")
 
 **Terminal State**: No further transitions allowed from Completed state.
 
 **Notification Sent**:
+
 - **Recipient**: David Davis
 - **Type**: "appointment_completed"
 - **Message**: "Your appointment has been completed. Notes are available in your portal."
@@ -405,6 +427,7 @@ Requested(requested_at=datetime(2025, 12, 9, 15, 0, 0, tzinfo=timezone.utc))
 **Actor**: Admin
 
 **Login**:
+
 - Email: `admin@healthhub.com`
 - Password: `password123`
 
@@ -412,15 +435,16 @@ Requested(requested_at=datetime(2025, 12, 9, 15, 0, 0, tzinfo=timezone.utc))
 
 1. **Navigate to Appointments**: Click "Appointments" in sidebar
 
-2. **Filter to Completed**: Select "Completed" status filter
+1. **Filter to Completed**: Select "Completed" status filter
 
-3. **Identify Unbilled Appointments**: Look for "Invoice Needed" badge
+1. **Identify Unbilled Appointments**: Look for "Invoice Needed" badge
 
-4. **Click David's Appointment**: View details
+1. **Click David's Appointment**: View details
 
-5. **Click "Generate Invoice"**
+1. **Click "Generate Invoice"**
 
-6. **Backend Processing**:
+1. **Backend Processing**:
+
    ```python
    def generate_invoice_from_appointment(appointment_id):
        # Fetch appointment (verify Completed status)
@@ -459,14 +483,16 @@ Requested(requested_at=datetime(2025, 12, 9, 15, 0, 0, tzinfo=timezone.utc))
        return Ok({"invoice_id": invoice_id, "total": total, "due_date": due_date})
    ```
 
-7. **Expected Result**:
+1. **Expected Result**:
+
    - **Invoice Created**: invoice_id generated
    - **Status**: "Sent"
    - **Notification**: David receives invoice ready notification
    - **Patient Dashboard**: Invoice appears in "Invoices" section
 
 **Invoice Details**:
-```
+
+```text
 Invoice #...
 Issued: 2025-12-15
 Due: 2026-01-14
@@ -482,6 +508,7 @@ Total: $214.00
 ```
 
 **Notification Sent**:
+
 - **Recipient**: David Davis
 - **Type**: "invoice_ready"
 - **Message**: "Your invoice for appointment on 2025-12-15 is ready. Amount due: $214.00. Due date: 2026-01-14."
@@ -500,15 +527,17 @@ Total: $214.00
 
 1. **Navigate to Appointments**: Click "Appointments" in sidebar
 
-2. **Click Completed Appointment**: View details
+1. **Click Completed Appointment**: View details
 
-3. **Review Doctor's Notes**:
+1. **Review Doctor's Notes**:
+
    - Physical examination findings
    - Diagnosis
    - Treatment plan
    - Follow-up recommendations
 
-4. **Expected Result**:
+1. **Expected Result**:
+
    - **Full Transparency**: David sees complete clinical notes
    - **Status**: Completed (terminal, cannot be modified)
    - **Doctor**: Dr. John Williams (Pediatrics)
@@ -517,15 +546,17 @@ Total: $214.00
 
 1. **Navigate to Invoices**: Click "Invoices" in sidebar
 
-2. **Click Invoice**: View itemized charges
+1. **Click Invoice**: View itemized charges
 
-3. **Review Invoice Details**:
+1. **Review Invoice Details**:
+
    - Line items (Office Visit, Annual Wellness Checkup)
    - Subtotal, tax, total
    - Due date (30 days from issue)
    - Payment instructions
 
-4. **Expected Result**:
+1. **Expected Result**:
+
    - **Full Transparency**: David sees itemized charges
    - **Status**: "Sent"
    - **Payment Options**: Credit card, check, online portal
@@ -537,15 +568,17 @@ Total: $214.00
 **Total Notifications in Workflow**:
 
 1. **Appointment Requested** → Doctor notified (alert)
-2. **Appointment Confirmed** → Patient notified
-3. **Appointment Completed** → Patient notified
-4. **Invoice Generated** → Patient notified
+1. **Appointment Confirmed** → Patient notified
+1. **Appointment Completed** → Patient notified
+1. **Invoice Generated** → Patient notified
 
 **Notification Timing**:
+
 - **Immediate**: All notifications sent synchronously during API call
 - **Reliable**: Notifications stored in database before API returns (transactional)
 
 **Notification Channels**:
+
 - **In-App**: Notifications visible in HealthHub UI
 - **Future**: Email, SMS, push notifications (not yet implemented)
 
@@ -556,6 +589,7 @@ Total: $214.00
 **Attempt**: Patient tries to start appointment directly from Requested state
 
 **Backend Validation**:
+
 ```python
 # Transition: Requested → InProgress (INVALID)
 current_status = Requested(requested_at=...)
@@ -568,13 +602,14 @@ if not validate_transition(current_status, InProgress):
 
 **Expected**: Appointment must be confirmed before starting
 
----
+______________________________________________________________________
 
 **Example 2: Modify Terminal State**
 
 **Attempt**: Admin tries to cancel completed appointment
 
 **Backend Validation**:
+
 ```python
 # Transition: Completed → Cancelled (INVALID)
 current_status = Completed(completed_at=..., notes="...")
@@ -594,24 +629,28 @@ if not validate_transition(current_status, Cancelled):
 **Test Function**: `test_complete_appointment_lifecycle`
 
 **Test Steps**:
+
 1. Patient requests appointment
-2. Doctor confirms appointment
-3. Doctor starts appointment
-4. Doctor completes appointment with notes
-5. Admin generates invoice
-6. Patient views appointment notes and invoice
-7. Verify state transitions
-8. Verify notifications triggered
-9. Attempt invalid transitions (verify blocked)
+1. Doctor confirms appointment
+1. Doctor starts appointment
+1. Doctor completes appointment with notes
+1. Admin generates invoice
+1. Patient views appointment notes and invoice
+1. Verify state transitions
+1. Verify notifications triggered
+1. Attempt invalid transitions (verify blocked)
 
 **Run Test**:
+
 ```bash
+# snippet
 docker compose -f docker/docker-compose.yml exec healthhub poetry run pytest tests/pytest/e2e/test_complete_care_episode.py::test_complete_appointment_lifecycle -v
 ```
 
 ## Summary
 
 **You have successfully**:
+
 - ✅ Requested appointment (Requested state)
 - ✅ Confirmed appointment (Confirmed state, patient notified)
 - ✅ Started appointment (InProgress state)
@@ -622,21 +661,22 @@ docker compose -f docker/docker-compose.yml exec healthhub poetry run pytest tes
 - ✅ Understood terminal state enforcement
 
 **Key Takeaways**:
+
 1. **State Machine Enforcement**: ADT with validate_transition prevents invalid state changes
-2. **Terminal States**: Completed and Cancelled states cannot transition further
-3. **Notification Cascade**: Patient notified at confirmation, completion, and invoice generation
-4. **Context-Rich States**: Each state carries state-specific data (timestamps, notes, doctor_id)
-5. **Invoice Generation**: Only possible from Completed state (terminal)
-6. **Full Transparency**: Patient sees complete appointment notes and itemized invoice
+1. **Terminal States**: Completed and Cancelled states cannot transition further
+1. **Notification Cascade**: Patient notified at confirmation, completion, and invoice generation
+1. **Context-Rich States**: Each state carries state-specific data (timestamps, notes, doctor_id)
+1. **Invoice Generation**: Only possible from Completed state (terminal)
+1. **Full Transparency**: Patient sees complete appointment notes and itemized invoice
 
 **Workflow Duration**: ~1 hour from request to invoice viewing
 
 ## Cross-References
 
-- [Intermediate Journey - Appointment State Machine](../01_journeys/intermediate_journey.md#step-2-create-appointment-with-state-machine)
-- [Appointments Feature](../03_features/appointments.md)
-- [Invoices Feature](../03_features/invoices.md)
-- [Patient Guide](../02_roles/patient_guide.md)
-- [Doctor Guide](../02_roles/doctor_guide.md)
-- [Admin Guide](../02_roles/admin_guide.md)
+- [Intermediate Journey - Appointment State Machine](../../tutorials/01_journeys/intermediate_journey.md#step-2-create-appointment-with-state-machine)
+- [Appointments Feature](../../engineering/features/appointments.md)
+- [Invoices Feature](../../engineering/features/invoices.md)
+- [Patient Guide](../../product/roles/patient_guide.md)
+- [Doctor Guide](../../product/roles/doctor_guide.md)
+- [Admin Guide](../../product/roles/admin_guide.md)
 - [Effect Patterns - State Machines](../../../../../documents/engineering/effect_patterns.md#state-machines)

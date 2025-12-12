@@ -23,33 +23,38 @@ flowchart TB
   Testing --> TestingArch
 ```
 
-| Need | Link |
-|------|------|
-| Test execution and patterns | [Testing](testing.md) |
-| Type safety driving test shape | [Code Quality](code_quality.md) |
-| Docker-based testing environment | [Docker Workflow](docker_workflow.md) |
-| Documentation standards | [Documentation Standards](../documentation_standards.md) |
+| Need                             | Link                                                     |
+| -------------------------------- | -------------------------------------------------------- |
+| Test execution and patterns      | [Testing](testing.md)                                    |
+| Type safety driving test shape   | [Code Quality](code_quality.md)                          |
+| Docker-based testing environment | [Docker Workflow](docker_workflow.md)                    |
+| Documentation standards          | [Documentation Standards](../documentation_standards.md) |
 
----
+______________________________________________________________________
 
 ## Part 1: Test Suite Boundaries
+
+Before executing any suite, run `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code` to ensure code + documentation gates pass (formatter, linter, link/spell/custom doc checks, functional catalogue).
 
 ### Unit Tests (tests/unit/)
 
 **Scope**: Test single functions or classes in isolation with no infrastructure dependencies.
 
 **Characteristics**:
+
 - No real infrastructure (no PostgreSQL, Redis, MinIO, Pulsar)
 - Use pytest-mock exclusively (`mocker.AsyncMock(spec=Protocol)`)
-- Fast (<1 second total execution time)
+- Fast (\<1 second total execution time)
 - Many tests (200+)
 
 **Fixture Strategy**:
+
 - Mock all external dependencies
 - Use `spec=` parameter for type safety
 - Focus on logic correctness and Result types
 
 **Example**: Testing an interpreter with mocked repository
+
 ```python
 # file: tests/unit/test_interpreters/test_database.py
 from pytest_mock import MockerFixture
@@ -71,17 +76,20 @@ async def test_get_user_interpreter(mocker: MockerFixture) -> None:
 **Scope**: Test effects and interpreters against real infrastructure services running in Docker.
 
 **Characteristics**:
+
 - Real infrastructure (PostgreSQL, Redis, MinIO, Pulsar)
 - Tests run inside Docker containers
 - Medium speed (~1 second per test)
 - Some tests (27+)
 
 **Fixture Strategy**:
+
 - Use `clean_*` fixtures that provide real infrastructure
 - Pre and post cleanup for isolation
 - Focus on infrastructure integration correctness
 
 **Example**: Testing cache workflow with real Redis
+
 ```python
 # file: tests/integration/test_cache_workflow.py
 @pytest.mark.asyncio
@@ -92,22 +100,25 @@ async def test_cache_workflow(clean_redis: Redis) -> None:
     assert_ok(result)
 ```
 
-### E2E Tests (tests/e2e/ or demo/*/tests/)
+### E2E Tests (tests/e2e/ or demo/\*/tests/)
 
 **Scope**: Test complete workflows end-to-end with full system integration.
 
 **Characteristics**:
+
 - Full stack (all infrastructure + application layer)
 - Real data flows from start to finish
 - Slow (multiple seconds per test)
 - Few tests (focus on critical paths)
 
 **Fixture Strategy**:
+
 - Use `base_state` or `clean_<project>_state` fixtures
 - Pre-loaded seed data for deterministic testing
 - Minimal mocking (only external services)
 
 **Example**: E2E test with seeded data
+
 ```python
 # file: demo/healthhub/tests/pytest/e2e/test_patient_workflows.py
 @pytest.mark.e2e
@@ -122,7 +133,7 @@ async def test_patient_view_prescriptions(
     assert await prescriptions.count() > 0
 ```
 
----
+______________________________________________________________________
 
 ## Part 2: Fixture Architecture
 
@@ -131,7 +142,8 @@ async def test_patient_view_prescriptions(
 **Rule**: All fixtures MUST be defined in `tests/fixtures/` and imported via root `conftest.py`.
 
 **Directory Structure**:
-```
+
+```text
 tests/
 ├── conftest.py          # Root: imports and re-exports all fixtures
 ├── fixtures/
@@ -155,12 +167,14 @@ tests/
 ```
 
 **Rationale**:
+
 - **Single source of truth**: One place to find fixture definitions
 - **Discoverability**: Pytest automatically finds fixtures in conftest.py
 - **No duplication**: Fixtures defined once, used everywhere
 - **Type safety**: Import statements enable IDE autocomplete
 
 **Root conftest.py Pattern** (`tests/conftest.py`):
+
 ```python
 # file: tests/conftest.py
 """Root pytest configuration for all tests.
@@ -191,6 +205,7 @@ __all__ = [
 ```
 
 **Anti-pattern**: Defining fixtures in test files
+
 ```python
 # file: tests/integration/test_cache.py
 # ❌ WRONG - Fixture defined in test file
@@ -242,6 +257,7 @@ async def clean_pulsar(
 ```
 
 **Why Pre AND Post?**:
+
 - **Pre-cleanup**: Guarantees clean state even if previous test failed
 - **Post-cleanup**: Prevents leaked resources from failing subsequent tests
 - **try/except**: Cleanup errors shouldn't mask test failures
@@ -262,6 +278,7 @@ await asyncio.sleep(0.2)  # 200ms safety margin
 ```
 
 **Why**:
+
 - Brokers need ~100ms to finalize ledger closures, topic deletions, subscription cleanup
 - Without sleep: "Resource still in use" errors, quota exceeded, connection pool exhaustion
 - 200ms is empirically tested safety margin (100ms min + 100ms buffer)
@@ -287,7 +304,8 @@ await pulsar_admin_client.delete_subscription(sub)  # Can fail if consumers exis
 ```
 
 **Why Client-Level?**:
-- **Fast**: Closing 100 producers takes <50ms vs 50+ seconds to delete topics
+
+- **Fast**: Closing 100 producers takes \<50ms vs 50+ seconds to delete topics
 - **Reliable**: Client cleanup always works; server cleanup has race conditions
 - **Isolation**: UUID topic names ensure no conflicts, cleanup is optional
 
@@ -308,6 +326,7 @@ def test_publish_workflow(clean_pulsar) -> None:
 ```
 
 **Why**:
+
 - **Broker-level isolation**: Tests can't conflict even if cleanup fails
 - **Parallel execution**: Future support for parallel test runs
 - **Debugging**: Easy to identify which test created which resources
@@ -326,26 +345,28 @@ producer = client.create_producer(topic, send_timeout_millis=5000)  # 5s
 ```
 
 **Rationale**:
+
 - **Fast feedback**: 5s timeout means test fails in 5s, not 30s
-- **CI efficiency**: Full suite completes in <15s instead of minutes
+- **CI efficiency**: Full suite completes in \<15s instead of minutes
 - **Early detection**: Timeout failures indicate infrastructure issues
 
 ### Infrastructure-Specific Cleanup Strategies
 
 Each infrastructure service uses the most efficient cleanup operation for that service.
 
-| Service | Operation | Speed | Rationale |
-|---------|-----------|-------|-----------|
-| PostgreSQL | `TRUNCATE TABLE ... CASCADE` | Fast (10ms) | O(1), handles FK constraints, resets sequences |
-| Redis | `FLUSHDB` | Instant (1ms) | Deletes all keys, no tracking needed |
-| MinIO S3 | Delete all objects in bucket | Medium (100ms) | Complete cleanup, bucket reuse |
-| Pulsar | Close cached producers/consumers | Fast (<50ms) | Client-level isolation |
+| Service    | Operation                        | Speed          | Rationale                                      |
+| ---------- | -------------------------------- | -------------- | ---------------------------------------------- |
+| PostgreSQL | `TRUNCATE TABLE ... CASCADE`     | Fast (10ms)    | O(1), handles FK constraints, resets sequences |
+| Redis      | `FLUSHDB`                        | Instant (1ms)  | Deletes all keys, no tracking needed           |
+| MinIO S3   | Delete all objects in bucket     | Medium (100ms) | Complete cleanup, bucket reuse                 |
+| Pulsar     | Close cached producers/consumers | Fast (\<50ms)  | Client-level isolation                         |
 
 #### PostgreSQL: TRUNCATE CASCADE Pattern
 
 **Strategy**: Use `TRUNCATE TABLE ... CASCADE` for database cleanup instead of `DELETE`.
 
 **Fixture implementation** (`tests/fixtures/database.py`):
+
 ```python
 # file: examples/testing.py
 @pytest_asyncio.fixture
@@ -362,18 +383,20 @@ async def clean_db(
 
 **Why TRUNCATE instead of DELETE?**
 
-| Operation | Speed | Auto-Increment Reset | Atomic | Handles FK Constraints |
-|-----------|-------|---------------------|--------|----------------------|
-| TRUNCATE CASCADE | Fast (10ms) | Yes | Yes | Yes (CASCADE) |
-| DELETE | Slow (100ms+) | No | No | Requires manual ordering |
+| Operation        | Speed         | Auto-Increment Reset | Atomic | Handles FK Constraints   |
+| ---------------- | ------------- | -------------------- | ------ | ------------------------ |
+| TRUNCATE CASCADE | Fast (10ms)   | Yes                  | Yes    | Yes (CASCADE)            |
+| DELETE           | Slow (100ms+) | No                   | No     | Requires manual ordering |
 
 **TRUNCATE advantages**:
+
 1. **Fast**: Single operation, no row-by-row processing
-2. **Atomic**: Either all tables truncated or none (transactional)
-3. **Resets sequences**: Auto-increment IDs start from 1 again
-4. **CASCADE**: Automatically handles foreign key relationships
+1. **Atomic**: Either all tables truncated or none (transactional)
+1. **Resets sequences**: Auto-increment IDs start from 1 again
+1. **CASCADE**: Automatically handles foreign key relationships
 
 **Anti-pattern**: Using DELETE for cleanup:
+
 ```python
 # file: examples/testing.py
 # ❌ WRONG - Slow, doesn't reset sequences, manual FK ordering required
@@ -387,6 +410,7 @@ await conn.execute("DELETE FROM users")  # Then parents
 **Strategy**: Use `FLUSHDB` to delete all keys in the current database.
 
 **Fixture implementation** (`tests/fixtures/cache.py`):
+
 ```python
 # file: examples/testing.py
 @pytest_asyncio.fixture
@@ -410,12 +434,14 @@ async def clean_redis(
 ```
 
 **Why FLUSHDB?**:
+
 - **Instant**: O(1) operation, ~1ms execution time
 - **Complete**: Deletes all keys without tracking
 - **Atomic**: All keys deleted in single operation
 - **No race conditions**: Unlike key-by-key deletion
 
 **Anti-pattern**: Manual key deletion:
+
 ```python
 # file: examples/testing.py
 # ❌ WRONG - Slow O(N), blocks Redis, requires tracking
@@ -429,6 +455,7 @@ for key in keys:
 **Strategy**: Delete all objects in test bucket, keep bucket for reuse.
 
 **Fixture implementation** (`tests/fixtures/storage.py`):
+
 ```python
 # file: examples/testing.py
 @pytest_asyncio.fixture
@@ -457,6 +484,7 @@ async def clean_minio(
 ```
 
 **Why keep bucket?**:
+
 - **Faster**: Deleting objects (100ms) faster than recreating bucket (500ms)
 - **Simpler**: No bucket name conflicts
 - **Consistent**: Same bucket name across all tests
@@ -466,6 +494,7 @@ async def clean_minio(
 **Strategy**: Close cached producers and consumers at client adapter level.
 
 **Fixture implementation** (`tests/fixtures/messaging.py`):
+
 ```python
 # file: examples/testing.py
 @pytest_asyncio.fixture
@@ -494,11 +523,12 @@ async def clean_pulsar(
 ```
 
 **Why client-level?**:
-- **Fast**: <50ms for 100 producers
+
+- **Fast**: \<50ms for 100 producers
 - **Reliable**: No race conditions
 - **Isolation**: UUID topic names prevent conflicts
 
----
+______________________________________________________________________
 
 ## Part 3: Four-Layer Testing Architecture
 
@@ -523,21 +553,23 @@ flowchart TB
   Integration --> Layer4[Layer 4 Workflows]
 ```
 
-| Layer | Count | Speed | Infrastructure |
-|-------|-------|-------|----------------|
-| Unit | Many (200+) | Fast (<1s) | pytest-mock only |
-| Integration | Some (27+) | Medium (~1s) | Real PostgreSQL/Redis/MinIO |
-| E2E/Demo | Few | Slow | Full stack |
+| Layer       | Count       | Speed        | Infrastructure              |
+| ----------- | ----------- | ------------ | --------------------------- |
+| Unit        | Many (200+) | Fast (\<1s)  | pytest-mock only            |
+| Integration | Some (27+)  | Medium (~1s) | Real PostgreSQL/Redis/MinIO |
+| E2E/Demo    | Few         | Slow         | Full stack                  |
 
 ### Architecture Layers
 
 **Each layer tests ONE concern**:
+
 - **Effects** = **WHAT** to do (pure data)
 - **Interpreters** = **HOW** to do it (execution)
 - **Programs** = **WHEN** to do it (sequencing)
 - **Workflows** = **WHY** to do it (business scenarios)
 
 **Testability**: Each layer can be tested independently:
+
 - **Effects**: No dependencies, just dataclass validation
 - **Interpreters**: Mock infrastructure, focus on execution logic
 - **Programs**: Mock effect results, focus on sequencing
@@ -611,6 +643,7 @@ async def test_get_user_by_id_success(mocker: MockerFixture) -> None:
 ```
 
 **Key points**:
+
 - Use `mocker.AsyncMock(spec=Protocol)` for type safety
 - Test both success (`Ok`) and error (`Err`) paths
 - Verify retryability for errors
@@ -663,6 +696,7 @@ def test_get_user_program_success(mocker: MockerFixture) -> None:
 ```
 
 **Key points**:
+
 - Programs are generators: use `next(gen)` to get next effect
 - Use `gen.send(value)` to provide mock results
 - Catch `StopIteration` to extract final return value
@@ -724,6 +758,7 @@ async def test_complete_user_workflow(clean_db: asyncpg.Connection) -> None:
 ```
 
 **Key points**:
+
 - Use `run_ws_program(program(), interpreter)` - it handles all generator iteration
 - Create interpreters with real infrastructure (via fixtures)
 - Test complete multi-effect workflows
@@ -733,16 +768,17 @@ async def test_complete_user_workflow(clean_db: asyncpg.Connection) -> None:
 
 **Do NOT**: Manually step through generators (no `next()`/`gen.send()`) - let `run_ws_program` do it.
 
----
+______________________________________________________________________
 
 ## Part 4: Test Terseness Doctrine
 
 **Core Philosophy**: Make individual tests as terse as possible by systematically eliminating verbatim repetitions through fixture-based abstraction and pytest idioms.
 
 This section presents:
+
 1. **Meta-Principle**: The "why" of test terseness (goal-setting)
-2. **Implementation Tactics**: The "how" of achieving terseness (5 tactics)
-3. **Anti-Patterns**: The "what not to do" (5 common mistakes)
+1. **Implementation Tactics**: The "how" of achieving terseness (5 tactics)
+1. **Anti-Patterns**: The "what not to do" (5 common mistakes)
 
 ### Meta-Principle: Test Terseness Through Systematic DRY
 
@@ -751,22 +787,24 @@ This section presents:
 **Core Philosophy**: Tests should read like specifications, not implementations. Setup, infrastructure, and boilerplate belong in fixtures and shared data; test functions should contain ONLY the logic unique to that test case.
 
 **Why Terseness Matters**:
+
 1. **Readability**: Shorter tests are easier to understand at a glance
-2. **Maintainability**: Less code means fewer places to update when requirements change
-3. **Focus**: Removes noise, highlights exactly what's being tested
-4. **Velocity**: Faster to write new tests by reusing well-crafted fixtures
+1. **Maintainability**: Less code means fewer places to update when requirements change
+1. **Focus**: Removes noise, highlights exactly what's being tested
+1. **Velocity**: Faster to write new tests by reusing well-crafted fixtures
 
 **Systematic Application**: Apply these tactics in order as a checklist:
 
 1. **Tactic 1 (Fixture-Level DRY)**: Infrastructure setup/cleanup → centralized fixture
-2. **Tactic 2 (Test-Level DRY)**: Repeated setup within file → local fixture
-3. **Tactic 3 (Suite-Level DRY)**: Repeated setup across files in suite → suite conftest.py
-4. **Tactic 4 (Cross-Suite DRY)**: Repeated data across all suites → tests/fixtures/base_state.py
-5. **Tactic 5 (Pytest Idiom DRY)**: Repeated test logic → parametrize, factories, autouse
+1. **Tactic 2 (Test-Level DRY)**: Repeated setup within file → local fixture
+1. **Tactic 3 (Suite-Level DRY)**: Repeated setup across files in suite → suite conftest.py
+1. **Tactic 4 (Cross-Suite DRY)**: Repeated data across all suites → tests/fixtures/base_state.py
+1. **Tactic 5 (Pytest Idiom DRY)**: Repeated test logic → parametrize, factories, autouse
 
 **Example: Terse vs Verbose Test**
 
 Verbose test with inline setup (45 lines):
+
 ```python
 # file: tests/integration/test_cache_workflow.py
 # ❌ VERBOSE - Setup repeated in every test
@@ -806,6 +844,7 @@ async def test_put_profile_workflow(clean_redis: Redis, mocker: MockerFixture) -
 ```
 
 Terse test with fixture (18 lines):
+
 ```python
 # file: tests/integration/test_cache_workflow.py
 # ✅ TERSE - Setup in fixture, only test logic here
@@ -838,6 +877,7 @@ async def test_put_profile_workflow(
 **Terseness improvement**: 45 lines → 18 lines (60% reduction), with setup boilerplate moved to reusable fixture.
 
 **Measurement**: Track these metrics to validate terseness improvements:
+
 - Lines of code per test function
 - Number of fixture reuses across test suite
 - Percentage of tests using parametrize for similar cases
@@ -845,7 +885,7 @@ async def test_put_profile_workflow(
 
 **See Also**: Implementation Tactics 1-5 below for detailed patterns and rationale.
 
----
+______________________________________________________________________
 
 ### Implementation Tactics
 
@@ -856,6 +896,7 @@ async def test_put_profile_workflow(
 **Core Principle**: Test isolation and reproducibility should be enforced at the **fixture level** with a single idempotent base state across **all microservices**, rather than scattered across individual test files.
 
 **Problem**: Without centralized isolation, every test file must implement its own cleanup logic, leading to:
+
 - **Code duplication**: Same cleanup code copied across 10+ test files
 - **Inconsistent state**: Tests may start with different base states
 - **Maintenance burden**: Changing cleanup logic requires updating many files
@@ -864,14 +905,16 @@ async def test_put_profile_workflow(
 **Solution**: Single `clean_<project>_state` fixture that resets ALL infrastructure to idempotent base state.
 
 **Benefits**:
+
 1. **DRY**: One fixture, not 10+ cleanup implementations
-2. **Idempotent**: Every test starts with identical state
-3. **Maintainable**: Change cleanup logic in one place
-4. **Debuggable**: Consistent state makes failures reproducible
-5. **Fast**: Pre-loaded seed data faster than per-test inserts
-6. **Comprehensive**: Resets ALL infrastructure, not just database
+1. **Idempotent**: Every test starts with identical state
+1. **Maintainable**: Change cleanup logic in one place
+1. **Debuggable**: Consistent state makes failures reproducible
+1. **Fast**: Pre-loaded seed data faster than per-test inserts
+1. **Comprehensive**: Resets ALL infrastructure, not just database
 
 **Pattern**: Centralized state fixture
+
 ```python
 # file: demo/healthhub/tests/conftest.py
 @pytest.fixture
@@ -902,6 +945,7 @@ async def clean_healthhub_state(
 ```
 
 **Anti-pattern**: Per-test cleanup
+
 ```python
 # file: tests/e2e/test_workflows.py
 # ❌ WRONG - Each test does its own cleanup (duplicated 10+ times)
@@ -933,6 +977,7 @@ interpreter = create_composite_interpreter(
 ```
 
 This pattern is duplicated in:
+
 - `test_put_and_get_profile_workflow` (lines 50-60)
 - `test_cache_miss_workflow` (lines 104-114)
 - `test_cache_with_database_fallback_workflow` (lines 160-167)
@@ -945,7 +990,7 @@ This pattern is duplicated in:
 ```python
 # file: tests/integration/conftest.py
 @pytest.fixture
-def mock_interpreter_deps(mocker: MockerFixture) -> dict[str, Any]:
+def mock_interpreter_deps(mocker: MockerFixture) -> dict[str, object]:
     """Provide mocked dependencies for composite interpreter."""
     mock_ws = mocker.AsyncMock(spec=WebSocketConnection)
     mock_ws.is_open.return_value = True
@@ -958,7 +1003,7 @@ def mock_interpreter_deps(mocker: MockerFixture) -> dict[str, Any]:
 
 @pytest.fixture
 def interpreter_with_redis(
-    mock_interpreter_deps: dict[str, Any],
+    mock_interpreter_deps: dict[str, object],
     clean_redis: Redis,
 ) -> tuple[CompositeInterpreter, AsyncMock]:
     """Provide interpreter with real Redis cache and mocked other deps."""
@@ -1005,11 +1050,13 @@ async def test_put_and_get_profile_workflow(
 ```
 
 **Terseness improvement**:
+
 - Before: 25 lines per test (9 lines setup + 16 lines logic)
 - After: 16 lines per test (0 lines setup + 16 lines logic)
 - Reduction: 36% fewer lines per test
 
 **See Also**:
+
 - [Testing - Pattern 6: Fixture-Level Isolation](testing.md#pattern-6-fixture-level-isolation-dry-doctrine) for complete implementation example
 
 ### Tactic 2: Test-Level DRY (Within Single File)
@@ -1023,6 +1070,7 @@ async def test_put_and_get_profile_workflow(
 **Solution**: Extract common setup to module-scoped or function-scoped fixtures.
 
 **Pattern**: Fixture-based setup
+
 ```python
 # file: tests/integration/test_cache_workflow.py
 @pytest.fixture
@@ -1051,6 +1099,7 @@ async def test_cache_get_workflow(alice_user: User, clean_redis: Redis):
 ```
 
 **Anti-pattern**: Repeated setup
+
 ```python
 # file: tests/integration/test_cache_workflow.py
 # ❌ WRONG - Repeated user creation
@@ -1069,6 +1118,7 @@ async def test_cache_get_workflow():
 ```
 
 **Rationale**:
+
 - Fixtures ensure consistent test data
 - Changes to setup logic happen in one place
 - Tests focus on behavior, not setup
@@ -1085,6 +1135,7 @@ async def test_cache_get_workflow():
 **Solution**: Define suite-specific fixtures in `tests/<suite>/conftest.py`.
 
 **Pattern**: Suite-specific conftest
+
 ```python
 # file: tests/integration/conftest.py
 """Fixtures specific to integration tests."""
@@ -1114,6 +1165,7 @@ def integration_interpreter(
 ```
 
 **Usage across multiple integration test files**:
+
 ```python
 # file: tests/integration/test_user_workflow.py
 @pytest.mark.asyncio
@@ -1131,6 +1183,7 @@ async def test_cache_workflow(integration_interpreter: CompositeInterpreter):
 ```
 
 **Anti-pattern**: Duplicating fixtures across test files
+
 ```python
 # file: tests/integration/test_user_workflow.py
 # ❌ WRONG - Fixture duplicated in multiple files
@@ -1146,6 +1199,7 @@ def integration_interpreter(...):  # DUPLICATED
 ```
 
 **Rationale**:
+
 - Suite-specific fixtures stay within their test suite
 - Clear ownership: integration tests own integration fixtures
 - No cross-suite pollution: unit tests can't accidentally use integration fixtures
@@ -1161,6 +1215,7 @@ def integration_interpreter(...):  # DUPLICATED
 **Solution**: Define standard test entities with fixed UUIDs in `tests/fixtures/base_state.py`, import everywhere.
 
 **Pattern**: Shared test data module (`tests/fixtures/base_state.py`):
+
 ```python
 # file: tests/fixtures/base_state.py
 """Standard test users - shared across ALL test suites."""
@@ -1180,6 +1235,7 @@ CHARLIE = User(id=CHARLIE_ID, email="charlie@example.com", name="Charlie")
 ```
 
 **Usage across ALL test suites**:
+
 ```python
 # file: tests/unit/test_domain/test_user.py
 from tests.fixtures.base_state import ALICE, ALICE_ID
@@ -1212,12 +1268,14 @@ async def test_user_login(base_state: dict):
 ```
 
 **Benefits**:
+
 - **Consistency**: Same "Alice" everywhere (same ID, email, name)
 - **Deterministic**: Fixed UUIDs enable predictable testing
 - **DRY**: One definition, used in 200+ tests
 - **Debuggable**: Logs showing "11111111-1111-1111-1111-111111111111" immediately identify Alice
 
 **Anti-pattern**: Different "Alice" in each suite
+
 ```python
 # file: tests/unit/test_domain.py
 # ❌ WRONG - Unit tests define their own Alice
@@ -1233,6 +1291,7 @@ ALICE = User(id=UUID("22222..."), email="alice@healthhub.com", name="Alice")  # 
 ```
 
 **See Also**:
+
 - `tests/fixtures/base_state.py` - Complete implementation with password hashes
 
 ### Tactic 5: Pytest Idiom DRY (Terseness Through Tools)
@@ -1248,6 +1307,7 @@ ALICE = User(id=UUID("22222..."), email="alice@healthhub.com", name="Alice")  # 
 #### Pattern 5a: Parametrize Instead of Copy-Paste
 
 **Pattern**: Parametrized tests
+
 ```python
 # file: tests/unit/test_validation.py
 @pytest.mark.parametrize("email,expected_valid", [
@@ -1264,6 +1324,7 @@ def test_email_validation(email: str, expected_valid: bool):
 ```
 
 **Anti-pattern**: Copy-paste tests
+
 ```python
 # file: tests/unit/test_validation.py
 # ❌ WRONG - Duplicated test logic
@@ -1285,6 +1346,7 @@ def test_email_validation_invalid_2():
 ```
 
 **Benefits**:
+
 - One test function instead of 5+
 - Easy to add new test cases (one line)
 - Clear test matrix
@@ -1325,12 +1387,15 @@ def test_user_email_is_immutable() -> None:
 ```python
 # file: tests/unit/test_domain/test_user.py
 # ✅ TERSE - Parametrized test (14 lines total)
-@pytest.mark.parametrize("field,new_value", [
-    ("name", "Bob"),
-    ("id", uuid4()),
-    ("email", "bob@example.com"),
-])
-def test_user_fields_are_immutable(field: str, new_value: Any) -> None:
+@pytest.mark.parametrize(
+    "field,new_value",
+    [
+        ("name", "Bob"),
+        ("id", uuid4()),
+        ("email", "bob@example.com"),
+    ],
+)
+def test_user_fields_are_immutable(field: str, new_value: object) -> None:
     """User fields should be frozen (immutable)."""
     user = User(id=uuid4(), name="Alice", email="alice@example.com")
     with pytest.raises(FrozenInstanceError):
@@ -1384,6 +1449,7 @@ def test_result_predicates(result: Result, predicate: str, expected: bool) -> No
 ```
 
 **Benefits demonstrated**:
+
 - **DRY**: One test function instead of 4
 - **Matrix clarity**: All test cases visible in parameter list
 - **Easy extension**: Add new predicates by adding one line
@@ -1392,6 +1458,7 @@ def test_result_predicates(result: Result, predicate: str, expected: bool) -> No
 #### Pattern 5b: Fixture Factories
 
 **Pattern**: Factory fixtures for dynamic test data
+
 ```python
 # file: tests/integration/conftest.py
 @pytest.fixture
@@ -1418,6 +1485,7 @@ async def test_user_workflow(make_user):
 ```
 
 **Benefits**:
+
 - Create test data as needed
 - Avoid pre-seeding unused data
 - Clear test data lifecycle
@@ -1425,6 +1493,7 @@ async def test_user_workflow(make_user):
 #### Pattern 5c: Autouse Fixtures
 
 **Pattern**: Autouse for mandatory setup
+
 ```python
 # file: demo/healthhub/tests/pytest/e2e/conftest.py
 @pytest_asyncio.fixture(autouse=True)
@@ -1440,6 +1509,7 @@ async def auto_clean_healthhub_state(
 ```
 
 **Usage**: Tests automatically get clean state
+
 ```python
 # file: demo/healthhub/tests/pytest/e2e/test_workflows.py
 @pytest.mark.e2e
@@ -1453,15 +1523,18 @@ async def test_patient_workflow():
 ```
 
 **Benefits**:
+
 - No manual fixture injection required
 - Impossible to forget cleanup
 - Clear: "all e2e tests get clean state"
 
 **When to use autouse**:
+
 - E2E tests: Always need full clean state
 - Performance tests: Always need monitoring setup
 
 **When NOT to use autouse**:
+
 - Unit tests: No infrastructure needed
 - Optional setup: Some tests need it, others don't
 
@@ -1634,7 +1707,7 @@ async def test_user_workflow_2():
     await insert_user(BOB_ID, ...)
 ```
 
----
+______________________________________________________________________
 
 ## Part 5: Fixture Discovery and Imports
 
@@ -1643,6 +1716,7 @@ async def test_user_workflow_2():
 **Purpose**: Make all fixtures discoverable to pytest without explicit imports in test files.
 
 **Implementation** (`tests/conftest.py`):
+
 ```python
 # file: tests/conftest.py
 """Root pytest configuration for all tests.
@@ -1677,17 +1751,19 @@ __all__ = [
 **Pytest fixture discovery hierarchy**:
 
 1. **Test file itself**: Fixtures defined in the test file (discouraged)
-2. **Suite conftest.py**: `tests/unit/conftest.py`, `tests/integration/conftest.py`, `tests/e2e/conftest.py`
-3. **Root conftest.py**: `tests/conftest.py`
-4. **Installed packages**: Fixtures from pytest plugins
+1. **Suite conftest.py**: `tests/unit/conftest.py`, `tests/integration/conftest.py`, `tests/e2e/conftest.py`
+1. **Root conftest.py**: `tests/conftest.py`
+1. **Installed packages**: Fixtures from pytest plugins
 
 **Visibility**:
+
 - Root conftest.py fixtures: Available to ALL test files
 - Suite conftest.py fixtures: Available only to that suite
 - Test file fixtures: Available only to that file
 
 **Example**:
-```
+
+```text
 tests/
 ├── conftest.py                    # Fixtures available to ALL tests
 ├── fixtures/
@@ -1703,6 +1779,7 @@ tests/
 ### Import Patterns
 
 **Pattern 1**: Import test data constants directly
+
 ```python
 # file: tests/integration/test_database.py
 from tests.fixtures.base_state import ALICE, ALICE_ID, BOB
@@ -1721,6 +1798,7 @@ async def test_insert_users(clean_db):
 ```
 
 **Pattern 2**: Fixtures are auto-discovered (no import needed)
+
 ```python
 # file: tests/integration/test_database.py
 # No import needed for clean_db - pytest finds it via conftest.py
@@ -1733,6 +1811,7 @@ async def test_truncate_users(clean_db):  # clean_db auto-discovered
 ```
 
 **Pattern 3**: Suite-specific fixtures
+
 ```python
 # file: tests/integration/conftest.py
 @pytest.fixture
@@ -1749,7 +1828,7 @@ async def test_workflow(integration_interpreter):  # Auto-discovered
     assert_ok(result)
 ```
 
----
+______________________________________________________________________
 
 ## Cross-References
 

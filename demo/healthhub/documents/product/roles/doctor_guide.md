@@ -1,20 +1,15 @@
 # Doctor Guide
 
 **Status**: Authoritative source
-**Supersedes**: none
+**Supersedes**: none **📖 Base Standard**: [doctor_guide.md](../../../../../documents/product/roles/doctor_guide.md)
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
-> **Purpose**: Complete guide for doctor role capabilities, restrictions, and workflows in HealthHub.
-
-> **Core Doctrines**: For comprehensive patterns, see:
-> - [Beginner Journey](../01_journeys/beginner_journey.md)
-> - [Intermediate Journey](../01_journeys/intermediate_journey.md)
-> - [Authentication Feature](../03_features/authentication.md)
+> **Purpose**: HealthHub overlay deltas for Doctor Guide. **📖 Base Standard**: [doctor_guide.md](../../../../../documents/product/roles/doctor_guide.md)
 
 ## Prerequisites
 
 - Docker workflow running; commands executed via `docker compose -f docker/docker-compose.yml`.
-- Completed [Beginner Journey](../01_journeys/beginner_journey.md) and [Intermediate Journey](../01_journeys/intermediate_journey.md).
+- Completed [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md) and [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md).
 - Access to HealthHub at `http://localhost:8851`.
 
 ## Learning Objectives
@@ -32,7 +27,9 @@
 **Doctor Role**: Doctors are healthcare providers who can view all patient data, manage appointments, prescribe medications, and review lab results. Doctors have elevated access compared to patients.
 
 **Authorization**: DoctorAuthorized ADT variant
+
 ```python
+# snippet
 @dataclass(frozen=True)
 class DoctorAuthorized:
     user_id: UUID
@@ -44,6 +41,7 @@ class DoctorAuthorized:
 ```
 
 **Key Characteristics**:
+
 - `doctor_id`: Links to doctor-specific data (appointments assigned, prescriptions created)
 - `specialization`: Medical specialty (shown in UI, used for appointment filtering)
 - `can_prescribe`: Boolean flag controlling prescription creation access
@@ -52,47 +50,49 @@ class DoctorAuthorized:
 
 ### ✅ What Doctors CAN Do
 
-| Capability | Description | API Endpoint | Tutorial Reference |
-|------------|-------------|--------------|-------------------|
-| **View all patients** | View patient list and individual profiles | `GET /api/patients` | [Beginner Journey](../01_journeys/beginner_journey.md#step-6-view-doctor-dashboard) |
-| **View patient details** | View patient demographics, allergies, medical history | `GET /api/patients/{id}` | [Patient Guide](patient_guide.md) |
-| **View all appointments** | View all appointments (not just own) | `GET /api/appointments` | [Appointments Feature](../03_features/appointments.md) |
-| **Confirm appointments** | Confirm patient-requested appointments | `POST /api/appointments/{id}/confirm` | [Appointments Feature](../03_features/appointments.md#workflow-2-doctor-confirms-appointment) |
-| **Start appointments** | Start confirmed appointments | `POST /api/appointments/{id}/start` | [Appointments Feature](../03_features/appointments.md#workflow-3-doctor-starts-appointment) |
-| **Complete appointments** | Complete appointments with clinical notes | `POST /api/appointments/{id}/complete` | [Appointments Feature](../03_features/appointments.md#workflow-4-doctor-completes-appointment) |
-| **Cancel appointments** | Cancel appointments in non-terminal states | `POST /api/appointments/{id}/cancel` | [Appointments Feature](../03_features/appointments.md#cancellation-workflow) |
-| **Create prescriptions** | Create prescriptions (if `can_prescribe=true`) | `POST /api/prescriptions` | [Prescriptions Feature](../03_features/prescriptions.md) |
-| **View all prescriptions** | View all prescriptions (with patient filter) | `GET /api/prescriptions` | [Prescriptions Feature](../03_features/prescriptions.md#doctor-view-all-prescriptions-with-filtering) |
-| **Review lab results** | Review lab results and add clinical notes | `POST /api/lab-results/{id}/review` | [Lab Results Feature](../03_features/lab_results.md#doctor-review-workflow) |
-| **View all lab results** | View all lab results (with patient filter) | `GET /api/lab-results` | [Lab Results Feature](../03_features/lab_results.md) |
-| **Update own profile** | Update contact information | `PUT /api/doctors/me` | - |
-| **Change password** | Change account password | `POST /api/auth/change-password` | [Authentication Feature](../03_features/authentication.md) |
-| **Logout** | End session and clear JWT token | `POST /api/auth/logout` | [Authentication Feature](../03_features/authentication.md#step-4-logout) |
+| Capability                 | Description                                           | API Endpoint                           | Tutorial Reference                                                                                                |
+| -------------------------- | ----------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **View all patients**      | View patient list and individual profiles             | `GET /api/patients`                    | [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md#step-6-view-doctor-dashboard)                  |
+| **View patient details**   | View patient demographics, allergies, medical history | `GET /api/patients/{id}`               | [Patient Guide](patient_guide.md)                                                                                 |
+| **View all appointments**  | View all appointments (not just own)                  | `GET /api/appointments`                | [Appointments Feature](../../engineering/features/appointments.md)                                                |
+| **Confirm appointments**   | Confirm patient-requested appointments                | `POST /api/appointments/{id}/confirm`  | [Appointments Feature](../../engineering/features/appointments.md#workflow-2-doctor-confirms-appointment)         |
+| **Start appointments**     | Start confirmed appointments                          | `POST /api/appointments/{id}/start`    | [Appointments Feature](../../engineering/features/appointments.md#workflow-3-doctor-starts-appointment)           |
+| **Complete appointments**  | Complete appointments with clinical notes             | `POST /api/appointments/{id}/complete` | [Appointments Feature](../../engineering/features/appointments.md#workflow-4-doctor-completes-appointment)        |
+| **Cancel appointments**    | Cancel appointments in non-terminal states            | `POST /api/appointments/{id}/cancel`   | [Appointments Feature](../../engineering/features/appointments.md#cancellation-workflow)                          |
+| **Create prescriptions**   | Create prescriptions (if `can_prescribe=true`)        | `POST /api/prescriptions`              | [Prescriptions Feature](../../engineering/features/prescriptions.md)                                              |
+| **View all prescriptions** | View all prescriptions (with patient filter)          | `GET /api/prescriptions`               | [Prescriptions Feature](../../engineering/features/prescriptions.md#doctor-view-all-prescriptions-with-filtering) |
+| **Review lab results**     | Review lab results and add clinical notes             | `POST /api/lab-results/{id}/review`    | [Lab Results Feature](../../engineering/features/lab_results.md#doctor-review-workflow)                           |
+| **View all lab results**   | View all lab results (with patient filter)            | `GET /api/lab-results`                 | [Lab Results Feature](../../engineering/features/lab_results.md)                                                  |
+| **Update own profile**     | Update contact information                            | `PUT /api/doctors/me`                  | -                                                                                                                 |
+| **Change password**        | Change account password                               | `POST /api/auth/change-password`       | [Authentication Feature](../../engineering/features/authentication.md)                                            |
+| **Logout**                 | End session and clear JWT token                       | `POST /api/auth/logout`                | [Authentication Feature](../../engineering/features/authentication.md#step-4-logout)                              |
 
 ### ❌ What Doctors CANNOT Do
 
-| Restriction | Reason | RBAC Enforcement | Alternative |
-|-------------|--------|------------------|-------------|
-| **Generate invoices** | Billing authority required | Admin only | Request admin to generate invoice |
-| **Mark invoices as paid** | Financial authority required | Admin only | N/A |
-| **View invoices** | Financial privacy | Admin only | N/A |
-| **View audit logs** | Administrative access required | Admin only | N/A |
-| **Manage users** | Administrative access required | Admin only | N/A |
-| **Deactivate patients** | Administrative access required | Admin only | N/A |
-| **Create prescriptions** (if `can_prescribe=false`) | Prescription authority required | Flag-based RBAC | Request prescription privileges from admin |
+| Restriction                                         | Reason                          | RBAC Enforcement | Alternative                                |
+| --------------------------------------------------- | ------------------------------- | ---------------- | ------------------------------------------ |
+| **Generate invoices**                               | Billing authority required      | Admin only       | Request admin to generate invoice          |
+| **Mark invoices as paid**                           | Financial authority required    | Admin only       | N/A                                        |
+| **View invoices**                                   | Financial privacy               | Admin only       | N/A                                        |
+| **View audit logs**                                 | Administrative access required  | Admin only       | N/A                                        |
+| **Manage users**                                    | Administrative access required  | Admin only       | N/A                                        |
+| **Deactivate patients**                             | Administrative access required  | Admin only       | N/A                                        |
+| **Create prescriptions** (if `can_prescribe=false`) | Prescription authority required | Flag-based RBAC  | Request prescription privileges from admin |
 
 ## Doctor Dashboard
 
 **Access**: `http://localhost:8851/dashboard` (after login as doctor)
 
 **Sections**:
+
 1. **Welcome Banner**: "Welcome, Dr. [First Name] [Last Name] ([Specialization])"
-2. **Pending Appointment Confirmations**: Appointments in "Requested" status
-3. **Today's Appointments**: Appointments scheduled for today
-4. **Patients with Critical Lab Results**: Patients with unreviewed critical lab results
-5. **Recent Appointments**: Last 10 completed appointments
+1. **Pending Appointment Confirmations**: Appointments in "Requested" status
+1. **Today's Appointments**: Appointments scheduled for today
+1. **Patients with Critical Lab Results**: Patients with unreviewed critical lab results
+1. **Recent Appointments**: Last 10 completed appointments
 
 **Navigation Sidebar**:
+
 - **Dashboard** (overview)
 - **Patients** (all patients)
 - **Appointments** (all appointments)
@@ -109,23 +109,27 @@ class DoctorAuthorized:
 
 1. **Navigate to Dashboard**: View "Pending Appointment Confirmations" section
 
-2. **Click Appointment**: View appointment details
+1. **Click Appointment**: View appointment details
+
    - Patient: Name, allergies, blood type
    - Scheduled Time: Date and time patient requested
    - Reason: Patient's stated reason for visit
 
-3. **Review Patient History** (optional):
+1. **Review Patient History** (optional):
+
    - Click "View Patient" to see medical history
    - Review past appointments, prescriptions, lab results
 
-4. **Confirm Appointment**: Click "Confirm Appointment" button
+1. **Confirm Appointment**: Click "Confirm Appointment" button
 
-5. **Expected Result**:
+1. **Expected Result**:
+
    - Appointment status transitions: Requested → Confirmed
    - Patient notified via notification
    - Appointment appears in "Today's Appointments" (if today)
 
 **RBAC Enforcement**:
+
 ```python
 # Backend validation
 match auth_state:
@@ -149,18 +153,20 @@ match auth_state:
 
 1. **Navigate to Appointments**: Click "Appointments" in sidebar
 
-2. **Filter to In-Progress**: Select "In Progress" status filter
+1. **Filter to In-Progress**: Select "In Progress" status filter
 
-3. **Click Appointment**: View appointment details
+1. **Click Appointment**: View appointment details
 
-4. **Add Clinical Notes**: Click "Complete Appointment" button
+1. **Add Clinical Notes**: Click "Complete Appointment" button
+
    - **Chief Complaint**: Patient's main concern
    - **Physical Examination**: Findings from exam
    - **Diagnosis**: Clinical diagnosis
    - **Treatment Plan**: Recommendations and prescriptions
    - **Follow-up**: When patient should return
 
-5. **Example Notes**:
+1. **Example Notes**:
+
    ```
    Chief Complaint: Patient reports occasional chest discomfort during exercise.
 
@@ -180,15 +186,17 @@ match auth_state:
    Follow-up: 3 months for blood pressure check and lipid panel
    ```
 
-6. **Submit Notes**: Click "Complete Appointment"
+1. **Submit Notes**: Click "Complete Appointment"
 
-7. **Expected Result**:
+1. **Expected Result**:
+
    - Appointment status transitions: InProgress → Completed (terminal state)
    - Notes saved and visible to patient
    - Patient notified that appointment completed
    - Appointment can be used to generate invoice
 
 **RBAC Enforcement**:
+
 ```python
 # Backend validation
 match auth_state:
@@ -213,11 +221,12 @@ match auth_state:
 
 1. **Navigate to Patients**: Click "Patients" in sidebar
 
-2. **Select Patient**: Click patient name to view profile
+1. **Select Patient**: Click patient name to view profile
 
-3. **Click "Prescribe Medication"** button
+1. **Click "Prescribe Medication"** button
 
-4. **Fill out Prescription Form**:
+1. **Fill out Prescription Form**:
+
    - **Medication**: Drug name (e.g., "Lisinopril")
    - **Dosage**: Amount (e.g., "10mg")
    - **Frequency**: How often (e.g., "Once daily")
@@ -225,17 +234,20 @@ match auth_state:
    - **Refills**: Number of refills (e.g., 2)
    - **Instructions**: Patient instructions (e.g., "Take in the morning with water")
 
-5. **System Checks Interactions**:
+1. **System Checks Interactions**:
+
    - **Against Patient Allergies**: Blocks if critical allergy interaction
    - **Against Current Prescriptions**: Warns if drug interaction detected
 
-6. **Review Warnings** (if any):
+1. **Review Warnings** (if any):
+
    - **Critical**: Prescription blocked, must select alternative medication
    - **High**: Serious warning, proceed with caution
    - **Medium**: Moderate warning, monitor patient
    - **Low**: Minor warning, informational only
 
-7. **Example - Blocked by Allergy**:
+1. **Example - Blocked by Allergy**:
+
    ```
    Critical Allergy Interaction Detected:
 
@@ -244,7 +256,8 @@ match auth_state:
    Recommendation: Do not prescribe - consider alternative medication (e.g., Azithromycin)
    ```
 
-8. **Example - Drug Interaction Warning**:
+1. **Example - Drug Interaction Warning**:
+
    ```
    High Drug Interaction Warning:
 
@@ -255,14 +268,16 @@ match auth_state:
    Do you wish to proceed? [Yes] [No]
    ```
 
-9. **Submit Prescription**: Click "Create Prescription"
+1. **Submit Prescription**: Click "Create Prescription"
 
-10. **Expected Result**:
-    - Prescription created (if no critical interactions)
-    - Patient notified that prescription ready
-    - Prescription visible to patient in "Prescriptions" section
+1. **Expected Result**:
+
+   - Prescription created (if no critical interactions)
+   - Patient notified that prescription ready
+   - Prescription visible to patient in "Prescriptions" section
 
 **RBAC Enforcement**:
+
 ```python
 # Backend validation
 match auth_state:
@@ -276,6 +291,7 @@ match auth_state:
 ```
 
 **Demo Data**:
+
 - Try prescribing Lisinopril to Alice (no interactions)
 - Try prescribing Amoxicillin to Alice (blocked by Penicillin allergy)
 
@@ -289,11 +305,12 @@ match auth_state:
 
 1. **Navigate to Lab Results**: Click "Lab Results" in sidebar
 
-2. **Filter to Unreviewed**: Select "Unreviewed" filter
+1. **Filter to Unreviewed**: Select "Unreviewed" filter
 
-3. **Prioritize Critical Results**: Results marked "Critical" appear at top
+1. **Prioritize Critical Results**: Results marked "Critical" appear at top
 
-4. **Click Lab Result**: View test details
+1. **Click Lab Result**: View test details
+
    - **Test Type**: Type of test (e.g., "Lipid Panel")
    - **Test Date**: When test was performed
    - **Patient**: Patient name and demographics
@@ -301,7 +318,8 @@ match auth_state:
      - Values outside normal range highlighted
      - Critical values highlighted in red
 
-5. **Example - Critical Lipid Panel**:
+1. **Example - Critical Lipid Panel**:
+
    ```
    Test Type: Lipid Panel
    Patient: Alice Anderson (O+, allergies: Penicillin, Shellfish)
@@ -315,12 +333,14 @@ match auth_state:
    - Triglycerides: 250 mg/dL (high, normal: 50-150)
    ```
 
-6. **Add Clinical Notes**: Click "Add Review"
+1. **Add Clinical Notes**: Click "Add Review"
+
    - **Interpretation**: Clinical assessment of results
    - **Recommendations**: Treatment recommendations
    - **Follow-up**: When to retest
 
-7. **Example Clinical Notes**:
+1. **Example Clinical Notes**:
+
    ```
    Interpretation:
    Total cholesterol and LDL are critically elevated, indicating high cardiovascular risk.
@@ -337,15 +357,17 @@ match auth_state:
    Target: LDL < 100, HDL > 40, triglycerides < 150.
    ```
 
-8. **Submit Review**: Click "Submit Review"
+1. **Submit Review**: Click "Submit Review"
 
-9. **Expected Result**:
+1. **Expected Result**:
+
    - Lab result marked as reviewed
    - Review notes saved
    - Patient notified that results are ready
    - Patient can view results with your clinical interpretation
 
 **RBAC Enforcement**:
+
 ```python
 # Backend validation
 match auth_state:
@@ -369,14 +391,16 @@ match auth_state:
 
 1. **Navigate to Patients**: Click "Patients" in sidebar
 
-2. **Select Patient**: Click patient name
+1. **Select Patient**: Click patient name
 
-3. **View Patient Profile**:
+1. **View Patient Profile**:
+
    - **Demographics**: Name, DOB, blood type, allergies
    - **Contact**: Email, phone, address
    - **Emergency Contact**: Name and phone
 
-4. **View Medical History Tabs**:
+1. **View Medical History Tabs**:
+
    - **Appointments**: All appointments (past and upcoming)
      - Filter by status (Completed, Cancelled, Upcoming)
      - View appointment notes from previous visits
@@ -392,7 +416,8 @@ match auth_state:
      - Food allergies (e.g., Shellfish, Peanuts)
      - Environmental allergies
 
-5. **Example - Alice Anderson's Profile**:
+1. **Example - Alice Anderson's Profile**:
+
    ```
    Patient: Alice Anderson
    DOB: 1985-03-15 (39 years old)
@@ -413,7 +438,8 @@ match auth_state:
      Notes: "Results within normal range..."
    ```
 
-6. **Use History for Clinical Decisions**:
+1. **Use History for Clinical Decisions**:
+
    - Review current medications before prescribing (drug interactions)
    - Check allergies before prescribing (allergy interactions)
    - Review lab trends to assess treatment effectiveness
@@ -428,6 +454,7 @@ match auth_state:
 **Purpose**: Controls which doctors can create prescriptions.
 
 **Database Field**:
+
 ```sql
 CREATE TABLE doctors (
     doctor_id UUID PRIMARY KEY,
@@ -439,7 +466,9 @@ CREATE TABLE doctors (
 ```
 
 **JWT Token**:
+
 ```json
+// snippet
 {
   "user_id": "10000000-0000-0000-0000-000000000001",
   "email": "dr.smith@healthhub.com",
@@ -452,6 +481,7 @@ CREATE TABLE doctors (
 ```
 
 **RBAC Enforcement**:
+
 ```python
 # API endpoint
 @router.post("/api/prescriptions")
@@ -469,12 +499,14 @@ async def create_prescription(
 ```
 
 **Who Gets `can_prescribe=true`?**
+
 - Medical Doctors (MD)
 - Doctors of Osteopathic Medicine (DO)
 - Nurse Practitioners (NP) with prescriptive authority
 - Physician Assistants (PA) with prescriptive authority
 
 **Who Gets `can_prescribe=false`?**
+
 - Residents (in training)
 - Fellows (in training)
 - Psychologists (PhD, PsyD) - cannot prescribe in most states
@@ -487,16 +519,19 @@ Contact admin to update `can_prescribe` flag in database.
 ## Security and Privacy
 
 **Data Access Scope**:
+
 - **All Patients**: Doctors can view all patient data (not just assigned patients)
 - **HIPAA Audit Logging**: All patient data access logged for compliance
 - **Clinical Justification**: Access should have clinical justification
 
 **Best Practices**:
+
 - Only access patient data for clinical purposes
 - Do not access patient data out of curiosity
 - All access is logged and subject to audit
 
 **JWT Token Security**:
+
 - **Access Token Expiration**: 15 minutes
 - **Refresh Token**: 7 days
 - **Logout**: Clears localStorage and redirects to login
@@ -504,24 +539,28 @@ Contact admin to update `can_prescribe` flag in database.
 ## Demo Users
 
 **Dr. Sarah Smith** (Cardiology) - Featured in tutorials
+
 - Email: `dr.smith@healthhub.com`
 - Password: `password123`
 - Specialization: Cardiology
 - can_prescribe: true
 
 **Dr. John Williams** (Pediatrics)
+
 - Email: `dr.williams@healthhub.com`
 - Password: `password123`
 - Specialization: Pediatrics
 - can_prescribe: true
 
 **Dr. Emily Brown** (General Practice)
+
 - Email: `dr.brown@healthhub.com`
 - Password: `password123`
 - Specialization: General Practice
 - can_prescribe: true
 
 **Dr. Michael Davis** (Orthopedics)
+
 - Email: `dr.davis@healthhub.com`
 - Password: `password123`
 - Specialization: Orthopedics
@@ -532,28 +571,31 @@ Contact admin to update `can_prescribe` flag in database.
 **Issue**: Cannot create prescription
 
 **Possible Causes**:
+
 - `can_prescribe=false` flag in database
 - Critical allergy interaction detected
 - Network error
 
 **Solution**: Check JWT token for `can_prescribe` field. If false, contact admin. If allergy interaction, select alternative medication.
 
----
+______________________________________________________________________
 
 **Issue**: Appointment confirmation fails
 
 **Possible Causes**:
+
 - Appointment already confirmed
 - Appointment cancelled
 - Network error
 
 **Solution**: Check appointment status. Refresh page and try again.
 
----
+______________________________________________________________________
 
 **Issue**: Lab result review fails
 
 **Possible Causes**:
+
 - Lab result already reviewed
 - Network error
 
@@ -562,6 +604,7 @@ Contact admin to update `can_prescribe` flag in database.
 ## Summary
 
 **Doctor role characteristics**:
+
 - ✅ View all patients and comprehensive medical histories
 - ✅ Manage appointment lifecycle (confirm, start, complete)
 - ✅ Create prescriptions (if `can_prescribe=true`)
@@ -575,11 +618,11 @@ Contact admin to update `can_prescribe` flag in database.
 
 ## Cross-References
 
-- [Beginner Journey - Doctor Login](../01_journeys/beginner_journey.md#step-5-login-as-doctor)
-- [Intermediate Journey - Doctor Workflows](../01_journeys/intermediate_journey.md)
-- [Authentication Feature](../03_features/authentication.md)
-- [Appointments Feature](../03_features/appointments.md)
-- [Prescriptions Feature](../03_features/prescriptions.md)
-- [Lab Results Feature](../03_features/lab_results.md)
+- [Beginner Journey - Doctor Login](../../tutorials/01_journeys/beginner_journey.md#step-5-login-as-doctor)
+- [Intermediate Journey - Doctor Workflows](../../tutorials/01_journeys/intermediate_journey.md)
+- [Authentication Feature](../../engineering/features/authentication.md)
+- [Appointments Feature](../../engineering/features/appointments.md)
+- [Prescriptions Feature](../../engineering/features/prescriptions.md)
+- [Lab Results Feature](../../engineering/features/lab_results.md)
 - [Patient Guide](patient_guide.md)
 - [Admin Guide](admin_guide.md)

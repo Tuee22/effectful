@@ -8,12 +8,7 @@ from dataclasses import dataclass
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok, Result
 from effectful.domain.optional_value import OptionalValue, from_optional_value
-from effectful.domain.metrics_result import (
-    MetricQueryResult,
-    MetricRecorded,
-    MetricRecordingFailed,
-    MetricResult,
-)
+from effectful.domain.metrics_result import MetricQueryResult, MetricResult
 from effectful.effects.base import Effect
 from effectful.effects.metrics import (
     IncrementCounter,

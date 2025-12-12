@@ -1,10 +1,10 @@
 # HIPAA Compliance
 
 **Status**: Authoritative source
-**Supersedes**: none
+**Supersedes**: none **📖 Base Standard**: [hipaa_compliance.md](../../../../documents/domain/hipaa_compliance.md)
 **Referenced by**: demo/healthhub/documents/readme.md
 
-> **Purpose**: SSoT for HIPAA-aligned documentation and controls for HealthHub healthcare workflows; ties code quality standards to PHI/PII handling requirements.
+> **Purpose**: HealthHub overlay deltas for Hipaa Compliance. **📖 Base Standard**: [hipaa_compliance.md](../../../../documents/domain/hipaa_compliance.md)
 
 ## Canonical Guidance
 
@@ -14,6 +14,7 @@
 - **Auditing**: Emit structured audit events for all PHI access paths; route to observability pipelines defined in the observability SSoT.
 
 ## Cross-References
+
 - [Code Quality](../engineering/code_quality.md)
 - [Configuration](../engineering/configuration.md)
 - [Observability](../engineering/observability.md)

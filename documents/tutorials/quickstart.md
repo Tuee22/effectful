@@ -1,7 +1,7 @@
 # Quickstart Guide
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/readme.md
 
 > **Purpose**: Tutorial for getting started with effectful and writing your first effect program.
@@ -9,6 +9,7 @@
 Welcome to **effectful**! This guide will get you writing effect programs in 10 minutes.
 
 > **Core Doctrines**: For comprehensive patterns, see:
+>
 > - [Architecture](../engineering/architecture.md) - 5-layer architecture and design decisions
 > - [Code Quality](../engineering/code_quality.md) - Type safety + purity rules
 > - [Testing](../engineering/testing.md) - Coverage requirements and test patterns
@@ -31,6 +32,7 @@ Welcome to **effectful**! This guide will get you writing effect programs in 10 
 Install effectful in your application:
 
 ```bash
+# snippet
 pip install effectful
 # or
 poetry add effectful
@@ -77,6 +79,7 @@ def hello_program() -> Generator[AllEffects, EffectResult, str]:
 ```
 
 **What's happening:**
+
 - `Generator[AllEffects, EffectResult, str]` means:
   - Yields `AllEffects` (any effect type)
   - Receives `EffectResult` (result from effect)
@@ -109,6 +112,7 @@ def test_hello_program() -> None:
 ```
 
 **Benefits:**
+
 - No infrastructure needed
 - Fast and deterministic
 - Tests pure program logic
@@ -138,6 +142,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 ```
 
 **What's happening:**
+
 - `user_result` receives the effect result
 - Pattern matching handles both success and failure cases
 - Type checker ensures all cases are handled
@@ -178,6 +183,7 @@ def test_greet_user() -> None:
 ```
 
 **Benefits:**
+
 - Fast (no real database/WebSocket)
 - Deterministic (no network flakiness)
 - Isolated (tests don't interfere)
@@ -205,6 +211,7 @@ def save_greeting(user_id: UUID, text: str) -> Generator[AllEffects, EffectResul
 ```
 
 **What's happening:**
+
 - `isinstance()` checks narrow the type
 - Type checker enforces handling unexpected types
 - Programs fail-fast on first error
@@ -307,5 +314,6 @@ def fallible() -> Result[int, str]:
 - Study [Effect Patterns](../engineering/effect_patterns.md) to compose larger workflows.
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Standards](../engineering/README.md)

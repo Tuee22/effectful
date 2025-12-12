@@ -1,20 +1,15 @@
 # Appointments Feature
 
-**Status**: Authoritative source (HealthHub tutorial patterns)
-**Supersedes**: none
+**Status**: Authoritative source
+**Supersedes**: none **📖 Base Standard**: [appointments.md](../../../../../documents/engineering/features/appointments.md)
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
-> **Purpose**: Complete reference for HealthHub appointment system: AppointmentStatus state machine, valid transitions, scheduling workflows, and execution workflows.
-
-> **Core Doctrines**: For comprehensive patterns, see:
-> - [ADTs and Result Types](../../../../../documents/tutorials/adts_and_results.md)
-> - [Effect Patterns - State Machines](../../../../../documents/engineering/effect_patterns.md#state-machines)
-> - [Code Quality](../../../../../documents/engineering/code_quality.md)
+> **Purpose**: HealthHub overlay deltas for Appointments. **📖 Base Standard**: [appointments.md](../../../../../documents/engineering/features/appointments.md)
 
 ## Prerequisites
 
 - Docker workflow running; commands executed via `docker compose -f docker/docker-compose.yml`.
-- Completed [Intermediate Journey](../01_journeys/intermediate_journey.md).
+- Completed [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md).
 - Familiarity with state machines, ADTs, Python type hints, pattern matching.
 
 ## Learning Objectives
@@ -30,14 +25,16 @@
 ## Overview
 
 **Appointment Lifecycle**:
+
 1. **Requested**: Patient requests appointment (initial state)
-2. **Confirmed**: Doctor confirms appointment time
-3. **InProgress**: Doctor starts appointment (patient present)
-4. **Completed**: Doctor completes appointment with notes (terminal state)
-5. **Cancelled**: Appointment cancelled by patient or doctor (terminal state)
+1. **Confirmed**: Doctor confirms appointment time
+1. **InProgress**: Doctor starts appointment (patient present)
+1. **Completed**: Doctor completes appointment with notes (terminal state)
+1. **Cancelled**: Appointment cancelled by patient or doctor (terminal state)
 
 **State Machine Diagram**:
-```
+
+```text
 Requested → Confirmed → InProgress → Completed (terminal)
     ↓           ↓           ↓
 Cancelled   Cancelled   Cancelled (terminal)
@@ -163,13 +160,15 @@ type AppointmentStatus = (
 ```
 
 **Why 5 variants?**
+
 1. **Requested**: Initial state, carries `requested_at` timestamp
-2. **Confirmed**: Doctor approved, carries `confirmed_at` and `confirmed_by_doctor_id`
-3. **InProgress**: Appointment started, carries `started_at`
-4. **Completed**: Terminal state, carries `completed_at` and doctor's notes
-5. **Cancelled**: Terminal state, carries `cancelled_at`, `cancelled_by`, and cancellation reason
+1. **Confirmed**: Doctor approved, carries `confirmed_at` and `confirmed_by_doctor_id`
+1. **InProgress**: Appointment started, carries `started_at`
+1. **Completed**: Terminal state, carries `completed_at` and doctor's notes
+1. **Cancelled**: Terminal state, carries `cancelled_at`, `cancelled_by`, and cancellation reason
 
 **Benefits over string status**:
+
 - **Type-safe**: MyPy enforces exhaustive pattern matching
 - **Context-rich**: Each variant carries state-specific data
 - **Terminal states explicit**: Type system prevents transitions from terminal states
@@ -229,6 +228,7 @@ def is_terminal_state(status: AppointmentStatus) -> bool:
 ```
 
 **Usage in programs**:
+
 ```python
 # file: demo/healthhub/backend/app/programs/appointment_programs.py
 def confirm_appointment_program(appointment_id: UUID) -> Generator[Effect, Result, Result[dict]]:
@@ -283,7 +283,9 @@ def confirm_appointment_program(appointment_id: UUID) -> Generator[Effect, Resul
 **Endpoint**: `POST /api/appointments`
 
 **Request**:
+
 ```json
+// snippet
 {
   "patient_id": "30000000-0000-0000-0000-000000000001",
   "doctor_id": "40000000-0000-0000-0000-000000000001",
@@ -368,6 +370,7 @@ def request_appointment_program(
 **Endpoint**: `POST /api/appointments/{appointment_id}/confirm`
 
 **Program**:
+
 ```python
 # file: demo/healthhub/backend/app/programs/appointment_programs.py
 def confirm_appointment_program(
@@ -437,6 +440,7 @@ def confirm_appointment_program(
 **Endpoint**: `POST /api/appointments/{appointment_id}/start`
 
 **Program**:
+
 ```python
 # file: demo/healthhub/backend/app/programs/appointment_programs.py
 def start_appointment_program(appointment_id: UUID) -> Generator[Effect, Result, Result[dict]]:
@@ -491,13 +495,16 @@ def start_appointment_program(appointment_id: UUID) -> Generator[Effect, Result,
 **Endpoint**: `POST /api/appointments/{appointment_id}/complete`
 
 **Request**:
+
 ```json
+// snippet
 {
   "notes": "Patient presented with stable blood pressure (120/80). Lungs clear, heart rate normal. Recommended annual follow-up. Prescribed Lisinopril 10mg daily."
 }
 ```
 
 **Program**:
+
 ```python
 # file: demo/healthhub/backend/app/programs/appointment_programs.py
 def complete_appointment_program(
@@ -569,13 +576,16 @@ def complete_appointment_program(
 **Endpoint**: `POST /api/appointments/{appointment_id}/cancel`
 
 **Request**:
+
 ```json
+// snippet
 {
   "reason": "Patient requested reschedule due to conflict"
 }
 ```
 
 **Program**:
+
 ```python
 # file: demo/healthhub/backend/app/programs/appointment_programs.py
 def cancel_appointment_program(
@@ -642,6 +652,7 @@ def cancel_appointment_program(
 ```
 
 **RBAC**:
+
 - Patients can cancel own appointments (any non-terminal state)
 - Doctors can cancel any appointment (any non-terminal state)
 
@@ -837,6 +848,7 @@ async def test_terminal_state_prevents_transitions(clean_healthhub_state, postgr
 ## Summary
 
 **You have learned**:
+
 - ✅ AppointmentStatus ADT with 5 variants (Requested, Confirmed, InProgress, Completed, Cancelled)
 - ✅ State machine with valid transitions and terminal states
 - ✅ Transition validation function (prevent invalid state changes)
@@ -847,18 +859,19 @@ async def test_terminal_state_prevents_transitions(clean_healthhub_state, postgr
 - ✅ E2E testing for all transitions
 
 **Key Takeaways**:
+
 1. **ADT State Machines**: Each state variant carries state-specific context
-2. **Transition Validation**: Centralized validation prevents invalid state changes
-3. **Terminal States**: Type system enforces no transitions from terminal states
-4. **Pattern Matching**: Exhaustive coverage ensures all states handled
-5. **Context-Rich**: Status variants carry timestamps, notes, reasons
-6. **Immutable**: Frozen dataclasses prevent accidental mutations
+1. **Transition Validation**: Centralized validation prevents invalid state changes
+1. **Terminal States**: Type system enforces no transitions from terminal states
+1. **Pattern Matching**: Exhaustive coverage ensures all states handled
+1. **Context-Rich**: Status variants carry timestamps, notes, reasons
+1. **Immutable**: Frozen dataclasses prevent accidental mutations
 
 ## Cross-References
 
-- [Intermediate Journey - Appointment State Machine](../01_journeys/intermediate_journey.md#step-2-create-appointment-with-state-machine)
+- [Intermediate Journey - Appointment State Machine](../../tutorials/01_journeys/intermediate_journey.md#step-2-create-appointment-with-state-machine)
 - [Effect Patterns - State Machines](../../../../../documents/engineering/effect_patterns.md#state-machines)
 - [ADTs and Result Types](../../../../../documents/tutorials/adts_and_results.md)
 - [Code Quality](../../../../../documents/engineering/code_quality.md)
-- [Doctor Guide](../02_roles/doctor_guide.md)
-- [Appointment Lifecycle Workflow](../04_workflows/appointment_lifecycle.md)
+- [Doctor Guide](../../product/roles/doctor_guide.md)
+- [Appointment Lifecycle Workflow](../../product/workflows/appointment_lifecycle.md)

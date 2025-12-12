@@ -7,7 +7,6 @@ server and creates ephemeral clients for end-to-end testing.
 
 import asyncio
 from collections.abc import Generator
-from uuid import uuid4
 
 import pytest
 import websockets

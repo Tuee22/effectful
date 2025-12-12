@@ -14,13 +14,7 @@ The metrics system supports:
 from typing import Protocol
 
 from effectful.domain.metrics_result import MetricQueryResult, MetricResult
-from effectful.observability import (
-    CounterDefinition,
-    GaugeDefinition,
-    HistogramDefinition,
-    MetricsRegistry,
-    SummaryDefinition,
-)
+from effectful.observability import MetricsRegistry
 
 
 class MetricsCollector(Protocol):

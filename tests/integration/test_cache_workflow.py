@@ -13,7 +13,7 @@ import pytest
 from redis.asyncio import Redis
 
 from effectful.algebraic.result import Err, Ok
-from effectful.domain.cache_result import CacheHit, CacheMiss
+from effectful.domain.cache_result import CacheMiss
 from effectful.domain.profile import ProfileData
 from effectful.domain.user import User, UserNotFound
 from effectful.effects.cache import (
@@ -99,7 +99,7 @@ class TestCacheWorkflowIntegration:
             cached = yield GetCachedProfile(user_id=uid)
 
             match cached:
-                case CacheMiss(key=key, reason=reason):
+                case CacheMiss(reason=reason):
                     yield SendText(text=f"Miss: {reason}")
                     return "miss"
                 case ProfileData():
@@ -365,7 +365,7 @@ class TestCacheWorkflowIntegration:
             result = yield GetCachedValue(key=k)
 
             match result:
-                case CacheMiss(key=key_name, reason=reason):
+                case CacheMiss(reason=reason):
                     yield SendText(text=f"Miss: {reason}")
                     return "miss"
                 case bytes():

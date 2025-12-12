@@ -1,7 +1,7 @@
 # Effects API Reference
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/api/README.md
 
 > **Purpose**: Comprehensive reference for all effect types in the effectful package.
@@ -29,6 +29,7 @@ Effects are declarative descriptions of side effects. They are pure data structu
 Send a text message over the WebSocket connection.
 
 **Type Signature**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -37,11 +38,13 @@ class SendText:
 ```
 
 **Parameters**:
+
 - `text: str` - The message to send
 
 **Returns**: `None` (wrapped in `EffectReturn[None]`)
 
 **Usage**:
+
 ```python
 # file: examples/effects.py
 from effectful import SendText
@@ -52,15 +55,17 @@ def greeting_program() -> Generator[AllEffects, EffectResult, None]:
 ```
 
 **Error Cases**:
+
 - `WebSocketClosedError` - Connection is closed
 
----
+______________________________________________________________________
 
 ### ReceiveText
 
 Receive a text message from the WebSocket connection.
 
 **Type Signature**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -74,6 +79,7 @@ class ReceiveText:
 **Returns**: `str` - The received message text
 
 **Usage**:
+
 ```python
 # file: examples/effects.py
 from effectful import ReceiveText, SendText
@@ -86,15 +92,17 @@ def echo_program() -> Generator[AllEffects, EffectResult, None]:
 ```
 
 **Error Cases**:
+
 - `WebSocketClosedError` - Connection closed before receiving
 
----
+______________________________________________________________________
 
 ### Close
 
 Close the WebSocket connection with a specific reason.
 
 **Type Signature**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -105,9 +113,11 @@ type CloseReason = CloseNormal | CloseGoingAway | CloseProtocolError | ClosePoli
 ```
 
 **Parameters**:
+
 - `reason: CloseReason` - The close reason (ADT with 4 variants)
 
 **Close Reasons**:
+
 - `CloseNormal()` - Normal closure (1000)
 - `CloseGoingAway()` - Endpoint going away (1001)
 - `CloseProtocolError()` - Protocol error (1002)
@@ -116,6 +126,7 @@ type CloseReason = CloseNormal | CloseGoingAway | CloseProtocolError | ClosePoli
 **Returns**: `None` (wrapped in `EffectReturn[None]`)
 
 **Usage**:
+
 ```python
 # file: examples/effects.py
 from effectful import Close, CloseNormal, SendText
@@ -127,10 +138,11 @@ def goodbye_program() -> Generator[AllEffects, EffectResult, None]:
 ```
 
 **Notes**:
+
 - Close always succeeds, even if connection is already closed
 - After close, further send/receive operations will fail
 
----
+______________________________________________________________________
 
 ## Database Effects
 
@@ -139,6 +151,7 @@ def goodbye_program() -> Generator[AllEffects, EffectResult, None]:
 Lookup a user by their unique identifier.
 
 **Type Signature**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -147,13 +160,16 @@ class GetUserById:
 ```
 
 **Parameters**:
+
 - `user_id: UUID` - The user's unique identifier
 
 **Returns**: `User | UserNotFound`
+
 - `User` - If user found in database
 - `UserNotFound` - ADT if user not found (with `user_id` and `reason` fields)
 
 **Usage**:
+
 ```python
 # file: examples/effects.py
 from uuid import UUID
@@ -173,9 +189,11 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, bool]:
 ```
 
 **Error Cases**:
+
 - `DatabaseError` - Database connection failure or query error
 
 **Domain Model**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -185,13 +203,14 @@ class User:
     name: str
 ```
 
----
+______________________________________________________________________
 
 ### SaveChatMessage
 
 Persist a chat message to the database.
 
 **Type Signature**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -201,12 +220,14 @@ class SaveChatMessage:
 ```
 
 **Parameters**:
+
 - `user_id: UUID` - The user who sent the message
 - `text: str` - The message content
 
 **Returns**: `ChatMessage` - The saved message with generated ID and timestamp
 
 **Usage**:
+
 ```python
 # file: examples/effects.py
 from uuid import UUID
@@ -221,9 +242,11 @@ def save_and_confirm(user_id: UUID, text: str) -> Generator[AllEffects, EffectRe
 ```
 
 **Error Cases**:
+
 - `DatabaseError` - Database connection failure or constraint violation
 
 **Domain Model**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -234,13 +257,14 @@ class ChatMessage:
     created_at: datetime
 ```
 
----
+______________________________________________________________________
 
 ### ListUsers
 
 List users with pagination support.
 
 **Type Signature**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -250,12 +274,14 @@ class ListUsers:
 ```
 
 **Parameters**:
+
 - `limit: int | None` - Maximum number of users to return (default: None for all)
 - `offset: int | None` - Number of users to skip (default: None for 0)
 
 **Returns**: `list[User]` - List of users (may be empty)
 
 **Usage**:
+
 ```python
 # file: examples/effects.py
 from effectful import ListUsers, SendText
@@ -269,15 +295,17 @@ def list_all_users() -> Generator[AllEffects, EffectResult, int]:
 ```
 
 **Error Cases**:
+
 - `DatabaseError` - Database connection failure or query error
 
----
+______________________________________________________________________
 
 ### CreateUser
 
 Create a new user in the database.
 
 **Type Signature**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -288,6 +316,7 @@ class CreateUser:
 ```
 
 **Parameters**:
+
 - `email: str` - User's email address
 - `name: str` - User's display name
 - `password_hash: str` - Bcrypt password hash
@@ -295,6 +324,7 @@ class CreateUser:
 **Returns**: `User` - The created user with generated ID
 
 **Usage**:
+
 ```python
 # file: examples/effects.py
 from effectful import CreateUser, HashPassword, SendText
@@ -314,15 +344,17 @@ def register_user(
 ```
 
 **Error Cases**:
+
 - `DatabaseError` - Database connection failure or constraint violation (e.g., duplicate email)
 
----
+______________________________________________________________________
 
 ### UpdateUser
 
 Update an existing user's information.
 
 **Type Signature**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -333,15 +365,18 @@ class UpdateUser:
 ```
 
 **Parameters**:
+
 - `user_id: UUID` - The user's unique identifier
 - `email: str | None` - New email address (optional)
 - `name: str | None` - New display name (optional)
 
 **Returns**: `User | UserNotFound`
+
 - `User` - The updated user if found
 - `UserNotFound` - ADT if user doesn't exist
 
 **Usage**:
+
 ```python
 # file: examples/effects.py
 from uuid import UUID
@@ -361,15 +396,17 @@ def update_user_name(user_id: UUID, new_name: str) -> Generator[AllEffects, Effe
 ```
 
 **Error Cases**:
+
 - `DatabaseError` - Database connection failure or constraint violation
 
----
+______________________________________________________________________
 
 ### DeleteUser
 
 Delete a user from the database.
 
 **Type Signature**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -378,11 +415,13 @@ class DeleteUser:
 ```
 
 **Parameters**:
+
 - `user_id: UUID` - The user's unique identifier
 
 **Returns**: `bool` - True if deleted, False if user not found
 
 **Usage**:
+
 ```python
 # file: examples/effects.py
 from uuid import UUID
@@ -401,15 +440,17 @@ def remove_user(user_id: UUID) -> Generator[AllEffects, EffectResult, bool]:
 ```
 
 **Error Cases**:
+
 - `DatabaseError` - Database connection failure
 
----
+______________________________________________________________________
 
 ### ListMessagesForUser
 
 Retrieve all messages for a specific user.
 
 **Type Signature**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -418,11 +459,13 @@ class ListMessagesForUser:
 ```
 
 **Parameters**:
+
 - `user_id: UUID` - The user's unique identifier
 
 **Returns**: `list[ChatMessage]` - List of messages (may be empty)
 
 **Usage**:
+
 ```python
 # file: examples/effects.py
 from uuid import UUID
@@ -437,9 +480,10 @@ def get_user_history(user_id: UUID) -> Generator[AllEffects, EffectResult, int]:
 ```
 
 **Error Cases**:
+
 - `DatabaseError` - Database connection failure or query error
 
----
+______________________________________________________________________
 
 ## Cache Effects
 
@@ -448,6 +492,7 @@ def get_user_history(user_id: UUID) -> Generator[AllEffects, EffectResult, int]:
 Retrieve a user's profile from the cache.
 
 **Type Signature**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -456,13 +501,16 @@ class GetCachedProfile:
 ```
 
 **Parameters**:
+
 - `user_id: UUID` - The user's unique identifier
 
 **Returns**: `ProfileData | CacheMiss`
+
 - `ProfileData` - If profile found in cache
 - `CacheMiss` - ADT if profile not found (cache miss)
 
 **Usage**:
+
 ```python
 # file: examples/effects.py
 from uuid import UUID
@@ -490,9 +538,11 @@ def get_profile_cached(user_id: UUID) -> Generator[AllEffects, EffectResult, str
 ```
 
 **Error Cases**:
+
 - `CacheError` - Cache connection failure or timeout
 
 **Domain Model**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -501,13 +551,14 @@ class ProfileData:
     name: str
 ```
 
----
+______________________________________________________________________
 
 ### PutCachedProfile
 
 Store a user's profile in the cache.
 
 **Type Signature**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -518,6 +569,7 @@ class PutCachedProfile:
 ```
 
 **Parameters**:
+
 - `user_id: UUID` - The user's unique identifier
 - `profile_data: ProfileData` - The profile data to cache
 - `ttl_seconds: int` - Time-to-live in seconds (default: 300)
@@ -525,6 +577,7 @@ class PutCachedProfile:
 **Returns**: `None` (wrapped in `EffectReturn[None]`)
 
 **Usage**:
+
 ```python
 # file: examples/effects.py
 from uuid import UUID
@@ -551,15 +604,17 @@ def cache_user_profile(user_id: UUID) -> Generator[AllEffects, EffectResult, boo
 ```
 
 **Error Cases**:
+
 - `CacheError` - Cache connection failure or out of memory
 
----
+______________________________________________________________________
 
 ### GetCachedValue
 
 Retrieve a value from the cache by key (generic key-value storage).
 
 **Type Signature**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -568,13 +623,16 @@ class GetCachedValue:
 ```
 
 **Parameters**:
+
 - `key: str` - The cache key to retrieve
 
 **Returns**: `bytes | CacheMiss`
+
 - `bytes` - The cached value if found
 - `CacheMiss` - ADT if key not found
 
 **Usage**:
+
 ```python
 # file: examples/effects.py
 from effectful import GetCachedValue, SendText
@@ -593,15 +651,17 @@ def get_session_data(session_id: str) -> Generator[AllEffects, EffectResult, byt
 ```
 
 **Error Cases**:
+
 - `CacheError` - Cache connection failure or timeout
 
----
+______________________________________________________________________
 
 ### PutCachedValue
 
 Store a value in the cache with TTL (generic key-value storage).
 
 **Type Signature**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -612,6 +672,7 @@ class PutCachedValue:
 ```
 
 **Parameters**:
+
 - `key: str` - The cache key
 - `value: bytes` - The value to cache
 - `ttl_seconds: int` - Time-to-live in seconds
@@ -619,6 +680,7 @@ class PutCachedValue:
 **Returns**: `bool` - True if stored successfully
 
 **Usage**:
+
 ```python
 # file: examples/effects.py
 import json
@@ -636,15 +698,17 @@ def cache_session(session_id: str, data: dict[str, str]) -> Generator[AllEffects
 ```
 
 **Error Cases**:
+
 - `CacheError` - Cache connection failure or out of memory
 
----
+______________________________________________________________________
 
 ### InvalidateCache
 
 Remove a value from the cache by key.
 
 **Type Signature**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -653,11 +717,13 @@ class InvalidateCache:
 ```
 
 **Parameters**:
+
 - `key: str` - The cache key to invalidate
 
 **Returns**: `bool` - True if deleted, False if key not found
 
 **Usage**:
+
 ```python
 # file: examples/effects.py
 from effectful import InvalidateCache, SendText
@@ -675,9 +741,10 @@ def logout_session(session_id: str) -> Generator[AllEffects, EffectResult, bool]
 ```
 
 **Error Cases**:
+
 - `CacheError` - Cache connection failure
 
----
+______________________________________________________________________
 
 ## Effect Composition Patterns
 
@@ -776,7 +843,7 @@ def error_aware_program(user_id: UUID) -> Generator[AllEffects, EffectResult, st
             return "not_found"
 ```
 
----
+______________________________________________________________________
 
 ## System Effects
 
@@ -787,6 +854,7 @@ System effects provide pure access to otherwise impure system resources, enablin
 Get the current UTC timestamp.
 
 **Type Signature**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -799,6 +867,7 @@ class GetCurrentTime:
 **Returns**: `datetime` - Current UTC timestamp
 
 **Usage**:
+
 ```python
 # file: examples/effects.py
 from effectful import GetCurrentTime, SendText
@@ -813,17 +882,19 @@ def log_with_timestamp() -> Generator[AllEffects, EffectResult, None]:
 ```
 
 **Why Use This Effect?**:
+
 - Makes time-dependent code testable (inject fixed times in tests)
 - Explicit dependency on current time
 - Pure functions remain pure
 
----
+______________________________________________________________________
 
 ### GenerateUUID
 
 Generate a new UUID v4.
 
 **Type Signature**:
+
 ```python
 # file: examples/effects.py
 @dataclass(frozen=True)
@@ -836,6 +907,7 @@ class GenerateUUID:
 **Returns**: `UUID` - Newly generated UUID v4
 
 **Usage**:
+
 ```python
 # file: examples/effects.py
 from uuid import UUID
@@ -851,11 +923,12 @@ def create_message_with_id(user_id: UUID, text: str) -> Generator[AllEffects, Ef
 ```
 
 **Why Use This Effect?**:
+
 - Makes UUID-dependent code testable (inject fixed UUIDs in tests)
 - Explicit dependency on randomness
 - Enables deterministic testing of ID generation
 
----
+______________________________________________________________________
 
 ## See Also
 
@@ -867,8 +940,9 @@ def create_message_with_id(user_id: UUID, text: str) -> Generator[AllEffects, Ef
 - [Programs API](./programs.md) - Program execution and types
 - [Testing Standards](../engineering/testing.md) - Testing programs with effects
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Architecture](../engineering/architecture.md)

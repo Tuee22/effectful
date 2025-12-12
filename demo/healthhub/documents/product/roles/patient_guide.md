@@ -1,20 +1,15 @@
 # Patient Guide
 
 **Status**: Authoritative source
-**Supersedes**: none
+**Supersedes**: none **📖 Base Standard**: [patient_guide.md](../../../../../documents/product/roles/patient_guide.md)
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
-> **Purpose**: Complete guide for patient role capabilities, restrictions, and workflows in HealthHub.
-
-> **Core Doctrines**: For comprehensive patterns, see:
-> - [Beginner Journey](../01_journeys/beginner_journey.md)
-> - [Authentication Feature](../03_features/authentication.md)
-> - [Code Quality](../../../../../documents/engineering/code_quality.md)
+> **Purpose**: HealthHub overlay deltas for Patient Guide. **📖 Base Standard**: [patient_guide.md](../../../../../documents/product/roles/patient_guide.md)
 
 ## Prerequisites
 
 - Docker workflow running; commands executed via `docker compose -f docker/docker-compose.yml`.
-- Completed [Beginner Journey](../01_journeys/beginner_journey.md).
+- Completed [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md).
 - Access to HealthHub at `http://localhost:8851`.
 
 ## Learning Objectives
@@ -31,7 +26,9 @@
 **Patient Role**: Patients are healthcare consumers who can view their own medical data and request healthcare services. Patients have the most restricted access in HealthHub.
 
 **Authorization**: PatientAuthorized ADT variant
+
 ```python
+# snippet
 @dataclass(frozen=True)
 class PatientAuthorized:
     user_id: UUID
@@ -46,47 +43,49 @@ class PatientAuthorized:
 
 ### ✅ What Patients CAN Do
 
-| Capability | Description | API Endpoint | Tutorial Reference |
-|------------|-------------|--------------|-------------------|
-| **View own profile** | View demographics, allergies, blood type | `GET /api/patients/me` | [Beginner Journey](../01_journeys/beginner_journey.md#step-3-view-patient-dashboard) |
-| **Request appointments** | Request new appointments with doctors | `POST /api/appointments` | [Appointments Feature](../03_features/appointments.md#workflow-1-patient-requests-appointment) |
-| **View own appointments** | View all own appointments (past and future) | `GET /api/appointments` | [Appointments Feature](../03_features/appointments.md) |
-| **Cancel own appointments** | Cancel appointments in non-terminal states | `POST /api/appointments/{id}/cancel` | [Appointments Feature](../03_features/appointments.md#cancellation-workflow) |
-| **View own prescriptions** | View all prescriptions prescribed to self | `GET /api/prescriptions` | [Prescriptions Feature](../03_features/prescriptions.md#patient-view-own-prescriptions-only) |
-| **Request prescription refills** | Request refills for active prescriptions | `POST /api/prescriptions/{id}/refill` | [Prescriptions Feature](../03_features/prescriptions.md#refill-management) |
-| **View own lab results** | View lab results with doctor notes | `GET /api/lab-results` | [Lab Results Feature](../03_features/lab_results.md#patient-viewing) |
-| **View own invoices** | View invoices with line items | `GET /api/invoices` | [Invoices Feature](../03_features/invoices.md#patient-viewing) |
-| **Update profile** | Update contact information, allergies | `PUT /api/patients/me` | - |
-| **Change password** | Change account password | `POST /api/auth/change-password` | [Authentication Feature](../03_features/authentication.md) |
-| **Logout** | End session and clear JWT token | `POST /api/auth/logout` | [Authentication Feature](../03_features/authentication.md#step-4-logout) |
+| Capability                       | Description                                 | API Endpoint                          | Tutorial Reference                                                                                         |
+| -------------------------------- | ------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **View own profile**             | View demographics, allergies, blood type    | `GET /api/patients/me`                | [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md#step-3-view-patient-dashboard)          |
+| **Request appointments**         | Request new appointments with doctors       | `POST /api/appointments`              | [Appointments Feature](../../engineering/features/appointments.md#workflow-1-patient-requests-appointment) |
+| **View own appointments**        | View all own appointments (past and future) | `GET /api/appointments`               | [Appointments Feature](../../engineering/features/appointments.md)                                         |
+| **Cancel own appointments**      | Cancel appointments in non-terminal states  | `POST /api/appointments/{id}/cancel`  | [Appointments Feature](../../engineering/features/appointments.md#cancellation-workflow)                   |
+| **View own prescriptions**       | View all prescriptions prescribed to self   | `GET /api/prescriptions`              | [Prescriptions Feature](../../engineering/features/prescriptions.md#patient-view-own-prescriptions-only)   |
+| **Request prescription refills** | Request refills for active prescriptions    | `POST /api/prescriptions/{id}/refill` | [Prescriptions Feature](../../engineering/features/prescriptions.md#refill-management)                     |
+| **View own lab results**         | View lab results with doctor notes          | `GET /api/lab-results`                | [Lab Results Feature](../../engineering/features/lab_results.md#patient-viewing)                           |
+| **View own invoices**            | View invoices with line items               | `GET /api/invoices`                   | [Invoices Feature](../../engineering/features/invoices.md#patient-viewing)                                 |
+| **Update profile**               | Update contact information, allergies       | `PUT /api/patients/me`                | -                                                                                                          |
+| **Change password**              | Change account password                     | `POST /api/auth/change-password`      | [Authentication Feature](../../engineering/features/authentication.md)                                     |
+| **Logout**                       | End session and clear JWT token             | `POST /api/auth/logout`               | [Authentication Feature](../../engineering/features/authentication.md#step-4-logout)                       |
 
 ### ❌ What Patients CANNOT Do
 
-| Restriction | Reason | RBAC Enforcement | Alternative |
-|-------------|--------|------------------|-------------|
-| **View other patients' data** | Privacy/HIPAA compliance | Pattern matching on `patient_id` | N/A |
-| **Create prescriptions** | Medical authority required | Doctor-only with `can_prescribe=true` | Request from doctor during appointment |
-| **Access patient list** | Privacy/HIPAA compliance | Doctor/Admin only | N/A |
-| **Confirm appointments** | Doctor confirmation required | Doctor/Admin only | Wait for doctor to confirm request |
-| **Start/complete appointments** | Doctor workflow | Doctor only | N/A |
-| **Review lab results** | Medical interpretation required | Doctor only | View results after doctor review |
-| **Generate invoices** | Billing authority required | Admin only | N/A |
-| **Mark invoices as paid** | Financial authority required | Admin only | Payment processed externally |
-| **View audit logs** | Administrative access required | Admin only | N/A |
-| **Manage users** | Administrative access required | Admin only | N/A |
+| Restriction                     | Reason                          | RBAC Enforcement                      | Alternative                            |
+| ------------------------------- | ------------------------------- | ------------------------------------- | -------------------------------------- |
+| **View other patients' data**   | Privacy/HIPAA compliance        | Pattern matching on `patient_id`      | N/A                                    |
+| **Create prescriptions**        | Medical authority required      | Doctor-only with `can_prescribe=true` | Request from doctor during appointment |
+| **Access patient list**         | Privacy/HIPAA compliance        | Doctor/Admin only                     | N/A                                    |
+| **Confirm appointments**        | Doctor confirmation required    | Doctor/Admin only                     | Wait for doctor to confirm request     |
+| **Start/complete appointments** | Doctor workflow                 | Doctor only                           | N/A                                    |
+| **Review lab results**          | Medical interpretation required | Doctor only                           | View results after doctor review       |
+| **Generate invoices**           | Billing authority required      | Admin only                            | N/A                                    |
+| **Mark invoices as paid**       | Financial authority required    | Admin only                            | Payment processed externally           |
+| **View audit logs**             | Administrative access required  | Admin only                            | N/A                                    |
+| **Manage users**                | Administrative access required  | Admin only                            | N/A                                    |
 
 ## Patient Dashboard
 
 **Access**: `http://localhost:8851/dashboard` (after login)
 
 **Sections**:
+
 1. **Welcome Banner**: "Welcome, [First Name] [Last Name]"
-2. **Upcoming Appointments**: Next 5 appointments (confirmed or in-progress)
-3. **Recent Prescriptions**: Active prescriptions (not expired)
-4. **Lab Results**: Recent lab results with review status
-5. **Invoices**: Unpaid invoices with due dates
+1. **Upcoming Appointments**: Next 5 appointments (confirmed or in-progress)
+1. **Recent Prescriptions**: Active prescriptions (not expired)
+1. **Lab Results**: Recent lab results with review status
+1. **Invoices**: Unpaid invoices with due dates
 
 **Navigation Sidebar**:
+
 - **Dashboard** (overview)
 - **Appointments** (all appointments)
 - **Prescriptions** (all prescriptions)
@@ -103,21 +102,24 @@ class PatientAuthorized:
 
 1. **Navigate to Appointments**: Click "Appointments" in sidebar
 
-2. **Click "Request Appointment"** button
+1. **Click "Request Appointment"** button
 
-3. **Fill out form**:
+1. **Fill out form**:
+
    - **Doctor**: Select from dropdown (shows all doctors with specializations)
    - **Appointment Time**: Select date and time
    - **Reason**: Enter reason for visit (e.g., "Annual physical examination")
 
-4. **Submit Request**: Click "Submit Request"
+1. **Submit Request**: Click "Submit Request"
 
-5. **Expected Result**:
+1. **Expected Result**:
+
    - Appointment created with status: "Requested"
    - Notification sent to doctor
    - Appointment appears in dashboard under "Upcoming Appointments"
 
 **RBAC Enforcement**:
+
 ```python
 # Backend validation
 match auth_state:
@@ -140,25 +142,29 @@ match auth_state:
 
 1. **Navigate to Appointments**: Click "Appointments" in sidebar
 
-2. **View Appointment List**:
+1. **View Appointment List**:
+
    - **Requested**: Yellow badge, awaiting doctor confirmation
    - **Confirmed**: Green badge, doctor confirmed
    - **InProgress**: Blue badge, appointment in progress
    - **Completed**: Gray badge, appointment finished
    - **Cancelled**: Red badge, appointment cancelled
 
-3. **Click Appointment**: View details
+1. **Click Appointment**: View details
+
    - Doctor name and specialization
    - Scheduled time
    - Reason for visit
    - Status with timestamp
    - Doctor notes (if completed)
 
-4. **Actions Available**:
+1. **Actions Available**:
+
    - **Cancel** (if Requested, Confirmed, or InProgress)
    - **Reschedule** (if Requested or Confirmed)
 
 **Data Filtering**:
+
 ```python
 # Backend query filters by patient_id
 SELECT * FROM appointments
@@ -178,7 +184,8 @@ ORDER BY scheduled_time DESC
 
 1. **Navigate to Prescriptions**: Click "Prescriptions" in sidebar
 
-2. **View Prescription List**:
+1. **View Prescription List**:
+
    - **Medication**: Drug name (e.g., "Lisinopril")
    - **Dosage**: Amount (e.g., "10mg")
    - **Frequency**: How often (e.g., "Once daily")
@@ -186,21 +193,25 @@ ORDER BY scheduled_time DESC
    - **Expires**: Expiration date
    - **Prescribing Doctor**: Doctor name and specialization
 
-3. **Filter Options**:
+1. **Filter Options**:
+
    - **Active**: Prescriptions not yet expired
    - **Expired**: Past expiration date
    - **All**: All prescriptions
 
-4. **Click Prescription**: View details
+1. **Click Prescription**: View details
+
    - Doctor's instructions/notes
    - Created date
    - Duration (days)
    - Expiration date
 
-5. **Actions Available**:
+1. **Actions Available**:
+
    - **Request Refill** (if refills remaining > 0 and not expired)
 
 **Data Filtering**:
+
 ```python
 # Backend query filters by patient_id
 SELECT * FROM prescriptions
@@ -220,14 +231,16 @@ ORDER BY created_at DESC
 
 1. **Navigate to Lab Results**: Click "Lab Results" in sidebar
 
-2. **View Lab Results List**:
+1. **View Lab Results List**:
+
    - **Test Type**: Type of test (e.g., "Lipid Panel", "CBC")
    - **Date**: When test was performed
    - **Critical**: Red badge if critical values detected
    - **Reviewed**: Green checkmark if doctor reviewed
    - **Doctor**: Ordering physician
 
-3. **Click Lab Result**: View details
+1. **Click Lab Result**: View details
+
    - **Test Values**: All measured values with reference ranges
      - Values outside normal range highlighted in yellow
      - Critical values highlighted in red
@@ -235,7 +248,8 @@ ORDER BY created_at DESC
    - **Doctor Notes**: Clinical interpretation (if reviewed)
    - **Ordering Physician**: Doctor who ordered test
 
-4. **Example - Alice's Lipid Panel**:
+1. **Example - Alice's Lipid Panel**:
+
    ```
    Test Type: Lipid Panel
    Date: 2025-11-15
@@ -252,6 +266,7 @@ ORDER BY created_at DESC
    ```
 
 **Data Filtering**:
+
 ```python
 # Backend query filters by patient_id
 SELECT * FROM lab_results
@@ -271,7 +286,8 @@ ORDER BY created_at DESC
 
 1. **Navigate to Invoices**: Click "Invoices" in sidebar
 
-2. **View Invoice List**:
+1. **View Invoice List**:
+
    - **Invoice Number**: Unique invoice ID
    - **Date**: Invoice issue date
    - **Total**: Total amount due
@@ -281,7 +297,8 @@ ORDER BY created_at DESC
      - **Overdue**: Red badge, past due date
      - **Paid**: Gray badge, payment received
 
-3. **Click Invoice**: View details
+1. **Click Invoice**: View details
+
    - **Line Items**: Itemized charges
      - Description (e.g., "Office Visit - Cardiology")
      - Quantity
@@ -293,7 +310,8 @@ ORDER BY created_at DESC
    - **Due Date**: Payment deadline
    - **Payment Status**: Sent, Paid, or Overdue
 
-4. **Example Invoice**:
+1. **Example Invoice**:
+
    ```
    Invoice #50000000-0000-0000-0000-000000000001
    Issued: 2025-11-20
@@ -310,6 +328,7 @@ ORDER BY created_at DESC
    ```
 
 **Data Filtering**:
+
 ```python
 # Backend query filters by patient_id
 SELECT * FROM invoices
@@ -326,6 +345,7 @@ ORDER BY issued_date DESC
 **Access**: Click "Profile" in sidebar
 
 **Editable Fields**:
+
 - **Contact Information**:
   - Email (username)
   - Phone number
@@ -336,18 +356,21 @@ ORDER BY issued_date DESC
   - Emergency contact
 
 **Non-Editable Fields** (doctor/admin only):
+
 - First name, Last name
 - Date of birth
 - Medical record number
 - Patient ID
 
 **Update Process**:
+
 1. Click "Edit Profile" button
-2. Modify editable fields
-3. Click "Save Changes"
-4. Confirmation message: "Profile updated successfully"
+1. Modify editable fields
+1. Click "Save Changes"
+1. Confirmation message: "Profile updated successfully"
 
 **RBAC Enforcement**:
+
 ```python
 # Backend validation
 match auth_state:
@@ -363,12 +386,15 @@ match auth_state:
 ## Security and Privacy
 
 **Data Access Boundaries**:
+
 - **Own Data Only**: All API queries filtered by `patient_id` from AuthorizationState
 - **No Cross-Patient Access**: Cannot view other patients' appointments, prescriptions, lab results, or invoices
 - **HIPAA Audit Logging**: All data access logged for compliance
 
 **JWT Token**:
+
 ```json
+// snippet
 {
   "user_id": "20000000-0000-0000-0000-000000000001",
   "email": "alice.patient@example.com",
@@ -379,6 +405,7 @@ match auth_state:
 ```
 
 **Session Management**:
+
 - **Access Token Expiration**: 15 minutes
 - **Refresh Token**: 7 days (stored securely)
 - **Logout**: Clears localStorage and redirects to login
@@ -386,6 +413,7 @@ match auth_state:
 ## Demo Users
 
 **Alice Anderson** (Featured in tutorials)
+
 - Email: `alice.patient@example.com`
 - Password: `password123`
 - Blood Type: O+
@@ -394,24 +422,28 @@ match auth_state:
 - Upcoming Appointment: Dr. Smith (Cardiology) - Confirmed
 
 **Bob Baker**
+
 - Email: `bob.patient@example.com`
 - Password: `password123`
 - Blood Type: A+
 - Allergies: Latex
 
 **Carol Carter**
+
 - Email: `carol.patient@example.com`
 - Password: `password123`
 - Blood Type: B-
 - Allergies: None
 
 **David Davis**
+
 - Email: `david.patient@example.com`
 - Password: `password123`
 - Blood Type: AB+
 - Allergies: Aspirin, Bee stings
 
 **Emily Evans**
+
 - Email: `emily.patient@example.com`
 - Password: `password123`
 - Blood Type: O-
@@ -422,26 +454,30 @@ match auth_state:
 **Issue**: "Access denied" error when trying to view data
 
 **Solution**: Verify you're logged in as correct patient. Check JWT token in localStorage:
+
 ```javascript
+// snippet
 JSON.parse(localStorage.getItem('healthhub-auth'))
 ```
 
----
+______________________________________________________________________
 
 **Issue**: Cannot request appointment
 
 **Possible Causes**:
+
 - Doctor not available at selected time
 - Past appointment time selected
 - Network error
 
 **Solution**: Check browser console for error messages, try different time slot.
 
----
+______________________________________________________________________
 
 **Issue**: Prescription refill request fails
 
 **Possible Causes**:
+
 - Prescription expired
 - No refills remaining
 - Network error
@@ -451,6 +487,7 @@ JSON.parse(localStorage.getItem('healthhub-auth'))
 ## Summary
 
 **Patient role characteristics**:
+
 - ✅ View own medical data (appointments, prescriptions, lab results, invoices)
 - ✅ Request appointments and services
 - ✅ Manage own profile (contact info, allergies)
@@ -465,11 +502,11 @@ JSON.parse(localStorage.getItem('healthhub-auth'))
 
 ## Cross-References
 
-- [Beginner Journey - Patient Login](../01_journeys/beginner_journey.md#step-2-login-as-patient)
-- [Authentication Feature](../03_features/authentication.md)
-- [Appointments Feature](../03_features/appointments.md)
-- [Prescriptions Feature](../03_features/prescriptions.md)
-- [Lab Results Feature](../03_features/lab_results.md)
-- [Invoices Feature](../03_features/invoices.md)
+- [Beginner Journey - Patient Login](../../tutorials/01_journeys/beginner_journey.md#step-2-login-as-patient)
+- [Authentication Feature](../../engineering/features/authentication.md)
+- [Appointments Feature](../../engineering/features/appointments.md)
+- [Prescriptions Feature](../../engineering/features/prescriptions.md)
+- [Lab Results Feature](../../engineering/features/lab_results.md)
+- [Invoices Feature](../../engineering/features/invoices.md)
 - [Doctor Guide](doctor_guide.md)
 - [Admin Guide](admin_guide.md)

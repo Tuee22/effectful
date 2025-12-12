@@ -1,20 +1,15 @@
 # Lab Results Feature
 
-**Status**: Authoritative source (HealthHub tutorial patterns)
-**Supersedes**: none
+**Status**: Authoritative source
+**Supersedes**: none **📖 Base Standard**: [lab_results.md](../../../../../documents/engineering/features/lab_results.md)
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
-> **Purpose**: Complete reference for HealthHub lab results system: lab result domain model, critical value alerts, doctor review workflow, and patient notifications.
-
-> **Core Doctrines**: For comprehensive patterns, see:
-> - [ADTs and Result Types](../../../../../documents/tutorials/adts_and_results.md)
-> - [Code Quality](../../../../../documents/engineering/code_quality.md)
-> - [Effect Patterns](../../../../../documents/engineering/effect_patterns.md)
+> **Purpose**: HealthHub overlay deltas for Lab Results. **📖 Base Standard**: [lab_results.md](../../../../../documents/engineering/features/lab_results.md)
 
 ## Prerequisites
 
 - Docker workflow running; commands executed via `docker compose -f docker/docker-compose.yml`.
-- Completed [Intermediate Journey](../01_journeys/intermediate_journey.md).
+- Completed [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md).
 - Familiarity with healthcare lab results, ADTs, Python type hints, pattern matching.
 
 ## Learning Objectives
@@ -29,6 +24,7 @@
 ## Overview
 
 **Lab Results System Architecture**:
+
 - **Submission**: Lab submits results via API (external system integration)
 - **Critical Detection**: Automatic flagging based on reference ranges
 - **Doctor Alerts**: Critical results trigger immediate doctor notification
@@ -37,11 +33,12 @@
 - **Patient Viewing**: Patients see results with doctor annotations
 
 **Critical Alert Flow**:
+
 1. Lab submits result with critical values
-2. System automatically flags as critical
-3. Immediate notification sent to doctor
-4. Doctor reviews and adds notes
-5. Patient notified that results are ready with doctor notes
+1. System automatically flags as critical
+1. Immediate notification sent to doctor
+1. Doctor reviews and adds notes
+1. Patient notified that results are ready with doctor notes
 
 ## Domain Models
 
@@ -130,6 +127,7 @@ def detect_critical_values(
 ```
 
 **Example Reference Ranges**:
+
 ```python
 # Lipid Panel reference ranges
 lipid_panel_ranges = {
@@ -169,7 +167,9 @@ lipid_panel_ranges = {
 **Endpoint**: `POST /api/lab-results` (external lab system)
 
 **Request**:
+
 ```json
+// snippet
 {
   "patient_id": "30000000-0000-0000-0000-000000000001",
   "doctor_id": "40000000-0000-0000-0000-000000000001",
@@ -280,6 +280,7 @@ def submit_lab_result(
 ```
 
 **Critical Alert Characteristics**:
+
 - **Immediate**: Sent synchronously during lab result submission
 - **High urgency**: Marked as "high" urgency for doctor's attention
 - **Contextual**: Includes which values are critical and thresholds
@@ -290,7 +291,9 @@ def submit_lab_result(
 **Endpoint**: `POST /api/lab-results/{lab_result_id}/review`
 
 **Request**:
+
 ```json
+// snippet
 {
   "doctor_notes": "Total cholesterol and LDL are critically elevated. HDL is critically low. Patient at high cardiovascular risk. Recommend immediate statin therapy (Atorvastatin 40mg daily) and lifestyle modifications. Follow-up lipid panel in 3 months."
 }
@@ -378,6 +381,7 @@ def review_lab_result(
 ```
 
 **Doctor Review Requirements**:
+
 - **Authorization**: Only ordering physician or assigned doctors can review
 - **Clinical interpretation**: Doctor provides actionable clinical notes
 - **Patient notification**: Automatic notification after review
@@ -431,6 +435,7 @@ def get_patient_lab_results(patient_id: UUID) -> Generator[Effect, Result, Resul
 ```
 
 **API Endpoint with RBAC**:
+
 ```python
 # file: demo/healthhub/backend/app/api/lab_results.py
 from fastapi import APIRouter, Depends, HTTPException
@@ -477,6 +482,7 @@ async def get_lab_results(
 ```
 
 **Patient View Features**:
+
 - **Critical highlighting**: Critical results shown with visual indicator
 - **Doctor notes**: Clinical interpretation visible to patient
 - **Test values**: All test values with reference ranges
@@ -486,7 +492,7 @@ async def get_lab_results(
 
 **Critical Lab Result Notification Flow**:
 
-```
+```text
 1. Lab submits critical result
    ↓
 2. System detects critical values (detect_critical_values)
@@ -503,6 +509,7 @@ async def get_lab_results(
 ```
 
 **Notification Timing**:
+
 - **Doctor alert**: Immediate (sent during lab result submission)
 - **Patient notification**: After doctor review (ensures clinical context provided)
 
@@ -615,6 +622,7 @@ async def test_patient_can_view_lab_results_with_doctor_notes(clean_healthhub_st
 ## Summary
 
 **You have learned**:
+
 - ✅ LabResult domain model (test_type, result_data, critical flag)
 - ✅ Critical value detection (automatic flagging based on reference ranges)
 - ✅ Doctor alert system (immediate notification for critical results)
@@ -624,18 +632,19 @@ async def test_patient_can_view_lab_results_with_doctor_notes(clean_healthhub_st
 - ✅ E2E testing for critical alerts, review, and viewing
 
 **Key Takeaways**:
+
 1. **Automatic Critical Detection**: System flags critical values based on reference ranges
-2. **Notification Cascade**: Doctor alerted immediately, patient notified after review
-3. **Clinical Context**: Patients receive results only with doctor interpretation
-4. **RBAC Enforcement**: Patients see own results, doctors see all results
-5. **Audit Trail**: Timestamps track submission and review
-6. **Safety First**: Critical alerts prioritize patient safety
+1. **Notification Cascade**: Doctor alerted immediately, patient notified after review
+1. **Clinical Context**: Patients receive results only with doctor interpretation
+1. **RBAC Enforcement**: Patients see own results, doctors see all results
+1. **Audit Trail**: Timestamps track submission and review
+1. **Safety First**: Critical alerts prioritize patient safety
 
 ## Cross-References
 
-- [Intermediate Journey - Lab Results](../01_journeys/intermediate_journey.md#step-4-view-lab-results-with-critical-alerts)
-- [Doctor Guide - Lab Result Review](../02_roles/doctor_guide.md)
-- [Patient Guide - Viewing Lab Results](../02_roles/patient_guide.md)
-- [Lab Result Workflow](../04_workflows/lab_result_workflow.md)
+- [Intermediate Journey - Lab Results](../../tutorials/01_journeys/intermediate_journey.md#step-4-view-lab-results-with-critical-alerts)
+- [Doctor Guide - Lab Result Review](../../product/roles/doctor_guide.md)
+- [Patient Guide - Viewing Lab Results](../../product/roles/patient_guide.md)
+- [Lab Result Workflow](../../product/workflows/lab_result_workflow.md)
 - [ADTs and Result Types](../../../../../documents/tutorials/adts_and_results.md)
 - [Code Quality](../../../../../documents/engineering/code_quality.md)

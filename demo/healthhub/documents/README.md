@@ -1,11 +1,11 @@
 # HealthHub Documentation
 
-**Status**: Reference only  
-**Supersedes**: none  
+**Status**: Reference only\\
+**Supersedes**: none **📖 Base Standard**: [readme.md](../../../documents/readme.md)
 **Referenced by**: demo/healthhub/documents/documentation_standards.md
 
-> **Purpose**: Navigation hub for HealthHub documentation deltas extending the base Effectful docs. Base standards apply; this file lists where overlays live.
-> **📖 Authoritative Reference**: [Effectful Documentation](../../../documents/readme.md)
+> **Purpose**: HealthHub overlay deltas for Readme. **📖 Base Standard**: [readme.md](../../../documents/readme.md)
+> **📖 Authoritative Reference**: [readme.md](../../../documents/readme.md)
 
 ## Scope
 

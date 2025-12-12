@@ -1,12 +1,13 @@
 # Tutorial 07: Migration Guide
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/readme.md
 
 > **Purpose**: Tutorial for migrating from imperative WebSocket code to effectful programs.
 
 > **Core Doctrine**: For architecture patterns and type safety requirements, see:
+>
 > - [architecture.md](../engineering/architecture.md) - 5-layer architecture
 > - [Code Quality](../engineering/code_quality.md) - Result types and ADTs
 
@@ -20,6 +21,7 @@
 ## Learning Objectives
 
 By the end of this tutorial, you will:
+
 - Identify imperative patterns to replace with effect programs
 - Transform imperative code to functional programs
 - Migrate error handling to Result types
@@ -27,7 +29,7 @@ By the end of this tutorial, you will:
 - Incrementally adopt effectful in existing codebases
 - Test both imperative and functional code during migration
 
----
+______________________________________________________________________
 
 ## Step 1: Identifying migration opportunities
 
@@ -99,6 +101,7 @@ async def handle_chat_connection(websocket: WebSocket, user_id: str) -> None:
 ```
 
 **Problems**:
+
 - ❌ Direct I/O operations (WebSocket, database) - hard to test
 - ❌ Exception-based error handling - unclear control flow
 - ❌ Mutable state (`db_conn`) - resource leaks possible
@@ -160,6 +163,7 @@ def chat_program(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 ```
 
 **Benefits**:
+
 - ✅ Pure business logic - effects are declarative
 - ✅ Easy to test - no real I/O in program
 - ✅ Immutable data flow - no mutable state
@@ -193,16 +197,16 @@ flowchart TB
 
 **Key Differences:**
 
-| Aspect | Imperative | Functional |
-|--------|-----------|-----------|
-| **I/O** | Direct (websocket.send, db.query) | Declarative (yield SendText, yield GetUserById) |
-| **Errors** | Exceptions (try/except) | Result types (Ok/Err with pattern matching) |
-| **State** | Mutable (db_conn variable) | Immutable (all values frozen dataclasses) |
-| **Testing** | Requires mocks for WebSocket/DB | Generator-based testing (no mocks needed) |
-| **Composition** | Difficult (async callbacks) | Easy (yield from) |
-| **Type Safety** | Partial (exceptions not in types) | Full (Result types, exhaustive matching) |
+| Aspect          | Imperative                        | Functional                                      |
+| --------------- | --------------------------------- | ----------------------------------------------- |
+| **I/O**         | Direct (websocket.send, db.query) | Declarative (yield SendText, yield GetUserById) |
+| **Errors**      | Exceptions (try/except)           | Result types (Ok/Err with pattern matching)     |
+| **State**       | Mutable (db_conn variable)        | Immutable (all values frozen dataclasses)       |
+| **Testing**     | Requires mocks for WebSocket/DB   | Generator-based testing (no mocks needed)       |
+| **Composition** | Difficult (async callbacks)       | Easy (yield from)                               |
+| **Type Safety** | Partial (exceptions not in types) | Full (Result types, exhaustive matching)        |
 
----
+______________________________________________________________________
 
 ## Step 2: Step-by-step migration
 
@@ -211,6 +215,7 @@ flowchart TB
 **Task**: Extract all I/O operations into effect descriptions.
 
 **Imperative Code**:
+
 ```python
 # file: examples/07_migration_guide.py
 # ❌ Direct I/O
@@ -219,6 +224,7 @@ await websocket.send_text("Hello")
 ```
 
 **Functional Code**:
+
 ```python
 # file: examples/07_migration_guide.py
 # ✅ Declarative effects
@@ -229,6 +235,7 @@ yield SendText(text="Hello")
 ### Step 2: Replace Exceptions with Result Types
 
 **Imperative Code**:
+
 ```python
 # file: examples/07_migration_guide.py
 # ❌ Exception-based error handling
@@ -242,6 +249,7 @@ except asyncpg.PostgresError as e:
 ```
 
 **Functional Code**:
+
 ```python
 # file: examples/07_migration_guide.py
 # ✅ Result-based error handling
@@ -262,6 +270,7 @@ match result:
 ### Step 3: Eliminate Mutable State
 
 **Imperative Code**:
+
 ```python
 # file: examples/07_migration_guide.py
 # ❌ Mutable connection state
@@ -275,6 +284,7 @@ finally:
 ```
 
 **Functional Code**:
+
 ```python
 # file: examples/07_migration_guide.py
 # ✅ Immutable data flow - interpreter manages connections
@@ -295,6 +305,7 @@ async with get_db_connection() as db_conn:
 ### Step 4: Extract Business Logic into Programs
 
 **Imperative Code**:
+
 ```python
 # file: examples/07_migration_guide.py
 # ❌ Business logic mixed with I/O
@@ -315,6 +326,7 @@ async def handle_user_message(websocket: WebSocket, db_conn, user_id: str) -> No
 ```
 
 **Functional Code**:
+
 ```python
 # file: examples/07_migration_guide.py
 # ✅ Pure business logic - testable without I/O
@@ -341,7 +353,7 @@ def handle_user_message(
             return "saved"
 ```
 
----
+______________________________________________________________________
 
 ## Step 3: Incremental adoption
 
@@ -465,7 +477,7 @@ result = await run_ws_program(chat_program(user_id), interpreter)
 
 **Step 3**: Replace legacy interpreter with functional implementation incrementally.
 
----
+______________________________________________________________________
 
 ## Step 4: Testing during migration
 
@@ -550,7 +562,7 @@ async def test_legacy_wrapper_compatibility(mocker: MockerFixture) -> None:
     mock_websocket.send_text.assert_called_once_with("Hello")
 ```
 
----
+______________________________________________________________________
 
 ## Step 5: Common migration challenges
 
@@ -559,6 +571,7 @@ async def test_legacy_wrapper_compatibility(mocker: MockerFixture) -> None:
 **Problem**: Imperative code often has multiple request-response cycles.
 
 **Imperative Code**:
+
 ```python
 # file: examples/07_migration_guide.py
 # ❌ Multiple request-response cycles
@@ -577,6 +590,7 @@ async def chat_loop(websocket: WebSocket, db_conn) -> None:
 ```
 
 **Functional Solution**:
+
 ```python
 # file: examples/07_migration_guide.py
 # ✅ Recursive program for loop behavior
@@ -609,6 +623,7 @@ match result:
 **Problem**: Imperative code often uses shared mutable state.
 
 **Imperative Code**:
+
 ```python
 # file: examples/07_migration_guide.py
 # ❌ Shared mutable state
@@ -626,6 +641,7 @@ async def handle_connection(websocket: WebSocket, user_id: str) -> None:
 ```
 
 **Functional Solution**:
+
 ```python
 # file: examples/07_migration_guide.py
 # ✅ Immutable state managed by application layer
@@ -667,6 +683,7 @@ state = remove_user(state, user_id)
 **Problem**: Imperative code often spawns background tasks.
 
 **Imperative Code**:
+
 ```python
 # file: examples/07_migration_guide.py
 # ❌ Background task spawned inside handler
@@ -679,6 +696,7 @@ async def handle_connection(websocket: WebSocket) -> None:
 ```
 
 **Functional Solution**:
+
 ```python
 # file: examples/07_migration_guide.py
 # ✅ Explicit effect for background operations
@@ -710,7 +728,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
             pass
 ```
 
----
+______________________________________________________________________
 
 ## Step 6: Migration checklist
 
@@ -740,13 +758,14 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 - [ ] Validate type safety (mypy --strict passes)
 - [ ] Remove feature flags
 
----
+______________________________________________________________________
 
 ## Best Practices
 
 ### ✅ DO
 
 1. **Migrate Incrementally**
+
    ```python
    # file: examples/07_migration_guide.py
    # ✅ Start with one endpoint
@@ -759,7 +778,8 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
        await legacy_notifications_handler(websocket)
    ```
 
-2. **Test Both Implementations During Migration**
+1. **Test Both Implementations During Migration**
+
    ```python
    # file: examples/07_migration_guide.py
    # ✅ Parameterized tests
@@ -769,7 +789,8 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
        pass
    ```
 
-3. **Use Feature Flags**
+1. **Use Feature Flags**
+
    ```python
    # file: examples/07_migration_guide.py
    # ✅ Gradual rollout
@@ -779,7 +800,8 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
        await legacy_implementation()
    ```
 
-4. **Monitor Error Rates**
+1. **Monitor Error Rates**
+
    ```python
    # file: examples/07_migration_guide.py
    # ✅ Track errors during migration
@@ -794,6 +816,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 ### ❌ DON'T
 
 1. **Don't Migrate Everything at Once**
+
    ```python
    # file: examples/07_migration_guide.py
    # ❌ Big bang migration (risky!)
@@ -803,7 +826,8 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
    # One endpoint/feature at a time
    ```
 
-2. **Don't Break Existing Tests**
+1. **Don't Break Existing Tests**
+
    ```python
    # file: examples/07_migration_guide.py
    # ❌ Removing tests during migration
@@ -812,7 +836,8 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
    # ✅ Keep both test suites until migration complete
    ```
 
-3. **Don't Ignore Type Safety**
+1. **Don't Ignore Type Safety**
+
    ```python
    # file: examples/07_migration_guide.py
    # ❌ Using overly generic types during migration (breaks guarantees)
@@ -824,7 +849,8 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
        ...
    ```
 
-4. **Don't Skip Error Handling Migration**
+1. **Don't Skip Error Handling Migration**
+
    ```python
    # file: examples/07_migration_guide.py
    # ❌ Keeping exception-based error handling
@@ -840,17 +866,18 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
            logger.error(f"Program failed: {error}")
    ```
 
----
+______________________________________________________________________
 
 ## Next Steps
 
 - Review [API Reference](../api/) for complete effectful API
-- Study [examples/](/examples/) for real-world migration examples
+- Study [examples/](../../examples/) for real-world migration examples
 - Read [architecture.md](../engineering/architecture.md) for design principles
 
 ## Summary
 
 You learned how to:
+
 - ✅ Identify imperative patterns to replace with effect programs
 - ✅ Transform imperative code to functional programs
 - ✅ Migrate error handling to Result types
@@ -861,8 +888,9 @@ You learned how to:
 
 Your migration strategy is solid and low-risk! 🎉
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Standards](../engineering/README.md)

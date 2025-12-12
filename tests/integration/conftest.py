@@ -95,7 +95,9 @@ class MockWebSocketConnection(WebSocketConnection):
         await self._send_text(text)
 
     async def receive_text(self) -> str:
-        return await self._receive_text()
+        result = await self._receive_text()
+        assert isinstance(result, str)
+        return result
 
     async def close(self) -> None:
         await self._close()

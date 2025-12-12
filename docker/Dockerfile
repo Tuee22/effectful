@@ -35,8 +35,8 @@ COPY . .
 # Configure Poetry to not create virtualenvs (install to system Python)
 RUN poetry config virtualenvs.create false
 
-# Install all dependencies including dev
-RUN poetry install --with dev
+# Install runtime + tooling groups (no dev group)
+RUN poetry install --with check,test
 
 # Keep container running for interactive use
 CMD ["sleep", "infinity"]

@@ -99,6 +99,7 @@ yarn.lock
 pnpm-lock.yaml
 **/pnpm-lock.yaml
 poetry.lock
+.python-poetry.lock
 
 # Test coverage reports - ZERO TOLERANCE for generated coverage files
 coverage/

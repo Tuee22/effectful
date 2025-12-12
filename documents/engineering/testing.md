@@ -25,16 +25,16 @@ flowchart TB
   TestingArch --> Testing
 ```
 
-| Need | Link |
-|------|------|
-| Test organization + fixture architecture + Test Terseness Doctrine | [Testing Architecture](testing_architecture.md) |
-| Type safety + purity rules driving test shape | [Code Quality](code_quality.md) |
-| Container + infra contract | [Docker Workflow](docker_workflow.md#development-contract) |
-| Command prefixes for pytest | [Command Reference](command_reference.md#command-table) |
-| Documentation format | [Documentation Standards](../documentation_standards.md) |
-| Observability expectations | [Monitoring & Alerting](monitoring_and_alerting.md#testing-alerts) |
+| Need                                                               | Link                                                               |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| Test organization + fixture architecture + Test Terseness Doctrine | [Testing Architecture](testing_architecture.md)                    |
+| Type safety + purity rules driving test shape                      | [Code Quality](code_quality.md)                                    |
+| Container + infra contract                                         | [Docker Workflow](docker_workflow.md#development-contract)         |
+| Command prefixes for pytest                                        | [Command Reference](command_reference.md#command-table)            |
+| Documentation format                                               | [Documentation Standards](../documentation_standards.md)           |
+| Observability expectations                                         | [Monitoring & Alerting](monitoring_and_alerting.md#testing-alerts) |
 
----
+______________________________________________________________________
 
 ## Part 1: Minimal API Philosophy
 
@@ -107,6 +107,7 @@ flowchart TB
 ```
 
 **NOT exported**:
+
 - ❌ `create_test_interpreter()` - Users should learn `CompositeInterpreter` explicitly
 - ❌ Fake repositories - Use `pytest-mock` with `spec=` parameter
 - ❌ Test fixtures - Integration test infrastructure only
@@ -116,6 +117,7 @@ flowchart TB
 **Both approaches are valid**. Matchers are provided for convenience, not required.
 
 **Approach 1: Pattern Matching (Verbose but Explicit)**
+
 ```python
 # file: examples/testing.py
 from effectful import Ok, Err
@@ -128,6 +130,7 @@ match result:
 ```
 
 **Approach 2: Matchers (Concise)**
+
 ```python
 # file: examples/testing.py
 from effectful.testing import assert_ok_value
@@ -136,11 +139,13 @@ assert_ok_value(result, expected)
 ```
 
 **When to use matchers**:
+
 - ✅ Quick assertions in simple tests
 - ✅ Extracting values from Result types (`unwrap_ok`)
 - ✅ When brevity improves readability
 
 **When to use pattern matching**:
+
 - ✅ Complex conditional logic based on Result
 - ✅ Handling multiple Result variants in same block
 - ✅ When you want explicit exhaustive matching
@@ -171,12 +176,13 @@ async def test_get_user(mocker: MockerFixture) -> None:
 ```
 
 **Why pytest-mock**:
+
 - ✅ Type-safe with `spec=` parameter
 - ✅ Industry standard, well-documented
 - ✅ No maintenance burden for library
 - ✅ Users learn transferable skills
 
----
+______________________________________________________________________
 
 ## Part 2: Test Execution Environment
 
@@ -200,14 +206,17 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tes
 docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tests/unit/test_interpreters/test_cache.py
 ```
 
+**Pre-flight:** always run `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code` (includes docs/tooling) before invoking pytest.
+
 ### Why Docker-Only?
 
 1. **Infrastructure Access**: Integration tests need PostgreSQL, Redis, MinIO, Pulsar
-2. **Environment Consistency**: Same Python version, dependencies, system libraries
-3. **Reproducibility**: Tests behave identically across all developer machines
-4. **CI Parity**: Local tests match CI behavior exactly
+1. **Environment Consistency**: Same Python version, dependencies, system libraries
+1. **Reproducibility**: Tests behave identically across all developer machines
+1. **CI Parity**: Local tests match CI behavior exactly
 
 ### Timeouts (SSoT)
+
 - **All test executions must set an explicit timeout**, including CI jobs, `docker compose exec ... pytest` commands, and ad-hoc scripts.
 - **Per-test timeout default = 60s** enforced via pytest-timeout for every individual test (unit, integration, e2e), including fixture setup/teardown. This prevents hung tests from blocking the suite; each test fails at 60s unless a higher per-test limit is justified and documented. Never disable timeouts globally.
 - Document the timeout value in PR descriptions when reporting test runs.
@@ -218,6 +227,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tes
 **CRITICAL**: Bash tool truncates output at 30,000 characters. Large test suites exceed this.
 
 **Required pattern**:
+
 ```bash
 # Run with output redirection
 docker compose -f docker/docker-compose.yml exec effectful poetry run pytest > /tmp/test-output.txt 2>&1
@@ -235,12 +245,18 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest > /
 **Core Principle**: Stateful infrastructure (PostgreSQL, Redis, MinIO, Pulsar) requires explicit cleanup between tests to prevent cascading failures.
 
 **Summary**: All infrastructure fixtures follow six cleanup patterns:
+
 1. **Pre and Post Cleanup**: Clean before AND after test runs
-2. **Async Sleep**: 200ms sleep after broker operations for finalization
-3. **Client-Level Cleanup**: Close connections, not server-side deletion
-4. **UUID-Based Naming**: Unique resource names for isolation
-5. **Reduced Timeouts**: 5s test timeouts vs 30s production
-6. **Fixture-Level DRY**: Centralized `clean_<project>_state` fixtures
+1. **Async Sleep**: 200ms sleep after broker operations for finalization
+1. **Client-Level Cleanup**: Close connections, not server-side deletion
+1. **UUID-Based Naming**: Unique resource names for isolation
+1. **Reduced Timeouts**: 5s test timeouts vs 30s production
+1. **Fixture-Level DRY**: Centralized `clean_<project>_state` fixtures
+
+### Pattern 6: Fixture-Level Isolation (DRY Doctrine)
+
+- Reuse shared `clean_<service>_*` fixtures for all tests touching that service.
+- Keep setup/teardown in fixtures; test bodies should focus on assertions and behavior.
 
 For complete patterns, rationale, and code examples, see [Testing Architecture](testing_architecture.md#part-2-fixture-architecture).
 
@@ -250,12 +266,12 @@ PostgreSQL is the most complex infrastructure service in effectful due to its re
 
 > **📖 See Also**: [Testing Architecture - PostgreSQL TRUNCATE CASCADE Pattern](testing_architecture.md#postgresql-truncate-cascade-pattern) for infrastructure cleanup strategy.
 
-
 #### TRUNCATE Pattern: Fast, Atomic Cleanup
 
 **Strategy**: Use `TRUNCATE TABLE ... CASCADE` for database cleanup instead of `DELETE`.
 
 **Fixture implementation** (`tests/fixtures/database.py:90`):
+
 ```python
 # file: examples/testing.py
 @pytest_asyncio.fixture
@@ -273,18 +289,20 @@ async def clean_db(
 
 **Why TRUNCATE instead of DELETE?**
 
-| Operation | Speed | Auto-Increment Reset | Atomic | Handles FK Constraints |
-|-----------|-------|---------------------|--------|----------------------|
-| TRUNCATE CASCADE | Fast (10ms) | Yes | Yes | Yes (CASCADE) |
-| DELETE | Slow (100ms+) | No | No | Requires manual ordering |
+| Operation        | Speed         | Auto-Increment Reset | Atomic | Handles FK Constraints   |
+| ---------------- | ------------- | -------------------- | ------ | ------------------------ |
+| TRUNCATE CASCADE | Fast (10ms)   | Yes                  | Yes    | Yes (CASCADE)            |
+| DELETE           | Slow (100ms+) | No                   | No     | Requires manual ordering |
 
 **TRUNCATE advantages**:
+
 1. **Fast**: Single operation, no row-by-row processing
-2. **Atomic**: Either all tables truncated or none (transactional)
-3. **Resets sequences**: Auto-increment IDs start from 1 again
-4. **CASCADE**: Automatically handles foreign key relationships
+1. **Atomic**: Either all tables truncated or none (transactional)
+1. **Resets sequences**: Auto-increment IDs start from 1 again
+1. **CASCADE**: Automatically handles foreign key relationships
 
 **Example from tests** (`tests/integration/test_database_workflow.py:47-52`):
+
 ```python
 # file: examples/testing.py
 # After clean_db fixture, seed test data
@@ -298,6 +316,7 @@ await clean_db.execute(
 ```
 
 **Anti-pattern**: Using DELETE for cleanup:
+
 ```python
 # file: examples/testing.py
 # ❌ WRONG - Slow, doesn't reset sequences, manual FK ordering required
@@ -311,6 +330,7 @@ await conn.execute("DELETE FROM users")  # Then parents
 **Always test CASCADE DELETE behavior** when tables have foreign key relationships.
 
 **Schema example** (`tests/fixtures/database.py:60-67`):
+
 ```python
 # file: examples/testing.py
 # chat_messages table has FK to users table
@@ -323,6 +343,7 @@ CREATE TABLE IF NOT EXISTS chat_messages (
 ```
 
 **Pattern**: Test that deleting a parent cascades to children:
+
 ```python
 # file: examples/testing.py
 # Seed user and message (parent + child)
@@ -341,6 +362,7 @@ assert len(messages) == 0  # CASCADE DELETE removed child records
 ```
 
 **Why test this?**:
+
 - **Constraint violations**: Without CASCADE, foreign key constraints block deletion
 - **Data integrity**: Orphaned records indicate missing CASCADE configuration
 - **Schema validation**: Tests verify schema matches expected relationships
@@ -350,6 +372,7 @@ assert len(messages) == 0  # CASCADE DELETE removed child records
 **PostgreSQL transactions provide ACID guarantees**. Effect programs should handle transaction boundaries correctly.
 
 **Pattern**: Test ROLLBACK behavior for failed operations:
+
 ```python
 # file: examples/testing.py
 async def test_transaction_rollback() -> None:
@@ -373,6 +396,7 @@ async def test_transaction_rollback() -> None:
 ```
 
 **Why test transactions?**:
+
 - **Data consistency**: Failed operations must not leave partial state
 - **Isolation**: Concurrent operations don't interfere
 - **Error recovery**: Programs handle failures gracefully
@@ -382,6 +406,7 @@ async def test_transaction_rollback() -> None:
 **Test that queries use indexes and avoid N+1 problems**.
 
 **Anti-pattern**: N+1 query problem:
+
 ```python
 # file: examples/testing.py
 # ❌ WRONG - N+1 queries (1 query for users + N queries for each user's messages)
@@ -391,6 +416,7 @@ for user in users:
 ```
 
 **Correct pattern**: Single query with JOIN:
+
 ```python
 # file: examples/testing.py
 # ✅ CORRECT - Single query with JOIN
@@ -403,6 +429,7 @@ rows = await clean_db.fetch(query)  # 1 query
 ```
 
 **Testing pattern**: Count database queries:
+
 ```python
 # file: examples/testing.py
 async def test_no_n_plus_1_queries(clean_db) -> None:
@@ -426,6 +453,7 @@ async def test_no_n_plus_1_queries(clean_db) -> None:
 ```
 
 **Why test performance?**:
+
 - **Scalability**: N+1 queries don't scale beyond toy datasets
 - **Production readiness**: Slow queries cause timeouts in production
 - **Index usage**: Tests verify indexes are defined and used
@@ -435,6 +463,7 @@ async def test_no_n_plus_1_queries(clean_db) -> None:
 **Test that schema changes don't break existing data or queries**.
 
 **Pattern**: Add column with default value:
+
 ```python
 # file: examples/testing.py
 async def test_add_column_migration(clean_db) -> None:
@@ -461,19 +490,20 @@ async def test_add_column_migration(clean_db) -> None:
 ```
 
 **Why test migrations?**:
+
 - **Backward compatibility**: New code must work with old data
 - **Zero downtime**: Schema changes shouldn't require full rebuild
 - **Data preservation**: Migrations must not lose existing data
 
 **Summary of PostgreSQL Testing Patterns:**
 
-| Pattern | Purpose | Speed | Reliability |
-|---------|---------|-------|-------------|
-| TRUNCATE CASCADE | Cleanup | Fast (10ms) | 100% |
-| Foreign Key Testing | Constraint validation | Fast | 100% |
-| Transaction Testing | ACID guarantees | Fast | 100% |
-| N+1 Detection | Performance | Medium | High |
-| Migration Testing | Schema evolution | Medium | High |
+| Pattern             | Purpose               | Speed       | Reliability |
+| ------------------- | --------------------- | ----------- | ----------- |
+| TRUNCATE CASCADE    | Cleanup               | Fast (10ms) | 100%        |
+| Foreign Key Testing | Constraint validation | Fast        | 100%        |
+| Transaction Testing | ACID guarantees       | Fast        | 100%        |
+| N+1 Detection       | Performance           | Medium      | High        |
+| Migration Testing   | Schema evolution      | Medium      | High        |
 
 **Key Insight**: PostgreSQL testing requires understanding relational semantics. TRUNCATE CASCADE handles foreign keys automatically, making it the correct cleanup pattern. Tests should validate constraints, transactions, and query performance.
 
@@ -486,6 +516,7 @@ Redis is an in-memory key-value store used in effectful for caching, pub/sub not
 **Strategy**: Use `FLUSHDB` to clear the entire Redis database before each test.
 
 **Fixture implementation** (`tests/fixtures/cache.py:48`):
+
 ```python
 # file: examples/testing.py
 @pytest_asyncio.fixture
@@ -501,18 +532,20 @@ async def clean_redis(redis_client: Redis) -> AsyncGenerator[Redis, None]:
 
 **Why FLUSHDB instead of DEL?**
 
-| Operation | Speed | Completeness | Risk of Leaks |
-|-----------|-------|--------------|---------------|
-| FLUSHDB | Instant (1ms) | 100% (all keys) | Zero |
-| DEL per key | Slow (N ms) | Depends on tracking | High |
+| Operation   | Speed         | Completeness        | Risk of Leaks |
+| ----------- | ------------- | ------------------- | ------------- |
+| FLUSHDB     | Instant (1ms) | 100% (all keys)     | Zero          |
+| DEL per key | Slow (N ms)   | Depends on tracking | High          |
 
 **FLUSHDB advantages**:
+
 1. **Instant**: O(1) operation regardless of database size
-2. **Complete**: Guaranteed to delete ALL keys (no tracking needed)
-3. **Simple**: Single command, no loops or key lists
-4. **Reliable**: Cannot accidentally miss keys
+1. **Complete**: Guaranteed to delete ALL keys (no tracking needed)
+1. **Simple**: Single command, no loops or key lists
+1. **Reliable**: Cannot accidentally miss keys
 
 **Example from tests** (`tests/integration/test_cache_workflow.py:67-70`):
+
 ```python
 # file: examples/testing.py
 # After clean_redis fixture, put profile in cache
@@ -523,6 +556,7 @@ cached = yield GetCachedProfile(user_id=uid)
 ```
 
 **Anti-pattern**: Using DEL for each key:
+
 ```python
 # file: examples/testing.py
 # ❌ WRONG - Slow, incomplete, error-prone
@@ -537,6 +571,7 @@ for key in keys:
 **Always test time-to-live behavior** to ensure caches don't grow indefinitely.
 
 **Pattern**: Verify TTL is set correctly:
+
 ```python
 # file: examples/testing.py
 async def test_cached_profile_has_ttl(clean_redis) -> None:
@@ -555,11 +590,13 @@ async def test_cached_profile_has_ttl(clean_redis) -> None:
 ```
 
 **Why test TTL?**:
+
 - **Memory management**: Without TTL, cache grows without bound
 - **Stale data**: Expired data should not be accessible
 - **Configuration validation**: Ensures TTL parameter is used
 
 **Example from tests** (`tests/integration/test_cache_workflow.py:500-502`):
+
 ```python
 # file: examples/testing.py
 # Check TTL is set
@@ -573,6 +610,7 @@ assert ttl <= 300
 **Test both cache hit and cache miss scenarios** to validate Result ADT usage.
 
 **Pattern**: Test cache miss first, then cache hit:
+
 ```python
 # file: examples/testing.py
 async def test_cache_miss_then_hit(clean_redis) -> None:
@@ -603,11 +641,13 @@ async def test_cache_miss_then_hit(clean_redis) -> None:
 ```
 
 **Why test both?**:
+
 - **Result type validation**: Ensures ADT variants are used correctly
 - **Miss handling**: Programs should handle cache misses gracefully
 - **Hit verification**: Ensures cache is actually storing data
 
 **Example from tests** (`tests/integration/test_cache_workflow.py:119-129`):
+
 ```python
 # file: examples/testing.py
 # Cache miss program
@@ -626,6 +666,7 @@ match cached:
 **Test cache-aside pattern**: Check cache → Miss → Fetch from DB → Populate cache.
 
 **Pattern**: Multi-step workflow with fallback:
+
 ```python
 # file: examples/testing.py
 async def test_cache_aside_pattern(clean_db, clean_redis) -> None:
@@ -670,11 +711,13 @@ async def test_cache_aside_pattern(clean_db, clean_redis) -> None:
 ```
 
 **Why test fallback?**:
+
 - **Real-world pattern**: Cache-aside is the most common caching strategy
 - **Performance validation**: Second call should be faster (cached)
 - **Correctness**: DB and cache must stay synchronized
 
 **Example from tests** (`tests/integration/test_cache_workflow.py:171-201`):
+
 ```python
 # file: examples/testing.py
 # Cache-aware workflow
@@ -696,6 +739,7 @@ match cached:
 **Test that cache invalidation removes the correct keys**.
 
 **Pattern**: Put → Verify → Invalidate → Verify gone:
+
 ```python
 # file: examples/testing.py
 async def test_cache_invalidation(clean_redis) -> None:
@@ -725,11 +769,13 @@ async def test_cache_invalidation(clean_redis) -> None:
 ```
 
 **Why test invalidation?**:
+
 - **Correctness**: Stale cache entries can cause bugs
 - **Return value**: InvalidateCache returns bool indicating success
 - **Side effects**: Verify key is actually deleted from Redis
 
 **Example from tests** (`tests/integration/test_cache_workflow.py:330-346`):
+
 ```python
 # file: examples/testing.py
 # Invalidate
@@ -747,13 +793,13 @@ match cached_after:
 
 **Summary of Redis Testing Patterns:**
 
-| Pattern | Purpose | Speed | Reliability |
-|---------|---------|-------|-------------|
-| FLUSHDB | Cleanup | Instant (1ms) | 100% |
-| TTL Testing | Memory management | Fast | 100% |
-| Hit/Miss Testing | Result ADT validation | Fast | 100% |
-| Database Fallback | Cache-aside pattern | Medium | High |
-| Invalidation Testing | Stale data prevention | Fast | 100% |
+| Pattern              | Purpose               | Speed         | Reliability |
+| -------------------- | --------------------- | ------------- | ----------- |
+| FLUSHDB              | Cleanup               | Instant (1ms) | 100%        |
+| TTL Testing          | Memory management     | Fast          | 100%        |
+| Hit/Miss Testing     | Result ADT validation | Fast          | 100%        |
+| Database Fallback    | Cache-aside pattern   | Medium        | High        |
+| Invalidation Testing | Stale data prevention | Fast          | 100%        |
 
 **Key Insight**: Redis testing emphasizes TTL, cache semantics (hit/miss), and the cache-aside pattern. FLUSHDB provides instant, complete cleanup. Tests should validate both cache hits and misses to ensure ADT types are used correctly.
 
@@ -783,13 +829,14 @@ except ClientError:
 
 Unlike relational databases or key-value stores, S3 doesn't have a "delete all" operation. The list-then-delete pattern is the standard cleanup strategy for S3-compatible storage.
 
-| Approach | Speed | Reliability | Use Case |
-|----------|-------|-------------|----------|
-| List + DELETE | O(n) objects | High | ✅ Standard S3 cleanup |
-| Truncate bucket | Not available | N/A | ❌ S3 doesn't support this |
-| Delete versioned objects | Complex | Medium | Only for versioned buckets |
+| Approach                 | Speed         | Reliability | Use Case                   |
+| ------------------------ | ------------- | ----------- | -------------------------- |
+| List + DELETE            | O(n) objects  | High        | ✅ Standard S3 cleanup     |
+| Truncate bucket          | Not available | N/A         | ❌ S3 doesn't support this |
+| Delete versioned objects | Complex       | Medium      | Only for versioned buckets |
 
 **Key Points:**
+
 - **O(n) cleanup**: Speed depends on number of objects (acceptable for test isolation)
 - **Idempotent**: Safe to call even if bucket is already empty
 - **Complete**: Removes all objects, ensuring clean slate
@@ -847,6 +894,7 @@ yield PutObject(
 ```
 
 **Why UUID keys:**
+
 - **Prevents collisions**: Tests running concurrently won't interfere
 - **Debugging aid**: UUID in key traces back to specific test run
 - **Cleanup insurance**: Even without fixture cleanup, orphaned objects have unique keys
@@ -907,6 +955,7 @@ def upload_download_program(
 ```
 
 **Why test metadata:**
+
 - **Production requirement**: File uploads often need user IDs, timestamps, checksums
 - **S3 quirk**: Metadata keys are case-insensitive and may be transformed
 - **Content-type matters**: Affects browser download behavior and MIME validation
@@ -936,6 +985,7 @@ def list_objects_program(
 ```
 
 **Why prefix-based listing:**
+
 - **Efficient**: S3 indexes by key prefix (no full bucket scan)
 - **Realistic**: Production systems organize by user ID, date, category
 - **Test isolation**: UUID in prefix ensures test doesn't see other tests' objects
@@ -944,18 +994,19 @@ def list_objects_program(
 
 **Comparison of MinIO cleanup strategies:**
 
-| Strategy | Speed | Isolation | Reliability | Use Case |
-|----------|-------|-----------|-------------|----------|
-| **List + DELETE** | O(n) | Perfect | High | ✅ Standard approach |
-| UUID keys only | N/A | Good | Medium | Backup strategy |
-| Separate buckets | Fast | Perfect | Low | ❌ Complex setup |
-| No cleanup | N/A | Poor | Low | ❌ Tests interfere |
+| Strategy          | Speed | Isolation | Reliability | Use Case             |
+| ----------------- | ----- | --------- | ----------- | -------------------- |
+| **List + DELETE** | O(n)  | Perfect   | High        | ✅ Standard approach |
+| UUID keys only    | N/A   | Good      | Medium      | Backup strategy      |
+| Separate buckets  | Fast  | Perfect   | Low         | ❌ Complex setup     |
+| No cleanup        | N/A   | Poor      | Low         | ❌ Tests interfere   |
 
 **Why List + DELETE wins:**
+
 - **Standard S3 pattern**: Every S3 user needs this for bucket cleanup
 - **Complete isolation**: Every test starts with empty bucket
 - **No state accumulation**: Tests don't leave garbage in storage
-- **Fast enough**: Even 1000 objects clean up in <1 second
+- **Fast enough**: Even 1000 objects clean up in \<1 second
 
 **Working Example** (from `tests/integration/test_storage_workflow.py:148-199`):
 
@@ -1005,6 +1056,7 @@ async def test_delete_object_workflow(
 **Anti-Pattern #23: Not Testing Object Deletion**
 
 **Why it's wrong:**
+
 ```python
 # file: examples/testing.py
 # ❌ Only test Put and Get, assume Delete works
@@ -1024,6 +1076,7 @@ def test_storage_workflow(clean_minio: str) -> None:
 **Impact:** Production deletion bugs go undetected until users complain about storage costs or leaked files.
 
 **How to fix:**
+
 ```python
 # file: examples/testing.py
 # ✅ Test complete lifecycle: Put → Get → Delete → Verify deletion
@@ -1047,17 +1100,17 @@ def test_storage_lifecycle(clean_minio: str) -> None:
 
 **Summary of MinIO Testing Patterns:**
 
-| Pattern | Purpose | Speed | Reliability |
-|---------|---------|-------|-------------|
-| List + DELETE | Cleanup | O(n) objects | High |
-| UUID keys | Isolation | N/A | Perfect |
-| Metadata testing | Production realism | Fast | High |
-| Prefix-based listing | Organization | Fast | High |
-| Lifecycle testing | Complete coverage | Fast | High |
+| Pattern              | Purpose            | Speed        | Reliability |
+| -------------------- | ------------------ | ------------ | ----------- |
+| List + DELETE        | Cleanup            | O(n) objects | High        |
+| UUID keys            | Isolation          | N/A          | Perfect     |
+| Metadata testing     | Production realism | Fast         | High        |
+| Prefix-based listing | Organization       | Fast         | High        |
+| Lifecycle testing    | Complete coverage  | Fast         | High        |
 
 **Key Insight**: MinIO testing requires list-then-delete cleanup (O(n)) rather than single-command cleanup. Combining this with UUID-based key isolation ensures perfect test isolation. Tests should verify the complete object lifecycle (put → get → delete → verify) and validate metadata/content-type survival.
 
----
+______________________________________________________________________
 
 ## Part 3: Coverage Doctrine
 
@@ -1066,6 +1119,7 @@ def test_storage_lifecycle(clean_minio: str) -> None:
 Unit tests measure coverage of library code in `effectful/`.
 
 **What's measured:**
+
 - `effectful/algebraic/` - Result types, EffectReturn
 - `effectful/domain/` - Domain models
 - `effectful/effects/` - Effect definitions
@@ -1074,6 +1128,7 @@ Unit tests measure coverage of library code in `effectful/`.
 - `effectful/testing/` - Testing utilities (matchers)
 
 **What's excluded (intentionally):**
+
 - `effectful/adapters/` - Infrastructure implementations (tested via integration)
 - `effectful/infrastructure/` - Protocol definitions (no logic to test)
 
@@ -1086,6 +1141,7 @@ Integration tests achieve **conceptual feature coverage**, not metric-driven cov
 **Goal:** Every user-facing feature has at least one integration test that validates the complete workflow with real infrastructure.
 
 **Examples of features to cover:**
+
 - User lookup workflow (database + cache)
 - Message persistence workflow
 - Authentication flow
@@ -1094,7 +1150,7 @@ Integration tests achieve **conceptual feature coverage**, not metric-driven cov
 
 **Not metric-driven:** Integration test coverage percentage is not a success criterion. What matters is that every feature works end-to-end.
 
----
+______________________________________________________________________
 
 ## Part 4: Four-Layer Testing Architecture
 
@@ -1109,7 +1165,7 @@ Effectful uses a four-layer testing architecture that maps directly to the 5-lay
 
 Each layer tests ONE concern (WHAT/HOW/WHEN/WHY), enabling independent testing of effects, interpreters, programs, and workflows. For complete implementation patterns, decision trees, and code examples, see [Testing Architecture - Part 3](testing_architecture.md#part-3-four-layer-testing-architecture).
 
----
+______________________________________________________________________
 
 ## Part 5: Testing Patterns
 
@@ -1118,14 +1174,15 @@ Each layer tests ONE concern (WHAT/HOW/WHEN/WHY), enabling independent testing o
 Use `mocker.AsyncMock(spec=Protocol)` for type-safe mocks:
 
 1. Create mock with spec parameter
-2. Configure `return_value` or `side_effect`
-3. Inject mock into interpreter
-4. Run program with `run_ws_program()`
-5. Assert results and mock calls
+1. Configure `return_value` or `side_effect`
+1. Inject mock into interpreter
+1. Run program with `run_ws_program()`
+1. Assert results and mock calls
 
 ### Test Structure Pattern (AAA)
 
 **Arrange-Act-Assert:**
+
 - **Arrange**: Create mocks, configure behaviors, set up test data
 - **Act**: Execute the code under test (single action)
 - **Assert**: Verify return values, side effects, mock calls
@@ -1133,11 +1190,12 @@ Use `mocker.AsyncMock(spec=Protocol)` for type-safe mocks:
 ### Error Testing Pattern
 
 **Error Testing Requirements:**
+
 1. Create mock that raises/returns error
-2. Run program expecting failure
-3. Assert result is `Err`
-4. Unwrap and verify error type
-5. Check error message and properties
+1. Run program expecting failure
+1. Assert result is `Err`
+1. Unwrap and verify error type
+1. Check error message and properties
 
 ```python
 # file: examples/testing.py
@@ -1187,6 +1245,7 @@ async def test_publish_message_workflow(clean_pulsar) -> None:
 ```
 
 **Why UUID naming?**:
+
 - **Broker-level isolation**: No conflicts between concurrent tests
 - **No cleanup required**: Topics auto-expire after broker retention period
 - **Debuggable**: Topic name shows which test created it
@@ -1216,6 +1275,7 @@ async def test_publish_returns_message_id(clean_pulsar) -> None:
 ```
 
 **Why publish-first?**:
+
 - **Simpler**: Fewer moving parts (no subscription setup)
 - **Faster**: ~50ms vs ~200ms for publish+consume
 - **Isolates issues**: If publish fails, no point testing consume
@@ -1258,6 +1318,7 @@ async def test_publish_and_consume_workflow(clean_pulsar) -> None:
 ```
 
 **Why roundtrip?**:
+
 - **End-to-end validation**: Tests producer → broker → consumer → ack flow
 - **Real integration**: Catches broker configuration issues
 - **Production-like**: Mirrors actual application behavior
@@ -1288,6 +1349,7 @@ async def test_consume_timeout_workflow(clean_pulsar) -> None:
 ```
 
 **Why test timeouts?**:
+
 - **ADT completeness**: Verify all ConsumeResult variants work
 - **Non-error case**: Timeouts are expected when queue is empty
 - **Behavior validation**: Ensures timeout is fast (~1s, not hanging)
@@ -1326,16 +1388,18 @@ async def test_negative_acknowledge_workflow(
 ```
 
 **Why `clean_pulsar`?**:
+
 - **Pre-cleanup**: Starts with clean state even if previous test failed
 - **Post-cleanup**: Prevents resource leaks from failing subsequent tests
 - **Async sleep**: Gives broker time to finalize close operations
 
 **Pattern Summary**:
+
 1. **UUID naming** → Broker-level isolation
-2. **Publish-first** → Simpler tests, faster feedback
-3. **Roundtrip** → End-to-end validation
-4. **Test timeouts** → Verify all ADT variants
-5. **Clean fixture** → Guaranteed test isolation
+1. **Publish-first** → Simpler tests, faster feedback
+1. **Roundtrip** → End-to-end validation
+1. **Test timeouts** → Verify all ADT variants
+1. **Clean fixture** → Guaranteed test isolation
 
 ### Five PostgreSQL Testing Patterns
 
@@ -1357,6 +1421,7 @@ async def clean_db(
 ```
 
 **Why TRUNCATE CASCADE?**:
+
 - **Instant cleanup**: O(1) operation regardless of table size (vs DELETE which is O(n))
 - **Foreign key safety**: CASCADE handles dependent tables automatically
 - **No transaction overhead**: Direct table truncation, not row-by-row deletion
@@ -1366,11 +1431,11 @@ async def clean_db(
 
 **Comparison:**
 
-| Cleanup Strategy | Speed | Foreign Key Safety | Use Case |
-|------------------|-------|-------------------|----------|
-| **TRUNCATE CASCADE** | O(1) | ✅ Automatic | ✅ Integration tests |
-| DELETE FROM | O(n) rows | ❌ Manual ordering | Legacy systems |
-| DROP + CREATE | Slow | ✅ But expensive | Schema changes |
+| Cleanup Strategy     | Speed     | Foreign Key Safety | Use Case             |
+| -------------------- | --------- | ------------------ | -------------------- |
+| **TRUNCATE CASCADE** | O(1)      | ✅ Automatic       | ✅ Integration tests |
+| DELETE FROM          | O(n) rows | ❌ Manual ordering | Legacy systems       |
+| DROP + CREATE        | Slow      | ✅ But expensive   | Schema changes       |
 
 #### Pattern 2: Test Foreign Key Relationships
 
@@ -1415,6 +1480,7 @@ async def test_delete_user_cascades_to_messages(
 ```
 
 **Why test foreign keys?**:
+
 - **Schema validation**: Confirms foreign key constraints are defined correctly
 - **Cascade behavior**: Ensures ON DELETE CASCADE works as expected
 - **Data integrity**: Prevents orphaned records in production
@@ -1461,6 +1527,7 @@ async def test_transaction_rollback_on_error(clean_db: asyncpg.Connection) -> No
 ```
 
 **Why test transactions?**:
+
 - **ACID compliance**: Verifies atomicity - all-or-nothing semantics
 - **Error path testing**: Ensures failures don't leave partial data
 - **Production realism**: Mirrors how effectful programs handle errors
@@ -1519,6 +1586,7 @@ async def test_list_users_with_message_counts_avoids_n_plus_1(
 ```
 
 **Why detect N+1?**:
+
 - **Performance**: N+1 queries are O(n) database round-trips (slow at scale)
 - **Scalability**: 100 users = 101 queries without JOIN
 - **Production bugs**: Often unnoticed in tests with small datasets
@@ -1568,6 +1636,7 @@ async def test_chat_workflow_integration(clean_db: asyncpg.Connection) -> None:
 ```
 
 **Why direct SQL for seeding?**:
+
 - **Faster**: No effect interpreter overhead (~10ms vs ~50ms)
 - **Isolated**: Test failures don't cascade from seeding failures
 - **Clear separation**: Setup (SQL) vs behavior under test (effects)
@@ -1576,11 +1645,12 @@ async def test_chat_workflow_integration(clean_db: asyncpg.Connection) -> None:
 **From `tests/integration/test_database_workflow.py`** - All tests seed with direct SQL.
 
 **Pattern Summary**:
+
 1. **TRUNCATE CASCADE** → Instant, safe cleanup
-2. **Test foreign keys** → Validate schema relationships
-3. **Test transactions** → Verify ROLLBACK on errors
-4. **Detect N+1 queries** → Prevent performance bugs
-5. **Seed with SQL** → Fast, isolated test setup
+1. **Test foreign keys** → Validate schema relationships
+1. **Test transactions** → Verify ROLLBACK on errors
+1. **Detect N+1 queries** → Prevent performance bugs
+1. **Seed with SQL** → Fast, isolated test setup
 
 ### Five Redis Testing Patterns
 
@@ -1600,6 +1670,7 @@ async def clean_redis(redis_client: Redis) -> AsyncGenerator[Redis, None]:
 ```
 
 **Why FLUSHDB?**:
+
 - **Instant**: O(1) operation deletes all keys in database (< 1ms)
 - **Complete**: Guarantees empty state before every test
 - **Simple**: Single command, no iteration required
@@ -1609,11 +1680,11 @@ async def clean_redis(redis_client: Redis) -> AsyncGenerator[Redis, None]:
 
 **Comparison:**
 
-| Cleanup Strategy | Speed | Completeness | Use Case |
-|------------------|-------|--------------|----------|
-| **FLUSHDB** | O(1), <1ms | ✅ Total | ✅ Integration tests |
-| DELETE key pattern | O(n) keys | Partial | Specific prefix cleanup |
-| FLUSHALL | O(1) | ✅ All DBs | ❌ Too aggressive |
+| Cleanup Strategy   | Speed       | Completeness | Use Case                |
+| ------------------ | ----------- | ------------ | ----------------------- |
+| **FLUSHDB**        | O(1), \<1ms | ✅ Total     | ✅ Integration tests    |
+| DELETE key pattern | O(n) keys   | Partial      | Specific prefix cleanup |
+| FLUSHALL           | O(1)        | ✅ All DBs   | ❌ Too aggressive       |
 
 #### Pattern 2: Test TTL (Time-To-Live) Explicitly
 
@@ -1651,6 +1722,7 @@ async def test_cached_profile_expires_after_ttl(
 ```
 
 **Why test TTL?**:
+
 - **Memory management**: Prevents unbounded cache growth
 - **Staleness prevention**: Ensures old data is eventually evicted
 - **Production realism**: TTL bugs cause memory leaks in production
@@ -1689,6 +1761,7 @@ async def test_cache_hit_and_miss_semantics(
 ```
 
 **Why test both?**:
+
 - **ADT completeness**: Verifies both variants of Result type work
 - **Error detection**: Missing cache hits indicate serialization bugs
 - **Edge case coverage**: Many bugs occur at cache miss → hit transition
@@ -1764,6 +1837,7 @@ async def test_cache_aside_pattern_with_database_fallback(
 ```
 
 **Why test fallback?**:
+
 - **Production pattern**: Cache-aside is the standard caching strategy
 - **Integration coverage**: Tests Redis + PostgreSQL working together
 - **Performance validation**: Verifies second request is cached (faster)
@@ -1810,16 +1884,18 @@ async def test_cache_invalidation_on_user_update(
 ```
 
 **Why test invalidation?**:
+
 - **Stale data prevention**: Ensures updates are reflected after cache clear
 - **Bug detection**: Missing invalidation causes users to see old data
 - **Production realism**: Cache invalidation bugs are common in production
 
 **Pattern Summary**:
+
 1. **FLUSHDB** → Instant cleanup (O(1))
-2. **Test TTL** → Prevent memory leaks
-3. **Hit/Miss both** → Complete ADT coverage
-4. **Database fallback** → Cache-aside pattern
-5. **Invalidation** → Stale data prevention
+1. **Test TTL** → Prevent memory leaks
+1. **Hit/Miss both** → Complete ADT coverage
+1. **Database fallback** → Cache-aside pattern
+1. **Invalidation** → Stale data prevention
 
 ### Five MinIO S3 Testing Patterns
 
@@ -1854,6 +1930,7 @@ def clean_minio(s3_bucket: str) -> str:
 ```
 
 **Why List + DELETE?**:
+
 - **Standard S3 pattern**: No "delete all" operation exists in S3
 - **O(n) cleanup**: Speed depends on object count (acceptable for tests)
 - **Complete**: Ensures bucket is empty before every test
@@ -1895,6 +1972,7 @@ async def test_put_and_get_object_workflow(
 ```
 
 **Why UUID keys?**:
+
 - **Prevents collisions**: Tests running concurrently won't interfere
 - **Debugging aid**: UUID traces back to specific test run
 - **Cleanup insurance**: Orphaned objects have unique keys
@@ -1935,6 +2013,7 @@ async def test_object_lifecycle(
 ```
 
 **Why test lifecycle?**:
+
 - **Complete coverage**: Tests all CRUD operations
 - **Delete validation**: Ensures delete actually removes object
 - **Production realism**: Users upload, download, and delete files
@@ -1982,6 +2061,7 @@ async def test_metadata_and_content_type_survival(
 ```
 
 **Why test metadata?**:
+
 - **Production requirement**: File uploads need user IDs, timestamps, checksums
 - **S3 quirk**: Metadata keys are case-insensitive, may be transformed
 - **Content-type matters**: Affects browser download behavior, MIME validation
@@ -2027,6 +2107,7 @@ async def test_list_objects_with_prefix(
 ```
 
 **Why test prefix listing?**:
+
 - **Efficient**: S3 indexes by prefix (no full bucket scan)
 - **Production pattern**: Organize by user ID, date, category
 - **Test isolation**: UUID in prefix ensures test doesn't see other tests' objects
@@ -2035,19 +2116,21 @@ async def test_list_objects_with_prefix(
 **From `tests/integration/test_storage_workflow.py:201-248`** - Prefix listing test.
 
 **Pattern Summary**:
-1. **List + DELETE** → Complete cleanup (O(n) objects)
-2. **UUID keys** → Prevent test collisions
-3. **Test lifecycle** → Put → Get → Delete → Verify
-4. **Test metadata** → Ensure round-trip survival
-5. **Prefix listing** → Efficient object queries
 
----
+1. **List + DELETE** → Complete cleanup (O(n) objects)
+1. **UUID keys** → Prevent test collisions
+1. **Test lifecycle** → Put → Get → Delete → Verify
+1. **Test metadata** → Ensure round-trip survival
+1. **Prefix listing** → Efficient object queries
+
+______________________________________________________________________
 
 ## Part 6: Complete Examples
 
 ### Example: Testing a New Database Effect
 
 **Step 1: Effect Test** (`tests/test_effects/test_database_effects.py`)
+
 ```python
 # file: examples/testing.py
 def test_delete_user_effect() -> None:
@@ -2061,6 +2144,7 @@ def test_delete_user_effect() -> None:
 ```
 
 **Step 2: Interpreter Test** (`tests/test_interpreters/test_database.py`)
+
 ```python
 # file: examples/testing.py
 @pytest.mark.asyncio()
@@ -2082,6 +2166,7 @@ async def test_delete_user_success(mocker: MockerFixture) -> None:
 ```
 
 **Step 3: Program Test** (`tests/test_demo/test_user_programs.py`)
+
 ```python
 # file: examples/testing.py
 def test_delete_user_program() -> None:
@@ -2108,6 +2193,7 @@ def test_delete_user_program() -> None:
 ```
 
 **Step 4: Workflow Test** (`tests/test_integration/test_user_workflow.py`)
+
 ```python
 # file: examples/testing.py
 @pytest.mark.asyncio()
@@ -2244,13 +2330,14 @@ class TestMessagingWorkflowIntegration:
 ```
 
 **Why This Example Works**:
+
 1. **UUID naming**: `f"test-topic-{uuid4()}"` ensures no conflicts
-2. **clean_pulsar fixture**: Guarantees clean state before/after
-3. **Real Pulsar**: Tests actual broker behavior, not mocks
-4. **Mocked other services**: WebSocket, DB, Cache use pytest-mock
-5. **Roundtrip validation**: Tests full publish → consume → ack flow
-6. **ADT pattern matching**: Exhaustive handling of MessageEnvelope variants
-7. **Short timeouts**: 5s timeout for fast failure detection
+1. **clean_pulsar fixture**: Guarantees clean state before/after
+1. **Real Pulsar**: Tests actual broker behavior, not mocks
+1. **Mocked other services**: WebSocket, DB, Cache use pytest-mock
+1. **Roundtrip validation**: Tests full publish → consume → ack flow
+1. **ADT pattern matching**: Exhaustive handling of MessageEnvelope variants
+1. **Short timeouts**: 5s timeout for fast failure detection
 
 **Test runs in ~200ms** with real Pulsar broker.
 
@@ -2436,18 +2523,20 @@ class TestDatabaseWorkflowIntegration:
 ```
 
 **Why This Example Works**:
+
 1. **clean_db fixture**: TRUNCATE CASCADE ensures clean state before test (Pattern 1)
-2. **Direct SQL seeding**: Fast, declarative user setup (Pattern 5)
-3. **Real PostgreSQL**: Tests actual database constraints, not mocks
-4. **Mocked other services**: WebSocket, Cache use pytest-mock
-5. **Foreign key validation**: Explicitly tests CASCADE DELETE behavior (Pattern 2)
-6. **Transaction testing**: Verifies ROLLBACK undoes all changes (Pattern 3)
-7. **ADT pattern matching**: Exhaustive handling of User | UserNotFound variants
-8. **No N+1 queries**: Uses efficient queries throughout (Pattern 4)
+1. **Direct SQL seeding**: Fast, declarative user setup (Pattern 5)
+1. **Real PostgreSQL**: Tests actual database constraints, not mocks
+1. **Mocked other services**: WebSocket, Cache use pytest-mock
+1. **Foreign key validation**: Explicitly tests CASCADE DELETE behavior (Pattern 2)
+1. **Transaction testing**: Verifies ROLLBACK undoes all changes (Pattern 3)
+1. **ADT pattern matching**: Exhaustive handling of User | UserNotFound variants
+1. **No N+1 queries**: Uses efficient queries throughout (Pattern 4)
 
 **Test runs in ~50-100ms** with real PostgreSQL (faster than Pulsar due to local DB).
 
 **Fixture Reference** (from `tests/fixtures/database.py:78-91`):
+
 ```python
 # file: examples/testing.py
 @pytest_asyncio.fixture
@@ -2630,16 +2719,18 @@ class TestCacheWorkflowIntegration:
 ```
 
 **Why This Example Works**:
+
 1. **clean_redis fixture**: FLUSHDB ensures clean state before test (Pattern 1)
-2. **Cache-aside pattern**: Complete miss → DB → populate → hit flow (Pattern 4)
-3. **TTL validation**: Explicitly verifies TTL and waits for expiration (Pattern 2)
-4. **Real Redis + PostgreSQL**: Tests actual cache + database integration
-5. **Cache invalidation**: Tests stale data prevention (Pattern 5)
-6. **Hit/Miss both tested**: Covers both ADT variants (Pattern 3)
+1. **Cache-aside pattern**: Complete miss → DB → populate → hit flow (Pattern 4)
+1. **TTL validation**: Explicitly verifies TTL and waits for expiration (Pattern 2)
+1. **Real Redis + PostgreSQL**: Tests actual cache + database integration
+1. **Cache invalidation**: Tests stale data prevention (Pattern 5)
+1. **Hit/Miss both tested**: Covers both ADT variants (Pattern 3)
 
 **Test runs in ~6 seconds** (due to TTL sleep), or ~50ms without TTL test.
 
 **Fixture Reference** (from `tests/fixtures/cache.py:38-49`):
+
 ```python
 # file: examples/testing.py
 @pytest_asyncio.fixture
@@ -2842,16 +2933,18 @@ class TestStorageWorkflowIntegration:
 ```
 
 **Why This Example Works**:
+
 1. **clean_minio fixture**: List + DELETE ensures clean state (Pattern 1)
-2. **UUID keys**: Prevents collisions between concurrent tests (Pattern 2)
-3. **Complete lifecycle**: Tests put → get → delete → verify (Pattern 3)
-4. **Metadata validation**: Ensures metadata survives round-trip (Pattern 4)
-5. **Prefix listing**: Tests efficient S3 queries (Pattern 5)
-6. **Real MinIO**: Tests actual S3-compatible storage, not mocks
+1. **UUID keys**: Prevents collisions between concurrent tests (Pattern 2)
+1. **Complete lifecycle**: Tests put → get → delete → verify (Pattern 3)
+1. **Metadata validation**: Ensures metadata survives round-trip (Pattern 4)
+1. **Prefix listing**: Tests efficient S3 queries (Pattern 5)
+1. **Real MinIO**: Tests actual S3-compatible storage, not mocks
 
 **Test runs in ~100-150ms** with real MinIO.
 
 **Fixture Reference** (from `tests/fixtures/storage.py:49-78`):
+
 ```python
 # file: examples/testing.py
 @pytest.fixture
@@ -2868,47 +2961,57 @@ def clean_minio(s3_bucket: str) -> str:
     return s3_bucket
 ```
 
----
+______________________________________________________________________
 
 ## Part 7: Test Anti-Patterns (1-22)
 
 ### 1. Tests Pass When Features Broken
+
 - **Wrong:** Expecting valid data to fail
 - **Right:** Test that valid inputs return expected outputs
 
 ### 2. Accepting "Not Implemented" Errors
+
 - **Wrong:** `assert result is None or isinstance(result, User)` - accepts missing implementation
 - **Right:** `assert isinstance(result, User)` with error message
 
 ### 3. Silent Effect Failures
+
 - **Wrong:** Accepting None from effects that should return values
 - **Right:** Only accept typed success values
 
 ### 4. Testing Actions Without Validating Results
+
 - **Wrong:** Yield effect, no verification of result
 - **Right:** Yield effect, verify result type and value
 
 ### 5. Contradicting Domain Guarantees
+
 - **Wrong:** Testing that required domain invariants don't hold
 - **Right:** Verify domain invariants are maintained
 
 ### 6. Using pytest.skip()
+
 - **Wrong:** `pytest.skip()` or `@pytest.mark.skip`
 - **Right:** Let tests FAIL to expose gaps, or delete test
 
 ### 7. Hardcoded Success Tests
+
 - **Wrong:** `assert True` - always passes
 - **Right:** Validate actual behavior and return values
 
 ### 8. Overly Permissive Assertions
+
 - **Wrong:** Accepting any non-None value
 - **Right:** Only accept specific expected values
 
 ### 9. Lowered Standards
+
 - **Wrong:** `assert len(result) > 0` - accepts anything non-empty
 - **Right:** Validate specific expected values
 
 ### 10. Test Timeouts
+
 - **Wrong:** Using `timeout` command to limit execution
 - **Right:** Let tests complete naturally
 
@@ -3007,37 +3110,44 @@ assert (await message_repo.get_all())[0].text == "Hello Alice"
 **Why:** Programs have effects beyond return values. Verify the entire behavior.
 
 ### 14. Relaxed Validation
+
 - **Wrong:** Default fallbacks for missing fields: `if not result: result = default`
 - **Right:** Strict validation requiring all fields: `assert isinstance(result, ExpectedType)`
 
 ### 15. Disabling Test Infrastructure
+
 - **Wrong:** Commenting out fixtures or test setup to make tests pass
 - **Right:** Fix root cause of test failures
 
 ### 16. Masking Root Causes with Workarounds
+
 - **Wrong:** Adding try/except to hide errors
 - **Right:** Fix root cause, use Result type for expected errors
 
 ### 17. Trial-and-Error Debugging
+
 - **Wrong:** Multiple conflicting "fixing tests" commits without diagnosis
 - **Right:** Systematic: baseline, root cause, plan, fix, validate
 
 ### 18. Adding Unvalidated Features During Test Fixing
+
 - **Wrong:** Adding new features while debugging test failures
 - **Right:** Fix tests first, add features after tests pass
 
 **Recovery Checklist:**
+
 1. Document baseline failures
-2. Investigate recent commits
-3. Identify root causes (not symptoms)
-4. Create systematic plan
-5. Fix avoiding anti-patterns
-6. Verify no new anti-patterns
-7. Run full test suite
+1. Investigate recent commits
+1. Identify root causes (not symptoms)
+1. Create systematic plan
+1. Fix avoiding anti-patterns
+1. Verify no new anti-patterns
+1. Run full test suite
 
 **Red Flags:** Multiple "fixing tests" commits in rapid succession, validation becoming less strict, infrastructure disabled instead of debugged, "temporary workaround" comments.
 
 ### 19. Test-Specific Environment Variables in Production Code
+
 - **Wrong:** Checking `PYTEST_RUNNING`, `PYTEST_CURRENT_TEST` in library code
 - **Wrong:** `if os.getenv("PYTEST_RUNNING"): return mock_value`
 - **Right:** Use dependency injection: pass test doubles via constructor/parameters
@@ -3046,6 +3156,7 @@ assert (await message_repo.get_all())[0].text == "Hello Alice"
 **Impact:** Couples library logic to test infrastructure, creates nondeterministic behavior.
 
 ### 20. Holding Database Locks Across Test Execution
+
 - **Wrong:** Executing TRUNCATE inside a transaction that wraps test execution
 - **Wrong:** Yielding test fixtures while holding AccessExclusiveLock from TRUNCATE
 - **Right:** TRUNCATE+seed before each test: Commit immediately, lock released before test runs
@@ -3053,6 +3164,7 @@ assert (await message_repo.get_all())[0].text == "Hello Alice"
 **Impact:** Tests timeout waiting for locks to release.
 
 ### 21. Docker Bind Mount Permission Issues (PostgreSQL Data Files)
+
 - **Wrong:** Using bind mount `./pgdata:/var/lib/postgresql/data` on Docker Desktop for Mac
 - **Wrong:** Files created with root ownership instead of postgres ownership
 - **Wrong:** PostgreSQL cannot access its own data files during TRUNCATE
@@ -3062,6 +3174,7 @@ assert (await message_repo.get_all())[0].text == "Hello Alice"
 **Impact:** Tests fail non-deterministically with `Permission denied: could not open file`.
 
 **Correct Solution (docker-compose.yml):**
+
 ```yaml
 # file: configs/testing.yaml
 postgres:
@@ -3075,11 +3188,13 @@ volumes:
 ```
 
 **Detection:**
+
 - Error message: `could not open file "base/16384/XXXXX": Permission denied`
 - Random test failures (different test each run)
 - Works individually, fails in full suite
 
 **Prevention:**
+
 - Always use named volumes for PostgreSQL data
 - Never use bind mounts for database files on Docker Desktop
 - Verify file ownership after docker compose up
@@ -3087,6 +3202,7 @@ volumes:
 ### 22. Using Deleted Testing Utilities
 
 **Wrong:**
+
 ```python
 # file: examples/testing.py
 # ❌ Module no longer exists
@@ -3097,6 +3213,7 @@ interpreter = create_test_interpreter(user_repo=fake_repo)  # Deleted
 ```
 
 **Right:**
+
 ```python
 # file: examples/testing.py
 # ✅ Use pytest-mock with explicit interpreter setup
@@ -3114,11 +3231,13 @@ def test_workflow(mocker: MockerFixture) -> None:
 **Why:** The library provides minimal API (6 matchers only). Infrastructure mocking uses pytest-mock, not library-provided fakes. This keeps the public API surface small and encourages learning proper patterns.
 
 **What's still available:**
+
 - ✅ `effectful.testing` matchers (assert_ok, unwrap_ok, etc.)
 - ✅ Pattern matching on Result types
 - ✅ pytest-mock for all infrastructure mocking
 
 **What's removed:**
+
 - ❌ `create_test_interpreter()` - Learn explicit interpreter setup
 - ❌ Fake repositories - Use `mocker.AsyncMock(spec=Protocol)`
 - ❌ Test fixtures as public API - Internal to test suite
@@ -3260,7 +3379,7 @@ async def clean_pulsar(pulsar_producer, pulsar_consumer):
     # UUID topic names ensure no broker-level conflicts
 ```
 
-**Impact**: Tests take 50+ seconds instead of <10 seconds, random failures from race conditions.
+**Impact**: Tests take 50+ seconds instead of \<10 seconds, random failures from race conditions.
 
 #### Anti-Pattern 27: Long Timeouts in Tests
 
@@ -3325,7 +3444,7 @@ async def test_publish(
 
 **Impact**: Cascading failures, flaky tests, leaked resources.
 
----
+______________________________________________________________________
 
 ## Part 8: Universal Success Criteria
 
@@ -3340,7 +3459,7 @@ All code changes must meet these requirements:
 - **Zero `Any`, `cast()`, or `# type: ignore`** (escape hatches forbidden)
 - **Integration tests cover all features** (conceptual coverage)
 
----
+______________________________________________________________________
 
 ## Part 9: Related Documentation
 
@@ -3352,9 +3471,10 @@ All code changes must meet these requirements:
 - **Pulsar Adapter:** `effectful/adapters/pulsar_messaging.py` - PulsarMessageProducer/Consumer with cleanup
 - **Pulsar Integration Tests:** `tests/integration/test_messaging_workflow.py` - Complete Pulsar test examples
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Testing Architecture](testing_architecture.md)
 - [Code Quality](code_quality.md)
 - [Docker Workflow](docker_workflow.md)

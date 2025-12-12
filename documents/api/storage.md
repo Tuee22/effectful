@@ -1,7 +1,7 @@
 # Storage Effects API Reference
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/api/README.md
 
 > **Purpose**: Reference for storage effect types used for S3-compatible object storage operations.
@@ -21,12 +21,14 @@ class GetObject:
 ```
 
 **Parameters:**
+
 - `bucket` - The bucket/container name
 - `key` - The object key/path
 
 **Returns:** `S3Object | None`
 
 **Example:**
+
 ```python
 # file: examples/storage.py
 from effectful import GetObject, S3Object, SendText
@@ -60,6 +62,7 @@ class PutObject:
 ```
 
 **Parameters:**
+
 - `bucket` - The bucket/container name
 - `key` - The object key/path
 - `content` - The data to store
@@ -68,6 +71,7 @@ class PutObject:
 **Returns:** `PutResult` (see Domain Models below)
 
 **Example:**
+
 ```python
 # file: examples/storage.py
 from effectful import PutObject, PutSuccess, PutFailure
@@ -107,12 +111,14 @@ class DeleteObject:
 ```
 
 **Parameters:**
+
 - `bucket` - The bucket/container name
 - `key` - The object key/path
 
 **Returns:** `bool` (True if deleted, False if not found)
 
 **Example:**
+
 ```python
 # file: examples/storage.py
 from effectful import DeleteObject
@@ -143,12 +149,14 @@ class ListObjects:
 ```
 
 **Parameters:**
+
 - `bucket` - The bucket/container name
 - `prefix` - Filter objects by key prefix (default: "" for all)
 
 **Returns:** `list[str]` (list of object keys)
 
 **Example:**
+
 ```python
 # file: examples/storage.py
 from effectful import ListObjects
@@ -180,6 +188,7 @@ class S3Object:
 ```
 
 **Fields:**
+
 - `content` - The object data
 - `content_type` - MIME type of the content
 - `etag` - Entity tag for versioning/caching
@@ -203,6 +212,7 @@ class PutFailure:
 ```
 
 **Pattern Matching:**
+
 ```python
 # file: examples/storage.py
 result = yield PutObject(bucket="data", key="file.txt", content=b"hello")
@@ -343,8 +353,9 @@ def generate_presigned_manifest(
 - [Interpreters](interpreters.md) - StorageInterpreter details
 - [Tutorial: Storage Effects](../tutorials/storage_effects.md) - Step-by-step guide
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Architecture](../engineering/architecture.md)

@@ -1,7 +1,7 @@
 # Storage Effects
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/readme.md
 
 > **Purpose**: Tutorial covering storage effects for S3-compatible object storage operations in effectful.
@@ -37,6 +37,7 @@ flowchart TB
 ```
 
 **Key properties:**
+
 - Immutable uploads: write new versions instead of mutating in place.
 - Idempotent deletes: deleting a missing key is not an error.
 - Metadata-first: use content type and metadata to drive downstream routing.
@@ -46,6 +47,7 @@ flowchart TB
 Keep programs orchestration-only; let interpreters own I/O and retries.
 
 ```python
+# snippet
 from collections.abc import Generator
 
 from effectful.effects.storage import GetObject, PutObject, DeleteObject
@@ -77,14 +79,19 @@ def delete_document(key: str) -> Generator[AllEffects, EffectResult, str]:
 ## Next Steps
 
 - Review metrics and alerting for storage paths in [Monitoring & Alerting](../engineering/monitoring_and_alerting.md).
+
 - Explore messaging workflows next in [Tutorial 10: Auth Effects](auth_effects.md).
+
 - See full API shapes in [Storage API Reference](../api/storage.md).
 
 - Unit-level: drive generators and assert yielded effects.
+
 - Interpreter-level: mock storage adapters with `mocker.AsyncMock` and assert error propagation/backoff.
+
 - Coverage rules and timeouts: [Testing](../engineering/testing.md) and [Testing Guide](testing_guide.md).
 
 ## Cross-References
+
 - [Storage API Reference](../api/storage.md)
 - [Architecture](../engineering/architecture.md#visual-data-flow)
 - [Effect Patterns](../engineering/effect_patterns.md#state-machines)

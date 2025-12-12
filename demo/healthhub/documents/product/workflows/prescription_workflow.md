@@ -1,20 +1,15 @@
 # Prescription Workflow
 
 **Status**: Authoritative source
-**Supersedes**: none
+**Supersedes**: none **📖 Base Standard**: [prescription_workflow.md](../../../../../documents/product/workflows/prescription_workflow.md)
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
-> **Purpose**: Complete prescription creation workflow demonstrating medication interaction checking, doctor-patient data flow, and notification system integration.
-
-> **Core Doctrines**: For comprehensive patterns, see:
-> - [Intermediate Journey](../01_journeys/intermediate_journey.md)
-> - [Prescriptions Feature](../03_features/prescriptions.md)
-> - [Code Quality](../../../../../documents/engineering/code_quality.md)
+> **Purpose**: HealthHub overlay deltas for Prescription Workflow. **📖 Base Standard**: [prescription_workflow.md](../../../../../documents/product/workflows/prescription_workflow.md)
 
 ## Prerequisites
 
 - Docker workflow running; commands executed via `docker compose -f docker/docker-compose.yml`.
-- Completed [Intermediate Journey](../01_journeys/intermediate_journey.md).
+- Completed [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md).
 - Access to HealthHub at `http://localhost:8851`.
 - Understanding of medication safety and interaction checking.
 
@@ -34,12 +29,14 @@
 **Duration**: ~1 hour
 
 **Features Involved**:
+
 1. **Appointments**: Context for prescription (doctor appointment with patient)
-2. **Patient Management**: Doctor searches/views patient history
-3. **Prescriptions**: Creation with interaction checking
-4. **Notifications**: Prescription ready notification
+1. **Patient Management**: Doctor searches/views patient history
+1. **Prescriptions**: Creation with interaction checking
+1. **Notifications**: Prescription ready notification
 
 **Demo Users**:
+
 - Patient: alice.patient@example.com (allergies: Penicillin, Shellfish)
 - Doctor: dr.smith@healthhub.com (can_prescribe=true)
 
@@ -47,7 +44,7 @@
 
 ## Workflow Diagram
 
-```
+```text
 Step 1: Doctor Completes Appointment (Context)
    ↓ (Diagnosis: Hypertension)
 Step 2: Doctor Looks Up Patient
@@ -71,16 +68,19 @@ Step 8: Patient Views Prescription
 **Two-Phase Checking**:
 
 1. **Allergy Checking**:
+
    - Check medication against patient's known allergies
    - Block if critical allergy interaction detected
    - Example: Amoxicillin vs Penicillin allergy → BLOCKED
 
-2. **Drug Interaction Checking**:
+1. **Drug Interaction Checking**:
+
    - Check medication against patient's current active prescriptions
    - Warn if drug interaction detected
    - Example: Warfarin + Aspirin → HIGH WARNING (bleeding risk)
 
 **Interaction Severity Levels**:
+
 - **Critical**: Prescription blocked, must select alternative
 - **High**: Serious warning, proceed with caution
 - **Medium**: Moderate warning, monitor patient
@@ -93,13 +93,15 @@ Step 8: Patient Views Prescription
 **Actor**: Dr. Sarah Smith (Cardiology)
 
 **Login**:
+
 - Email: `dr.smith@healthhub.com`
 - Password: `password123`
 
 **Scenario**: Alice's annual cardiac checkup completed, diagnosis of mild hypertension.
 
 **Appointment Notes** (already completed in previous step):
-```
+
+```text
 Diagnosis: Mild hypertension (blood pressure 135/85)
 
 Treatment Plan:
@@ -110,6 +112,7 @@ Treatment Plan:
 ```
 
 **Expected Result**:
+
 - Appointment status: Completed
 - Clinical indication for prescription documented
 - Doctor ready to prescribe medication
@@ -124,22 +127,25 @@ Treatment Plan:
 
 1. **Navigate to Patients**: Click "Patients" in sidebar
 
-2. **Search for Alice**: Enter "Alice" or "alice.patient@example.com"
+1. **Search for Alice**: Enter "Alice" or "alice.patient@example.com"
 
-3. **Click Alice Anderson**: View patient profile
+1. **Click Alice Anderson**: View patient profile
 
-4. **Review Patient Information**:
+1. **Review Patient Information**:
+
    - **Demographics**: Alice Anderson, DOB: 1985-03-15 (39 years old)
    - **Blood Type**: O+
    - **Allergies**: **Penicillin, Shellfish** ← CRITICAL for prescribing
    - **Emergency Contact**: John Anderson, (555) 234-5678
 
-5. **View Medical History**:
+1. **View Medical History**:
+
    - **Active Prescriptions**: Currently none (new prescription will be first)
    - **Past Appointments**: Previous cardiac checkups
    - **Lab Results**: Lipid panel results normal
 
-6. **Expected Result**:
+1. **Expected Result**:
+
    - Doctor aware of Alice's allergies (Penicillin, Shellfish)
    - Doctor aware Alice has no current prescriptions (no drug interactions possible)
    - Doctor ready to prescribe with allergy context
@@ -156,7 +162,8 @@ Treatment Plan:
 
 1. **Click "Prescribe Medication"** (from patient profile page)
 
-2. **Fill out Prescription Form**:
+1. **Fill out Prescription Form**:
+
    - **Medication**: Lisinopril ← ACE inhibitor for hypertension
    - **Dosage**: 10mg
    - **Frequency**: Once daily
@@ -164,9 +171,10 @@ Treatment Plan:
    - **Refills**: 2
    - **Instructions**: "Take in the morning with water. Monitor blood pressure daily."
 
-3. **Click "Check Interactions"** (automatic or manual trigger)
+1. **Click "Check Interactions"** (automatic or manual trigger)
 
-4. **Expected Result**:
+1. **Expected Result**:
+
    - Form filled out completely
    - System ready to check interactions
    - Doctor waiting for interaction check results
@@ -178,6 +186,7 @@ Treatment Plan:
 **Backend Processing**:
 
 ```python
+# snippet
 def check_allergy_interactions(patient_id, medication):
     # Fetch patient allergies
     allergies_result = yield DatabaseEffect.Query(
@@ -226,7 +235,7 @@ def _medication_contains_allergen(medication, allergen):
 
 **Outcome**: No allergy warnings, proceed to drug interaction check
 
----
+______________________________________________________________________
 
 **Scenario 2: Unsafe Medication (Amoxicillin)**
 
@@ -234,7 +243,8 @@ def _medication_contains_allergen(medication, allergen):
 **Result**: CRITICAL INTERACTION (Amoxicillin is penicillin-based)
 
 **Warning**:
-```
+
+```text
 Critical Allergy Interaction:
 
 Amoxicillin may cause allergic reaction in patients with Penicillin allergy.
@@ -251,6 +261,7 @@ Recommendation: Do not prescribe - consider alternative medication (e.g., Azithr
 **Backend Processing**:
 
 ```python
+# snippet
 def check_drug_interactions(patient_id, new_medication):
     # Fetch active prescriptions
     prescriptions_result = yield DatabaseEffect.Query(
@@ -312,7 +323,8 @@ def _check_drug_pair_interaction(med1, med2):
 **Scenario 1: No Warnings (Lisinopril for Alice)**
 
 **Interaction Check Results**:
-```
+
+```text
 ✓ Allergy Check: No interactions detected
 ✓ Drug Interaction Check: No interactions detected
 
@@ -323,12 +335,13 @@ Safe to prescribe.
 
 **Outcome**: Prescription created successfully
 
----
+______________________________________________________________________
 
 **Scenario 2: Critical Warning (Amoxicillin for Alice)**
 
 **Interaction Check Results**:
-```
+
+```text
 ✗ Critical Allergy Interaction:
 
 Amoxicillin may cause allergic reaction in patients with Penicillin allergy.
@@ -342,12 +355,13 @@ Recommendation: Do not prescribe - consider alternative medication.
 
 **Outcome**: Prescription blocked for Amoxicillin, doctor selects alternative medication
 
----
+______________________________________________________________________
 
 **Scenario 3: High Warning (Aspirin for patient on Warfarin)**
 
 **Interaction Check Results**:
-```
+
+```text
 ⚠ High Drug Interaction Warning:
 
 Increased bleeding risk when combining Warfarin and Aspirin.
@@ -368,6 +382,7 @@ Recommendation: Monitor INR closely, consider alternative antiplatelet.
 **Backend Processing**:
 
 ```python
+# snippet
 def create_prescription_with_interaction_check(patient_id, doctor_id, medication, dosage, frequency, duration_days, refills, notes):
     # Check allergies
     allergy_warnings = yield from check_allergy_interactions(patient_id, medication)
@@ -401,13 +416,15 @@ def create_prescription_with_interaction_check(patient_id, doctor_id, medication
 ```
 
 **Expected Result**:
+
 - **Prescription Created**: prescription_id generated
 - **Database Record**: Stored in `prescriptions` table
 - **Notification Sent**: Alice receives "prescription_ready" notification
 - **Warnings Logged**: All warnings (if any) logged for audit trail
 
 **Prescription Details**:
-```
+
+```text
 Prescription ID: 60000000-0000-0000-0000-000000000001
 Patient: Alice Anderson
 Doctor: Dr. Sarah Smith (Cardiology)
@@ -422,6 +439,7 @@ Expires: 2026-03-10 15:00:00
 ```
 
 **Notification Sent**:
+
 - **Recipient**: Alice Anderson
 - **Type**: "prescription_ready"
 - **Message**: "New prescription for Lisinopril is ready. Pick up at your pharmacy."
@@ -433,6 +451,7 @@ Expires: 2026-03-10 15:00:00
 **Actor**: Alice Anderson (patient)
 
 **Login**:
+
 - Email: `alice.patient@example.com`
 - Password: `password123`
 
@@ -440,9 +459,10 @@ Expires: 2026-03-10 15:00:00
 
 1. **Navigate to Prescriptions**: Click "Prescriptions" in sidebar
 
-2. **View Prescription List**: See newly created prescription
+1. **View Prescription List**: See newly created prescription
 
-3. **Click Prescription**: View details
+1. **Click Prescription**: View details
+
    ```
    Medication: Lisinopril
    Dosage: 10mg
@@ -460,7 +480,8 @@ Expires: 2026-03-10 15:00:00
    [Request Refill] (available when refills remain and not expired)
    ```
 
-4. **Expected Result**:
+1. **Expected Result**:
+
    - Alice sees complete prescription details
    - Doctor's instructions clearly visible
    - Refill count and expiration date displayed
@@ -479,7 +500,7 @@ Expires: 2026-03-10 15:00:00
 
 **Result**: ✓ Safe to prescribe
 
----
+______________________________________________________________________
 
 ### Example 2: Critical Allergy Interaction (Blocked)
 
@@ -492,7 +513,7 @@ Expires: 2026-03-10 15:00:00
 
 **Alternative**: Azithromycin 250mg (not penicillin-based)
 
----
+______________________________________________________________________
 
 ### Example 3: High Drug Interaction (Warning)
 
@@ -505,7 +526,7 @@ Expires: 2026-03-10 15:00:00
 
 **Result**: Warning displayed, doctor decides to proceed with careful monitoring
 
----
+______________________________________________________________________
 
 ### Example 4: Medium Drug Interaction (Monitor)
 
@@ -523,6 +544,7 @@ Expires: 2026-03-10 15:00:00
 **Doctor with can_prescribe=true**:
 
 ```python
+# snippet
 @router.post("/api/prescriptions")
 async def create_prescription(
     prescription_data: dict,
@@ -541,6 +563,7 @@ async def create_prescription(
 ```
 
 **Enforcement**:
+
 - Only doctors with `can_prescribe=true` can create prescriptions
 - Flag checked during API endpoint authorization
 - Flag stored in JWT token for efficiency
@@ -550,20 +573,24 @@ async def create_prescription(
 **File**: `demo/healthhub/tests/pytest/e2e/test_prescriptions.py`
 
 **Test Functions**:
+
 1. `test_create_prescription_no_interactions` - Safe prescription (Lisinopril for Bob)
-2. `test_create_prescription_blocked_by_allergy` - Blocked prescription (Amoxicillin for Alice)
-3. `test_create_prescription_drug_interaction_warning` - Warning prescription (Aspirin for patient on Warfarin)
-4. `test_patient_view_prescription` - Patient viewing own prescription
-5. `test_doctor_without_can_prescribe_blocked` - RBAC enforcement
+1. `test_create_prescription_blocked_by_allergy` - Blocked prescription (Amoxicillin for Alice)
+1. `test_create_prescription_drug_interaction_warning` - Warning prescription (Aspirin for patient on Warfarin)
+1. `test_patient_view_prescription` - Patient viewing own prescription
+1. `test_doctor_without_can_prescribe_blocked` - RBAC enforcement
 
 **Run Tests**:
+
 ```bash
+# snippet
 docker compose -f docker/docker-compose.yml exec healthhub poetry run pytest tests/pytest/e2e/test_prescriptions.py -v
 ```
 
 ## Summary
 
 **You have successfully**:
+
 - ✅ Reviewed patient allergies before prescribing
 - ✅ Initiated prescription creation
 - ✅ Executed allergy interaction checking (blocked critical interactions)
@@ -574,20 +601,21 @@ docker compose -f docker/docker-compose.yml exec healthhub poetry run pytest tes
 - ✅ Understood RBAC enforcement (can_prescribe flag)
 
 **Key Takeaways**:
+
 1. **Two-Phase Checking**: Allergy check → Drug interaction check
-2. **Severity Levels**: Critical (blocked) → High (warning) → Medium (monitor) → Low (informational)
-3. **Patient Safety First**: Critical interactions blocked automatically
-4. **Doctor Discretion**: High/medium warnings allow doctor to proceed with caution
-5. **Full Transparency**: Patient sees complete prescription details and instructions
-6. **RBAC Enforcement**: Only doctors with can_prescribe=true can prescribe
-7. **Notification System**: Patient notified immediately when prescription ready
+1. **Severity Levels**: Critical (blocked) → High (warning) → Medium (monitor) → Low (informational)
+1. **Patient Safety First**: Critical interactions blocked automatically
+1. **Doctor Discretion**: High/medium warnings allow doctor to proceed with caution
+1. **Full Transparency**: Patient sees complete prescription details and instructions
+1. **RBAC Enforcement**: Only doctors with can_prescribe=true can prescribe
+1. **Notification System**: Patient notified immediately when prescription ready
 
 **Workflow Duration**: ~1 hour from patient lookup to prescription viewing
 
 ## Cross-References
 
-- [Intermediate Journey - Prescription Creation](../01_journeys/intermediate_journey.md#step-3-create-prescription-with-interaction-checking)
-- [Prescriptions Feature](../03_features/prescriptions.md)
-- [Patient Guide](../02_roles/patient_guide.md)
-- [Doctor Guide](../02_roles/doctor_guide.md)
+- [Intermediate Journey - Prescription Creation](../../tutorials/01_journeys/intermediate_journey.md#step-3-create-prescription-with-interaction-checking)
+- [Prescriptions Feature](../../engineering/features/prescriptions.md)
+- [Patient Guide](../../product/roles/patient_guide.md)
+- [Doctor Guide](../../product/roles/doctor_guide.md)
 - [Code Quality](../../../../../documents/engineering/code_quality.md)

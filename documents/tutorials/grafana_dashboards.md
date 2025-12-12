@@ -1,7 +1,7 @@
 # Grafana Dashboards Tutorial
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/readme.md
 
 > **Purpose**: Tutorial for building actionable Grafana dashboards for effectful metrics.
@@ -12,7 +12,7 @@
 
 > **Core Doctrine**: For observability philosophy, see [observability.md](../engineering/observability.md)
 
----
+______________________________________________________________________
 
 ## Prerequisites
 
@@ -25,14 +25,14 @@
 By the end of this tutorial, you will:
 
 1. ✅ Create Grafana dashboards from scratch
-2. ✅ Write PromQL queries for visualization
-3. ✅ Use templates for dynamic filtering
-4. ✅ Configure panel types (graph, gauge, stat, table)
-5. ✅ Export and version-control dashboards as JSON
+1. ✅ Write PromQL queries for visualization
+1. ✅ Use templates for dynamic filtering
+1. ✅ Configure panel types (graph, gauge, stat, table)
+1. ✅ Export and version-control dashboards as JSON
 
 **Time**: 30 minutes
 
----
+______________________________________________________________________
 
 ## Dashboard Architecture
 
@@ -52,13 +52,14 @@ flowchart TB
 ```
 
 **Hierarchy**:
+
 - **Dashboard**: Top-level container (e.g., "Effectful Metrics")
 - **Rows**: Logical groupings (e.g., "Effect System", "Database", "Cache")
 - **Panels**: Individual visualizations (graphs, gauges, stats)
 - **Queries**: PromQL expressions pulling data from Prometheus
 - **Variables**: Dynamic filters (e.g., `$namespace`, `$effect_type`)
 
----
+______________________________________________________________________
 
 ## Step 1: Access Grafana
 
@@ -73,25 +74,27 @@ open http://localhost:3000
 **Login**: `admin` / `admin` (change password when prompted)
 
 **Verify Data Source**:
-1. Navigate to **Configuration → Data Sources**
-2. Click **Prometheus**
-3. Verify "Data source is working" (green checkmark)
 
----
+1. Navigate to **Configuration → Data Sources**
+1. Click **Prometheus**
+1. Verify "Data source is working" (green checkmark)
+
+______________________________________________________________________
 
 ## Step 2: Create Your First Dashboard
 
 ### Create Dashboard
 
 1. Click **Create → Dashboard** (+ icon in left sidebar)
-2. Click **Add new panel**
-3. You'll see the panel editor
+1. Click **Add new panel**
+1. You'll see the panel editor
 
 ### Configure First Panel
 
 **Panel Title**: "Effect Execution Rate"
 
 **Query Tab**:
+
 ```promql
 # file: examples/15_grafana_dashboards.promql
 sum(rate(effectful_effects_total[5m])) by (effect_type)
@@ -100,6 +103,7 @@ sum(rate(effectful_effects_total[5m])) by (effect_type)
 **Legend Format**: `{{effect_type}}`
 
 **Panel Settings** (right sidebar):
+
 - Title: "Effect Execution Rate"
 - Description: "Per-second rate of effect executions by type"
 
@@ -107,13 +111,14 @@ sum(rate(effectful_effects_total[5m])) by (effect_type)
 
 **Click Apply** to save panel.
 
----
+______________________________________________________________________
 
 ## Step 3: Add More Panels
 
 ### Panel 2: Effect Error Rate
 
 **Query**:
+
 ```promql
 # file: examples/15_grafana_dashboards.promql
 sum(rate(effectful_effects_total{result="error"}[5m]))
@@ -124,6 +129,7 @@ sum(rate(effectful_effects_total[5m]))
 **Visualization**: Gauge
 
 **Settings**:
+
 - Title: "Effect Error Rate"
 - Unit: Percent (0-1.0)
 - Thresholds:
@@ -134,6 +140,7 @@ sum(rate(effectful_effects_total[5m]))
 ### Panel 3: Effect Duration P95
 
 **Query**:
+
 ```promql
 # file: examples/15_grafana_dashboards.promql
 histogram_quantile(0.95,
@@ -146,6 +153,7 @@ histogram_quantile(0.95,
 **Visualization**: Time series
 
 **Settings**:
+
 - Title: "Effect Duration (P95)"
 - Unit: seconds
 - Legend: `{{effect_type}}`
@@ -153,6 +161,7 @@ histogram_quantile(0.95,
 ### Panel 4: Active Programs
 
 **Query**:
+
 ```promql
 # file: examples/15_grafana_dashboards.promql
 effectful_programs_active
@@ -161,6 +170,7 @@ effectful_programs_active
 **Visualization**: Stat
 
 **Settings**:
+
 - Title: "Active Programs"
 - Color mode: Background
 - Thresholds:
@@ -168,19 +178,20 @@ effectful_programs_active
   - Yellow: 10 - 50
   - Red: 50+
 
----
+______________________________________________________________________
 
 ## Step 4: Organize with Rows
 
 ### Create Row
 
 1. Click **Add → Row** at top of dashboard
-2. Click row title to edit: "Effect System Metrics"
-3. Drag panels into row
+1. Click row title to edit: "Effect System Metrics"
+1. Drag panels into row
 
 ### Add More Rows
 
 Create logical groupings:
+
 - **Effect System Metrics** (error rate, duration, throughput)
 - **Database Metrics** (query duration, connection pool)
 - **Cache Metrics** (hit rate, evictions, memory usage)
@@ -188,7 +199,7 @@ Create logical groupings:
 
 **Collapse Rows**: Click row title to toggle visibility.
 
----
+______________________________________________________________________
 
 ## Step 5: Add Template Variables
 
@@ -197,10 +208,11 @@ Template variables enable dynamic filtering across all panels.
 ### Add Namespace Variable
 
 1. Click **Dashboard settings** (gear icon, top right)
-2. Navigate to **Variables**
-3. Click **Add variable**
+1. Navigate to **Variables**
+1. Click **Add variable**
 
 **Configuration**:
+
 - Name: `namespace`
 - Type: Query
 - Label: Namespace
@@ -212,6 +224,7 @@ Template variables enable dynamic filtering across all panels.
 ### Add Effect Type Variable
 
 **Configuration**:
+
 - Name: `effect_type`
 - Type: Query
 - Label: Effect Type
@@ -234,11 +247,12 @@ sum(rate(effectful_effects_total{namespace=~"$namespace", effect_type=~"$effect_
 ```
 
 **Variable Syntax**:
+
 - `$namespace` - Single value
 - `$effect_type` - Single value
 - `=~"$namespace"` - Regex match (supports multi-value)
 
----
+______________________________________________________________________
 
 ## Step 6: Advanced Panel Types
 
@@ -247,6 +261,7 @@ sum(rate(effectful_effects_total{namespace=~"$namespace", effect_type=~"$effect_
 **Use Case**: Visualize latency distribution over time.
 
 **Query**:
+
 ```promql
 # file: examples/15_grafana_dashboards.promql
 sum by (le) (
@@ -257,6 +272,7 @@ sum by (le) (
 **Visualization**: Heatmap
 
 **Settings**:
+
 - Y-Axis: le (buckets)
 - Color scheme: Spectral
 - Data format: Time series buckets
@@ -266,6 +282,7 @@ sum by (le) (
 **Use Case**: Show top N slow queries.
 
 **Query**:
+
 ```promql
 # file: examples/15_grafana_dashboards.promql
 topk(10,
@@ -280,6 +297,7 @@ topk(10,
 **Visualization**: Table
 
 **Transformations**:
+
 - Organize fields by name
 - Hide unnecessary columns (Time, le)
 
@@ -288,6 +306,7 @@ topk(10,
 **Use Case**: Show resource utilization (CPU, memory, connections).
 
 **Query**:
+
 ```promql
 # file: examples/15_grafana_dashboards.promql
 database_connections_active / database_connections_max
@@ -296,11 +315,12 @@ database_connections_active / database_connections_max
 **Visualization**: Bar gauge
 
 **Settings**:
+
 - Orientation: Horizontal
 - Display mode: Gradient
 - Unit: Percent (0-1.0)
 
----
+______________________________________________________________________
 
 ## Step 7: PromQL Query Patterns
 
@@ -396,13 +416,14 @@ avg by (instance) (cpu_usage_percent)
 count(up{job="effectful"})
 ```
 
----
+______________________________________________________________________
 
 ## Step 8: Configure Time Ranges
 
 ### Dashboard Time Picker
 
 Located in top-right corner:
+
 - **Last 5 minutes** - Real-time monitoring
 - **Last 1 hour** - Recent trends
 - **Last 6 hours** - Incident investigation
@@ -414,10 +435,12 @@ Located in top-right corner:
 Override dashboard time range for specific panels:
 
 **Panel Settings → Time regions**:
+
 - Relative time: Override dashboard time
 - Time shift: Show data from X time ago
 
 **Use Case**: Compare current hour to same hour yesterday:
+
 ```text
 # file: dashboards/panel_time_overrides.txt
 Panel 1: Last 1 hour (dashboard time)
@@ -427,10 +450,11 @@ Panel 2: Last 1 hour, shifted back 24 hours
 ### Auto-Refresh
 
 Enable auto-refresh for live dashboards:
+
 - Click time picker dropdown
 - Select refresh interval (5s, 10s, 30s, 1m, 5m)
 
----
+______________________________________________________________________
 
 ## Step 9: Alerts in Grafana
 
@@ -439,10 +463,11 @@ Grafana can generate alerts directly from panel queries.
 ### Create Alert from Panel
 
 1. Edit panel
-2. Click **Alert** tab
-3. Click **Create alert rule from this panel**
+1. Click **Alert** tab
+1. Click **Create alert rule from this panel**
 
 **Alert Configuration**:
+
 ```text
 # file: dashboards/alert_rule_notes.txt
 Rule name: High Effect Error Rate
@@ -451,30 +476,32 @@ Condition: WHEN last() OF query(A) IS ABOVE 0.05
 ```
 
 **Notifications**:
+
 - Contact point: Slack, PagerDuty, Email
 - Severity: Critical, Warning, Info
 
 **See Also**: [Alert Rules Tutorial](./alert_rules.md) for complete guide.
 
----
+______________________________________________________________________
 
 ## Step 10: Save and Export Dashboard
 
 ### Save Dashboard
 
 1. Click **Save dashboard** (floppy disk icon, top right)
-2. Enter name: "Effectful Metrics"
-3. (Optional) Add description
-4. Click **Save**
+1. Enter name: "Effectful Metrics"
+1. (Optional) Add description
+1. Click **Save**
 
 ### Export as JSON
 
 1. Click **Dashboard settings** (gear icon)
-2. Navigate to **JSON Model**
-3. Click **Copy to Clipboard**
-4. Save to file: `docker/grafana/dashboards/effectful.json`
+1. Navigate to **JSON Model**
+1. Click **Copy to Clipboard**
+1. Save to file: `docker/grafana/dashboards/effectful.json`
 
 **Version Control**:
+
 ```bash
 # Add to git
 git add docker/grafana/dashboards/effectful.json
@@ -484,11 +511,11 @@ git commit -m "Add Effectful metrics dashboard"
 ### Import Dashboard
 
 1. Click **Create → Import** (+ icon)
-2. Paste JSON or upload file
-3. Select Prometheus data source
-4. Click **Import**
+1. Paste JSON or upload file
+1. Select Prometheus data source
+1. Click **Import**
 
----
+______________________________________________________________________
 
 ## Complete Dashboard Example
 
@@ -565,13 +592,14 @@ git commit -m "Add Effectful metrics dashboard"
 }
 ```
 
----
+______________________________________________________________________
 
 ## Best Practices
 
 ### DO
 
 **✅ Use Consistent Colors**
+
 ```text
 # file: dashboards/grafana_color_conventions.txt
 Green: Good (success, low latency, high cache hit)
@@ -580,12 +608,14 @@ Red: Critical (errors, high latency, resource exhaustion)
 ```
 
 **✅ Add Panel Descriptions**
+
 ```text
 # file: dashboards/panel_description_template.txt
 Description: "P95 latency should be < 1s (SLO: 99% of requests < 2s)"
 ```
 
 **✅ Use Template Variables**
+
 ```promql
 # file: examples/15_grafana_dashboards.promql
 # Allows filtering by namespace, effect_type, etc.
@@ -593,6 +623,7 @@ effectful_effects_total{namespace=~"$namespace", effect_type=~"$effect_type"}
 ```
 
 **✅ Set Meaningful Units**
+
 ```text
 # file: dashboards/metric_units_reference.txt
 Time: seconds (s), milliseconds (ms)
@@ -601,6 +632,7 @@ Throughput: ops/sec, req/sec
 ```
 
 **✅ Group Related Panels**
+
 ```text
 # file: dashboards/panel_grouping_examples.txt
 Row 1: SLOs (error rate, latency)
@@ -611,6 +643,7 @@ Row 3: Resources (CPU, memory, connections)
 ### DON'T
 
 **❌ Overload Dashboards**
+
 ```text
 # file: dashboards/dashboard_density_guidance.txt
 # Bad: 50+ panels on one dashboard
@@ -618,6 +651,7 @@ Row 3: Resources (CPU, memory, connections)
 ```
 
 **❌ Use Default Panel Titles**
+
 ```text
 # file: dashboards/panel_title_examples.txt
 # Bad: "Panel Title"
@@ -625,6 +659,7 @@ Row 3: Resources (CPU, memory, connections)
 ```
 
 **❌ Forget to Save**
+
 ```text
 # file: dashboards/dashboard_persistence_warning.txt
 # Grafana dashboards are ephemeral unless saved!
@@ -632,31 +667,36 @@ Row 3: Resources (CPU, memory, connections)
 ```
 
 **❌ Hard-Code Label Values**
+
 ```text
 # file: dashboards/label_variable_examples.txt
 # Bad: {namespace="production"}
 # Good: {namespace=~"$namespace"}
 ```
 
----
+______________________________________________________________________
 
 ## Dashboard Gallery
 
 ### Effectful Overview Dashboard
 
 **Rows**:
+
 1. **SLO Metrics** (3 panels)
+
    - Effect error rate (gauge)
    - Effect p95 latency (graph)
    - Active programs (stat)
 
-2. **Effect System** (4 panels)
+1. **Effect System** (4 panels)
+
    - Effect execution rate by type (graph)
    - Effect duration heatmap (heatmap)
    - Top 10 slowest effects (table)
    - Effect result breakdown (pie chart)
 
-3. **Infrastructure** (3 panels)
+1. **Infrastructure** (3 panels)
+
    - Database connections (gauge)
    - Cache hit rate (graph)
    - WebSocket connections (stat)
@@ -664,35 +704,41 @@ Row 3: Resources (CPU, memory, connections)
 ### HealthHub Dashboard
 
 **Rows**:
+
 1. **Clinical Metrics** (4 panels)
+
    - Appointments created (stat)
    - Unreviewed critical lab results (gauge)
    - Prescription interaction checks (graph)
    - HIPAA audit events (table)
 
-2. **Performance** (3 panels)
+1. **Performance** (3 panels)
+
    - API latency p95 (graph)
    - Database query duration (heatmap)
    - Cache effectiveness (graph)
 
-3. **Business Metrics** (3 panels)
+1. **Business Metrics** (3 panels)
+
    - Active patients (stat)
    - Appointments per specialization (bar chart)
    - Revenue (graph)
 
----
+______________________________________________________________________
 
 ## Troubleshooting
 
 ### No Data in Panel
 
 **Check**:
+
 1. Time range includes data (widen time picker)
-2. PromQL query valid (test in Prometheus UI)
-3. Metric exists (check /metrics endpoint)
-4. Template variables filtering too aggressively
+1. PromQL query valid (test in Prometheus UI)
+1. Metric exists (check /metrics endpoint)
+1. Template variables filtering too aggressively
 
 **Debug**:
+
 ```bash
 # Query Prometheus directly
 curl 'http://localhost:9090/api/v1/query?query=effectful_effects_total'
@@ -701,6 +747,7 @@ curl 'http://localhost:9090/api/v1/query?query=effectful_effects_total'
 ### Query Too Slow
 
 **Optimize**:
+
 - Reduce time range (last 1h instead of 7d)
 - Use shorter rate window (`[5m]` instead of `[1h]`)
 - Aggregate with `sum by` to reduce cardinality
@@ -709,16 +756,18 @@ curl 'http://localhost:9090/api/v1/query?query=effectful_effects_total'
 ### Panel Shows "N/A"
 
 **Causes**:
+
 - Query returns no data points
 - Metric name typo
 - Label filter excludes all data
 
 **Fix**:
+
 - Test query in Prometheus UI
 - Verify metric name with `curl http://localhost:8000/metrics`
 - Remove label filters temporarily
 
----
+______________________________________________________________________
 
 ## Summary
 
@@ -729,11 +778,11 @@ curl 'http://localhost:9090/api/v1/query?query=effectful_effects_total'
 ## Next Steps
 
 1. **Create Custom Dashboards** - Build dashboards for your application
-2. **Export to Git** - Version-control dashboard JSON
-3. **Set Up Alerts** - Configure Grafana alerts for critical panels
-4. **Explore Plugins** - Install community plugins (worldmap, diagram)
+1. **Export to Git** - Version-control dashboard JSON
+1. **Set Up Alerts** - Configure Grafana alerts for critical panels
+1. **Explore Plugins** - Install community plugins (worldmap, diagram)
 
----
+______________________________________________________________________
 
 ## See Also
 
@@ -742,8 +791,9 @@ curl 'http://localhost:9090/api/v1/query?query=effectful_effects_total'
 - [Metrics Quickstart](./metrics_quickstart.md) - Getting started with metrics
 - [Observability](../engineering/observability.md) - Metrics philosophy
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Standards](../engineering/README.md)

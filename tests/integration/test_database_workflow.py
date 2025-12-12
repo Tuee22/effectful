@@ -29,7 +29,6 @@ from effectful.effects.websocket import SendText
 from effectful.infrastructure.cache import ProfileCache
 from effectful.infrastructure.websocket import WebSocketConnection
 from effectful.interpreters.composite import create_composite_interpreter
-from effectful.interpreters.errors import DatabaseError
 from effectful.programs.program_types import AllEffects, EffectResult
 from effectful.programs.runners import run_ws_program
 

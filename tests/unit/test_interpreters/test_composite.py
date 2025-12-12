@@ -23,15 +23,15 @@ from effectful.domain.cache_result import CacheHit
 from effectful.domain.message import ChatMessage
 from effectful.domain.profile import ProfileData
 from effectful.domain.user import User, UserFound
-from effectful.domain.message_envelope import MessageEnvelope, PublishSuccess
+from effectful.domain.message_envelope import PublishSuccess
 from effectful.domain.optional_value import Absent
-from effectful.domain.s3_object import PutSuccess, S3Object
+from effectful.domain.s3_object import PutSuccess
 from effectful.domain.token_result import TokenValid
 from effectful.effects.auth import ValidateToken
 from effectful.effects.cache import GetCachedProfile, PutCachedProfile
 from effectful.effects.database import GetUserById, SaveChatMessage
 from effectful.effects.messaging import PublishMessage
-from effectful.effects.storage import GetObject, PutObject
+from effectful.effects.storage import PutObject
 from effectful.effects.websocket import Close, CloseNormal, ReceiveText, SendText
 from effectful.infrastructure.auth import AuthService
 from effectful.infrastructure.cache import ProfileCache

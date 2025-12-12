@@ -141,6 +141,9 @@ class TestPublicAPIImports:
             create_composite_interpreter,
         )
 
+        assert callable(CacheInterpreter)
+        assert callable(DatabaseInterpreter)
+        assert callable(WebSocketInterpreter)
         assert callable(create_composite_interpreter)
 
     def test_import_errors(self) -> None:

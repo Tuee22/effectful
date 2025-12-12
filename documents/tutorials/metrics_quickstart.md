@@ -1,7 +1,7 @@
 # Metrics Quickstart
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/readme.md
 
 > **Purpose**: Tutorial for getting started with type-safe metrics in effectful applications.
@@ -12,7 +12,7 @@
 
 > **API Reference**: For complete API documentation, see [metrics.md](../api/metrics.md)
 
----
+______________________________________________________________________
 
 ## Prerequisites
 
@@ -25,14 +25,14 @@
 By the end of this tutorial, you will:
 
 1. ✅ Define a metrics registry with counters and histograms
-2. ✅ Yield metrics effects from effect programs
-3. ✅ Pattern match on metric results (success/failure)
-4. ✅ Query metrics for debugging
-5. ✅ Understand when metrics recording fails
+1. ✅ Yield metrics effects from effect programs
+1. ✅ Pattern match on metric results (success/failure)
+1. ✅ Query metrics for debugging
+1. ✅ Understand when metrics recording fails
 
 **Time**: 15 minutes
 
----
+______________________________________________________________________
 
 ## Step 1: Define Your Metrics Registry
 
@@ -41,6 +41,7 @@ The registry is a **frozen dataclass** that defines all metrics at application s
 **Why frozen?** Prevents runtime metric creation, which causes cardinality explosion.
 
 ```python
+# snippet
 from effectful.observability import (
     MetricsRegistry,
     CounterDefinition,
@@ -70,17 +71,19 @@ APP_METRICS = MetricsRegistry(
 ```
 
 **Key Points**:
+
 - `counters`, `gauges`, `histograms`, `summaries` are **tuples** (immutable)
 - `label_names` defines fixed label keys (prevents typos)
 - Buckets for histograms cover expected range (0.1s to 60s)
 
----
+______________________________________________________________________
 
 ## Step 2: Record a Counter Metric
 
 Counters track **monotonically increasing values** (requests, errors, tasks processed).
 
 ```python
+# snippet
 from collections.abc import Generator
 from effectful import AllEffects, EffectResult
 from effectful.effects.metrics import IncrementCounter
@@ -119,17 +122,19 @@ def process_task_with_metrics(
 ```
 
 **Key Points**:
+
 - `IncrementCounter` effect describes the operation (pure data)
 - Labels must match registry definition (`task_type`, `status`)
 - Pattern matching handles success/failure explicitly
 
----
+______________________________________________________________________
 
 ## Step 3: Record a Histogram Metric
 
 Histograms track **distributions** (latency, request size, duration).
 
 ```python
+# snippet
 import time
 
 def measure_task_duration(
@@ -162,17 +167,19 @@ def measure_task_duration(
 ```
 
 **Key Points**:
+
 - Measure duration with `time.perf_counter()` (monotonic clock)
 - Histogram buckets defined in registry (0.1s, 0.5s, 1.0s, ...)
 - Value must be in seconds for `_seconds` metrics
 
----
+______________________________________________________________________
 
 ## Step 4: Query Metrics (Debugging)
 
 Query current metric values for debugging or health checks.
 
 ```python
+# snippet
 from effectful.effects.metrics import QueryMetrics
 from effectful.domain.metrics_result import QuerySuccess, QueryFailure
 
@@ -196,18 +203,20 @@ def check_task_metrics() -> Generator[AllEffects, EffectResult, dict[str, float]
 ```
 
 **Output Example**:
+
 ```text
 📊 Metrics at 1706472000.0:
   tasks_processed_total{task_type="email",status="success"} = 142.0
 ```
 
----
+______________________________________________________________________
 
 ## Step 5: Handle Metric Failures
 
 Metrics can fail for several reasons. Always pattern match to handle errors gracefully.
 
 ```python
+# snippet
 def robust_metric_recording(
     task_type: str,
 ) -> Generator[AllEffects, EffectResult, None]:
@@ -240,19 +249,20 @@ def robust_metric_recording(
 
 **Common Errors**:
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| `metric_not_registered` | Metric not in registry | Add to `MetricsRegistry` |
-| `missing_label: task_type` | Required label missing | Provide all labels from definition |
-| `unexpected_label: foo` | Extra label not in registry | Remove label or add to registry |
-| `type_mismatch` | Using `IncrementCounter` on Gauge | Use correct effect type |
-| `collector_error` | Prometheus unreachable | Check Docker services |
+| Error                      | Cause                             | Solution                           |
+| -------------------------- | --------------------------------- | ---------------------------------- |
+| `metric_not_registered`    | Metric not in registry            | Add to `MetricsRegistry`           |
+| `missing_label: task_type` | Required label missing            | Provide all labels from definition |
+| `unexpected_label: foo`    | Extra label not in registry       | Remove label or add to registry    |
+| `type_mismatch`            | Using `IncrementCounter` on Gauge | Use correct effect type            |
+| `collector_error`          | Prometheus unreachable            | Check Docker services              |
 
----
+______________________________________________________________________
 
 ## Complete Working Example
 
 ```python
+# snippet
 from collections.abc import Generator
 from dataclasses import dataclass
 import time
@@ -371,6 +381,7 @@ async def main() -> None:
 ```
 
 **Expected Output**:
+
 ```text
 ✅ All metrics recorded successfully
 Task 0: Ok(True)
@@ -386,13 +397,14 @@ Task 4: Ok(True)
 Stats: Ok(5)
 ```
 
----
+______________________________________________________________________
 
 ## Testing Your Metrics
 
 Use `ResetMetrics` effect in test fixtures for isolation.
 
 ```python
+# snippet
 import pytest
 from effectful.effects.metrics import ResetMetrics
 
@@ -427,31 +439,36 @@ async def test_task_metrics(clean_metrics: None) -> None:
 
 **⚠️ WARNING**: NEVER use `ResetMetrics` in production! Only in tests.
 
----
+______________________________________________________________________
 
 ## Next Steps
 
 Now that you understand basic metrics, explore advanced topics:
 
 1. **Metric Types Guide** - When to use Counter vs Gauge vs Histogram vs Summary
+
    - See [metric_types_guide.md](./metric_types_guide.md)
 
-2. **Prometheus Setup** - Run Prometheus/Grafana in Docker
+1. **Prometheus Setup** - Run Prometheus/Grafana in Docker
+
    - See [prometheus_setup.md](./prometheus_setup.md)
 
-3. **Alert Rules** - Create alerts for metric thresholds
+1. **Alert Rules** - Create alerts for metric thresholds
+
    - See [alert_rules.md](./alert_rules.md)
 
-4. **Grafana Dashboards** - Visualize metrics with beautiful dashboards
+1. **Grafana Dashboards** - Visualize metrics with beautiful dashboards
+
    - See [grafana_dashboards.md](./grafana_dashboards.md)
 
----
+______________________________________________________________________
 
 ## Common Patterns
 
 ### Pattern 1: Automatic Duration Tracking
 
 ```python
+# snippet
 def with_duration_tracking[T] (
     metric_name: str,
     labels: dict[str, str],
@@ -484,6 +501,7 @@ user = yield from with_duration_tracking(
 ### Pattern 2: Conditional Metrics
 
 ```python
+# snippet
 def process_with_status_metrics(
     task_id: str,
 ) -> Generator[AllEffects, EffectResult, None]:
@@ -502,7 +520,7 @@ def process_with_status_metrics(
     )
 ```
 
----
+______________________________________________________________________
 
 ## Troubleshooting
 
@@ -581,11 +599,12 @@ yield IncrementCounter(
 )
 ```
 
----
+______________________________________________________________________
 
 ## Summary
 
 You've learned:
+
 - ✅ How to define a metrics registry with frozen dataclasses
 - ✅ How to record counter and histogram metrics from effect programs
 - ✅ How to query metrics for debugging
@@ -593,12 +612,13 @@ You've learned:
 - ✅ Common error patterns and solutions
 
 **Key Takeaways**:
-1. **Registry First** - Define all metrics at startup (frozen, immutable)
-2. **Explicit Errors** - Pattern match on `MetricRecorded | MetricRecordingFailed`
-3. **Label Discipline** - Match registry definition exactly (no typos!)
-4. **Testing** - Use `ResetMetrics` in fixtures for isolation
 
----
+1. **Registry First** - Define all metrics at startup (frozen, immutable)
+1. **Explicit Errors** - Pattern match on `MetricRecorded | MetricRecordingFailed`
+1. **Label Discipline** - Match registry definition exactly (no typos!)
+1. **Testing** - Use `ResetMetrics` in fixtures for isolation
+
+______________________________________________________________________
 
 ## See Also
 
@@ -607,8 +627,9 @@ You've learned:
 - [Metrics API Reference](../api/metrics.md) - Complete API documentation
 - [Metric Types Guide](./metric_types_guide.md) - When to use each type
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Standards](../engineering/README.md)

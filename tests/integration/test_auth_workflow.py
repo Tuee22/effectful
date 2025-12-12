@@ -79,7 +79,7 @@ class TestAuthWorkflowIntegration:
             validation = yield ValidateToken(token=token)
 
             match validation:
-                case TokenValid(user_id=validated_uid, claims=validated_claims):
+                case TokenValid(user_id=validated_uid, claims=_):
                     assert validated_uid == uid
                     yield SendText(text=f"Token valid for user {validated_uid}")
                     return "valid"

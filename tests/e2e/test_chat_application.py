@@ -58,12 +58,7 @@ from effectful.interpreters.composite import create_composite_interpreter
 from effectful.programs.program_types import AllEffects, EffectResult
 from effectful.programs.runners import run_ws_program
 from tests.e2e.client.ws_client import E2EWebSocketClient
-from tests.fixtures.base_state import (
-    ALICE_ID,
-    ALICE_PASSWORD,
-    ALICE_PASSWORD_HASH,
-    BOB_ID,
-)
+from tests.fixtures.base_state import ALICE_PASSWORD, ALICE_PASSWORD_HASH
 from effectful.testing import unwrap_ok
 
 
@@ -642,7 +637,6 @@ class TestFullWorkflow:
             assert isinstance(chat_message, ChatMessage)
 
             # 4. STORAGE: Archive the message
-            timestamp = datetime.now(timezone.utc).isoformat()
             archive_key = f"archive/{auth_user_id}/{chat_message.id}.txt"
             yield PutObject(
                 bucket=bucket,

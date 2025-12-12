@@ -6,31 +6,34 @@
 
 > **Purpose**: Core ADT for representing optional values using functional algebraic data types instead of Python's Optional; provides explicit absence reasons and type-safe pattern matching.
 
----
+______________________________________________________________________
 
 ## Overview
 
 OptionalValue is a lightweight algebraic data type (ADT) that represents values that may be present or intentionally absent with an explicit reason. It replaces bare `Optional[T]` usage while maintaining ergonomic APIs and type safety.
 
 **Why OptionalValue exists:**
+
 - **Explicit absence**: `Absent(reason="not_provided")` is more informative than `None`
 - **Type safety**: Pattern matching ensures all cases are handled exhaustively
 - **Semantic clarity**: Distinguishes between "value not provided" vs "value unknown" vs domain-specific reasons
 - **Simpler than custom ADTs**: When you only need generic "present or absent" semantics
 
 **When to use OptionalValue:**
+
 - Generic optional fields in domain models (e.g., `blood_type: OptionalValue[str]`)
 - Effect parameters that may be absent (e.g., `metadata: OptionalValue[dict[str, str]]`)
 - Any field with "present or absent" semantics where absence has no domain-specific meaning
 
 **When NOT to use OptionalValue:**
+
 - Domain-specific absence reasons → Use custom ADT (e.g., `UserFound | UserNotFound | UserDeleted`)
 - Always-present fields → Use concrete type (e.g., `age: int`, not `OptionalValue[int]`)
 - External API boundaries → Convert to `T | None` with `from_optional_value()`
 
 See [Decision Tree](#decision-tree-optional-vs-optionalvalue-vs-custom-adt) for complete guidance.
 
----
+______________________________________________________________________
 
 ## API Reference
 
@@ -39,6 +42,7 @@ See [Decision Tree](#decision-tree-optional-vs-optionalvalue-vs-custom-adt) for 
 Represents a value that is present.
 
 ```python
+# snippet
 @dataclass(frozen=True)
 class Provided(Generic[T_co]):
     """Represents a present value."""
@@ -46,26 +50,31 @@ class Provided(Generic[T_co]):
 ```
 
 **Type Parameters:**
+
 - `T_co`: Covariant type parameter (read-only, allows subtype substitution)
 
 **Fields:**
+
 - `value: T_co` - The present value
 
 **Example:**
+
 ```python
+# snippet
 from effectful.domain.optional_value import Provided
 
 blood_type = Provided(value="O+")
 metadata = Provided(value={"content-type": "application/json"})
 ```
 
----
+______________________________________________________________________
 
 ### Absent[T]
 
 Represents a value that is intentionally missing with a reason.
 
 ```python
+# snippet
 @dataclass(frozen=True)
 class Absent(Generic[T_co]):
     """Represents an intentionally missing value with a reason."""
@@ -73,19 +82,24 @@ class Absent(Generic[T_co]):
 ```
 
 **Type Parameters:**
+
 - `T_co`: Covariant type parameter (read-only, allows subtype substitution)
 
 **Fields:**
+
 - `reason: str` - Explanation for why the value is absent (default: `"not_provided"`)
 
 **Common reason values:**
+
 - `"not_provided"` - Value not supplied by user (default)
 - `"not_requested"` - Value not requested in query
 - `"not_disclosed"` - Value withheld for privacy
 - `"not_applicable"` - Value doesn't apply in this context
 
 **Example:**
+
 ```python
+# snippet
 from effectful.domain.optional_value import Absent
 
 blood_type = Absent(reason="not_provided")
@@ -93,21 +107,25 @@ metadata = Absent(reason="not_requested")
 notes = Absent(reason="not_disclosed")
 ```
 
----
+______________________________________________________________________
 
 ### OptionalValue[T]
 
 Type alias representing either a present value or an absent value.
 
 ```python
+# snippet
 type OptionalValue[T_co] = Provided[T_co] | Absent[T_co]
 ```
 
 **Type Parameters:**
+
 - `T_co`: Covariant type parameter (read-only)
 
 **Usage:**
+
 ```python
+# snippet
 from effectful.domain.optional_value import OptionalValue, Provided, Absent
 
 # Type annotation
@@ -121,7 +139,7 @@ match metadata:
         print(f"No metadata: {r}")
 ```
 
----
+______________________________________________________________________
 
 ## Helper Functions
 
@@ -130,7 +148,9 @@ match metadata:
 Convert an optional value (`T | None`) into the OptionalValue ADT.
 
 **Signature:**
+
 ```python
+# snippet
 def to_optional_value(
     value: T_co | None,
     *,
@@ -139,14 +159,18 @@ def to_optional_value(
 ```
 
 **Parameters:**
+
 - `value: T_co | None` - The value to convert (None becomes Absent, T becomes Provided)
 - `reason: str` - Reason string if value is None (default: `"not_provided"`)
 
 **Returns:**
+
 - `OptionalValue[T_co]` - Either `Provided(value)` or `Absent(reason)`
 
 **Examples:**
+
 ```python
+# snippet
 from effectful.domain.optional_value import to_optional_value
 
 # Convert present value
@@ -164,25 +188,31 @@ result = to_optional_value(None, reason="not_disclosed")
 
 **Use case:** Converting from external APIs or user input that use `None` sentinel.
 
----
+______________________________________________________________________
 
 ### from_optional_value()
 
 Convert OptionalValue back to an optional sentinel (`T | None`) for external APIs.
 
 **Signature:**
+
 ```python
+# snippet
 def from_optional_value(optional_value: OptionalValue[T_co]) -> T_co | None
 ```
 
 **Parameters:**
+
 - `optional_value: OptionalValue[T_co]` - The OptionalValue to convert
 
 **Returns:**
+
 - `T_co | None` - The wrapped value if Provided, None if Absent
 
 **Examples:**
+
 ```python
+# snippet
 from effectful.domain.optional_value import from_optional_value, Provided, Absent
 
 # Convert Provided → value
@@ -198,14 +228,16 @@ result = from_optional_value(Absent(reason="not_provided"))
 
 See [Pattern 4: Boundary Conversion](#pattern-4-boundary-conversion) for complete examples.
 
----
+______________________________________________________________________
 
 ## Pattern 1: Basic Usage
 
 ### Constructing OptionalValue
 
 **Option 1: Direct construction**
+
 ```python
+# snippet
 from effectful.domain.optional_value import Provided, Absent
 
 # Present value
@@ -216,7 +248,9 @@ blood_type = Absent(reason="not_provided")
 ```
 
 **Option 2: Helper function**
+
 ```python
+# snippet
 from effectful.domain.optional_value import to_optional_value
 
 # From value
@@ -232,7 +266,9 @@ blood_type = to_optional_value(None, reason="not_disclosed")
 ### Pattern Matching
 
 **Exhaustive matching with match/case:**
+
 ```python
+# snippet
 from effectful.domain.optional_value import Provided, Absent
 
 match blood_type:
@@ -243,7 +279,9 @@ match blood_type:
 ```
 
 **Type narrowing with isinstance:**
+
 ```python
+# snippet
 if isinstance(blood_type, Provided):
     # Type narrowed: blood_type.value is accessible
     print(f"Blood type: {blood_type.value}")
@@ -252,7 +290,7 @@ elif isinstance(blood_type, Absent):
     print(f"Blood type unknown: {blood_type.reason}")
 ```
 
----
+______________________________________________________________________
 
 ## Pattern 2: Domain Models
 
@@ -261,6 +299,7 @@ Use OptionalValue for generic optional fields in domain models where absence has
 **Example: Patient Demographics**
 
 ```python
+# snippet
 from dataclasses import dataclass
 from uuid import UUID
 from effectful.domain.optional_value import OptionalValue, Provided, Absent
@@ -291,7 +330,9 @@ match patient.blood_type:
 ```
 
 **Testing:**
+
 ```python
+# snippet
 def test_patient_with_blood_type() -> None:
     patient = Patient(
         id=uuid4(),
@@ -315,11 +356,12 @@ def test_patient_without_blood_type() -> None:
     assert patient.blood_type.reason == "not_provided"
 ```
 
----
+______________________________________________________________________
 
 ## Pattern 3: Effect Parameters (THE CANONICAL NORMALIZATION PATTERN)
 
 **Problem:** Users want ergonomic APIs when constructing effects:
+
 ```python
 # Allow all three forms:
 yield PutObject(bucket="x", key="y", content=b"z", metadata={"k": "v"})  # dict
@@ -336,6 +378,7 @@ But effects should store normalized `OptionalValue[T]` internally for type safet
 **Replicate this pattern in your effects:**
 
 ```python
+# snippet
 from dataclasses import dataclass
 from effectful.domain.optional_value import OptionalValue, Provided, Absent, to_optional_value
 
@@ -382,11 +425,12 @@ class PutObject:
 **This is NOT duplication to fix.** Each `_normalize_optional_value()` function is:
 
 1. **Type-specific** - Handles concrete types (`dict[str, str]`, `int`, `str`, not generic `T`)
-2. **Simple** - 4 lines, single isinstance check, no complex logic
-3. **Local** - Used only in one module's `__init__` methods
-4. **Pattern** - Intentionally replicated, like `frozen=True` or `@dataclass`
+1. **Simple** - 4 lines, single isinstance check, no complex logic
+1. **Local** - Used only in one module's `__init__` methods
+1. **Pattern** - Intentionally replicated, like `frozen=True` or `@dataclass`
 
 **Extracting to shared utility would:**
+
 - Lose type specificity (requires complex generic constraints)
 - Add unnecessary indirection (import + function call overhead)
 - Create import dependencies (violates locality principle)
@@ -397,6 +441,7 @@ class PutObject:
 ### Usage Examples
 
 **Ergonomic API:**
+
 ```python
 # Pass dict directly (normalized to Provided)
 effect = PutObject(bucket="my-bucket", key="file.txt", content=b"data", metadata={"type": "json"})
@@ -409,7 +454,9 @@ effect = PutObject(bucket="my-bucket", key="file.txt", content=b"data", metadata
 ```
 
 **Internal representation (always OptionalValue):**
+
 ```python
+# snippet
 effect = PutObject(bucket="my-bucket", key="file.txt", content=b"data", metadata={"type": "json"})
 
 # Always normalized to OptionalValue
@@ -420,6 +467,7 @@ assert effect.metadata.value == {"type": "json"}
 ### Testing Pattern
 
 ```python
+# snippet
 def test_put_object_normalizes_metadata_dict() -> None:
     """Test that dict is normalized to Provided."""
     effect = PutObject(bucket="b", key="k", content=b"", metadata={"x": "y"})
@@ -445,6 +493,7 @@ def test_put_object_normalizes_metadata_optional_value() -> None:
 ### When to Use This Pattern
 
 Use local normalization when:
+
 - Effect has optional parameters
 - Want ergonomic API (allow `T`, `None`, or `OptionalValue[T]`)
 - Need type-safe storage (always `OptionalValue[T]` internally)
@@ -452,7 +501,7 @@ Use local normalization when:
 
 **See also:** [Effect Patterns: Pattern 6 - Boundary Normalization](../engineering/effect_patterns.md#pattern-6-boundary-normalization-for-optionalvalue)
 
----
+______________________________________________________________________
 
 ## Pattern 4: Boundary Conversion
 
@@ -461,6 +510,7 @@ Use `from_optional_value()` to convert OptionalValue back to `T | None` when cal
 **Example: S3 Storage Adapter**
 
 ```python
+# snippet
 from effectful.domain.optional_value import from_optional_value, OptionalValue
 
 class S3StorageAdapter:
@@ -500,13 +550,14 @@ class S3StorageAdapter:
 ```
 
 **Pattern:**
+
 1. **Effect parameters** use OptionalValue (type-safe, explicit reasons)
-2. **Boundary conversion** uses `from_optional_value()` before calling external APIs
-3. **External APIs** receive `T | None` (their expected format)
+1. **Boundary conversion** uses `from_optional_value()` before calling external APIs
+1. **External APIs** receive `T | None` (their expected format)
 
 **See also:** Real-world example in `effectful/adapters/s3_storage.py`
 
----
+______________________________________________________________________
 
 ## Decision Tree: Optional vs OptionalValue vs Custom ADT
 
@@ -525,48 +576,48 @@ flowchart TD
     CustomADT --> CustomExample["UserFound | UserNotFound | UserDeleted<br/>BloodTypeKnown | BloodTypeUnknown"]
     OptionalValue --> OptionalValueExample["metadata: OptionalValue[dict]<br/>blood_type: OptionalValue[str]"]
     ConcreteType --> ConcreteExample["age: int<br/>email: str"]
-
-    style CustomADT fill:#90EE90
-    style OptionalValue fill:#87CEEB
-    style ConcreteType fill:#FFD700
 ```
 
 ### Examples by Scenario
 
-| Field | Choice | Reason |
-|-------|--------|--------|
-| User lookup result | Custom ADT: `UserFound \| UserNotFound \| UserDeleted` | Domain-specific reasons (not found vs deleted vs access denied) |
-| Blood type | OptionalValue[str] | Generic optional (provided or not provided, no domain semantics) |
-| Effect metadata | OptionalValue[dict[str, str]] | Generic optional parameter (present or absent) |
-| Patient age | int | Always present (not optional) |
-| Cache lookup | Custom ADT: `CacheHit \| CacheMiss` | Domain-specific (cache semantics matter) |
-| Doctor notes | OptionalValue[str] | Generic optional (provided or not provided) |
+| Field              | Choice                                                 | Reason                                                           |
+| ------------------ | ------------------------------------------------------ | ---------------------------------------------------------------- |
+| User lookup result | Custom ADT: `UserFound \| UserNotFound \| UserDeleted` | Domain-specific reasons (not found vs deleted vs access denied)  |
+| Blood type         | OptionalValue[str]                                     | Generic optional (provided or not provided, no domain semantics) |
+| Effect metadata    | OptionalValue\[dict[str, str]\]                        | Generic optional parameter (present or absent)                   |
+| Patient age        | int                                                    | Always present (not optional)                                    |
+| Cache lookup       | Custom ADT: `CacheHit \| CacheMiss`                    | Domain-specific (cache semantics matter)                         |
+| Doctor notes       | OptionalValue[str]                                     | Generic optional (provided or not provided)                      |
 
 ### Decision Logic
 
 **Use Custom ADT when:**
+
 - Absence has domain-specific meaning (`UserNotFound` vs `UserDeleted`)
 - Multiple absence reasons exist
 - Presence/absence is a domain concept (e.g., cache hit/miss)
 - Type system should enforce handling of all cases
 
 **Use OptionalValue[T] when:**
+
 - Generic "provided or not provided" semantics
 - No domain-specific absence reasons
 - Field is optional data (not optional behavior)
 - Want ergonomic API without custom types
 
 **Use Concrete Type when:**
+
 - Field is always present (never optional)
 - Absence would be an error (not a valid state)
 
----
+______________________________________________________________________
 
 ## Testing Patterns
 
 ### Testing Effects with OptionalValue
 
 ```python
+# snippet
 from effectful.effects.storage import PutObject
 from effectful.domain.optional_value import Provided, Absent
 
@@ -599,6 +650,7 @@ def test_effect_with_absent_metadata() -> None:
 ### Testing Generator Programs
 
 ```python
+# snippet
 from collections.abc import Generator
 from effectful.domain.optional_value import Provided, Absent, OptionalValue
 
@@ -635,7 +687,7 @@ def test_greet_patient_with_blood_type(fake_interpreter: Interpreter) -> None:
     assert value == "Hello Alice, blood type: O+"
 ```
 
----
+______________________________________________________________________
 
 ## Common Mistakes & Anti-Patterns
 
@@ -672,7 +724,7 @@ patient = Patient(blood_type=Absent(reason="not_disclosed"))
 
 **See:** [Code Quality: Doctrine 2 - ADTs Over Optional Types](../engineering/code_quality.md#2-adts-over-optional-types)
 
----
+______________________________________________________________________
 
 ### Anti-Pattern 2: Custom ADT for Generic Absence
 
@@ -705,7 +757,7 @@ metadata: OptionalValue[dict[str, str]] = Provided(value={"k": "v"})
 
 **Rule:** If absence has no domain-specific meaning, use OptionalValue. If absence has semantic importance (e.g., `UserDeleted` vs `UserNotFound`), use custom ADT.
 
----
+______________________________________________________________________
 
 ### Anti-Pattern 3: Sharing Normalization Logic
 
@@ -757,14 +809,15 @@ class PutObject:
 ```
 
 **Why local is correct:**
+
 1. **Type-specific** - Each effect has concrete types (dict, int, str), not generic T
-2. **Simple** - 4 lines, single isinstance check, trivial
-3. **Local** - Used only in one module's __init__ methods
-4. **Pattern** - Replicate like `frozen=True`, not extract like shared logic
+1. **Simple** - 4 lines, single isinstance check, trivial
+1. **Local** - Used only in one module's __init__ methods
+1. **Pattern** - Replicate like `frozen=True`, not extract like shared logic
 
 **See:** [Pattern 3: Effect Parameters](#pattern-3-effect-parameters-the-canonical-normalization-pattern) for complete explanation.
 
----
+______________________________________________________________________
 
 ### Anti-Pattern 4: Manual Pattern Matching Instead of from_optional_value()
 
@@ -790,28 +843,32 @@ s3_client.put_object(Bucket=bucket, Key=key, Body=content, Metadata=metadata_dic
 
 **See:** [Pattern 4: Boundary Conversion](#pattern-4-boundary-conversion)
 
----
+______________________________________________________________________
 
 ## References
 
 **Related Documentation:**
+
 - [Architecture: Why ADTs Instead of Optional?](../engineering/architecture.md#why-adts-instead-of-optional)
 - [Code Quality: Doctrine 2 - ADTs Over Optional Types](../engineering/code_quality.md#2-adts-over-optional-types)
 - [Effect Patterns: Pattern 6 - Boundary Normalization](../engineering/effect_patterns.md#pattern-6-boundary-normalization-for-optionalvalue)
 - [Tutorial: ADTs and Results](../tutorials/adts_and_results.md)
 
 **Source Code:**
+
 - Implementation: `effectful/domain/optional_value.py`
 - Real-world usage: `demo/healthhub/backend/app/` (JWT claims, healthcare effects, notifications)
 - Examples: `examples/optional_value.py`
 
 **Related Types:**
+
 - [Result Type API](result.md) - For fallible operations with explicit errors
 - [Custom ADTs](../tutorials/adts_and_results.md) - For domain-specific union types
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Architecture: Why ADTs Instead of Optional?](../engineering/architecture.md#why-adts-instead-of-optional)
 - [Code Quality: Doctrine 2 - ADTs Over Optional Types](../engineering/code_quality.md#2-adts-over-optional-types)
 - [Effect Patterns: Pattern 6 - Boundary Normalization](../engineering/effect_patterns.md#pattern-6-boundary-normalization-for-optionalvalue)

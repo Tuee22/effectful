@@ -85,6 +85,7 @@ type EffectResult = (
     | TokenValidationResult  # ValidateToken returns TokenValidationResult ADT (TokenValid | TokenExpired | TokenInvalid)
     | TokenRefreshResult  # RefreshToken returns TokenRefreshResult ADT (TokenRefreshed | TokenRefreshRejected)
     # Metrics ADTs
+    | MetricQueryResult  # QueryMetrics returns MetricQueryResult ADT
     | MetricRecorded  # IncrementCounter, SetGauge, ObserveHistogram, RecordSummary return MetricRecorded on success
     | MetricRecordingFailed  # Metrics recording operations return MetricRecordingFailed on validation/collector error
     | QuerySuccess  # QueryMetrics returns QuerySuccess with metrics dict

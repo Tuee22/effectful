@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     POETRY_NO_INTERACTION=1 \
-    PYTHONPATH=/app/effectful-root:/app/healthhub \
+    PYTHONPATH=/app/effectful-root:/app/effectful-root/demo/healthhub:/app/effectful-root/demo/healthhub/backend \
     DOCKER_CONTAINER=1
 
 WORKDIR /app
@@ -64,6 +64,7 @@ RUN poetry config virtualenvs.create false
 
 # Copy effectful library from root (resolve deps from pyproject only; lockfile is a build artifact)
 COPY pyproject.toml /app/effectful-root/
+COPY README.md /app/effectful-root/
 COPY effectful/ /app/effectful-root/effectful/
 
 # Install effectful
@@ -74,26 +75,28 @@ RUN poetry install --only main --no-interaction --no-ansi
 # Step 2: Install healthhub application
 # ============================================
 
-WORKDIR /app/healthhub
+RUN mkdir -p /app/effectful-root/demo/healthhub
+WORKDIR /app/effectful-root/demo/healthhub
 
 # Copy healthhub pyproject.toml
-COPY demo/healthhub/pyproject.toml /app/healthhub/
+COPY demo/healthhub/pyproject.toml /app/effectful-root/demo/healthhub/
 
 # Copy healthhub code
-COPY demo/healthhub/backend/ /app/healthhub/backend/
-COPY demo/healthhub/tools/ /app/healthhub/tools/
-COPY demo/healthhub/tests/ /app/healthhub/tests/
-COPY demo/healthhub/stubs/ /app/healthhub/stubs/
+COPY demo/healthhub/backend/ /app/effectful-root/demo/healthhub/backend/
+COPY demo/healthhub/tools/ /app/effectful-root/demo/healthhub/tools/
+COPY demo/healthhub/tests/ /app/effectful-root/demo/healthhub/tests/
+COPY demo/healthhub/stubs/ /app/effectful-root/demo/healthhub/stubs/
 
-# Install healthhub dependencies (including dev for Playwright)
+# Install healthhub dependencies (runtime + dev tooling/tests) with lock guard and fallback
 RUN poetry lock --no-update 2>/dev/null || true && \
     poetry install --with dev --no-root --no-interaction --no-ansi 2>/dev/null || \
     pip install \
-    fastapi uvicorn[standard] pydantic[email] pydantic-settings \
+    fastapi "uvicorn[standard]" "pydantic[email]" pydantic-settings \
     asyncpg redis pulsar-client bcrypt pyjwt python-multipart \
-    python-jose[cryptography] passlib[bcrypt] boto3 prometheus-client \
+    "python-jose[cryptography]" "passlib[bcrypt]" boto3 prometheus-client \
     email-validator pytest pytest-asyncio pytest-cov pytest-mock pytest-timeout httpx \
-    mypy black ruff playwright pytest-playwright
+    mypy black ruff mdformat mdformat-gfm mdformat-frontmatter mdformat-footnote mdformat-tables \
+    pymarkdownlnt codespell playwright pytest-playwright
 
 # Install Playwright browsers (ShipNorth pattern)
 RUN python -m playwright install --with-deps chromium firefox webkit
@@ -117,7 +120,7 @@ RUN npm install --quiet && \
     ls -la build/index.html
 
 # Return to healthhub workdir
-WORKDIR /app/healthhub
+WORKDIR /app/effectful-root/demo/healthhub
 
 # ============================================
 # Policy Enforcement (ShipNorth pattern)
@@ -129,7 +132,7 @@ RUN if [ -f /usr/local/bin/pytest ]; then mv /usr/local/bin/pytest /usr/local/bi
     chmod +x /usr/local/bin/pytest
 
 # Set PYTHONPATH so both effectful and healthhub are importable
-ENV PYTHONPATH=/app/effectful-root:/app/healthhub:/app/healthhub/backend
+ENV PYTHONPATH=/app/effectful-root:/app/effectful-root/demo/healthhub:/app/effectful-root/demo/healthhub/backend
 
 # Expose port
 EXPOSE 8851

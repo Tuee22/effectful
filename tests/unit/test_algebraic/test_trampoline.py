@@ -1,6 +1,5 @@
 """Tests for trampoline utilities."""
 
-import asyncio
 from collections.abc import Awaitable
 
 import pytest

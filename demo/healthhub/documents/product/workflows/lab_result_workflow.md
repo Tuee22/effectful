@@ -1,20 +1,15 @@
 # Lab Result Workflow
 
 **Status**: Authoritative source
-**Supersedes**: none
+**Supersedes**: none **📖 Base Standard**: [lab_result_workflow.md](../../../../../documents/product/workflows/lab_result_workflow.md)
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
-> **Purpose**: Complete lab result workflow demonstrating critical value detection, doctor review process, and notification cascade.
-
-> **Core Doctrines**: For comprehensive patterns, see:
-> - [Intermediate Journey](../01_journeys/intermediate_journey.md)
-> - [Effect Patterns](../../../../../documents/engineering/effect_patterns.md)
-> - [Code Quality](../../../../../documents/engineering/code_quality.md)
+> **Purpose**: HealthHub overlay deltas for Lab Result Workflow. **📖 Base Standard**: [lab_result_workflow.md](../../../../../documents/product/workflows/lab_result_workflow.md)
 
 ## Prerequisites
 
 - Docker workflow running; commands executed via `docker compose -f docker/docker-compose.yml`.
-- Completed [Intermediate Journey](../01_journeys/intermediate_journey.md).
+- Completed [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md).
 - Access to HealthHub at `http://localhost:8851`.
 
 ## Learning Objectives
@@ -32,11 +27,13 @@
 **Duration**: ~1 hour (following the complete workflow)
 
 **Features Involved**:
+
 1. **Lab Results**: Test ordering, result submission, critical value detection
-2. **Notifications**: Critical value alerts, review notifications
-3. **Doctor Review**: Clinical interpretation, patient communication
+1. **Notifications**: Critical value alerts, review notifications
+1. **Doctor Review**: Clinical interpretation, patient communication
 
 **Demo Users**:
+
 - Patient: david.patient@example.com (password: password123)
 - Doctor: dr.brown@healthhub.com (password: password123)
 
@@ -44,7 +41,7 @@
 
 ## Workflow Diagram
 
-```
+```text
 Step 1: Doctor Orders Lab Work
    ↓ (creates LabResult record with pending=true)
 Step 2: Lab Submits Results
@@ -71,20 +68,22 @@ Step 7: Patient Views Results
 
 1. **Navigate to Patients**: Click "Patients" in sidebar
 
-2. **Select Patient**: Click "David Daniels"
+1. **Select Patient**: Click "David Daniels"
 
-3. **Click "Order Lab Work"**
+1. **Click "Order Lab Work"**
 
-4. **Fill out Lab Order Form**:
+1. **Fill out Lab Order Form**:
+
    - **Test Name**: Comprehensive Metabolic Panel
    - **Test Type**: Blood
    - **Ordered Date**: 2025-12-09
    - **Priority**: Routine
    - **Clinical Indication**: Annual physical exam
 
-5. **Submit Order**: Click "Order Lab Work"
+1. **Submit Order**: Click "Order Lab Work"
 
-6. **Backend Processing**:
+1. **Backend Processing**:
+
    ```python
    # Effect program: order_lab_work
    def order_lab_work(patient_id, doctor_id, test_name, test_type, clinical_indication):
@@ -115,12 +114,14 @@ Step 7: Patient Views Results
        return Ok({"lab_result_id": lab_result_id, "status": "pending"})
    ```
 
-7. **Expected Result**:
+1. **Expected Result**:
+
    - Lab result record created with pending=true
    - Order appears in doctor's "Pending Lab Orders"
    - Order sent to lab (external system integration)
 
 **Data Created**:
+
 - `lab_results` table: lab_result_id, patient_id, doctor_id, test_name (Comprehensive Metabolic Panel), test_type (Blood), ordered_date, pending=true, is_critical=false
 
 **Test Coverage**: `test_lab_results.py::test_order_lab_work`
@@ -135,9 +136,10 @@ Step 7: Patient Views Results
 
 1. **Lab Processes Sample**: Lab performs comprehensive metabolic panel
 
-2. **Lab Submits Results via API**: POST `/api/lab-results/{lab_result_id}/submit`
+1. **Lab Submits Results via API**: POST `/api/lab-results/{lab_result_id}/submit`
 
-3. **Payload**:
+1. **Payload**:
+
    ```json
    {
      "test_data": {
@@ -163,7 +165,8 @@ Step 7: Patient Views Results
    }
    ```
 
-4. **Backend Processing**:
+1. **Backend Processing**:
+
    ```python
    # Effect program: submit_lab_results
    def submit_lab_results(lab_result_id, test_data, reference_ranges, completed_date):
@@ -222,12 +225,14 @@ Step 7: Patient Views Results
        return is_critical, critical_values
    ```
 
-5. **Expected Result**:
+1. **Expected Result**:
+
    - Lab result updated: pending=false, is_critical=true
    - Critical value detected: glucose=250 (critical_high threshold: 200)
    - Dr. Brown receives immediate critical alert
 
 **Data Updated**:
+
 - `lab_results` table: test_data (JSON), is_critical=true, pending=false, completed_date
 
 **Test Coverage**: `test_lab_results.py::test_submit_lab_results_with_critical_values`
@@ -240,15 +245,16 @@ Step 7: Patient Views Results
 
 **Critical Value Thresholds**:
 
-| Test | Normal Range | Critical Low | Critical High |
-|------|-------------|--------------|---------------|
-| Glucose | 70-100 mg/dL | <40 mg/dL | >200 mg/dL |
-| Sodium | 136-145 mEq/L | <120 mEq/L | >160 mEq/L |
-| Potassium | 3.5-5.0 mEq/L | <2.5 mEq/L | >6.0 mEq/L |
-| Creatinine | 0.6-1.2 mg/dL | N/A | >3.0 mg/dL |
-| Hemoglobin | 13.5-17.5 g/dL | <7.0 g/dL | >20.0 g/dL |
+| Test       | Normal Range   | Critical Low | Critical High |
+| ---------- | -------------- | ------------ | ------------- |
+| Glucose    | 70-100 mg/dL   | \<40 mg/dL   | >200 mg/dL    |
+| Sodium     | 136-145 mEq/L  | \<120 mEq/L  | >160 mEq/L    |
+| Potassium  | 3.5-5.0 mEq/L  | \<2.5 mEq/L  | >6.0 mEq/L    |
+| Creatinine | 0.6-1.2 mg/dL  | N/A          | >3.0 mg/dL    |
+| Hemoglobin | 13.5-17.5 g/dL | \<7.0 g/dL   | >20.0 g/dL    |
 
 **Detection Logic**:
+
 ```python
 # Critical if value exceeds critical thresholds
 glucose = 250 mg/dL
@@ -260,6 +266,7 @@ if glucose > critical_high_threshold:
 ```
 
 **Result for David's Test**:
+
 - **Glucose**: 250 mg/dL > 200 mg/dL (critical_high) → ✗ CRITICAL
 - **All other values**: Within normal or non-critical ranges → ✓ Normal
 - **Overall**: is_critical=true (one or more critical values)
@@ -273,12 +280,14 @@ if glucose > critical_high_threshold:
 **Actor**: System (automatic during Step 2)
 
 **Notification Details**:
+
 - **Type**: Critical Alert (highest priority)
 - **Recipient**: Dr. Brown (ordering doctor)
 - **Message**: "CRITICAL LAB RESULT: Comprehensive Metabolic Panel for patient David Daniels. Critical values: glucose: 250 mg/dL"
 - **Urgency**: Critical (red badge, push notification, email)
 
 **Backend Processing**:
+
 ```python
 # Effect: SendDoctorAlert
 _ = yield SendDoctorAlert(
@@ -290,6 +299,7 @@ _ = yield SendDoctorAlert(
 ```
 
 **Expected Result**:
+
 - Dr. Brown sees red alert badge in navigation
 - Alert appears at top of dashboard: "🚨 CRITICAL LAB RESULT"
 - Click alert navigates directly to lab result review page
@@ -306,7 +316,8 @@ _ = yield SendDoctorAlert(
 
 1. **Click Critical Alert**: Navigate to lab result from alert
 
-2. **Review Test Data**:
+1. **Review Test Data**:
+
    ```
    Comprehensive Metabolic Panel - David Daniels
    Completed: 2025-12-09 15:30:00
@@ -326,9 +337,10 @@ _ = yield SendDoctorAlert(
    ✓ Total Bilirubin: 0.8 mg/dL (Normal: 0.3-1.2)
    ```
 
-3. **Click "Add Clinical Notes"**
+1. **Click "Add Clinical Notes"**
 
-4. **Enter Clinical Assessment**:
+1. **Enter Clinical Assessment**:
+
    ```
    CRITICAL LAB RESULT REVIEW
 
@@ -358,9 +370,10 @@ _ = yield SendDoctorAlert(
    2025-12-09 16:00:00
    ```
 
-5. **Click "Mark as Reviewed"**
+1. **Click "Mark as Reviewed"**
 
-6. **Backend Processing**:
+1. **Backend Processing**:
+
    ```python
    # Effect program: review_lab_result
    def review_lab_result(lab_result_id, doctor_id, clinical_notes):
@@ -399,13 +412,15 @@ _ = yield SendDoctorAlert(
        return Ok({"lab_result_id": lab_result_id, "reviewed": True})
    ```
 
-7. **Expected Result**:
+1. **Expected Result**:
+
    - Lab result marked as reviewed=true
    - Clinical notes saved
    - Patient notified results are available
    - Critical alert cleared from Dr. Brown's dashboard
 
 **Data Updated**:
+
 - `lab_results` table: clinical_notes (text), reviewed=true, reviewed_at, reviewed_by_doctor_id
 
 **Test Coverage**: `test_lab_results.py::test_doctor_review_lab_result`
@@ -417,12 +432,14 @@ _ = yield SendDoctorAlert(
 **Actor**: System (automatic during Step 5)
 
 **Notification Details**:
+
 - **Type**: Lab Result Available
 - **Recipient**: David Daniels (patient)
 - **Message**: "Your Comprehensive Metabolic Panel results have been reviewed by Dr. Brown and are now available in your portal."
 - **Urgency**: Medium (blue badge, in-app notification)
 
 **Backend Processing**:
+
 ```python
 # Effect: SendPatientNotification
 _ = yield SendPatientNotification(
@@ -433,6 +450,7 @@ _ = yield SendPatientNotification(
 ```
 
 **Expected Result**:
+
 - David sees notification badge in navigation
 - Notification appears in "Notifications" section
 - Click notification navigates to lab results page
@@ -449,7 +467,8 @@ _ = yield SendPatientNotification(
 
 1. **Click Notification**: Navigate to lab results from notification
 
-2. **View Lab Result Details**:
+1. **View Lab Result Details**:
+
    ```
    Comprehensive Metabolic Panel
    Ordered: 2025-12-09
@@ -479,13 +498,15 @@ _ = yield SendPatientNotification(
    - Dietary consultation scheduled
    ```
 
-3. **Expected Result**:
+1. **Expected Result**:
+
    - David sees all test results with normal/abnormal indicators
    - Clinical notes explain significance of elevated glucose
    - Treatment plan clearly outlined
    - David understands diagnosis and next steps
 
 **RBAC Enforcement**:
+
 ```python
 # Patient can only view own lab results
 def get_lab_result(auth_state: AuthorizationState, lab_result_id: UUID):
@@ -510,21 +531,25 @@ def get_lab_result(auth_state: AuthorizationState, lab_result_id: UUID):
 **Feature-to-Feature Data Flow**:
 
 1. **Lab Results → Appointments**:
+
    - Lab work often ordered during appointment
    - Appointment notes reference pending lab orders
    - Follow-up appointments scheduled based on results
 
-2. **Lab Results → Prescriptions**:
+1. **Lab Results → Prescriptions**:
+
    - Critical lab results trigger medication orders (e.g., Metformin for elevated glucose)
    - Prescription creation references lab result findings
    - Medication adjustments based on lab monitoring
 
-3. **Lab Results → Notifications**:
+1. **Lab Results → Notifications**:
+
    - Critical values trigger immediate doctor alerts
    - Doctor review triggers patient notifications
    - Escalation cascade: Lab → Doctor → Patient
 
-4. **Lab Results → Audit Logs**:
+1. **Lab Results → Audit Logs**:
+
    - All PHI access logged (doctor ordering, doctor reviewing, patient viewing)
    - Critical value alerts logged for compliance
    - HIPAA-compliant audit trail
@@ -536,13 +561,14 @@ def get_lab_result(auth_state: AuthorizationState, lab_result_id: UUID):
 **Test Functions**:
 
 1. **test_complete_lab_result_workflow**: Tests entire workflow (order → submit → review → view)
-2. **test_critical_value_detection**: Tests detection logic with various thresholds
-3. **test_critical_value_doctor_notification**: Tests immediate alert on critical values
-4. **test_doctor_review_lab_result**: Tests review process and notification cascade
-5. **test_patient_view_lab_result**: Tests patient access and RBAC
-6. **test_non_critical_lab_result_workflow**: Tests workflow without critical values
+1. **test_critical_value_detection**: Tests detection logic with various thresholds
+1. **test_critical_value_doctor_notification**: Tests immediate alert on critical values
+1. **test_doctor_review_lab_result**: Tests review process and notification cascade
+1. **test_patient_view_lab_result**: Tests patient access and RBAC
+1. **test_non_critical_lab_result_workflow**: Tests workflow without critical values
 
 **Assertions**:
+
 - Lab result created with pending=true
 - Critical values correctly detected (glucose > 200)
 - Doctor receives immediate critical alert
@@ -552,14 +578,17 @@ def get_lab_result(auth_state: AuthorizationState, lab_result_id: UUID):
 - RBAC enforced (patients can only view own results)
 
 **Run Tests**:
+
 ```bash
+# snippet
 docker compose -f docker/docker-compose.yml exec healthhub poetry run pytest tests/pytest/e2e/test_lab_results.py -v
 ```
 
 ## Critical Value Scenarios
 
 ### Scenario 1: Critical Glucose (This Tutorial)
-```
+
+```text
 Test Data: glucose = 250 mg/dL
 Threshold: critical_high = 200 mg/dL
 Result: ✗ CRITICAL
@@ -567,7 +596,8 @@ Action: Immediate doctor alert, diabetes diagnosis, Metformin prescribed
 ```
 
 ### Scenario 2: Critical Potassium (Hyperkalemia)
-```
+
+```text
 Test Data: potassium = 6.5 mEq/L
 Threshold: critical_high = 6.0 mEq/L
 Result: ✗ CRITICAL
@@ -575,7 +605,8 @@ Action: Immediate doctor alert, emergency treatment, cardiac monitoring
 ```
 
 ### Scenario 3: Critical Hemoglobin (Severe Anemia)
-```
+
+```text
 Test Data: hemoglobin = 6.0 g/dL
 Threshold: critical_low = 7.0 g/dL
 Result: ✗ CRITICAL
@@ -583,7 +614,8 @@ Action: Immediate doctor alert, transfusion consideration, urgent hematology con
 ```
 
 ### Scenario 4: Normal Results
-```
+
+```text
 Test Data: All values within normal ranges
 Threshold: No critical values
 Result: ✓ Normal
@@ -593,6 +625,7 @@ Action: Routine doctor review, patient notified when reviewed, no urgent interve
 ## Summary
 
 **You have successfully**:
+
 - ✅ Ordered lab work during patient care
 - ✅ Submitted lab results with critical value detection
 - ✅ Triggered immediate doctor notification for critical glucose
@@ -601,20 +634,21 @@ Action: Routine doctor review, patient notified when reviewed, no urgent interve
 - ✅ Viewed results from patient perspective
 
 **Key Takeaways**:
+
 1. **Critical Value Detection**: Automatic detection triggers immediate alerts
-2. **Notification Cascade**: Lab → Doctor (if critical) → Doctor Review → Patient
-3. **Clinical Interpretation**: Doctor adds context and treatment plan to raw data
-4. **RBAC Throughout**: Patients can only view own results, doctors can view all
-5. **HIPAA Compliance**: All PHI access logged in audit trail
-6. **Integration**: Lab results drive prescriptions, appointments, and follow-up care
+1. **Notification Cascade**: Lab → Doctor (if critical) → Doctor Review → Patient
+1. **Clinical Interpretation**: Doctor adds context and treatment plan to raw data
+1. **RBAC Throughout**: Patients can only view own results, doctors can view all
+1. **HIPAA Compliance**: All PHI access logged in audit trail
+1. **Integration**: Lab results drive prescriptions, appointments, and follow-up care
 
 **Workflow Duration**: ~1 hour from order to patient viewing
 
 ## Cross-References
 
-- [Intermediate Journey](../01_journeys/intermediate_journey.md)
-- [Lab Results Feature](../03_features/lab_results.md)
-- [Doctor Guide](../02_roles/doctor_guide.md)
-- [Patient Guide](../02_roles/patient_guide.md)
+- [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md)
+- [Lab Results Feature](../../engineering/features/lab_results.md)
+- [Doctor Guide](../../product/roles/doctor_guide.md)
+- [Patient Guide](../../product/roles/patient_guide.md)
 - [Appointment Lifecycle](appointment_lifecycle.md)
 - [Prescription Workflow](prescription_workflow.md)

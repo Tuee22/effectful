@@ -5,9 +5,7 @@ with real InMemoryMetricsCollector infrastructure. Tests verify
 end-to-end metric recording and querying.
 """
 
-import time
 from collections.abc import Generator
-from uuid import uuid4
 
 import pytest
 from pytest_mock import MockerFixture

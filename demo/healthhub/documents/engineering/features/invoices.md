@@ -1,20 +1,15 @@
 # Invoices Feature
 
-**Status**: Authoritative source (HealthHub tutorial patterns)
-**Supersedes**: none
+**Status**: Authoritative source
+**Supersedes**: none **📖 Base Standard**: [invoices.md](../../../../../documents/engineering/features/invoices.md)
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
-> **Purpose**: Complete reference for HealthHub invoice system: invoice domain model, generation from completed appointments, line item management, payment status tracking, and admin-only creation.
-
-> **Core Doctrines**: For comprehensive patterns, see:
-> - [ADTs and Result Types](../../../../../documents/tutorials/adts_and_results.md)
-> - [Code Quality](../../../../../documents/engineering/code_quality.md)
-> - [Effect Patterns](../../../../../documents/engineering/effect_patterns.md)
+> **Purpose**: HealthHub overlay deltas for Invoices. **📖 Base Standard**: [invoices.md](../../../../../documents/engineering/features/invoices.md)
 
 ## Prerequisites
 
 - Docker workflow running; commands executed via `docker compose -f docker/docker-compose.yml`.
-- Completed [Intermediate Journey](../01_journeys/intermediate_journey.md).
+- Completed [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md).
 - Familiarity with billing systems, ADTs, Python type hints, pattern matching.
 
 ## Learning Objectives
@@ -30,6 +25,7 @@
 ## Overview
 
 **Invoice System Architecture**:
+
 - **Generation**: Invoices generated from completed appointments (admin-triggered)
 - **Line Items**: Flexible line item structure (appointment charges, procedures, supplies)
 - **Payment Tracking**: Status transitions (Sent → Paid | Overdue)
@@ -37,11 +33,12 @@
 - **Patient Access**: Patients view own invoices with payment history
 
 **Invoice Lifecycle**:
+
 1. **Appointment Completed**: Doctor completes appointment with notes
-2. **Admin Generates Invoice**: Admin creates invoice from appointment
-3. **Invoice Sent**: Status set to "Sent", patient notified
-4. **Payment**: Patient pays invoice, status updated to "Paid"
-5. **Overdue**: If unpaid past due date, status updated to "Overdue"
+1. **Admin Generates Invoice**: Admin creates invoice from appointment
+1. **Invoice Sent**: Status set to "Sent", patient notified
+1. **Payment**: Patient pays invoice, status updated to "Paid"
+1. **Overdue**: If unpaid past due date, status updated to "Overdue"
 
 ## Domain Models
 
@@ -121,6 +118,7 @@ class InvoiceLineItem:
 ```
 
 **Why separate line items?**
+
 - **Flexible billing**: Support multiple charges per invoice
 - **Detailed breakdown**: Patients see itemized charges
 - **Audit trail**: Track individual service charges
@@ -299,6 +297,7 @@ def generate_invoice_from_appointment(
 ```
 
 **API Endpoint with RBAC**:
+
 ```python
 # file: demo/healthhub/backend/app/api/invoices.py
 from fastapi import APIRouter, Depends, HTTPException
@@ -350,7 +349,9 @@ async def generate_invoice_from_appointment_endpoint(
 **Endpoint**: `POST /api/invoices/{invoice_id}/mark-paid` (admin-only)
 
 **Request**:
+
 ```json
+// snippet
 {
   "payment_method": "credit_card",
   "payment_reference": "CH_abc123xyz"
@@ -556,6 +557,7 @@ def get_patient_invoices(patient_id: UUID) -> Generator[Effect, Result, Result[l
 ```
 
 **API Endpoint with RBAC**:
+
 ```python
 # file: demo/healthhub/backend/app/api/invoices.py
 @router.get("/")
@@ -708,6 +710,7 @@ async def test_patient_can_view_own_invoices_with_line_items(clean_healthhub_sta
 ## Summary
 
 **You have learned**:
+
 - ✅ Invoice and InvoiceLineItem domain models
 - ✅ Invoice generation from completed appointments
 - ✅ Line item management (flexible billing structure)
@@ -717,18 +720,19 @@ async def test_patient_can_view_own_invoices_with_line_items(clean_healthhub_sta
 - ✅ E2E testing for creation, viewing, and status transitions
 
 **Key Takeaways**:
+
 1. **Admin-Only Creation**: Only `AdminAuthorized` can generate invoices (RBAC)
-2. **Flexible Line Items**: Support itemized billing with multiple charges
-3. **Status Transitions**: Sent → Paid | Overdue (scheduled job marks overdue)
-4. **Patient Transparency**: Patients see detailed line items and payment history
-5. **Audit Trail**: Payment log tracks all payment transactions
-6. **Automatic Notifications**: Patient notified when invoice issued and when overdue
+1. **Flexible Line Items**: Support itemized billing with multiple charges
+1. **Status Transitions**: Sent → Paid | Overdue (scheduled job marks overdue)
+1. **Patient Transparency**: Patients see detailed line items and payment history
+1. **Audit Trail**: Payment log tracks all payment transactions
+1. **Automatic Notifications**: Patient notified when invoice issued and when overdue
 
 ## Cross-References
 
 - [Appointments - Invoice Generation](appointments.md#workflow-4-doctor-completes-appointment)
-- [Admin Guide - Invoice Management](../02_roles/admin_guide.md)
-- [Patient Guide - Viewing Invoices](../02_roles/patient_guide.md)
-- [Patient Onboarding Workflow](../04_workflows/patient_onboarding.md)
+- [Admin Guide - Invoice Management](../../product/roles/admin_guide.md)
+- [Patient Guide - Viewing Invoices](../../product/roles/patient_guide.md)
+- [Patient Onboarding Workflow](../../product/workflows/patient_onboarding.md)
 - [ADTs and Result Types](../../../../../documents/tutorials/adts_and_results.md)
 - [Code Quality](../../../../../documents/engineering/code_quality.md)

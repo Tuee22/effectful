@@ -1,7 +1,7 @@
 # Metric Types Guide
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/readme.md
 
 > **Purpose**: Guide for choosing the right Prometheus metric type for effectful applications.
@@ -12,7 +12,7 @@
 
 > **Tutorial**: For quickstart, see [metrics_quickstart.md](./metrics_quickstart.md)
 
----
+______________________________________________________________________
 
 ## Prerequisites
 
@@ -30,16 +30,16 @@
 
 Prometheus provides 4 metric types, each optimized for different use cases:
 
-| Type | Purpose | Example Use Cases | Aggregation |
-|------|---------|-------------------|-------------|
-| **Counter** | Monotonically increasing count | Requests, errors, tasks completed | `rate()`, `increase()` |
-| **Gauge** | Point-in-time value (up/down) | Memory usage, queue depth, active connections | `avg()`, `min()`, `max()` |
-| **Histogram** | Distribution with buckets | Request duration, response size | `histogram_quantile()` |
-| **Summary** | Distribution with quantiles | Similar to histogram (client-side) | Limited aggregation |
+| Type          | Purpose                        | Example Use Cases                             | Aggregation               |
+| ------------- | ------------------------------ | --------------------------------------------- | ------------------------- |
+| **Counter**   | Monotonically increasing count | Requests, errors, tasks completed             | `rate()`, `increase()`    |
+| **Gauge**     | Point-in-time value (up/down)  | Memory usage, queue depth, active connections | `avg()`, `min()`, `max()` |
+| **Histogram** | Distribution with buckets      | Request duration, response size               | `histogram_quantile()`    |
+| **Summary**   | Distribution with quantiles    | Similar to histogram (client-side)            | Limited aggregation       |
 
 **TL;DR**: Use Counter for counts, Gauge for current values, Histogram for distributions. Avoid Summary.
 
----
+______________________________________________________________________
 
 ## Step 2: Decision tree
 
@@ -58,13 +58,14 @@ Prometheus provides 4 metric types, each optimized for different use cases:
 └─ Not sure? → Start with Counter or Gauge
 ```
 
----
+______________________________________________________________________
 
 ## Step 3: Counter (monotonically increasing values)
 
 ### When to Use
 
 **Use Counter for**:
+
 - ✅ Total requests received
 - ✅ Total errors encountered
 - ✅ Total tasks processed
@@ -72,6 +73,7 @@ Prometheus provides 4 metric types, each optimized for different use cases:
 - ✅ Total database queries executed
 
 **Do NOT use Counter for**:
+
 - ❌ Current temperature (use Gauge)
 - ❌ Active connections (use Gauge)
 - ❌ Request duration (use Histogram)
@@ -87,6 +89,7 @@ Prometheus provides 4 metric types, each optimized for different use cases:
 ### Example
 
 ```python
+# snippet
 from effectful.effects.metrics import IncrementCounter
 from effectful.observability import CounterDefinition, MetricsRegistry
 
@@ -146,22 +149,25 @@ sum(rate(http_requests_total[5m]))
 ### Best Practices
 
 **✅ DO**:
+
 - Name with `_total` suffix
 - Increment by constant amounts (usually 1.0)
 - Use for event counts
 
 **❌ DON'T**:
+
 - Decrement counters
 - Set counter to arbitrary value (use Gauge)
 - Use counter for current state (use Gauge)
 
----
+______________________________________________________________________
 
 ## Step 4: Gauge (current value, up or down)
 
 ### When to Use
 
 **Use Gauge for**:
+
 - ✅ Current memory usage
 - ✅ Active database connections
 - ✅ Queue depth
@@ -170,6 +176,7 @@ sum(rate(http_requests_total[5m]))
 - ✅ In-flight requests
 
 **Do NOT use Gauge for**:
+
 - ❌ Total requests (use Counter)
 - ❌ Request duration distribution (use Histogram)
 - ❌ Monotonically increasing values (use Counter)
@@ -184,6 +191,7 @@ sum(rate(http_requests_total[5m]))
 ### Example
 
 ```python
+# snippet
 from effectful.effects.metrics import RecordGauge
 from effectful.observability import GaugeDefinition, MetricsRegistry
 
@@ -253,22 +261,25 @@ websocket_connections_active > 1000
 ### Best Practices
 
 **✅ DO**:
+
 - Set to current absolute value
 - Use for state that can increase or decrease
 - Update frequently for accuracy
 
 **❌ DON'T**:
+
 - Use `rate()` on gauges (they're already current values)
 - Name with `_total` suffix
 - Use for event counts (use Counter)
 
----
+______________________________________________________________________
 
 ## Step 5: Histogram (distribution with buckets)
 
 ### When to Use
 
 **Use Histogram for**:
+
 - ✅ Request/response duration
 - ✅ Request/response size
 - ✅ Database query latency
@@ -276,6 +287,7 @@ websocket_connections_active > 1000
 - ✅ Any distribution you want quantiles for (p50, p95, p99)
 
 **Do NOT use Histogram for**:
+
 - ❌ Event counts (use Counter)
 - ❌ Current values (use Gauge)
 - ❌ Values without meaningful distribution
@@ -291,6 +303,7 @@ websocket_connections_active > 1000
 ### Example
 
 ```python
+# snippet
 from effectful.effects.metrics import ObserveHistogram
 from effectful.observability import HistogramDefinition, MetricsRegistry
 import time
@@ -341,18 +354,23 @@ def measure_request_duration(
 ### Bucket Design
 
 **Good Buckets** (exponential distribution):
+
 ```python
+# snippet
 buckets=(0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0)
 # Roughly doubles each step, covers 5ms to 10s
 ```
 
 **Bad Buckets** (linear distribution):
+
 ```python
+# snippet
 buckets=(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
 # Poor resolution at extremes
 ```
 
 **Bucket Guidelines**:
+
 - Cover expected range (p1 to p99+)
 - Use exponential distribution (~2x each step)
 - Include SLO thresholds (e.g., 0.1s, 0.5s, 1.0s)
@@ -397,28 +415,32 @@ http_request_duration_seconds_count{method="GET",endpoint="/api/users"} 250
 ### Best Practices
 
 **✅ DO**:
+
 - Use for latency/duration measurements
 - Name with `_seconds` or `_bytes` suffix
 - Design buckets to cover expected range
 - Use `histogram_quantile()` for percentiles
 
 **❌ DON'T**:
+
 - Use too many buckets (>15 usually wasteful)
 - Use linear buckets
 - Forget `+Inf` bucket (added automatically)
 
----
+______________________________________________________________________
 
 ## Step 6: Summary (distribution with quantiles, rare)
 
 ### When to Use
 
 **Use Summary for**:
+
 - ⚠️ **Rarely used** - prefer Histogram instead
 - ⚠️ When you need exact quantiles (not approximate)
 - ⚠️ When aggregation across labels is not needed
 
 **Prefer Histogram because**:
+
 - ✅ Server-side aggregation possible
 - ✅ Lower cardinality
 - ✅ Can calculate any quantile later (not fixed at registration)
@@ -435,6 +457,7 @@ http_request_duration_seconds_count{method="GET",endpoint="/api/users"} 250
 ### Example
 
 ```python
+# snippet
 from effectful.effects.metrics import RecordSummary
 from effectful.observability import SummaryDefinition, MetricsRegistry
 
@@ -481,24 +504,25 @@ response_size_bytes_count{endpoint="/api/users"} 100
 
 ### Histogram vs Summary Comparison
 
-| Aspect | Histogram | Summary |
-|--------|-----------|---------|
+| Aspect                   | Histogram            | Summary               |
+| ------------------------ | -------------------- | --------------------- |
 | **Quantile calculation** | Server-side (PromQL) | Client-side (library) |
-| **Accuracy** | Approximate | Exact |
-| **Aggregation** | ✅ Possible | ❌ Not possible |
-| **Cardinality** | Low (fixed buckets) | High (per label) |
-| **PromQL flexibility** | ✅ Any quantile | ❌ Fixed quantiles |
-| **Recommendation** | ✅ Prefer | ⚠️ Avoid |
+| **Accuracy**             | Approximate          | Exact                 |
+| **Aggregation**          | ✅ Possible          | ❌ Not possible       |
+| **Cardinality**          | Low (fixed buckets)  | High (per label)      |
+| **PromQL flexibility**   | ✅ Any quantile      | ❌ Fixed quantiles    |
+| **Recommendation**       | ✅ Prefer            | ⚠️ Avoid              |
 
 **Recommendation**: **Always use Histogram** unless you have a specific reason for Summary.
 
----
+______________________________________________________________________
 
 ## Step 7: Real-world examples
 
 ### Example 1: HealthHub Appointments
 
 ```python
+# snippet
 from effectful.observability import MetricsRegistry, CounterDefinition, HistogramDefinition, GaugeDefinition
 
 HEALTHHUB_METRICS = MetricsRegistry(
@@ -559,6 +583,7 @@ HEALTHHUB_METRICS = MetricsRegistry(
 ### Example 2: E-commerce System
 
 ```python
+# snippet
 ECOMMERCE_METRICS = MetricsRegistry(
     counters=(
         # Orders
@@ -614,7 +639,7 @@ ECOMMERCE_METRICS = MetricsRegistry(
 )
 ```
 
----
+______________________________________________________________________
 
 ## Step 8: Common patterns
 
@@ -623,6 +648,7 @@ ECOMMERCE_METRICS = MetricsRegistry(
 Track both count and duration for requests:
 
 ```python
+# snippet
 def handle_api_request(
     endpoint: str,
 ) -> Generator[AllEffects, EffectResult, None]:
@@ -656,6 +682,7 @@ def handle_api_request(
 Update gauge when resource count changes:
 
 ```python
+# snippet
 def update_connection_gauge(
     pool_name: str,
     connections: int,
@@ -680,6 +707,7 @@ yield from update_connection_gauge("main", current_connections - 1)
 Use labels to separate success/error counts:
 
 ```python
+# snippet
 def track_operation_result(
     operation: str,
     result: OperationResult,
@@ -701,6 +729,7 @@ def track_operation_result(
 ```
 
 **PromQL for error rate**:
+
 ```promql
 # file: examples/12_metric_types_guide.promql
 sum(rate(operations_total{status="error"}[5m]))
@@ -708,7 +737,7 @@ sum(rate(operations_total{status="error"}[5m]))
 sum(rate(operations_total[5m]))
 ```
 
----
+______________________________________________________________________
 
 ## Step 9: Quick reference card
 
@@ -776,7 +805,7 @@ yield RecordSummary(metric_name="size_bytes", labels={...}, value=1234.0)
 size_bytes{quantile="0.95"}
 ```
 
----
+______________________________________________________________________
 
 ## Summary
 
@@ -790,7 +819,7 @@ size_bytes{quantile="0.95"}
 - Add alerting semantics for the chosen metrics in [Alert Rules](alert_rules.md).
 - Review monitoring policy in [Monitoring & Alerting](../engineering/monitoring_and_alerting.md).
 
----
+______________________________________________________________________
 
 ## See Also
 
@@ -799,8 +828,9 @@ size_bytes{quantile="0.95"}
 - [Alert Rules](./alert_rules.md) - Creating alerts
 - [Observability](../engineering/observability.md) - Metrics philosophy
 
----
+______________________________________________________________________
 
 ## Cross-References
+
 - [Documentation Standards](../documentation_standards.md)
 - [Engineering Standards](../engineering/README.md)

@@ -8,7 +8,7 @@
 
 Authoritative command map for running, testing, and packaging inside the containerized toolchain.
 
----
+______________________________________________________________________
 
 ## SSoT Link Map
 
@@ -27,12 +27,12 @@ flowchart TB
   Testing --> Docs
 ```
 
-| Need | Link |
-|------|------|
-| Docker contract | [Docker Workflow](docker_workflow.md#development-contract) |
-| Which tests to run | [Testing](testing.md#running-tests) |
-| Daily development loop | [Development Workflow](development_workflow.md) |
-| Formatting + linking rules | [Documentation Standards](../documentation_standards.md) |
+| Need                       | Link                                                       |
+| -------------------------- | ---------------------------------------------------------- |
+| Docker contract            | [Docker Workflow](docker_workflow.md#development-contract) |
+| Which tests to run         | [Testing](testing.md#running-tests)                        |
+| Daily development loop     | [Development Workflow](development_workflow.md)            |
+| Formatting + linking rules | [Documentation Standards](../documentation_standards.md)   |
 
 ## Command Map (Mermaid)
 
@@ -57,6 +57,11 @@ flowchart TB
   Poetry --> Build
 ```
 
+## Docker Service Management
+
+- Use the compose file specified in each guide; commands assume the `effectful` service unless noted.
+- Service names and compose files are listed in the Command Table for quick reference.
+
 ## Docker Command Prefix
 
 **All commands run inside Docker**: `docker compose -f docker/docker-compose.yml exec effectful poetry run <command>`
@@ -67,16 +72,21 @@ See [Docker Workflow](docker_workflow.md) for complete policy.
 
 ## Command Table
 
-| Task | Command |
-|------|---------|
-| Start services | `docker compose -f docker/docker-compose.yml up -d` |
-| View logs | `docker compose -f docker/docker-compose.yml logs -f effectful` |
-| Check code quality | `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code` |
-| Test all | `docker compose -f docker/docker-compose.yml exec effectful poetry run test-all` |
-| Test unit | `docker compose -f docker/docker-compose.yml exec effectful poetry run test-unit` |
-| Test integration | `docker compose -f docker/docker-compose.yml exec effectful poetry run test-integration` |
-| Python shell | `docker compose -f docker/docker-compose.yml exec effectful poetry run python` |
-| Build package | `docker compose -f docker/docker-compose.yml exec effectful poetry build` |
+| Task               | Command                                                                                  |
+| ------------------ | ---------------------------------------------------------------------------------------- |
+| Start services     | `docker compose -f docker/docker-compose.yml up -d`                                      |
+| View logs          | `docker compose -f docker/docker-compose.yml logs -f effectful`                          |
+| Check code quality | `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code`       |
+| Test all           | `docker compose -f docker/docker-compose.yml exec effectful poetry run test-all`         |
+| Test unit          | `docker compose -f docker/docker-compose.yml exec effectful poetry run test-unit`        |
+| Test integration   | `docker compose -f docker/docker-compose.yml exec effectful poetry run test-integration` |
+| Python shell       | `docker compose -f docker/docker-compose.yml exec effectful poetry run python`           |
+| Build package      | `docker compose -f docker/docker-compose.yml exec effectful poetry build`                |
+
+## Code Quality Validation
+
+- Run `poetry run check-code` inside the correct compose service (`effectful` for core, demo-specific for overlays).
+- Validate formatting, lint, types, markdown checks, and custom doc validators in a single invocation.
 
 ## Poetry Entrypoints
 
@@ -91,14 +101,15 @@ See [Docker Workflow](docker_workflow.md) for complete policy.
 
 ## Test Statistics
 
-| Category | Test Count (via `rg "def test_"`) | Duration | Infrastructure |
-|----------|-----------------------------------|----------|----------------|
-| Unit tests | ~479 | Varies by host/container; run in Docker | pytest-mock only |
-| Integration | ~84 | Varies; requires Docker services | PostgreSQL/Redis/MinIO/Pulsar |
-| Full suite | ~750 | Varies; run containerized | Mixed |
-| Coverage | 69% overall | - | Adapters/infrastructure excluded from measurement |
+| Category    | Test Count (via `rg "def test_"`) | Duration                                | Infrastructure                                    |
+| ----------- | --------------------------------- | --------------------------------------- | ------------------------------------------------- |
+| Unit tests  | ~479                              | Varies by host/container; run in Docker | pytest-mock only                                  |
+| Integration | ~84                               | Varies; requires Docker services        | PostgreSQL/Redis/MinIO/Pulsar                     |
+| Full suite  | ~750                              | Varies; run containerized               | Mixed                                             |
+| Coverage    | 69% overall                       | -                                       | Adapters/infrastructure excluded from measurement |
 
 **Test Organization**:
+
 - `tests/unit/` - Pure logic and interpreter/unit coverage
 - `tests/integration/` - Multi-effect workflows against real infrastructure
 - `tests/e2e/` - End-to-end chat workflow
@@ -106,6 +117,11 @@ See [Docker Workflow](docker_workflow.md) for complete policy.
 - `tests/test_domain.py` - Domain model tests
 - `tests/test_observability.py` - Observability surface tests
 - `tests/test_adapters.py` - Adapter-focused tests
+
+## Running Tests
+
+- Use `poetry run test-unit`, `poetry run test-integration`, and `poetry run test-all` from the appropriate compose service.
+- Respect timeout guidance in [Testing Guide](testing.md#part-2-test-execution-environment).
 
 ## Test Output Management
 
@@ -151,6 +167,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest > /
 - [Code Quality](code_quality.md) - check-code workflow and MyPy strict enforcement
 
 ## Cross-References
+
 - [Docker Workflow](docker_workflow.md)
 - [Testing](testing.md)
 - [Development Workflow](development_workflow.md)

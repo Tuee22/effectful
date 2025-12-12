@@ -1,7 +1,7 @@
 # Architecture
 
-**Status**: Authoritative source  
-**Supersedes**: none  
+**Status**: Authoritative source\
+**Supersedes**: none\
 **Referenced by**: documents/readme.md, engineering/README.md
 
 > **Purpose**: Single Source of Truth for the Effectful architecture, including layers, effect hierarchy, and data flow patterns.
@@ -30,14 +30,14 @@ flowchart TB
   Purity --> Effects
 ```
 
-| Need | Link |
-|------|------|
-| Doctrine for types + purity | [Code Quality](code_quality.md) |
-| Purity boundaries | [Code Quality](code_quality.md#purity-doctrines) |
-| Test shape by layer | [Testing](testing.md#part-4-four-layer-testing-architecture) |
-| Observability guidance | [Observability](observability.md) |
-| Container contract | [Docker Workflow](docker_workflow.md) |
-| Effect composition examples | [Effect Patterns](effect_patterns.md) |
+| Need                        | Link                                                         |
+| --------------------------- | ------------------------------------------------------------ |
+| Doctrine for types + purity | [Code Quality](code_quality.md)                              |
+| Purity boundaries           | [Code Quality](code_quality.md#purity-doctrines)             |
+| Test shape by layer         | [Testing](testing.md#part-4-four-layer-testing-architecture) |
+| Observability guidance      | [Observability](observability.md)                            |
+| Container contract          | [Docker Workflow](docker_workflow.md)                        |
+| Effect composition examples | [Effect Patterns](effect_patterns.md)                        |
 
 ## Design Philosophy
 
@@ -46,10 +46,11 @@ flowchart TB
 The core principle: If your program compiles with `mypy --strict`, it should be correct.
 
 We achieve this through:
+
 1. **Algebraic Data Types (ADTs)** - Model all possible states explicitly
-2. **Result Type** - Make errors visible in type signatures
-3. **Immutability** - Eliminate temporal coupling and race conditions
-4. **Exhaustive Matching** - Type checker enforces handling all cases
+1. **Result Type** - Make errors visible in type signatures
+1. **Immutability** - Eliminate temporal coupling and race conditions
+1. **Exhaustive Matching** - Type checker enforces handling all cases
 
 For detailed type safety patterns, see `documents/engineering/code_quality.md`.
 
@@ -71,15 +72,16 @@ flowchart TB
 
 **Layer Responsibilities:**
 
-| Layer | Component | Responsibility |
-|-------|-----------|----------------|
-| 1 | Application | Pure effect programs (business logic as generators) |
-| 2 | Program Runner | Execution engine (generator protocol, fail-fast semantics) |
-| 3 | Composite Interpreter | Effect routing (pattern matching to specialized handlers) |
-| 4 | Specialized Interpreters | Infrastructure integration (WebSocket, Database, Cache, Messaging, Storage, Auth, Metrics) |
-| 5 | Infrastructure | External systems (PostgreSQL, Redis, FastAPI, Apache Pulsar, AWS S3, JWT auth, Prometheus, or test fakes) |
+| Layer | Component                | Responsibility                                                                                            |
+| ----- | ------------------------ | --------------------------------------------------------------------------------------------------------- |
+| 1     | Application              | Pure effect programs (business logic as generators)                                                       |
+| 2     | Program Runner           | Execution engine (generator protocol, fail-fast semantics)                                                |
+| 3     | Composite Interpreter    | Effect routing (pattern matching to specialized handlers)                                                 |
+| 4     | Specialized Interpreters | Infrastructure integration (WebSocket, Database, Cache, Messaging, Storage, Auth, Metrics)                |
+| 5     | Infrastructure           | External systems (PostgreSQL, Redis, FastAPI, Apache Pulsar, AWS S3, JWT auth, Prometheus, or test fakes) |
 
 **Key Properties:**
+
 - **Unidirectional flow**: Data flows down through layers, results flow back up
 - **Separation of concerns**: Each layer has single responsibility
 - **Testability**: Replace Layer 5 with fakes for unit tests
@@ -123,13 +125,14 @@ flowchart TB
 ```
 
 **Key Points:**
+
 - Programs yield effects (pure data) to the runner
 - Runner calls interpreter for each effect
 - Composite interpreter routes to specialized handlers
 - Specialized interpreters interact with infrastructure
 - Results flow back up through the same path (fail-fast on errors)
 
----
+______________________________________________________________________
 
 ## Core Abstractions
 
@@ -151,6 +154,7 @@ class GetUserById:
 ```
 
 **Why frozen dataclasses?**
+
 - Immutable - can't be modified after creation
 - Hashable - can be used in sets, dict keys
 - Thread-safe - no race conditions
@@ -174,6 +178,7 @@ type Result[T, E] = Ok[T] | Err[E]
 ```
 
 **Why not exceptions?**
+
 - Errors are **visible in type signatures**
 - Cannot forget to handle errors (type checker enforces)
 - Errors can be transformed, composed, logged
@@ -199,6 +204,7 @@ type UserLookupResult = UserFound | UserNotFound
 ```
 
 **Benefits:**
+
 - Impossible to forget cases (exhaustive matching)
 - Self-documenting (all states explicit)
 - Refactoring-friendly (add new case -> type errors guide you)
@@ -225,6 +231,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 ```
 
 **Why generators?**
+
 - **Separation of concerns**: Program describes what (effects), interpreter decides how (execution)
 - **Composability**: Use `yield from` to call sub-programs
 - **Testability**: Swap real interpreter for fake
@@ -253,13 +260,14 @@ class WebSocketInterpreter:
 **Test interpreter**: Uses pytest-mock AsyncMock
 
 ### WebSocket Security Pattern
+
 - Use **one-time tickets**: issue a short-lived JWT (aud = `ws`) and store `jti` in Redis; consume with `GETDEL` on connect to enforce single use.
 - Enforce **origin allowlist** and `wss://` only; reject upgrades from unknown origins in middleware.
 - Apply **defense-in-depth**: ticket validation → server-side channel authorization (deny by default) → per-connection/user/global rate limits.
 - Set CSP `connect-src` to the explicit WebSocket endpoints to block exfiltration.
 - Treat WebSocket interpreters like any other I/O: return typed errors (e.g., `WebSocketClosedError`) and keep programs pure.
 
----
+______________________________________________________________________
 
 ## Effect Type Hierarchy
 
@@ -300,11 +308,12 @@ flowchart TB
 ```
 
 **Key Properties:**
+
 - **Union type**: `AllEffects = WebSocketEffect | DatabaseEffect | CacheEffect | ...`
 - **Pattern matching**: Composite interpreter routes based on effect type
 - **Extensible**: Add new effect categories by extending the union
 
----
+______________________________________________________________________
 
 ## Program Composition
 
@@ -325,6 +334,7 @@ flowchart TB
 ```
 
 **Composition Patterns:**
+
 - **Sequential**: `yield effect1; yield effect2`
 - **Delegation**: `result = yield from sub_program()`
 - **Conditional**: `match result: case Ok(...): yield effect`
@@ -342,7 +352,7 @@ def main_workflow(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
     return "success"
 ```
 
----
+______________________________________________________________________
 
 ## Infrastructure Topology
 
@@ -370,21 +380,22 @@ flowchart TB
 
 **Infrastructure Services:**
 
-| Service | Protocol | Purpose |
-|---------|----------|---------|
-| FastAPI WebSocket | WebSocket | Real-time client communication |
-| PostgreSQL | asyncpg | Persistent data storage |
-| Redis | aioredis | Caching and session storage |
-| MinIO S3 | S3 API | File and object storage |
-| Apache Pulsar | Pulsar client | Pub/sub messaging |
-| Prometheus | HTTP | Metrics collection and monitoring |
-| Grafana | HTTP | Metrics visualization and alerting |
+| Service           | Protocol      | Purpose                            |
+| ----------------- | ------------- | ---------------------------------- |
+| FastAPI WebSocket | WebSocket     | Real-time client communication     |
+| PostgreSQL        | asyncpg       | Persistent data storage            |
+| Redis             | aioredis      | Caching and session storage        |
+| MinIO S3          | S3 API        | File and object storage            |
+| Apache Pulsar     | Pulsar client | Pub/sub messaging                  |
+| Prometheus        | HTTP          | Metrics collection and monitoring  |
+| Grafana           | HTTP          | Metrics visualization and alerting |
 
 **Testing Strategy:**
+
 - **Unit tests**: All services mocked with pytest-mock
 - **Integration tests**: Real Docker containers for each service
 
----
+______________________________________________________________________
 
 ## Effect Execution Flow
 
@@ -400,13 +411,14 @@ flowchart TB
 ```
 
 **Key Behavior:**
+
 - Runner uses `next()` to get the first effect from the program
 - For each effect, runner calls `interpreter.interpret(effect)`
 - On success (`Ok`), runner sends the value back to the program using `send()`
 - On failure (`Err`), runner immediately returns the error (fail-fast semantics)
 - When program completes (`StopIteration`), runner returns `Ok(final_value)`
 
----
+______________________________________________________________________
 
 ## Error Propagation
 
@@ -439,23 +451,25 @@ flowchart TB
 ```
 
 **Critical Properties:**
+
 - **Fail-Fast**: First error immediately stops execution and returns `Err`
 - **No Cleanup**: Program does not continue after error (no finally blocks)
 - **No Retry**: Errors are returned as-is (retry logic in application layer)
 - **Deterministic**: Same error at same point always produces same result
 
----
+______________________________________________________________________
 
 ## Design Decisions
 
 ### Why Generators Instead of Monads?
 
 **Chose generators** because:
+
 1. Native Python feature (no library needed)
-2. Familiar syntax (looks like regular async code)
-3. Type checker understands them
-4. Excellent IDE support
-5. No performance overhead (compared to monad transformers)
+1. Familiar syntax (looks like regular async code)
+1. Type checker understands them
+1. Excellent IDE support
+1. No performance overhead (compared to monad transformers)
 
 **Tradeoff**: Less compositional than monads, but easier to learn and use.
 
@@ -466,6 +480,7 @@ flowchart TB
 **Result type makes errors visible** - type checker enforces error handling.
 
 **Benefits:**
+
 - Type checker enforces error handling
 - No try/except archaeology
 - Errors can be transformed, logged, retried
@@ -474,6 +489,7 @@ flowchart TB
 ### Why Frozen Dataclasses Instead of NamedTuples?
 
 **Frozen dataclasses**:
+
 - Better IDE support (type hints, docstrings)
 - Clearer syntax (`@dataclass(frozen=True)`)
 - Can have methods
@@ -482,6 +498,7 @@ flowchart TB
 ### Why Composite Interpreter Instead of Monad Transformers?
 
 **Benefits:**
+
 - Simple delegation (no transformer stack)
 - Easy to add new effect types
 - Clear error handling (each interpreter returns Result)
@@ -494,11 +511,12 @@ flowchart TB
 **ADT is self-documenting** - all cases explicit with reasons.
 
 **Benefits:**
+
 - Forces caller to think about all cases
 - Self-documenting (no comments needed)
 - Refactoring-safe (add new case -> type errors guide you)
 
----
+______________________________________________________________________
 
 ## Performance Considerations
 
@@ -525,13 +543,14 @@ flowchart TB
 
 **Conclusion**: Result type is faster for error cases.
 
----
+______________________________________________________________________
 
 ## Migration Guide
 
 ### From Imperative to Functional
 
 **Before** (imperative, exceptions):
+
 ```python
 # file: examples/architecture.py
 async def greet_user(websocket: WebSocket, db: AsyncSession, user_id: UUID):
@@ -544,6 +563,7 @@ async def greet_user(websocket: WebSocket, db: AsyncSession, user_id: UUID):
 ```
 
 **After** (functional, effects):
+
 ```python
 # file: examples/architecture.py
 def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, None]:
@@ -559,21 +579,22 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, None]:
 ```
 
 **Benefits:**
+
 - Testable without database/WebSocket
 - Type-safe (all effects explicit)
 - Composable (can call from other programs)
 - Error handling enforced by type system
 
----
+______________________________________________________________________
 
 ## Future Extensions
 
 ### Planned Features
 
 1. **Parallel Effects** - Execute multiple effects concurrently
-2. **Effect Retries** - Automatic retry with backoff
-3. **Effect Timeouts** - Timeout wrapper for effects
-4. **Effect Logging** - Automatic structured logging
+1. **Effect Retries** - Automatic retry with backoff
+1. **Effect Timeouts** - Timeout wrapper for effects
+1. **Effect Logging** - Automatic structured logging
 
 ### Non-Goals
 
@@ -582,7 +603,7 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, None]:
 - **Not a task queue** - Use Celery/Dramatiq/etc.
 - **Not a reactive framework** - Use RxPY/aioreactive/etc.
 
----
+______________________________________________________________________
 
 ## References
 
@@ -592,11 +613,12 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, None]:
 - **Generators**: PEP 255, PEP 342 (coroutines)
 - **Type Safety**: Mypy strict mode, PEP 695 (generic type syntax)
 
----
+______________________________________________________________________
 
 **Philosophy**: Correctness first, performance second. Make invalid states unrepresentable.
 
 ## Cross-References
+
 - [Code Quality](code_quality.md)
 - [Testing](testing.md)
 - [Observability](observability.md)
