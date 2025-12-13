@@ -6,7 +6,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from tools.doc_utils import default_arg_parser, fenced_blocks
+from effectful_tools.doc_utils import default_arg_parser, fenced_blocks
 
 
 COMMENT_LANGS = {

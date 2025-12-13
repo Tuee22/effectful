@@ -1,21 +1,16 @@
 #!/usr/bin/env python3
-"""Comprehensive code + documentation gate.
+"""Shared documentation suite runner for core and demos.
 
-Order:
-1) black
-2) ruff
-3) mypy
-4) mdformat --check
-5) pymarkdown scan
-6) codespell
-7) Custom doc validators
-8) Functional catalogue check
+Steps:
+1) mdformat --check (documents + demo)
+2) PyMarkdown scan (with configured rules)
+3) codespell
+4) Custom doc validators (run_doc_checks)
 """
 
 from __future__ import annotations
 
 import subprocess
-import sys
 from pathlib import Path
 from typing import Sequence
 
@@ -24,26 +19,21 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def run_step(name: str, command: Sequence[str]) -> int:
-    print("=" * 80)
-    print(name)
-    print("=" * 80)
+    print(f"- {name}")
     result = subprocess.run(command, check=False)
     if result.returncode != 0:
-        print(f"\n❌ {name} failed.")
+        print(f"❌ {name} failed.")
     else:
-        print(f"\n✅ {name} passed.")
+        print(f"✅ {name} passed.")
     return result.returncode
 
 
-def main() -> int:
+def run() -> int:
     pymarkdown_config = ROOT / "configs" / ".pymarkdown.json"
     codespell_config = ROOT / "configs" / ".codespellrc"
     steps: list[tuple[str, list[str]]] = [
-        ("STEP 1/8: Black", ["black", "effectful", "tests", "tools"]),
-        ("STEP 2/8: Ruff", ["ruff", "check", "effectful", "tests", "tools"]),
-        ("STEP 3/8: MyPy", ["mypy", "effectful", "tests", "tools"]),
         (
-            "STEP 4/8: mdformat",
+            "mdformat",
             [
                 "mdformat",
                 "--check",
@@ -52,7 +42,7 @@ def main() -> int:
             ],
         ),
         (
-            "STEP 5/8: PyMarkdown",
+            "PyMarkdown",
             [
                 "pymarkdown",
                 "--config",
@@ -65,22 +55,21 @@ def main() -> int:
             ],
         ),
         (
-            "STEP 6/8: codespell",
+            "codespell",
             ["codespell", "--config", str(codespell_config), "documents", "demo"],
         ),
-        ("STEP 7/8: Custom doc checks", ["python", "-m", "tools.run_doc_checks"]),
-        (
-            "STEP 8/8: Functional catalogue",
-            ["python", "-m", "tools.generate_functional_catalogue", "--check"],
-        ),
+        ("Custom doc checks", ["python", "-m", "effectful_tools.run_doc_checks"]),
     ]
     for name, command in steps:
         code = run_step(name, command)
         if code != 0:
             return code
-    print("\n✅ ALL CHECKS PASSED!")
     return 0
 
 
+def main() -> int:
+    return run()
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())

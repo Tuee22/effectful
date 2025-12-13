@@ -18,7 +18,8 @@ T = TypeVar("T")
 
 
 class InterpreterProtocol(Protocol):
-    async def handle(self, effect: AllEffects) -> object: ...
+    async def handle(self, effect: AllEffects) -> object:
+        ...
 
 
 @dataclass(frozen=True)
@@ -94,4 +95,6 @@ def unwrap_program_result(result: Result[T, InterpreterFailure]) -> T:
         case Ok(value):
             return value
         case Err(failure):
-            raise RuntimeError(f"Interpreter failure for {type(failure.effect).__name__}: {failure.message}")
+            raise RuntimeError(
+                f"Interpreter failure for {type(failure.effect).__name__}: {failure.message}"
+            )

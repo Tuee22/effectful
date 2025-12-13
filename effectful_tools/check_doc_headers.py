@@ -6,7 +6,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from tools.doc_utils import DOCS_DIR, DEMO_DIR, default_arg_parser
+from effectful_tools.doc_utils import DOCS_DIR, DEMO_DIR, default_arg_parser
 
 
 VALID_STATUS = {"authoritative source", "reference only", "deprecated"}

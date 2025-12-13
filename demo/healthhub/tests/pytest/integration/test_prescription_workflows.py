@@ -20,6 +20,7 @@ from uuid import UUID
 import asyncpg
 import pytest
 import redis.asyncio as redis
+from effectful.domain.optional_value import to_optional_value
 
 from app.domain.prescription import MedicationInteractionWarning, NoInteractions, Prescription
 from app.interpreters.composite_interpreter import CompositeInterpreter
@@ -65,7 +66,7 @@ class TestPrescriptionCreation:
                 frequency="Once daily",
                 duration_days=30,
                 refills_remaining=2,
-                notes="For blood pressure management",
+                notes=to_optional_value("For blood pressure management"),
                 actor_id=sample_user_id,
                 existing_medications=[],  # No existing medications
             ),
@@ -125,7 +126,7 @@ class TestPrescriptionCreation:
                 frequency="Twice daily",
                 duration_days=90,
                 refills_remaining=3,
-                notes=None,
+                notes=to_optional_value(None, reason="not_provided"),
                 actor_id=sample_user_id,
                 existing_medications=[],
             ),
@@ -183,7 +184,7 @@ class TestMedicationInteractionChecking:
                 frequency="Once daily",
                 duration_days=30,
                 refills_remaining=0,
-                notes=None,
+                notes=to_optional_value(None, reason="not_provided"),
                 actor_id=sample_user_id,
                 existing_medications=["Aspirin"],  # Known severe interaction
             ),
@@ -255,7 +256,7 @@ class TestMedicationInteractionChecking:
                 frequency="Every 6 hours as needed",
                 duration_days=7,
                 refills_remaining=0,
-                notes=None,
+                notes=to_optional_value(None, reason="not_provided"),
                 actor_id=sample_user_id,
                 existing_medications=["Lisinopril"],  # Known moderate interaction
             ),
@@ -323,7 +324,7 @@ class TestMedicationInteractionChecking:
                 frequency="Three times daily with meals",
                 duration_days=60,
                 refills_remaining=1,
-                notes=None,
+                notes=to_optional_value(None, reason="not_provided"),
                 actor_id=sample_user_id,
                 existing_medications=["Levothyroxine"],  # Known minor interaction
             ),
@@ -378,7 +379,7 @@ class TestPrescriptionAuthorization:
                 frequency="Three times daily",
                 duration_days=10,
                 refills_remaining=0,
-                notes=None,
+                notes=to_optional_value(None, reason="not_provided"),
                 actor_id=sample_user_id,
                 existing_medications=[],
             ),
@@ -428,7 +429,7 @@ class TestPrescriptionAuthorization:
                 frequency="Once daily at bedtime",
                 duration_days=90,
                 refills_remaining=2,
-                notes=None,
+                notes=to_optional_value(None, reason="not_provided"),
                 actor_id=sample_user_id,
                 existing_medications=[],
             ),
@@ -476,7 +477,7 @@ class TestPrescriptionNotifications:
                 frequency="Once daily",
                 duration_days=30,
                 refills_remaining=3,
-                notes="For cholesterol management",
+                notes=to_optional_value("For cholesterol management"),
                 actor_id=sample_user_id,
                 existing_medications=[],
             ),

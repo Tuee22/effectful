@@ -16,5 +16,5 @@
 ## Cross-References
 
 - [HealthHub Documentation Guide](../../../../../documents/readme.md)
-- [HealthHub Documentation Hub](../readme.md)
+- [HealthHub Documentation Hub](../../readme.md)
 - [Effectful Advanced Composition Tutorial](../../../../../documents/tutorials/advanced_composition.md)

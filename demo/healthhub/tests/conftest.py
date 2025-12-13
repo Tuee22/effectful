@@ -44,7 +44,8 @@ def assert_frozen(obj: object, attr: str, value: object) -> None:
 
 
 class SupportsAclose(Protocol):
-    async def aclose(self) -> None: ...
+    async def aclose(self) -> None:
+        ...
 
 
 def has_aclose(pubsub: object) -> TypeGuard[SupportsAclose]:

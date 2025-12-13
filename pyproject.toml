@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Pure functional effect system for Python with algebraic data types and explicit error handling"
 authors = ["Effectful Team"]
 readme = "README.md"
-packages = [{include = "effectful"}]
+packages = [{include = "effectful"}, {include = "effectful_tools"}]
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -37,12 +37,12 @@ codespell = "^2.4.1"
 
 [tool.poetry.scripts]
 # Code quality
-check-code = "tools.check_code:main"
+check-code = "effectful_tools.check_code:main"
 
 # Testing
-test-all = "tools.test_runner:run_all"
-test-unit = "tools.test_runner:run_unit"
-test-integration = "tools.test_runner:run_integration"
+test-all = "effectful_tools.test_runner:run_all"
+test-unit = "effectful_tools.test_runner:run_unit"
+test-integration = "effectful_tools.test_runner:run_integration"
 
 [build-system]
 requires = ["poetry-core"]
@@ -112,7 +112,7 @@ color_output = true
 error_summary = true
 
 # File coverage
-files = ["effectful/", "tests/", "tools/"]
+files = ["effectful/", "tests/", "effectful_tools/"]
 explicit_package_bases = true
 namespace_packages = true
 

@@ -6,7 +6,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from tools.doc_utils import (
+from effectful_tools.doc_utils import (
     CanonicalDiagram,
     DOCS_DIR,
     DEMO_DIR,

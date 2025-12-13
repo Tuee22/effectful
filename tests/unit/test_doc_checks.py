@@ -6,7 +6,7 @@ from pathlib import Path
 from _pytest.capture import CaptureFixture
 from _pytest.monkeypatch import MonkeyPatch
 
-from tools import (
+from effectful_tools import (
     check_demo_docs,
     check_doc_code_blocks,
     check_doc_headers,

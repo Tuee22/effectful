@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from tools import check_demo_docs, check_doc_headers, check_mermaid_metadata
+from effectful_tools import check_demo_docs, check_doc_headers, check_mermaid_metadata
 
 
 def test_check_header_requires_purpose(tmp_path: Path) -> None:

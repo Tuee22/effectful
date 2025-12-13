@@ -127,8 +127,8 @@ services:
       E2E_BACKEND_URL: http://localhost:8851
       DESTRUCTIVELY_SEED_DB_TEST_DATA: "true"
     volumes:
-      # Mount effectful library read-only for hot reload
-      - ../../../effectful:/app/effectful-root/effectful:ro
+      # Mount effectful library + tools/doc suite read-only for hot reload
+      - ../../..:/app/effectful-root:ro
       # Mount healthhub backend for hot reload
       - ../backend/app:/app/healthhub/backend/app
       - ../backend/scripts:/app/healthhub/backend/scripts

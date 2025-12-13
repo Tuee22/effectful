@@ -7,7 +7,7 @@ import re
 import sys
 from pathlib import Path
 
-from tools.doc_utils import DOCS_DIR, DEMO_DIR, default_arg_parser
+from effectful_tools.doc_utils import DOCS_DIR, DEMO_DIR, default_arg_parser
 
 
 EXCEPTIONS = {"README.md", "AGENTS.md", "CLAUDE.md", "MIGRATION_PLAN.md"}

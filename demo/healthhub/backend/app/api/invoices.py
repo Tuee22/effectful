@@ -62,7 +62,7 @@ router = APIRouter()
 
 def _normalize_optional_uuid(value: object, *, reason: str) -> OptionalValue[UUID]:
     """Normalize incoming UUID values to OptionalValue."""
-    if isinstance(value, OptionalValue):
+    if isinstance(value, (Provided, Absent)):
         return value
     if value is None:
         return Absent(reason=reason)
@@ -75,7 +75,7 @@ def _normalize_optional_uuid(value: object, *, reason: str) -> OptionalValue[UUI
 
 def _normalize_optional_date(value: object, *, reason: str) -> OptionalValue[date]:
     """Normalize incoming date values to OptionalValue."""
-    if isinstance(value, OptionalValue):
+    if isinstance(value, (Provided, Absent)):
         return value
     if value is None:
         return Absent(reason=reason)
@@ -88,7 +88,7 @@ def _normalize_optional_date(value: object, *, reason: str) -> OptionalValue[dat
 
 def _normalize_optional_datetime(value: object, *, reason: str) -> OptionalValue[datetime]:
     """Normalize incoming datetime values to OptionalValue."""
-    if isinstance(value, OptionalValue):
+    if isinstance(value, (Provided, Absent)):
         return value
     if value is None:
         return Absent(reason=reason)
@@ -118,7 +118,9 @@ class InvoiceResponse(BaseModel):
 
     id: str
     patient_id: str
-    appointment_id: OptionalValue[UUID] = Field(default_factory=lambda: Absent("no_associated_appointment"))
+    appointment_id: OptionalValue[UUID] = Field(
+        default_factory=lambda: Absent("no_associated_appointment")
+    )
     status: Literal["draft", "sent", "paid", "overdue"]
     subtotal: float
     tax_amount: float

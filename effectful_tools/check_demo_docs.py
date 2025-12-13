@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from typing import Iterable
 
-from tools.doc_utils import DOCS_DIR, DEMO_DIR, default_arg_parser
+from effectful_tools.doc_utils import DOCS_DIR, DEMO_DIR, default_arg_parser
 
 
 def base_doc_for_demo(path: Path) -> Path:

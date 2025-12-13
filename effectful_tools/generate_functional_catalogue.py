@@ -10,7 +10,7 @@ from pathlib import Path
 
 import mdformat
 
-from tools.doc_utils import CanonicalDiagram, DOCS_DIR, DEMO_DIR, anchorize, fenced_blocks
+from effectful_tools.doc_utils import CanonicalDiagram, DOCS_DIR, DEMO_DIR, anchorize, fenced_blocks
 
 
 CATALOGUE_PATH = DOCS_DIR / "engineering" / "functional_catalogue.md"

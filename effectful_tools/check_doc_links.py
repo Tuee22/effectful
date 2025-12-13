@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 from typing import Iterable
 
-from tools.doc_utils import anchorize, default_arg_parser, is_repo_github_link
+from effectful_tools.doc_utils import anchorize, default_arg_parser, is_repo_github_link
 
 
 ROOT = Path(__file__).resolve().parent.parent

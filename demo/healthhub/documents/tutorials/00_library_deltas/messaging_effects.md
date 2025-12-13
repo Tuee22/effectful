@@ -16,5 +16,5 @@
 ## Cross-References
 
 - [HealthHub Documentation Guide](../../../../../documents/readme.md)
-- [HealthHub Documentation Hub](../readme.md)
+- [HealthHub Documentation Hub](../../readme.md)
 - [Effectful Messaging Effects Tutorial](../../../../../documents/tutorials/messaging_effects.md)

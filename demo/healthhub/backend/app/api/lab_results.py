@@ -18,7 +18,13 @@ from app.database.converters import (
     safe_uuid,
 )
 from app.domain.lab_result import LabResult
-from effectful.domain.optional_value import Absent, OptionalValue, from_optional_value, to_optional_value
+from effectful.domain.optional_value import (
+    Absent,
+    OptionalValue,
+    Provided,
+    from_optional_value,
+    to_optional_value,
+)
 from app.domain.lookup_result import LabResultFound, LabResultMissing, is_lab_result_lookup_result
 from app.effects.healthcare import (
     CreateLabResult,
@@ -77,9 +83,13 @@ class CreateLabResultRequest(BaseModel):
     @field_validator("doctor_notes", mode="before")
     @classmethod
     def normalize_doctor_notes(cls, value: object) -> OptionalValue[str]:
-        if isinstance(value, OptionalValue):
+        if isinstance(value, (Provided, Absent)):
             return value
-        return to_optional_value(value if value is not None else None, reason="not_provided")
+        if value is None:
+            return Absent("not_provided")
+        if isinstance(value, str):
+            return to_optional_value(value, reason="not_provided")
+        raise TypeError("doctor_notes must be a string when provided")
 
 
 class ReviewLabResultRequest(BaseModel):
@@ -92,9 +102,13 @@ class ReviewLabResultRequest(BaseModel):
     @field_validator("doctor_notes", mode="before")
     @classmethod
     def normalize_doctor_notes(cls, value: object) -> OptionalValue[str]:
-        if isinstance(value, OptionalValue):
+        if isinstance(value, (Provided, Absent)):
             return value
-        return to_optional_value(value if value is not None else None, reason="not_provided")
+        if value is None:
+            return Absent("not_provided")
+        if isinstance(value, str):
+            return to_optional_value(value, reason="not_provided")
+        raise TypeError("doctor_notes must be a string when provided")
 
 
 def _row_to_lab_result(row: dict[str, object]) -> LabResult:
@@ -297,7 +311,7 @@ async def review_lab_result(
     def review_program() -> Generator[AllEffects, object, LabResultFound | LabResultMissing]:
         result = yield ReviewLabResult(
             result_id=UUID(lab_result_id),
-            doctor_notes=to_optional_value(request.doctor_notes, reason="not_provided"),
+            doctor_notes=request.doctor_notes,
         )
         assert is_lab_result_lookup_result(result)
         return result

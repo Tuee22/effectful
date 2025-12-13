@@ -24,7 +24,13 @@ from app.domain.lookup_result import (
     PrescriptionMissing,
     is_prescription_lookup_result,
 )
-from effectful.domain.optional_value import Absent, OptionalValue, from_optional_value, to_optional_value
+from effectful.domain.optional_value import (
+    Absent,
+    OptionalValue,
+    Provided,
+    from_optional_value,
+    to_optional_value,
+)
 from app.domain.prescription import MedicationInteractionWarning, Prescription
 from app.effects.healthcare import GetPrescriptionById, ListPrescriptions
 from app.infrastructure.rate_limiter import rate_limit
@@ -83,7 +89,7 @@ class CreatePrescriptionRequest(BaseModel):
     @field_validator("notes", mode="before")
     @classmethod
     def normalize_notes(cls, value: object) -> OptionalValue[str]:
-        if isinstance(value, OptionalValue):
+        if isinstance(value, (Provided, Absent)):
             return value
         return to_optional_value(value if isinstance(value, str) else None, reason="not_provided")
 

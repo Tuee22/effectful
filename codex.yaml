@@ -100,7 +100,7 @@ agents:
       - Mermaid safe subset: no dotted lines, subgraphs, or note-over; TB orientation when long.
       - Code examples follow zero escape-hatch policy.
     suggest:
-      - Run tools/verify_links.py after refactors; use provided templates; prefer links over copies.
+      - Run effectful_tools/verify_links.py after refactors; use provided templates; prefer links over copies.
 
   - name: effect_patterns
     source: documents/engineering/effect_patterns.md

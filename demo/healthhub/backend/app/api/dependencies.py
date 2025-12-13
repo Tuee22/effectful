@@ -22,7 +22,7 @@ from app.domain.lookup_result import (
     DoctorMissingByUserId,
     is_doctor_lookup_result,
 )
-from effectful.domain.optional_value import from_optional_value, to_optional_value
+from effectful.domain.optional_value import OptionalValue, from_optional_value, to_optional_value
 from app.effects.healthcare import GetDoctorById
 from app.effects.notification import LogAuditEvent
 from app.interpreters.auditing_interpreter import AuditContext, AuditedCompositeInterpreter
@@ -286,7 +286,9 @@ async def get_current_user(
                     assert is_doctor_lookup_result(result)
                     return result
 
-                doctor_result = unwrap_program_result(await run_program(doctor_program(), interpreter))
+                doctor_result = unwrap_program_result(
+                    await run_program(doctor_program(), interpreter)
+                )
 
                 match doctor_result:
                     case DoctorFound(doctor=doctor):

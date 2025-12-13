@@ -2,7 +2,7 @@
 
 **Status**: Authoritative source\
 **Supersedes**: previous Unified Documentation Guide (documents/documentation_standards.md)\
-**Referenced by**: ../CLAUDE.md, documents/README.md, documents/engineering/code_quality.md, documents/engineering/navigation.md, documents/engineering/testing.md, documents/engineering/docker_workflow.md, documents/engineering/monitoring_and_alerting.md
+**Referenced by**: ../CLAUDE.md, documents/readme.md, documents/engineering/code_quality.md, documents/engineering/navigation.md, documents/engineering/testing.md, documents/engineering/docker_workflow.md, documents/engineering/monitoring_and_alerting.md
 
 > **Purpose**: Single Source of Truth (SSoT) for writing and maintaining documentation across BBY, Effectful, and SpectralMC. Defines rules that can be enforced deterministically (via Markdown tooling and Python scripts) so human/LLM review can focus on semantics, architecture, and higher-level consistency.
 
@@ -64,6 +64,16 @@ poetry run check-code
     - Custom doc scripts (Mermaid, catalogue, filename/layout checks, code-block checks)
 
 If any of these fail, `poetry run check-code` fails. LLM review happens **only after** `check-code` passes.
+
+### 1.6 Reusable enforcement pattern (core + demos)
+
+To keep demos/examples terse while reusing the full code + docs enforcement, maintain this pattern:
+
+- **Single orchestrator**: `effectful_tools.check_code` remains the canonical runner for code + docs (formatter, linter, type check, Markdown tooling, custom doc scripts, functional catalogue). This lives in the **effectful library** and is the source of truth.
+- **Library-friendly tools**: All doc checkers live under `effectful_tools.*` (installed via Poetry with the library) and are importable (e.g., `effectful_tools.run_doc_checks:main`) so demos can call them without copying logic. Downstream apps must **call the library modules**, not reimplement or fork the logic.
+- **Demo wrappers call core**: Each demo provides a thin `check-code` wrapper that shells to, or imports, the core runner (or at minimum invokes `effectful_tools.run_doc_checks`) so overlays get identical enforcement.
+- **Extensibility lives in effectful**: If a demo needs an additional check, add it to the effectful `effectful_tools` package (behind flags if necessary) and reuse it from the demo. The library owns all reusable checking logic.
+- **Command parity in docs**: Demo documentation must point to the shared runner and the exact compose/service/poetry invocation to run it (base library vs demo container), keeping the “one command for everything” story intact.
 
 ______________________________________________________________________
 
@@ -262,7 +272,7 @@ ______________________________________________________________________
 - Always specify the language (e.g., `python`, `bash`):
 
   ```python
-  # tools/cli/effects.py
+  # effectful_tools/cli/effects.py
   # ❌ WRONG - Mutable domain model
   @dataclass
   class User:
@@ -563,7 +573,7 @@ Rules:
 
 **Generator** (custom Python):
 
-- `tools/generate_functional_catalogue.py`:
+- `effectful_tools/generate_functional_catalogue.py`:
   - Scans all `.md` for ````  ```mermaid ```` blocks with `%% kind:` and `%% id:`.
   - Validates metadata and uniqueness (reuses `check_mermaid_metadata` logic).
   - Derives `Kind`, `ID`, `Name`, `Module`, and `Doc` link.
@@ -605,7 +615,7 @@ Demo projects inherit base standards and functional structures with **delta-only
 
 **Enforcement** (custom Python):
 
-- `tools/check_demo_docs.py`:
+- `effectful_tools/check_demo_docs.py`:
   - Asserts each `demo/.../documents/*.md` has a corresponding base doc.
   - Fails if base link at top is missing or malformed.
   - Optionally flags demo docs that are nearly identical to base docs (copy/paste).
@@ -656,16 +666,16 @@ Use the following tools in the docs pipeline:
   - `codespell`, `cspell`, or similar over `documents/` and `demo/*/documents/`.
 - **Link checking**:
   - `markdown-link-check`, `linkcheckmd`, or a custom Python HTTP/link walker.
-- **Custom Python checkers**:
-  - `check_doc_filenames.py`
-  - `check_doc_artifacts.py`
-  - `check_doc_headers.py`
-  - `check_doc_links.py`
-  - `check_doc_crossrefs.py` (optional)
-  - `check_doc_code_blocks.py`
-  - `check_mermaid_metadata.py`
-  - `check_demo_docs.py`
-  - `generate_functional_catalogue.py` (with a “check” mode)
+- **Custom Python checkers** (from `effectful_tools`):
+  - `effectful_tools/check_doc_filenames.py`
+  - `effectful_tools/check_doc_artifacts.py`
+  - `effectful_tools/check_doc_headers.py`
+  - `effectful_tools/check_doc_links.py`
+  - `effectful_tools/check_doc_crossrefs.py` (optional)
+  - `effectful_tools/check_doc_code_blocks.py`
+  - `effectful_tools/check_mermaid_metadata.py`
+  - `effectful_tools/check_demo_docs.py`
+  - `effectful_tools/generate_functional_catalogue.py` (with a “check” mode)
 
 ### 13.2 `poetry run check-code` integration
 
@@ -681,14 +691,14 @@ Use the following tools in the docs pipeline:
      - Spell checker (optional).
      - Link checker.
      - All custom doc scripts:
-       - `check_doc_filenames.py`
-       - `check_doc_artifacts.py`
-       - `check_doc_headers.py`
-       - `check_doc_links.py` (+ optional `check_doc_crossrefs.py`)
-       - `check_doc_code_blocks.py`
-       - `check_mermaid_metadata.py`
-       - `check_demo_docs.py`
-       - `generate_functional_catalogue.py --check`
+       - `effectful_tools/check_doc_filenames.py`
+       - `effectful_tools/check_doc_artifacts.py`
+       - `effectful_tools/check_doc_headers.py`
+       - `effectful_tools/check_doc_links.py` (+ optional `effectful_tools/check_doc_crossrefs.py`)
+       - `effectful_tools/check_doc_code_blocks.py`
+       - `effectful_tools/check_mermaid_metadata.py`
+       - `effectful_tools/check_demo_docs.py`
+       - `effectful_tools/generate_functional_catalogue.py --check`
 - Any failure must cause `check-code` to exit non-zero.
 
 Authors must run:
@@ -826,7 +836,7 @@ ______________________________________________________________________
 
 ## Cross-References
 
-- [Documentation Index](README.md#effectful-documentation)
+- [Documentation Index](readme.md#effectful-documentation)
 - [CLAUDE Guide](../CLAUDE.md)
 - [Engineering Standards](engineering/README.md#ssot-link-map)
 - [Code Quality Standards](engineering/code_quality.md#cross-references)

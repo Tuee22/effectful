@@ -65,6 +65,11 @@ RUN poetry config virtualenvs.create false
 # Copy effectful library from root (resolve deps from pyproject only; lockfile is a build artifact)
 COPY pyproject.toml /app/effectful-root/
 COPY README.md /app/effectful-root/
+COPY CLAUDE.md /app/effectful-root/
+COPY configs/ /app/effectful-root/configs/
+COPY documents/ /app/effectful-root/documents/
+COPY examples/ /app/effectful-root/examples/
+COPY effectful_tools/ /app/effectful-root/effectful_tools/
 COPY effectful/ /app/effectful-root/effectful/
 
 # Install effectful
@@ -83,6 +88,7 @@ COPY demo/healthhub/pyproject.toml /app/effectful-root/demo/healthhub/
 
 # Copy healthhub code
 COPY demo/healthhub/backend/ /app/effectful-root/demo/healthhub/backend/
+COPY demo/healthhub/documents/ /app/effectful-root/demo/healthhub/documents/
 COPY demo/healthhub/tools/ /app/effectful-root/demo/healthhub/tools/
 COPY demo/healthhub/tests/ /app/effectful-root/demo/healthhub/tests/
 COPY demo/healthhub/stubs/ /app/effectful-root/demo/healthhub/stubs/

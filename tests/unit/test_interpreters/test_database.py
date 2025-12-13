@@ -20,6 +20,7 @@ from pytest_mock import MockerFixture
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok
 from effectful.domain.message import ChatMessage
+from effectful.domain.optional_value import Absent, Provided
 from effectful.domain.user import User, UserFound, UserNotFound
 from effectful.effects.database import (
     CreateUser,
@@ -346,7 +347,7 @@ class TestDatabaseInterpreter:
                 pytest.fail(f"Expected Ok with users list, got {result}")
 
         # Verify mock was called correctly
-        mock_user_repo.list_users.assert_called_once_with(10, 0)
+        mock_user_repo.list_users.assert_called_once_with(Provided(value=10), Provided(value=0))
 
     @pytest.mark.asyncio()
     async def test_list_users_empty(self, mocker: MockerFixture) -> None:
@@ -369,7 +370,9 @@ class TestDatabaseInterpreter:
                 pytest.fail(f"Expected Ok with empty list, got {result}")
 
         # Verify mock was called correctly
-        mock_user_repo.list_users.assert_called_once_with(None, None)
+        mock_user_repo.list_users.assert_called_once_with(
+            Absent(reason="not_provided"), Absent(reason="not_provided")
+        )
 
     @pytest.mark.asyncio()
     async def test_list_users_database_error(self, mocker: MockerFixture) -> None:
@@ -465,7 +468,7 @@ class TestDatabaseInterpreter:
 
         # Verify mock was called correctly
         mock_user_repo.update_user.assert_called_once_with(
-            user_id, "updated@example.com", "Updated"
+            user_id, Provided(value="updated@example.com"), Provided(value="Updated")
         )
 
     @pytest.mark.asyncio()

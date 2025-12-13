@@ -235,18 +235,16 @@ class HealthcareInterpreter:
                 requested_time=requested_time,
                 reason=reason,
             ):
-                return await self._create_appointment(
-                    patient_id, doctor_id, requested_time, reason
-                )
+                return await self._create_appointment(patient_id, doctor_id, requested_time, reason)
 
             case GetAppointmentById(appointment_id=appointment_id):
                 return await self._get_appointment_by_id(appointment_id)
 
             case ListAppointments(patient_id=patient_id, doctor_id=doctor_id, status=status):
                 return await self._list_appointments(
-                    from_optional_value(patient_id),
-                    from_optional_value(doctor_id),
-                    from_optional_value(status),
+                    patient_id,
+                    doctor_id,
+                    status,
                 )
 
             case TransitionAppointmentStatus(
@@ -511,12 +509,8 @@ class HealthcareInterpreter:
                 if not isinstance(emergency_contact, Absent)
                 else existing.patient.emergency_contact
             ),
-            from_optional_value(phone)
-            if not isinstance(phone, Absent)
-            else current_phone,
-            from_optional_value(address)
-            if not isinstance(address, Absent)
-            else current_address,
+            from_optional_value(phone) if not isinstance(phone, Absent) else current_phone,
+            from_optional_value(address) if not isinstance(address, Absent) else current_address,
             now,
         )
 
@@ -1184,9 +1178,7 @@ class HealthcareInterpreter:
     ) -> InvoiceLookupResult:
         """Update invoice payment status."""
         now = datetime.now(timezone.utc)
-        resolved_paid_at = (
-            from_optional_value(paid_at) if not isinstance(paid_at, Absent) else None
-        )
+        resolved_paid_at = from_optional_value(paid_at) if not isinstance(paid_at, Absent) else None
         if status == "paid" and resolved_paid_at is None:
             resolved_paid_at = now
 

@@ -11,6 +11,15 @@
 
 - No additional deltas; inherits base standard.
 
+- Doc enforcement is shared: run the core `check-code` (formatter + lint + type check + doc suite) instead of duplicating logic in the demo. From the repo root:
+
+  ```bash
+  # Run full code + docs suite for core and demos
+  docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
+  ```
+
+  HealthHub wrappers must stay thin and call the **effectful library** tooling (e.g., `effectful_tools.check_code`, `effectful_tools.run_doc_checks`); do not fork or reimplement checks inside the demo. If HealthHub needs an extra check, add it to the effectful `effectful_tools` package and invoke it from the demo wrapper.
+
 ______________________________________________________________________
 
 ## Base SSoT

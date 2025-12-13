@@ -34,12 +34,12 @@ def main() -> int:
     print("=" * 80)
 
     black_result = subprocess.run(
-        ["black", "backend", "tests", "tools"],
+        ["black", "--check", "backend", "tests", "tools"],
         check=False,
     )
 
     if black_result.returncode != 0:
-        print("\n❌ Black failed!")
+        print("\n❌ Black failed (formatting required)!")
         print("=" * 80)
         return black_result.returncode
 
@@ -91,6 +91,25 @@ def main() -> int:
         return mypy_tests_result.returncode
 
     print("\n✅ Tests/Tools MyPy passed!")
+
+    # Run documentation suite from effectful core (mdformat + PyMarkdown + codespell + custom checks)
+    print("\n" + "=" * 80)
+    print("STEP 3/3: Documentation suite (effectful library)")
+    print("=" * 80)
+    effectful_root = Path(__file__).resolve().parents[3]
+    doc_suite_result = subprocess.run(
+        ["python", "-m", "effectful_tools.doc_suite"],
+        check=False,
+        cwd=effectful_root,
+        env=dict(os.environ, PYTHONPATH=os.environ.get("PYTHONPATH", str(effectful_root))),
+    )
+
+    if doc_suite_result.returncode != 0:
+        print("\n❌ Documentation suite failed!")
+        print("=" * 80)
+        return doc_suite_result.returncode
+
+    print("\n✅ Documentation suite passed!")
     print("\n" + "=" * 80)
     print("✅ ALL CHECKS PASSED!")
     print("=" * 80)

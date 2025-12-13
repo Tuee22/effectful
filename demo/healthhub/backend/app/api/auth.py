@@ -39,7 +39,13 @@ from app.domain.lookup_result import (
     is_patient_lookup_result,
     is_user_lookup_result,
 )
-from effectful.domain.optional_value import Absent, OptionalValue, from_optional_value, to_optional_value
+from effectful.domain.optional_value import (
+    Absent,
+    OptionalValue,
+    Provided,
+    from_optional_value,
+    to_optional_value,
+)
 from app.domain.patient import Patient
 from app.domain.user import User, UserRole
 from app.effects.healthcare import (
@@ -109,14 +115,14 @@ class RegisterRequest(BaseModel):
     )
     @classmethod
     def normalize_optional_str(cls, value: object) -> OptionalValue[str]:
-        if isinstance(value, OptionalValue):
+        if isinstance(value, (Provided, Absent)):
             return value
         return to_optional_value(value if isinstance(value, str) else None, reason="not_provided")
 
     @field_validator("date_of_birth", mode="before")
     @classmethod
     def normalize_optional_date(cls, value: object) -> OptionalValue[date]:
-        if isinstance(value, OptionalValue):
+        if isinstance(value, (Provided, Absent)):
             return value
         if value is None:
             return Absent("not_provided")

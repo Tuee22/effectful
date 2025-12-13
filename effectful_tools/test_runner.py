@@ -115,7 +115,7 @@ if __name__ == "__main__":
             sys.exit(run_all())
         else:
             print(f"Unknown test category: {sys.argv[1]}")
-            print("Usage: python -m tools.test_runner [unit|integration|all]")
+            print("Usage: python -m effectful_tools.test_runner [unit|integration|all]")
             sys.exit(1)
     else:
         # Default to all tests

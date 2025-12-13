@@ -16,5 +16,5 @@
 ## Cross-References
 
 - [HealthHub Documentation Guide](../../../../../documents/readme.md)
-- [HealthHub Documentation Hub](../readme.md)
+- [HealthHub Documentation Hub](../../readme.md)
 - [Effectful Production Deployment Tutorial](../../../../../documents/tutorials/production_deployment.md)

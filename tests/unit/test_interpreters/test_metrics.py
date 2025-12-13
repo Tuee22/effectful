@@ -19,6 +19,7 @@ from pytest_mock import MockerFixture
 
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok
+from effectful.domain.optional_value import Absent, Provided
 from effectful.domain.metrics_result import (
     MetricRecorded,
     MetricRecordingFailed,
@@ -421,8 +422,8 @@ class TestQueryMetrics:
 
         # Verify mock called correctly
         mock_collector.query_metrics.assert_called_once_with(
-            metric_name="requests_total",
-            labels={"method": "GET", "status": "200"},
+            metric_name=Provided(value="requests_total"),
+            labels=Provided(value={"method": "GET", "status": "200"}),
         )
 
     @pytest.mark.asyncio()
@@ -451,8 +452,8 @@ class TestQueryMetrics:
 
         # Verify mock called correctly
         mock_collector.query_metrics.assert_called_once_with(
-            metric_name=None,
-            labels=None,
+            metric_name=Absent(reason="not_provided"),
+            labels=Absent(reason="not_provided"),
         )
 
     @pytest.mark.asyncio()

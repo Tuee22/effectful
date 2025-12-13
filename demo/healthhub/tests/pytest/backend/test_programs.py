@@ -114,7 +114,7 @@ class TestScheduleAppointmentProgram:
         program = schedule_appointment_program(
             patient_id=patient_id,
             doctor_id=doctor_id,
-            requested_time=requested_time,
+            requested_time=to_optional_value(requested_time),
             reason=reason,
             actor_id=actor_id,
         )
@@ -180,7 +180,7 @@ class TestScheduleAppointmentProgram:
         program = schedule_appointment_program(
             patient_id=patient_id,
             doctor_id=doctor_id,
-            requested_time=None,
+            requested_time=to_optional_value(None, reason="not_requested"),
             reason="Checkup",
             actor_id=actor_id,
         )
@@ -223,7 +223,7 @@ class TestScheduleAppointmentProgram:
         program = schedule_appointment_program(
             patient_id=patient_id,
             doctor_id=doctor_id,
-            requested_time=None,
+            requested_time=to_optional_value(None, reason="not_requested"),
             reason="Checkup",
             actor_id=actor_id,
         )
@@ -476,7 +476,7 @@ class TestCreatePrescriptionProgram:
             frequency="once daily",
             duration_days=30,
             refills_remaining=3,
-            notes="Monitor BP",
+            notes=to_optional_value("Monitor BP"),
             actor_id=actor_id,
             existing_medications=["Metformin"],
         )
@@ -550,7 +550,7 @@ class TestCreatePrescriptionProgram:
             frequency="once daily",
             duration_days=30,
             refills_remaining=3,
-            notes=None,
+            notes=to_optional_value(None, reason="not_provided"),
             actor_id=actor_id,
             existing_medications=[],
         )
@@ -598,7 +598,7 @@ class TestCreatePrescriptionProgram:
             frequency="once daily",
             duration_days=30,
             refills_remaining=3,
-            notes=None,
+            notes=to_optional_value(None, reason="not_provided"),
             actor_id=actor_id,
             existing_medications=[],
         )
@@ -664,7 +664,7 @@ class TestCreatePrescriptionProgram:
             frequency="once daily",
             duration_days=30,
             refills_remaining=3,
-            notes=None,
+            notes=to_optional_value(None, reason="not_provided"),
             actor_id=actor_id,
             existing_medications=[],
         )
@@ -735,7 +735,7 @@ class TestCreatePrescriptionProgram:
             frequency="once daily",
             duration_days=30,
             refills_remaining=0,
-            notes=None,
+            notes=to_optional_value(None, reason="not_provided"),
             actor_id=actor_id,
             existing_medications=["Warfarin"],
         )
@@ -829,7 +829,7 @@ class TestCreatePrescriptionProgram:
             frequency="once daily",
             duration_days=30,
             refills_remaining=3,
-            notes="Monitor potassium",
+            notes=to_optional_value("Monitor potassium"),
             actor_id=actor_id,
             existing_medications=["Potassium"],
         )

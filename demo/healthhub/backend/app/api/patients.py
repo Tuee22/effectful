@@ -32,7 +32,13 @@ from app.domain.lookup_result import (
     is_patient_lookup_result,
     is_patient_update_result,
 )
-from effectful.domain.optional_value import Absent, OptionalValue, from_optional_value, to_optional_value
+from effectful.domain.optional_value import (
+    Absent,
+    OptionalValue,
+    Provided,
+    from_optional_value,
+    to_optional_value,
+)
 from app.domain.patient import Patient
 from app.effects.healthcare import (
     CreatePatient as CreatePatientEffect,
@@ -116,7 +122,7 @@ class CreatePatientRequest(BaseModel):
     @field_validator("blood_type", "insurance_id", "phone", "address", mode="before")
     @classmethod
     def normalize_optional_str(cls, value: object) -> OptionalValue[str]:
-        if isinstance(value, OptionalValue):
+        if isinstance(value, (Provided, Absent)):
             return value
         return to_optional_value(value if isinstance(value, str) else None, reason="not_provided")
 
@@ -147,14 +153,14 @@ class UpdatePatientRequest(BaseModel):
     )
     @classmethod
     def normalize_optional_str(cls, value: object) -> OptionalValue[str]:
-        if isinstance(value, OptionalValue):
+        if isinstance(value, (Provided, Absent)):
             return value
         return to_optional_value(value if isinstance(value, str) else None, reason="not_provided")
 
     @field_validator("allergies", mode="before")
     @classmethod
     def normalize_optional_list(cls, value: object) -> OptionalValue[list[str]]:
-        if isinstance(value, OptionalValue):
+        if isinstance(value, (Provided, Absent)):
             return value
         if value is None:
             return Absent("not_provided")

@@ -47,7 +47,7 @@ from app.programs.appointment_programs import (
     transition_appointment_program,
 )
 from app.programs.runner import run_program, unwrap_program_result
-from effectful.domain.optional_value import Absent, OptionalValue, to_optional_value
+from effectful.domain.optional_value import Absent, OptionalValue, Provided, to_optional_value
 
 router = APIRouter()
 StatusFilter = Literal["requested", "confirmed", "in_progress", "completed", "cancelled"]
@@ -80,7 +80,7 @@ class CreateAppointmentRequest(BaseModel):
     @field_validator("requested_time", mode="before")
     @classmethod
     def normalize_requested_time(cls, value: object) -> OptionalValue[datetime]:
-        if isinstance(value, OptionalValue):
+        if isinstance(value, (Provided, Absent)):
             return value
         if isinstance(value, str):
             try:
@@ -91,7 +91,9 @@ class CreateAppointmentRequest(BaseModel):
                     detail="requested_time must be ISO-8601 datetime when provided",
                 ) from exc
             return to_optional_value(parsed, reason="not_requested")
-        return to_optional_value(value if isinstance(value, datetime) else None, reason="not_requested")
+        return to_optional_value(
+            value if isinstance(value, datetime) else None, reason="not_requested"
+        )
 
 
 class TransitionStatusRequest(BaseModel):

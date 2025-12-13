@@ -21,6 +21,7 @@ import asyncpg
 import pytest
 import redis.asyncio as redis
 from app.interpreters.composite_interpreter import CompositeInterpreter
+from effectful.domain.optional_value import to_optional_value
 
 from app.domain.appointment import (
     Appointment,
@@ -42,11 +43,16 @@ from app.programs.appointment_programs import (
     schedule_appointment_program,
     transition_appointment_program,
 )
-from app.programs.runner import run_program
+from effectful.algebraic.result import Err, Ok, Result
+from app.programs.runner import InterpreterFailure, run_program, unwrap_program_result
 from tests.conftest import close_pubsub
 
 
-def expect_scheduled(result: ScheduleAppointmentResult) -> Appointment:
+def expect_scheduled(
+    result: ScheduleAppointmentResult | Result[ScheduleAppointmentResult, InterpreterFailure]
+) -> Appointment:
+    if isinstance(result, (Ok, Err)):
+        result = unwrap_program_result(result)
     assert isinstance(result, AppointmentScheduled)
     return result.appointment
 
@@ -79,7 +85,7 @@ class TestAppointmentScheduling:
             schedule_appointment_program(
                 patient_id=seed_test_patient,
                 doctor_id=seed_test_doctor,
-                requested_time=requested_time,
+                requested_time=to_optional_value(requested_time),
                 reason=reason,
                 actor_id=sample_user_id,
             ),
@@ -131,7 +137,7 @@ class TestAppointmentScheduling:
                 schedule_appointment_program(
                     patient_id=seed_test_patient,
                     doctor_id=seed_test_doctor,
-                    requested_time=None,
+                    requested_time=to_optional_value(None, reason="not_requested"),
                     reason="Follow-up visit",
                     actor_id=sample_user_id,
                 ),
@@ -182,7 +188,7 @@ class TestAppointmentStateTransitions:
                 schedule_appointment_program(
                     patient_id=seed_test_patient,
                     doctor_id=seed_test_doctor,
-                    requested_time=None,
+                    requested_time=to_optional_value(None, reason="not_requested"),
                     reason="Consultation",
                     actor_id=sample_user_id,
                 ),
@@ -256,7 +262,7 @@ class TestAppointmentStateTransitions:
                 schedule_appointment_program(
                     patient_id=seed_test_patient,
                     doctor_id=seed_test_doctor,
-                    requested_time=None,
+                    requested_time=to_optional_value(None, reason="not_requested"),
                     reason="Emergency visit",
                     actor_id=sample_user_id,
                 ),
@@ -338,7 +344,7 @@ class TestAppointmentStateTransitions:
                 schedule_appointment_program(
                     patient_id=seed_test_patient,
                     doctor_id=seed_test_doctor,
-                    requested_time=None,
+                    requested_time=to_optional_value(None, reason="not_requested"),
                     reason="Full workflow test",
                     actor_id=sample_user_id,
                 ),
@@ -439,7 +445,7 @@ class TestAppointmentStateTransitions:
                 schedule_appointment_program(
                     patient_id=seed_test_patient,
                     doctor_id=seed_test_doctor,
-                    requested_time=None,
+                    requested_time=to_optional_value(None, reason="not_requested"),
                     reason="Cancellation test",
                     actor_id=sample_user_id,
                 ),
@@ -517,7 +523,7 @@ class TestAppointmentNotifications:
                 schedule_appointment_program(
                     patient_id=seed_test_patient,
                     doctor_id=seed_test_doctor,
-                    requested_time=None,
+                    requested_time=to_optional_value(None, reason="not_requested"),
                     reason="Notification test",
                     actor_id=sample_user_id,
                 ),

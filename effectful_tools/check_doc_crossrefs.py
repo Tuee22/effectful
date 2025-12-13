@@ -6,7 +6,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from tools.doc_utils import anchorize, default_arg_parser
+from effectful_tools.doc_utils import anchorize, default_arg_parser
 
 
 ROOT = Path(__file__).resolve().parent.parent

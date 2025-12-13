@@ -113,6 +113,13 @@ def field_validator(
     *fields: str, mode: str = "before", check_fields: Optional[bool] = None
 ) -> Callable[[Callable[..., _ValidatorT]], Callable[..., _ValidatorT]]: ...
 
+# Field serializers (Pydantic v2)
+_SerializerT = TypeVar("_SerializerT")
+
+def field_serializer(
+    *fields: str, when_used: Literal["always", "json", "unless-none"] | None = None
+) -> Callable[[Callable[..., _SerializerT]], Callable[..., _SerializerT]]: ...
+
 # Email validation
 class EmailStr(str):
     """Email string type."""
