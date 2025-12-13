@@ -71,7 +71,7 @@ Backend (inside container):
 ```bash
 # snippet
 docker compose -f docker/docker-compose.yml exec effectful poetry install
-docker compose -f docker/docker-compose.yml exec healthhub poetry install
+docker compose -f demo/healthhub/docker/docker-compose.yml exec healthhub poetry install
 ```
 
 Frontend (inside container):

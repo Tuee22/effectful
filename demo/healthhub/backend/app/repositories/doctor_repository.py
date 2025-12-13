@@ -9,6 +9,7 @@ import asyncpg
 
 from app.protocols.database import DatabasePool
 from app.database import safe_bool, safe_datetime, safe_optional_str, safe_str, safe_uuid
+from effectful.domain.optional_value import Absent, OptionalValue, Provided
 from app.domain.doctor import Doctor
 from effectful.domain.optional_value import to_optional_value
 
@@ -24,14 +25,14 @@ class DoctorRepository:
         """
         self.pool = pool
 
-    async def get_by_id(self, doctor_id: UUID) -> Doctor | None:
+    async def get_by_id(self, doctor_id: UUID) -> OptionalValue[Doctor]:
         """Get doctor by ID.
 
         Args:
             doctor_id: Doctor UUID
 
         Returns:
-            Doctor if found, None otherwise
+            Provided[Doctor] if found, Absent otherwise with explicit reason
         """
         row = await self.pool.fetchrow(
             """
@@ -44,18 +45,18 @@ class DoctorRepository:
         )
 
         if row is None:
-            return None
+            return Absent(reason="doctor_not_found")
 
-        return self._row_to_doctor(row)
+        return Provided(self._row_to_doctor(row))
 
-    async def get_by_user_id(self, user_id: UUID) -> Doctor | None:
+    async def get_by_user_id(self, user_id: UUID) -> OptionalValue[Doctor]:
         """Get doctor by user ID.
 
         Args:
             user_id: User UUID
 
         Returns:
-            Doctor if found, None otherwise
+            Provided[Doctor] if found, Absent otherwise with explicit reason
         """
         row = await self.pool.fetchrow(
             """
@@ -68,9 +69,9 @@ class DoctorRepository:
         )
 
         if row is None:
-            return None
+            return Absent(reason="doctor_not_found")
 
-        return self._row_to_doctor(row)
+        return Provided(self._row_to_doctor(row))
 
     async def create(
         self,

@@ -794,7 +794,7 @@ ______________________________________________________________________
    result = gen.send(mock_response)
    ```
 
-2. **Don't Skip Result Type Verification**
+1. **Don't Skip Result Type Verification**
 
    ```python
    # wrong: assumes Ok without checking the Result type
@@ -808,7 +808,7 @@ ______________________________________________________________________
    assert result.value.id == user_id
    ```
 
-3. **Don't Test Multiple Behaviors in One Test**
+1. **Don't Test Multiple Behaviors in One Test**
 
    ```python
    # wrong: combines multiple behaviors in one test
@@ -820,7 +820,7 @@ ______________________________________________________________________
        assert isinstance(missing, Err)
    ```
 
-4. **Don't Use Real Infrastructure in Unit Tests**
+1. **Don't Use Real Infrastructure in Unit Tests**
 
    ```python
    # wrong: hitting real services from unit tests
@@ -828,7 +828,7 @@ ______________________________________________________________________
    redis_client = await aioredis.from_url(REDIS_URL)
    ```
 
-5. **Don't Use pytest.skip()**
+1. **Don't Use pytest.skip()**
 
    ```python
    # wrong: skipping hides missing coverage
@@ -837,7 +837,7 @@ ______________________________________________________________________
        pytest.fail("Implement complex workflow test or remove it")
    ```
 
----
+______________________________________________________________________
 
 ## Testing Metrics Effects
 

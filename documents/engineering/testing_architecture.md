@@ -717,12 +717,12 @@ def test_get_user_program_success(mocker: MockerFixture) -> None:
 **Pattern**: `run_ws_program()` with real infrastructure.
 
 ```python
-# file: tests/integration/test_user_workflow.py
+# file: tests/integration/test_database_workflow.py
 from effectful.programs.runners import run_ws_program
 from effectful.interpreters.composite import CompositeInterpreter
 
 @pytest.mark.asyncio
-async def test_complete_user_workflow(clean_db: asyncpg.Connection) -> None:
+async def test_complete_database_workflow(clean_db: asyncpg.Connection) -> None:
     """Complete workflow: insert user, get user, verify result."""
     # Arrange - Create real interpreter with real infrastructure
     db_interpreter = DatabaseInterpreter(conn=clean_db)
@@ -948,9 +948,9 @@ async def clean_healthhub_state(
 **Anti-pattern**: Per-test cleanup
 
 ```python
-# file: tests/e2e/test_workflows.py
+# file: tests/e2e/test_chat_application.py
 # ❌ WRONG - Each test does its own cleanup (duplicated 10+ times)
-async def test_user_workflow(clean_db):
+async def test_chat_application_flow(clean_db):
     await clean_db.execute("DELETE FROM users")  # Duplicated
     await clean_db.execute("INSERT INTO users ...")  # Duplicated
     # ... test logic
@@ -1168,11 +1168,11 @@ def integration_interpreter(
 **Usage across multiple integration test files**:
 
 ```python
-# file: tests/integration/test_user_workflow.py
+# file: tests/integration/test_system_workflow.py
 @pytest.mark.asyncio
-async def test_user_workflow(integration_interpreter: CompositeInterpreter):
-    """Test user workflow with real infrastructure."""
-    result = await run_ws_program(user_program(), integration_interpreter)
+async def test_system_workflow(integration_interpreter: CompositeInterpreter):
+    """Test system workflow with real infrastructure."""
+    result = await run_ws_program(system_program(), integration_interpreter)
     assert_ok(result)
 
 # file: tests/integration/test_cache_workflow.py
@@ -1186,7 +1186,7 @@ async def test_cache_workflow(integration_interpreter: CompositeInterpreter):
 **Anti-pattern**: Duplicating fixtures across test files
 
 ```python
-# file: tests/integration/test_user_workflow.py
+# file: tests/integration/test_system_workflow.py
 # ❌ WRONG - Fixture duplicated in multiple files
 @pytest.fixture
 def integration_interpreter(...):  # DUPLICATED
@@ -1257,7 +1257,7 @@ async def test_insert_user(clean_db: asyncpg.Connection):
         ALICE.id, ALICE.email, ALICE.name
     )
 
-# file: tests/e2e/test_user_workflows.py
+# file: tests/e2e/test_chat_application.py
 from tests.fixtures.base_state import ALICE
 
 @pytest.mark.e2e
@@ -1286,7 +1286,7 @@ ALICE = User(id=uuid4(), email="alice@test.com", name="Alice")  # Different ID!
 # ❌ WRONG - Integration tests define different Alice
 ALICE = User(id=uuid4(), email="alice@example.com", name="Alice Smith")  # Different again!
 
-# file: tests/e2e/test_workflows.py
+# file: tests/e2e/test_chat_application.py
 # ❌ WRONG - E2E tests define yet another Alice
 ALICE = User(id=UUID("22222..."), email="alice@healthhub.com", name="Alice")  # Different again!
 ```
@@ -1512,7 +1512,7 @@ async def auto_clean_healthhub_state(
 **Usage**: Tests automatically get clean state
 
 ```python
-# file: demo/healthhub/tests/pytest/e2e/test_workflows.py
+# file: demo/healthhub/tests/pytest/e2e/test_patient_workflows.py
 @pytest.mark.e2e
 async def test_patient_workflow():
     """Test patient workflow.
@@ -1546,7 +1546,7 @@ async def test_patient_workflow():
 **Wrong**: Hardcoding test data directly in test functions
 
 ```python
-# file: tests/integration/test_user_workflow.py
+# file: tests/integration/test_database_workflow.py
 # ❌ WRONG - Hardcoded test data
 @pytest.mark.asyncio
 async def test_create_user():
@@ -1562,7 +1562,7 @@ async def test_create_user():
 **Right**: Use shared test data from base_state.py
 
 ```python
-# file: tests/integration/test_user_workflow.py
+# file: tests/integration/test_database_workflow.py
 # ✅ CORRECT - Shared test data
 from tests.fixtures.base_state import ALICE
 
@@ -1683,13 +1683,13 @@ async def test_get_user(seeded_db):
 **Wrong**: Random or hardcoded UUIDs in each test
 
 ```python
-# file: tests/integration/test_workflows.py
+# file: tests/integration/test_system_workflow.py
 # ❌ WRONG - Random UUIDs
-async def test_user_workflow_1():
+async def test_system_workflow_1():
     user_id = uuid4()  # Random every run
     await insert_user(user_id, ...)
 
-async def test_user_workflow_2():
+async def test_system_workflow_2():
     user_id = uuid4()  # Different random UUID
     await insert_user(user_id, ...)
 ```
@@ -1697,14 +1697,14 @@ async def test_user_workflow_2():
 **Right**: Use fixed UUIDs from base_state.py
 
 ```python
-# file: tests/integration/test_workflows.py
+# file: tests/integration/test_system_workflow.py
 # ✅ CORRECT - Fixed UUIDs
 from tests.fixtures.base_state import ALICE_ID, BOB_ID
 
-async def test_user_workflow_1():
+async def test_system_workflow_1():
     await insert_user(ALICE_ID, ...)
 
-async def test_user_workflow_2():
+async def test_system_workflow_2():
     await insert_user(BOB_ID, ...)
 ```
 

@@ -1,11 +1,10 @@
 # Effects Reference
 
-**Status**: Reference only
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/readme.md
+**Referenced by**: | **📖 Base Standard**: [effects.md](../../../../documents/api/effects.md)
 
 > **Purpose**: HealthHub overlay deltas for Effects. See base SSoT for canonical definitions.
-> **📖 Base Standard**: [effects.md](../../../../documents/api/effects.md)
 > **📖 Authoritative Reference**: [effects.md](../../../../documents/api/effects.md)
 
 ## Deltas

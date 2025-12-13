@@ -1,11 +1,10 @@
 # Tutorial 04: Testing Effect Programs
 
-**Status**: Reference only
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/readme.md
+**Referenced by**: | **📖 Base Standard**: [testing_guide.md](../../../../../documents/tutorials/00_library_deltas/testing_guide.md)
 
 > **Purpose**: HealthHub overlay deltas for Testing Guide. See base SSoT for canonical guidance.
-> **📖 Base Standard**: [testing_guide.md](../../../../../documents/tutorials/00_library_deltas/testing_guide.md)
 > **📖 Authoritative Reference**: [testing_guide.md](../../../../../documents/tutorials/00_library_deltas/testing_guide.md)
 
 ## Deltas

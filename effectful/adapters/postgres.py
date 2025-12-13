@@ -12,6 +12,7 @@ from uuid import UUID, uuid4
 import asyncpg
 
 from effectful.domain.message import ChatMessage
+from effectful.domain.optional_value import OptionalValue, from_optional_value
 from effectful.domain.user import User, UserFound, UserLookupResult, UserNotFound
 from effectful.infrastructure.repositories import (
     ChatMessageRepository,
@@ -130,7 +131,7 @@ class PostgresUserRepository(UserRepository):
 
         return UserFound(user=_extract_user_from_row(row), source="database")
 
-    async def list_users(self, limit: int | None, offset: int | None) -> list[User]:
+    async def list_users(self, limit: OptionalValue[int], offset: OptionalValue[int]) -> list[User]:
         """List all users with optional pagination.
 
         Args:
@@ -141,13 +142,18 @@ class PostgresUserRepository(UserRepository):
             List of User objects
         """
         # Build query with pure pattern - tuple of optional parts
+        resolved_limit = from_optional_value(limit)
+        resolved_offset = from_optional_value(offset)
+
         query_parts = (
             "SELECT id, email, name FROM users ORDER BY name",
-            " LIMIT $1" if limit is not None else "",
-            f" OFFSET ${2 if limit is not None else 1}" if offset is not None else "",
+            " LIMIT $1" if resolved_limit is not None else "",
+            f" OFFSET ${2 if resolved_limit is not None else 1}"
+            if resolved_offset is not None
+            else "",
         )
         query = "".join(query_parts)
-        params = tuple(p for p in (limit, offset) if p is not None)
+        params = tuple(p for p in (resolved_limit, resolved_offset) if p is not None)
 
         rows = await self._conn.fetch(query, *params)
 
@@ -192,7 +198,7 @@ class PostgresUserRepository(UserRepository):
         return _extract_user_from_row(row)
 
     async def update_user(
-        self, user_id: UUID, email: str | None, name: str | None
+        self, user_id: UUID, email: OptionalValue[str], name: OptionalValue[str]
     ) -> UserLookupResult:
         """Update user fields in PostgreSQL.
 
@@ -205,9 +211,11 @@ class PostgresUserRepository(UserRepository):
             UserFound with updated user, UserNotFound if not found
         """
         # Build dynamic update with pure pattern - filter None values
+        resolved_email = from_optional_value(email)
+        resolved_name = from_optional_value(name)
         fields = tuple(
             (field, value)
-            for field, value in (("email", email), ("name", name))
+            for field, value in (("email", resolved_email), ("name", resolved_name))
             if value is not None
         )
 

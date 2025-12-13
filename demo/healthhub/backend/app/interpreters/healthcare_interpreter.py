@@ -80,7 +80,13 @@ from app.domain.lookup_result import (
     UserLookupResult,
     UserMissingByEmail,
 )
-from effectful.domain.optional_value import from_optional_value, to_optional_value
+from effectful.domain.optional_value import (
+    Absent,
+    OptionalValue,
+    Provided,
+    from_optional_value,
+    to_optional_value,
+)
 from app.domain.user import User, UserRole
 from app.effects.healthcare import (
     AddInvoiceLineItem,
@@ -230,7 +236,7 @@ class HealthcareInterpreter:
                 reason=reason,
             ):
                 return await self._create_appointment(
-                    patient_id, doctor_id, from_optional_value(requested_time), reason
+                    patient_id, doctor_id, requested_time, reason
                 )
 
             case GetAppointmentById(appointment_id=appointment_id):
@@ -275,9 +281,7 @@ class HealthcareInterpreter:
                 return await self._get_prescription_by_id(prescription_id)
 
             case ListPrescriptions(patient_id=patient_id, doctor_id=doctor_id):
-                return await self._list_prescriptions(
-                    from_optional_value(patient_id), from_optional_value(doctor_id)
-                )
+                return await self._list_prescriptions(patient_id, doctor_id)
 
             case CheckMedicationInteractions(medications=medications):
                 return await self._check_medication_interactions(medications)
@@ -320,9 +324,9 @@ class HealthcareInterpreter:
             ):
                 return await self._create_invoice(
                     patient_id,
-                    from_optional_value(appointment_id),
+                    appointment_id,
                     line_items,
-                    from_optional_value(due_date),
+                    due_date,
                 )
 
             case AddInvoiceLineItem(
@@ -335,14 +339,14 @@ class HealthcareInterpreter:
                     invoice_id, description, quantity, unit_price
                 )
 
-            case UpdateInvoiceStatus(invoice_id=invoice_id, status=status):
-                return await self._update_invoice_status(invoice_id, status)
+            case UpdateInvoiceStatus(invoice_id=invoice_id, status=status, paid_at=paid_at):
+                return await self._update_invoice_status(invoice_id, status, paid_at)
 
             case GetInvoiceById(invoice_id=invoice_id):
                 return await self._get_invoice_by_id(invoice_id)
 
             case ListInvoices(patient_id=patient_id):
-                return await self._list_invoices(from_optional_value(patient_id))
+                return await self._list_invoices(patient_id)
 
             case ListInvoiceLineItems(invoice_id=invoice_id):
                 return await self._list_invoice_line_items(invoice_id)
@@ -355,9 +359,11 @@ class HealthcareInterpreter:
     async def _get_patient_by_id(self, patient_id: UUID) -> PatientLookupResult:
         """Get patient by ID."""
         patient = await self.patient_repo.get_by_id(patient_id)
-        if patient is None:
-            return PatientMissingById(patient_id=patient_id)
-        return PatientFound(patient=patient)
+        match patient:
+            case Provided(value=found_patient):
+                return PatientFound(patient=found_patient)
+            case Absent():
+                return PatientMissingById(patient_id=patient_id)
 
     async def _get_patient_by_user_id(self, user_id: UUID) -> PatientLookupResult:
         """Get patient by user ID."""
@@ -396,12 +402,12 @@ class HealthcareInterpreter:
         first_name: str,
         last_name: str,
         date_of_birth: date,
-        blood_type: str | None,
+        blood_type: OptionalValue[str],
         allergies: list[str],
-        insurance_id: str | None,
+        insurance_id: OptionalValue[str],
         emergency_contact: str,
-        phone: str | None,
-        address: str | None,
+        phone: OptionalValue[str],
+        address: OptionalValue[str],
     ) -> Patient:
         """Create new patient record."""
         now = datetime.now(timezone.utc)
@@ -424,12 +430,12 @@ class HealthcareInterpreter:
             first_name,
             last_name,
             date_of_birth,
-            blood_type,
+            from_optional_value(blood_type),
             allergies,
-            insurance_id,
+            from_optional_value(insurance_id),
             emergency_contact,
-            phone,
-            address,
+            from_optional_value(phone),
+            from_optional_value(address),
             now,
             now,
         )
@@ -441,14 +447,14 @@ class HealthcareInterpreter:
     async def _update_patient(
         self,
         patient_id: UUID,
-        first_name: str | None,
-        last_name: str | None,
-        blood_type: str | None,
-        allergies: list[str] | None,
-        insurance_id: str | None,
-        emergency_contact: str | None,
-        phone: str | None,
-        address: str | None,
+        first_name: OptionalValue[str],
+        last_name: OptionalValue[str],
+        blood_type: OptionalValue[str],
+        allergies: OptionalValue[list[str]],
+        insurance_id: OptionalValue[str],
+        emergency_contact: OptionalValue[str],
+        phone: OptionalValue[str],
+        address: OptionalValue[str],
     ) -> PatientUpdateResult:
         """Update patient record."""
         existing = await self._get_patient_by_id(patient_id)
@@ -457,7 +463,11 @@ class HealthcareInterpreter:
 
         assert isinstance(existing, PatientFound)
 
-        new_allergies = allergies if allergies is not None else existing.patient.allergies
+        new_allergies = (
+            from_optional_value(allergies)
+            if not isinstance(allergies, Absent)
+            else existing.patient.allergies
+        )
         allergies_json = json.dumps(new_allergies)
         now = datetime.now(timezone.utc)
         current_blood_type = from_optional_value(existing.patient.blood_type)
@@ -483,18 +493,30 @@ class HealthcareInterpreter:
                       phone, address, created_at, updated_at
             """,
             patient_id,
-            first_name if first_name is not None else existing.patient.first_name,
-            last_name if last_name is not None else existing.patient.last_name,
-            blood_type if blood_type is not None else current_blood_type,
+            from_optional_value(first_name)
+            if not isinstance(first_name, Absent)
+            else existing.patient.first_name,
+            from_optional_value(last_name)
+            if not isinstance(last_name, Absent)
+            else existing.patient.last_name,
+            from_optional_value(blood_type)
+            if not isinstance(blood_type, Absent)
+            else current_blood_type,
             allergies_json,
-            insurance_id if insurance_id is not None else current_insurance_id,
+            from_optional_value(insurance_id)
+            if not isinstance(insurance_id, Absent)
+            else current_insurance_id,
             (
-                emergency_contact
-                if emergency_contact is not None
+                from_optional_value(emergency_contact)
+                if not isinstance(emergency_contact, Absent)
                 else existing.patient.emergency_contact
             ),
-            phone if phone is not None else current_phone,
-            address if address is not None else current_address,
+            from_optional_value(phone)
+            if not isinstance(phone, Absent)
+            else current_phone,
+            from_optional_value(address)
+            if not isinstance(address, Absent)
+            else current_address,
             now,
         )
 
@@ -543,23 +565,29 @@ class HealthcareInterpreter:
     async def _get_doctor_by_id(self, doctor_id: UUID) -> DoctorLookupResult:
         """Get doctor by ID."""
         doctor = await self.doctor_repo.get_by_id(doctor_id)
-        if doctor is None:
-            return DoctorMissingById(doctor_id=doctor_id)
-        return DoctorFound(doctor=doctor)
+        match doctor:
+            case Provided(value=found_doctor):
+                return DoctorFound(doctor=found_doctor)
+            case Absent():
+                return DoctorMissingById(doctor_id=doctor_id)
 
     async def _get_doctor_by_user_id(self, user_id: UUID) -> DoctorLookupResult:
         """Get doctor by user ID."""
         doctor = await self.doctor_repo.get_by_user_id(user_id)
-        if doctor is None:
-            return DoctorMissingByUserId(user_id=user_id)
-        return DoctorFound(doctor=doctor)
+        match doctor:
+            case Provided(value=found_doctor):
+                return DoctorFound(doctor=found_doctor)
+            case Absent():
+                return DoctorMissingByUserId(user_id=user_id)
 
     async def _get_user_by_email(self, email: str) -> UserLookupResult:
         """Get user by email."""
         user = await self.user_repo.get_by_email(email)
-        if user is None:
-            return UserMissingByEmail(email=email)
-        return UserFound(user=user)
+        match user:
+            case Provided(value=found_user):
+                return UserFound(user=found_user)
+            case Absent():
+                return UserMissingByEmail(email=email)
 
     async def _create_user(self, email: str, password_hash: str, role: str) -> User:
         """Create a new user."""
@@ -576,12 +604,13 @@ class HealthcareInterpreter:
         self,
         patient_id: UUID,
         doctor_id: UUID,
-        requested_time: datetime | None,
+        requested_time: OptionalValue[datetime],
         reason: str,
     ) -> Appointment:
         """Create new appointment in Requested status."""
         now = datetime.now(timezone.utc)
         appointment_id = uuid4()
+        resolved_requested_time = from_optional_value(requested_time)
 
         status = Requested(requested_at=now)
 
@@ -599,7 +628,7 @@ class HealthcareInterpreter:
             patient_id,
             doctor_id,
             "requested",
-            requested_time,
+            resolved_requested_time,
             reason,
             None,
             now,
@@ -629,9 +658,11 @@ class HealthcareInterpreter:
 
     async def _list_appointments(
         self,
-        patient_id: UUID | None,
-        doctor_id: UUID | None,
-        status: Literal["requested", "confirmed", "in_progress", "completed", "cancelled"] | None,
+        patient_id: OptionalValue[UUID],
+        doctor_id: OptionalValue[UUID],
+        status: OptionalValue[
+            Literal["requested", "confirmed", "in_progress", "completed", "cancelled"]
+        ],
     ) -> list[Appointment]:
         """List appointments with optional filtering."""
         query = """
@@ -642,16 +673,19 @@ class HealthcareInterpreter:
         """
         params: list[UUID | str] = []
 
-        if patient_id is not None:
-            params.append(patient_id)
+        resolved_patient = from_optional_value(patient_id)
+        if resolved_patient is not None:
+            params.append(resolved_patient)
             query += f" AND patient_id = ${len(params)}"
 
-        if doctor_id is not None:
-            params.append(doctor_id)
+        resolved_doctor = from_optional_value(doctor_id)
+        if resolved_doctor is not None:
+            params.append(resolved_doctor)
             query += f" AND doctor_id = ${len(params)}"
 
-        if status is not None:
-            params.append(status)
+        resolved_status = from_optional_value(status)
+        if resolved_status is not None:
+            params.append(resolved_status)
             query += f" AND status = ${len(params)}"
 
         query += " ORDER BY created_at DESC"
@@ -785,7 +819,7 @@ class HealthcareInterpreter:
         return PrescriptionFound(prescription=self._row_to_prescription(row))
 
     async def _list_prescriptions(
-        self, patient_id: UUID | None, doctor_id: UUID | None
+        self, patient_id: OptionalValue[UUID], doctor_id: OptionalValue[UUID]
     ) -> list[Prescription]:
         """List prescriptions with optional filtering."""
         query = """
@@ -797,12 +831,14 @@ class HealthcareInterpreter:
         """
         params: list[UUID] = []
 
-        if patient_id is not None:
-            params.append(patient_id)
+        resolved_patient_id = from_optional_value(patient_id)
+        if resolved_patient_id is not None:
+            params.append(resolved_patient_id)
             query += f" AND patient_id = ${len(params)}"
 
-        if doctor_id is not None:
-            params.append(doctor_id)
+        resolved_doctor_id = from_optional_value(doctor_id)
+        if resolved_doctor_id is not None:
+            params.append(resolved_doctor_id)
             query += f" AND doctor_id = ${len(params)}"
 
         query += " ORDER BY created_at DESC"
@@ -961,13 +997,15 @@ class HealthcareInterpreter:
     async def _create_invoice(
         self,
         patient_id: UUID,
-        appointment_id: UUID | None,
+        appointment_id: OptionalValue[UUID],
         line_items: list[LineItem],
-        due_date: date | None,
+        due_date: OptionalValue[date],
     ) -> Invoice:
         """Create new invoice with line items."""
         now = datetime.now(timezone.utc)
         invoice_id = uuid4()
+        resolved_appointment_id = from_optional_value(appointment_id)
+        resolved_due_date = from_optional_value(due_date)
 
         # Calculate totals
         subtotal = sum((item.total for item in line_items), start=0)
@@ -989,12 +1027,12 @@ class HealthcareInterpreter:
             """,
             invoice_id,
             patient_id,
-            appointment_id,
+            resolved_appointment_id,
             "draft",
             str(subtotal),
             str(tax_amount),
             str(total_amount),
-            due_date,
+            resolved_due_date,
             None,
             now,
             now,
@@ -1041,7 +1079,7 @@ class HealthcareInterpreter:
 
         return InvoiceFound(invoice=self._row_to_invoice(row))
 
-    async def _list_invoices(self, patient_id: UUID | None) -> list[Invoice]:
+    async def _list_invoices(self, patient_id: OptionalValue[UUID]) -> list[Invoice]:
         """List invoices with optional patient filter."""
         query = """
             SELECT id, patient_id, appointment_id, status, subtotal,
@@ -1052,8 +1090,9 @@ class HealthcareInterpreter:
         """
         params: list[UUID] = []
 
-        if patient_id is not None:
-            params.append(patient_id)
+        resolved_patient = from_optional_value(patient_id)
+        if resolved_patient is not None:
+            params.append(resolved_patient)
             query += f" AND patient_id = ${len(params)}"
 
         query += " ORDER BY created_at DESC"
@@ -1138,11 +1177,18 @@ class HealthcareInterpreter:
         )
 
     async def _update_invoice_status(
-        self, invoice_id: UUID, status: Literal["draft", "sent", "paid", "overdue"]
+        self,
+        invoice_id: UUID,
+        status: Literal["draft", "sent", "paid", "overdue"],
+        paid_at: OptionalValue[datetime],
     ) -> InvoiceLookupResult:
         """Update invoice payment status."""
         now = datetime.now(timezone.utc)
-        paid_at = now if status == "paid" else None
+        resolved_paid_at = (
+            from_optional_value(paid_at) if not isinstance(paid_at, Absent) else None
+        )
+        if status == "paid" and resolved_paid_at is None:
+            resolved_paid_at = now
 
         row = await self.pool.fetchrow(
             """
@@ -1154,7 +1200,7 @@ class HealthcareInterpreter:
                       created_at, updated_at
             """,
             status,
-            paid_at,
+            resolved_paid_at,
             now,
             invoice_id,
         )

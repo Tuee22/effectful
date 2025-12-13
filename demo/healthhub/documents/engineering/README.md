@@ -1,11 +1,10 @@
 # HealthHub Engineering Best Practices
 
-**Status**: Reference only
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/readme.md
+**Referenced by**: | **📖 Base Standard**: [README.md](../../../../documents/engineering/README.md)
 
 > **Purpose**: HealthHub overlay deltas for Engineering Standards. See base SSoT for canonical navigation and policies.
-> **📖 Base Standard**: [README.md](../../../../documents/engineering/README.md)
 > **📖 Authoritative Reference**: [README.md](../../../../documents/engineering/README.md)
 
 ______________________________________________________________________
@@ -14,6 +13,7 @@ ______________________________________________________________________
 
 - Base SSoT: [Effectful Engineering Standards](../../../../documents/engineering/README.md); use the base doc for all canonical guidance.
 - HealthHub-specific adjustments are limited to service naming (`healthhub`) and compose location (`demo/healthhub/docker/docker-compose.yml`). Add future engineering deltas in the matching overlay file (same filename as the base) instead of copying procedures.
+- Apply **Total Pure Modelling** to request DTOs: Pydantic/FastAPI models are boundaries and must normalize immediately to `OptionalValue`/ADT variants—no `None` gaps carried into domain logic (see [effect_patterns.md#pattern-6-boundary-normalization-for-optionalvalue](../../../../documents/engineering/effect_patterns.md#pattern-6-boundary-normalization-for-optionalvalue)).
 
 ## HealthHub-Specific Engineering Documentation
 

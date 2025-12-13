@@ -54,17 +54,17 @@ class AdminAuthorized:
 
 **Admin-Only Capabilities**:
 
-| Capability                   | Description                                 | API Endpoint                                        | Tutorial Reference                                                                             |
-| ---------------------------- | ------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| **Generate invoices**        | Create invoices from completed appointments | `POST /api/invoices/generate-from-appointment/{id}` | [Invoices Feature](../../engineering/features/invoices.md#invoice-generation-from-appointment) |
-| **View all invoices**        | View all invoices for all patients          | `GET /api/invoices`                                 | [Invoices Feature](../../engineering/features/invoices.md)                                     |
-| **Mark invoices paid**       | Update invoice status to Paid               | `POST /api/invoices/{id}/mark-paid`                 | [Invoices Feature](../../engineering/features/invoices.md#mark-invoice-as-paid)                |
-| **View audit logs**          | View HIPAA audit trail (all PHI access)     | `GET /api/audit-logs`                               | -                                                                                              |
-| **Manage users**             | Create, activate, deactivate users          | `POST /api/users`, `PUT /api/users/{id}`            | -                                                                                              |
-| **Update user roles**        | Change user roles (patient, doctor, admin)  | `PUT /api/users/{id}/role`                          | -                                                                                              |
-| **Update doctor privileges** | Toggle `can_prescribe` flag for doctors     | `PUT /api/doctors/{id}/can-prescribe`               | -                                                                                              |
-| **View system metrics**      | View system usage, performance metrics      | `GET /api/metrics`                                  | -                                                                                              |
-| **Manage data retention**    | Configure HIPAA-compliant data retention    | `PUT /api/settings/retention`                       | -                                                                                              |
+| Capability                   | Description                                 | API Endpoint                                        | Tutorial Reference                                         |
+| ---------------------------- | ------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------- |
+| **Generate invoices**        | Create invoices from completed appointments | `POST /api/invoices/generate-from-appointment/{id}` | [Invoices Feature](../../engineering/features/invoices.md) |
+| **View all invoices**        | View all invoices for all patients          | `GET /api/invoices`                                 | [Invoices Feature](../../engineering/features/invoices.md) |
+| **Mark invoices paid**       | Update invoice status to Paid               | `POST /api/invoices/{id}/mark-paid`                 | [Invoices Feature](../../engineering/features/invoices.md) |
+| **View audit logs**          | View HIPAA audit trail (all PHI access)     | `GET /api/audit-logs`                               | -                                                          |
+| **Manage users**             | Create, activate, deactivate users          | `POST /api/users`, `PUT /api/users/{id}`            | -                                                          |
+| **Update user roles**        | Change user roles (patient, doctor, admin)  | `PUT /api/users/{id}/role`                          | -                                                          |
+| **Update doctor privileges** | Toggle `can_prescribe` flag for doctors     | `PUT /api/doctors/{id}/can-prescribe`               | -                                                          |
+| **View system metrics**      | View system usage, performance metrics      | `GET /api/metrics`                                  | -                                                          |
+| **Manage data retention**    | Configure HIPAA-compliant data retention    | `PUT /api/settings/retention`                       | -                                                          |
 
 ### ❌ What Admins CANNOT Do (Intentional Restrictions)
 
@@ -621,7 +621,7 @@ ______________________________________________________________________
 
 ## Cross-References
 
-- [Beginner Journey - Admin Login](../../tutorials/01_journeys/beginner_journey.md#step-7-login-as-admin)
+- [Beginner Journey - Admin Login](../../tutorials/01_journeys/beginner_journey.md)
 - [Authentication Feature](../../engineering/features/authentication.md)
 - [Appointments Feature](../../engineering/features/appointments.md)
 - [Prescriptions Feature](../../engineering/features/prescriptions.md)

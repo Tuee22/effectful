@@ -1,11 +1,10 @@
 # Effect Types
 
-**Status**: Reference only
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/readme.md
+**Referenced by**: | **📖 Base Standard**: [effect_types.md](../../../../../documents/tutorials/00_library_deltas/effect_types.md)
 
 > **Purpose**: HealthHub overlay deltas for Effect Types. See base SSoT for canonical guidance.
-> **📖 Base Standard**: [effect_types.md](../../../../../documents/tutorials/00_library_deltas/effect_types.md)
 > **📖 Authoritative Reference**: [effect_types.md](../../../../../documents/tutorials/00_library_deltas/effect_types.md)
 
 ## Deltas

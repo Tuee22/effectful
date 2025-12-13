@@ -34,7 +34,7 @@ from app.protocols.database import DatabasePool
 from app.protocols.observability import ObservabilityInterpreter
 from app.protocols.redis_factory import RedisClientFactory
 from app.protocols.interpreter_factory import InterpreterFactory
-from app.programs.runner import run_program
+from app.programs.runner import run_program, unwrap_program_result
 
 
 # Security scheme for JWT Bearer authentication
@@ -82,7 +82,7 @@ class Unauthorized:
     """Unauthorized access attempt."""
 
     reason: str
-    detail: str
+    detail: OptionalValue[str]
 
 
 type AuthorizationState = PatientAuthorized | DoctorAuthorized | AdminAuthorized | Unauthorized
@@ -250,7 +250,10 @@ async def get_current_user(
                 if patient_id_value is None:
                     return Unauthorized(
                         reason="no_profile",
-                        detail="Patient profile not found. Complete profile setup first.",
+                        detail=to_optional_value(
+                            "Patient profile not found. Complete profile setup first.",
+                            reason="patient_profile_missing",
+                        ),
                     )
 
                 auth_state: AuthorizationState = PatientAuthorized(
@@ -265,7 +268,10 @@ async def get_current_user(
                 if doctor_id_value is None:
                     return Unauthorized(
                         reason="no_profile",
-                        detail="Doctor profile not found. Complete profile setup first.",
+                        detail=to_optional_value(
+                            "Doctor profile not found. Complete profile setup first.",
+                            reason="doctor_profile_missing",
+                        ),
                     )
 
                 doctor_id = doctor_id_value
@@ -280,7 +286,7 @@ async def get_current_user(
                     assert is_doctor_lookup_result(result)
                     return result
 
-                doctor_result = await run_program(doctor_program(), interpreter)
+                doctor_result = unwrap_program_result(await run_program(doctor_program(), interpreter))
 
                 match doctor_result:
                     case DoctorFound(doctor=doctor):
@@ -294,7 +300,10 @@ async def get_current_user(
                     case DoctorMissingById() | DoctorMissingByUserId():
                         return Unauthorized(
                             reason="no_profile",
-                            detail="Doctor profile not found or was deleted.",
+                            detail=to_optional_value(
+                                "Doctor profile not found or was deleted.",
+                                reason="doctor_profile_missing",
+                            ),
                         )
                     # MyPy enforces exhaustiveness - no fallback needed
 
@@ -306,7 +315,10 @@ async def get_current_user(
 
             case _:
                 return Unauthorized(
-                    reason="invalid_role", detail=f"Unknown role: {token_data.role}"
+                    reason="invalid_role",
+                    detail=to_optional_value(
+                        f"Unknown role: {token_data.role}", reason="invalid_role"
+                    ),
                 )
 
         def audit_program() -> Generator[AllEffects, object, bool]:
@@ -326,7 +338,7 @@ async def get_current_user(
             )
             return True
 
-        await run_program(audit_program(), interpreter)
+        unwrap_program_result(await run_program(audit_program(), interpreter))
 
         return auth_state
 
@@ -356,9 +368,12 @@ async def get_audited_composite_interpreter(
             | AdminAuthorized(user_id=uid)
         ):
             user_id = uid
-        case Unauthorized():
+        case Unauthorized(detail=detail):
             # This should never happen - get_current_user raises HTTPException for unauthorized
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=from_optional_value(detail) or "Unauthorized",
+            )
 
     # Create audit context
     audit_context = AuditContext(
@@ -397,7 +412,7 @@ async def require_patient(
         case Unauthorized(detail=detail):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=detail,
+                detail=from_optional_value(detail) or "Unauthorized",
             )
         case _:
             raise HTTPException(
@@ -426,7 +441,7 @@ async def require_doctor(
         case Unauthorized(detail=detail):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=detail,
+                detail=from_optional_value(detail) or "Unauthorized",
             )
         case _:
             raise HTTPException(
@@ -455,7 +470,7 @@ async def require_admin(
         case Unauthorized(detail=detail):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=detail,
+                detail=from_optional_value(detail) or "Unauthorized",
             )
         case _:
             raise HTTPException(
@@ -486,7 +501,7 @@ async def require_doctor_or_admin(
         case Unauthorized(detail=detail):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=detail,
+                detail=from_optional_value(detail) or "Unauthorized",
             )
         case PatientAuthorized():
             raise HTTPException(
@@ -513,7 +528,7 @@ async def require_authenticated(
         case Unauthorized(detail=detail):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=detail,
+                detail=from_optional_value(detail) or "Unauthorized",
             )
         case PatientAuthorized() | DoctorAuthorized() | AdminAuthorized():
             return auth

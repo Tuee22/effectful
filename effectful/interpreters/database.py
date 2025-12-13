@@ -8,7 +8,7 @@ from uuid import UUID
 
 from effectful.algebraic.effect_return import EffectReturn
 from effectful.algebraic.result import Err, Ok, Result
-from effectful.domain.optional_value import OptionalValue, from_optional_value
+from effectful.domain.optional_value import OptionalValue
 from effectful.domain.user import UserFound, UserNotFound
 from effectful.effects.base import Effect
 from effectful.effects.database import (
@@ -150,10 +150,7 @@ class DatabaseInterpreter:
     ) -> Result[EffectReturn[EffectResult], InterpreterError]:
         """Handle ListUsers effect."""
         try:
-            users = await self.user_repo.list_users(
-                from_optional_value(limit),
-                from_optional_value(offset),
-            )
+            users = await self.user_repo.list_users(limit, offset)
             return Ok(EffectReturn(value=users, effect_name="ListUsers"))
         except Exception as e:
             return Err(
@@ -190,8 +187,8 @@ class DatabaseInterpreter:
         try:
             lookup_result = await self.user_repo.update_user(
                 user_id,
-                from_optional_value(email),
-                from_optional_value(name),
+                email,
+                name,
             )
             match lookup_result:  # pragma: no branch
                 case UserFound(user=user, source=_):

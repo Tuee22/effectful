@@ -1,11 +1,10 @@
 # HealthHub Tutorials
 
-**Status**: Reference only
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/readme.md
+**Referenced by**: | **📖 Base Standard**: [README.md](../../../../documents/tutorials/README.md)
 
 > **Purpose**: HealthHub overlay deltas for tutorials. See base SSoT for canonical journeys and guides.
-> **📖 Base Standard**: [README.md](../../../../documents/tutorials/README.md)
 > **📖 Authoritative Reference**: [README.md](../../../../documents/tutorials/README.md)
 
 ## Deltas

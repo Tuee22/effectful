@@ -43,19 +43,19 @@ class PatientAuthorized:
 
 ### ✅ What Patients CAN Do
 
-| Capability                       | Description                                 | API Endpoint                          | Tutorial Reference                                                                                         |
-| -------------------------------- | ------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| **View own profile**             | View demographics, allergies, blood type    | `GET /api/patients/me`                | [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md#step-3-view-patient-dashboard)          |
-| **Request appointments**         | Request new appointments with doctors       | `POST /api/appointments`              | [Appointments Feature](../../engineering/features/appointments.md#workflow-1-patient-requests-appointment) |
-| **View own appointments**        | View all own appointments (past and future) | `GET /api/appointments`               | [Appointments Feature](../../engineering/features/appointments.md)                                         |
-| **Cancel own appointments**      | Cancel appointments in non-terminal states  | `POST /api/appointments/{id}/cancel`  | [Appointments Feature](../../engineering/features/appointments.md#cancellation-workflow)                   |
-| **View own prescriptions**       | View all prescriptions prescribed to self   | `GET /api/prescriptions`              | [Prescriptions Feature](../../engineering/features/prescriptions.md#patient-view-own-prescriptions-only)   |
-| **Request prescription refills** | Request refills for active prescriptions    | `POST /api/prescriptions/{id}/refill` | [Prescriptions Feature](../../engineering/features/prescriptions.md#refill-management)                     |
-| **View own lab results**         | View lab results with doctor notes          | `GET /api/lab-results`                | [Lab Results Feature](../../engineering/features/lab_results.md#patient-viewing)                           |
-| **View own invoices**            | View invoices with line items               | `GET /api/invoices`                   | [Invoices Feature](../../engineering/features/invoices.md#patient-viewing)                                 |
-| **Update profile**               | Update contact information, allergies       | `PUT /api/patients/me`                | -                                                                                                          |
-| **Change password**              | Change account password                     | `POST /api/auth/change-password`      | [Authentication Feature](../../engineering/features/authentication.md)                                     |
-| **Logout**                       | End session and clear JWT token             | `POST /api/auth/logout`               | [Authentication Feature](../../engineering/features/authentication.md#step-4-logout)                       |
+| Capability                       | Description                                 | API Endpoint                          | Tutorial Reference                                                     |
+| -------------------------------- | ------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------- |
+| **View own profile**             | View demographics, allergies, blood type    | `GET /api/patients/me`                | [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md)    |
+| **Request appointments**         | Request new appointments with doctors       | `POST /api/appointments`              | [Appointments Feature](../../engineering/features/appointments.md)     |
+| **View own appointments**        | View all own appointments (past and future) | `GET /api/appointments`               | [Appointments Feature](../../engineering/features/appointments.md)     |
+| **Cancel own appointments**      | Cancel appointments in non-terminal states  | `POST /api/appointments/{id}/cancel`  | [Appointments Feature](../../engineering/features/appointments.md)     |
+| **View own prescriptions**       | View all prescriptions prescribed to self   | `GET /api/prescriptions`              | [Prescriptions Feature](../../engineering/features/prescriptions.md)   |
+| **Request prescription refills** | Request refills for active prescriptions    | `POST /api/prescriptions/{id}/refill` | [Prescriptions Feature](../../engineering/features/prescriptions.md)   |
+| **View own lab results**         | View lab results with doctor notes          | `GET /api/lab-results`                | [Lab Results Feature](../../engineering/features/lab_results.md)       |
+| **View own invoices**            | View invoices with line items               | `GET /api/invoices`                   | [Invoices Feature](../../engineering/features/invoices.md)             |
+| **Update profile**               | Update contact information, allergies       | `PUT /api/patients/me`                | -                                                                      |
+| **Change password**              | Change account password                     | `POST /api/auth/change-password`      | [Authentication Feature](../../engineering/features/authentication.md) |
+| **Logout**                       | End session and clear JWT token             | `POST /api/auth/logout`               | [Authentication Feature](../../engineering/features/authentication.md) |
 
 ### ❌ What Patients CANNOT Do
 
@@ -502,7 +502,7 @@ ______________________________________________________________________
 
 ## Cross-References
 
-- [Beginner Journey - Patient Login](../../tutorials/01_journeys/beginner_journey.md#step-2-login-as-patient)
+- [Beginner Journey - Patient Login](../../tutorials/01_journeys/beginner_journey.md)
 - [Authentication Feature](../../engineering/features/authentication.md)
 - [Appointments Feature](../../engineering/features/appointments.md)
 - [Prescriptions Feature](../../engineering/features/prescriptions.md)

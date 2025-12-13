@@ -1,11 +1,10 @@
 # Library Delta Tutorials
 
-**Status**: Reference only
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/tutorials/README.md
+**Referenced by**: | **📖 Base Standard**: [README.md](../../../../../documents/tutorials/00_library_deltas/README.md)
 
 > **Purpose**: HealthHub overlay deltas for library delta tutorials. See base SSoT for canonical guidance.
-> **📖 Base Standard**: [README.md](../../../../../documents/tutorials/00_library_deltas/README.md)
 > **📖 Authoritative Reference**: [README.md](../../../../../documents/tutorials/00_library_deltas/README.md)
 
 ______________________________________________________________________
@@ -24,9 +23,6 @@ Each file in this directory:
 ```markdown
 # Tutorial Title
 
-**Status**: Reference only
-**Supersedes**: none **📖 Base Standard**: [README.md](../../../../../documents/tutorials/00_library_deltas/README.md)
-**Referenced by**: demo/healthhub/documents/readme.md
 
 
 ## Deltas

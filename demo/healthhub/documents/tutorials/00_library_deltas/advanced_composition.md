@@ -1,11 +1,10 @@
 # Tutorial 06: Advanced Composition
 
-**Status**: Reference only
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/readme.md
+**Referenced by**: | **📖 Base Standard**: [advanced_composition.md](../../../../../documents/tutorials/00_library_deltas/advanced_composition.md)
 
 > **Purpose**: HealthHub overlay deltas for Advanced Composition. See base SSoT for canonical guidance.
-> **📖 Base Standard**: [advanced_composition.md](../../../../../documents/tutorials/00_library_deltas/advanced_composition.md)
 > **📖 Authoritative Reference**: [advanced_composition.md](../../../../../documents/tutorials/00_library_deltas/advanced_composition.md)
 
 ## Deltas

@@ -23,7 +23,21 @@ from effectful.domain.metrics_result import (
     QueryFailure,
     QuerySuccess,
 )
+from effectful.domain.optional_value import (
+    Absent,
+    OptionalValue,
+    Provided,
+    from_optional_value,
+    to_optional_value,
+)
 from effectful.observability import MetricsRegistry
+
+
+def _normalize_optional_value[T](value: T | OptionalValue[T] | None) -> OptionalValue[T]:
+    """Normalize incoming values to OptionalValue for ADT purity."""
+    if isinstance(value, (Provided, Absent)):
+        return value
+    return to_optional_value(value)
 
 
 @dataclass(frozen=True)
@@ -488,8 +502,8 @@ class InMemoryMetricsCollector:
 
     async def query_metrics(
         self,
-        metric_name: str | None,
-        labels: dict[str, str] | None,
+        metric_name: str | OptionalValue[str] | None,
+        labels: dict[str, str] | OptionalValue[dict[str, str]] | None,
     ) -> MetricQueryResult:
         """Query current metric values.
 
@@ -504,10 +518,14 @@ class InMemoryMetricsCollector:
         if self.registry is None:
             return QueryFailure(reason="No metrics registered - call register_metrics() first")
 
+        normalized_metric_name = _normalize_optional_value(metric_name)
+        normalized_labels = _normalize_optional_value(labels)
+        resolved_metric_name = from_optional_value(normalized_metric_name)
+        resolved_labels = from_optional_value(normalized_labels)
         metrics: dict[str, float] = {}
 
         # Query all metrics if metric_name is None
-        if metric_name is None:
+        if resolved_metric_name is None:
             # Collect all counters using dict comprehension
             counter_metrics = {
                 f"{name}{{{label_key}}}": value
@@ -542,7 +560,7 @@ class InMemoryMetricsCollector:
             return QuerySuccess(metrics=metrics, timestamp=time.time())
 
         # Query specific metric
-        label_filter_key = self._serialize_labels(labels) if labels else None
+        label_filter_key = self._serialize_labels(resolved_labels) if resolved_labels else None
 
         # Check if metric is registered
         counter_names = tuple(c.name for c in self.registry.counters)
@@ -551,56 +569,62 @@ class InMemoryMetricsCollector:
         summary_names = tuple(s.name for s in self.registry.summaries)
 
         # Check counters
-        if metric_name in counter_names:
-            inner_map = self._counters.get(metric_name, {})
+        if resolved_metric_name in counter_names:
+            inner_map = self._counters.get(resolved_metric_name, {})
             if label_filter_key:
                 value = inner_map.get(label_filter_key, 0.0)
-                metrics = {f"{metric_name}{{{label_filter_key}}}": value}
+                metrics = {f"{resolved_metric_name}{{{label_filter_key}}}": value}
             else:
                 metrics = {
-                    f"{metric_name}{{{label_key}}}": value for label_key, value in inner_map.items()
+                    f"{resolved_metric_name}{{{label_key}}}": value
+                    for label_key, value in inner_map.items()
                 }
             return QuerySuccess(metrics=metrics, timestamp=time.time())
 
         # Check gauges
-        if metric_name in gauge_names:
-            inner_map = self._gauges.get(metric_name, {})
+        if resolved_metric_name in gauge_names:
+            inner_map = self._gauges.get(resolved_metric_name, {})
             if label_filter_key:
                 value = inner_map.get(label_filter_key, 0.0)
-                metrics = {f"{metric_name}{{{label_filter_key}}}": value}
+                metrics = {f"{resolved_metric_name}{{{label_filter_key}}}": value}
             else:
                 metrics = {
-                    f"{metric_name}{{{label_key}}}": value for label_key, value in inner_map.items()
+                    f"{resolved_metric_name}{{{label_key}}}": value
+                    for label_key, value in inner_map.items()
                 }
             return QuerySuccess(metrics=metrics, timestamp=time.time())
 
         # Check histograms
-        if metric_name in histogram_names:
-            histogram_map: dict[str, list[float]] = self._histograms.get(metric_name, {})
+        if resolved_metric_name in histogram_names:
+            histogram_map: dict[str, list[float]] = self._histograms.get(resolved_metric_name, {})
             if label_filter_key:
                 hist_values: list[float] = histogram_map.get(label_filter_key, [])
-                metrics = {f"{metric_name}_count{{{label_filter_key}}}": float(len(hist_values))}
+                metrics = {
+                    f"{resolved_metric_name}_count{{{label_filter_key}}}": float(len(hist_values))
+                }
             else:
                 metrics = {
-                    f"{metric_name}_count{{{label_key}}}": float(len(hist_values))
+                    f"{resolved_metric_name}_count{{{label_key}}}": float(len(hist_values))
                     for label_key, hist_values in histogram_map.items()
                 }
             return QuerySuccess(metrics=metrics, timestamp=time.time())
 
         # Check summaries
-        if metric_name in summary_names:
-            summary_map: dict[str, list[float]] = self._summaries.get(metric_name, {})
+        if resolved_metric_name in summary_names:
+            summary_map: dict[str, list[float]] = self._summaries.get(resolved_metric_name, {})
             if label_filter_key:
                 sum_values: list[float] = summary_map.get(label_filter_key, [])
-                metrics = {f"{metric_name}_count{{{label_filter_key}}}": float(len(sum_values))}
+                metrics = {
+                    f"{resolved_metric_name}_count{{{label_filter_key}}}": float(len(sum_values))
+                }
             else:
                 metrics = {
-                    f"{metric_name}_count{{{label_key}}}": float(len(sum_values))
+                    f"{resolved_metric_name}_count{{{label_key}}}": float(len(sum_values))
                     for label_key, sum_values in summary_map.items()
                 }
             return QuerySuccess(metrics=metrics, timestamp=time.time())
 
-        return QueryFailure(reason=f"Metric '{metric_name}' not found")
+        return QueryFailure(reason=f"Metric '{resolved_metric_name}' not found")
 
     async def reset_metrics(self) -> MetricResult:
         """Clear all metrics.

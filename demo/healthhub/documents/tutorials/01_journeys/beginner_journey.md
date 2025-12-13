@@ -1,11 +1,10 @@
 # Beginner Journey (HealthHub Delta)
 
-**Status**: Reference only
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/tutorials/README.md
+**Referenced by**: | **📖 Base Standard**: [beginner_journey.md](../../../../../documents/tutorials/01_journeys/beginner_journey.md)
 
 > **Purpose**: HealthHub overlay deltas for Beginner Journey. See base SSoT for canonical flow.
-> **📖 Base Standard**: [beginner_journey.md](../../../../../documents/tutorials/01_journeys/beginner_journey.md)
 > **📖 Authoritative Reference**: [beginner_journey.md](../../../../../documents/tutorials/01_journeys/beginner_journey.md)
 
 ## Deltas

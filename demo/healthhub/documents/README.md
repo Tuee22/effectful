@@ -1,11 +1,10 @@
 # HealthHub Documentation
 
-**Status**: Reference only
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/documentation_standards.md
+**Referenced by**: | **📖 Base Standard**: [readme.md](../../../documents/readme.md)
 
 > **Purpose**: HealthHub overlay deltas for Readme. See base SSoT for canonical navigation and guidance.
-> **📖 Base Standard**: [readme.md](../../../documents/readme.md)
 > **📖 Authoritative Reference**: [readme.md](../../../documents/readme.md)
 
 ## Deltas

@@ -1,10 +1,14 @@
 """Program runner for effect execution.
 
 Layer 2 in 5-layer architecture: Executes generator-based effect programs.
+Returns typed Result values to avoid leaking interpreter exceptions.
 """
 
 from collections.abc import Generator
+from dataclasses import dataclass
 from typing import TypeVar
+
+from effectful.algebraic.result import Err, Ok, Result
 
 from app.domain.lookup_result import PatientFound, PatientMissingById, PatientMissingByUserId
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
@@ -17,9 +21,17 @@ class InterpreterProtocol(Protocol):
     async def handle(self, effect: AllEffects) -> object: ...
 
 
+@dataclass(frozen=True)
+class InterpreterFailure:
+    """Interpreter raised unexpectedly while executing an effect."""
+
+    effect: AllEffects
+    message: str
+
+
 async def run_program(
     program: Generator[AllEffects, object, T], interpreter: InterpreterProtocol
-) -> T:
+) -> Result[T, InterpreterFailure]:
     """Execute an effect program to completion.
 
     This is the core effect execution loop (Layer 2):
@@ -34,7 +46,7 @@ async def run_program(
         interpreter: Composite interpreter to handle effects
 
     Returns:
-        Final program result
+        Result[final program value, InterpreterFailure]
 
     Example:
         ```python
@@ -48,7 +60,7 @@ async def run_program(
                 case PatientMissingByUserId():
                     return "Patient not found"
 
-        result = await run_program(greet_patient(patient_id), interpreter)
+        result = unwrap_program_result(await run_program(greet_patient(patient_id), interpreter))
         ```
     """
     effect_result: object = None
@@ -59,11 +71,27 @@ async def run_program(
             effect = program.send(effect_result)
 
             # Execute effect via interpreter
-            effect_result = await interpreter.handle(effect)
+            try:
+                effect_result = await interpreter.handle(effect)
+            except Exception as exc:  # pragma: no cover - defensive guard
+                return Err(InterpreterFailure(effect=effect, message=str(exc)))
 
     except StopIteration as stop:
         # Program completed, return final value
         # Generator[AllEffects, object, T] places T in StopIteration.value
         # Use explicit type narrowing pattern
         result: T = stop.value
-        return result
+        return Ok(result)
+
+
+def unwrap_program_result(result: Result[T, InterpreterFailure]) -> T:
+    """Convert a program Result into a value or raise for unexpected interpreter failures.
+
+    This keeps API handlers simple while still enforcing typed error propagation
+    from the interpreter boundary.
+    """
+    match result:
+        case Ok(value):
+            return value
+        case Err(failure):
+            raise RuntimeError(f"Interpreter failure for {type(failure.effect).__name__}: {failure.message}")

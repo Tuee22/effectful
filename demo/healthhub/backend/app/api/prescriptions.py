@@ -9,7 +9,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from app.api.dependencies import (
     AdminAuthorized,
@@ -24,7 +24,7 @@ from app.domain.lookup_result import (
     PrescriptionMissing,
     is_prescription_lookup_result,
 )
-from effectful.domain.optional_value import from_optional_value
+from effectful.domain.optional_value import Absent, OptionalValue, from_optional_value, to_optional_value
 from app.domain.prescription import MedicationInteractionWarning, Prescription
 from app.effects.healthcare import GetPrescriptionById, ListPrescriptions
 from app.infrastructure.rate_limiter import rate_limit
@@ -38,13 +38,15 @@ from app.programs.prescription_programs import (
     PrescriptionPatientMissing,
     create_prescription_program,
 )
-from app.programs.runner import run_program
+from app.programs.runner import run_program, unwrap_program_result
 
 router = APIRouter()
 
 
 class PrescriptionResponse(BaseModel):
     """Prescription response model."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     id: str
     patient_id: str
@@ -54,13 +56,19 @@ class PrescriptionResponse(BaseModel):
     frequency: str
     duration_days: int
     refills_remaining: int
-    notes: str | None
+    notes: OptionalValue[str] = Field(default_factory=lambda: Absent("not_recorded"))
     created_at: datetime
     expires_at: datetime
+
+    @field_serializer("notes")
+    def serialize_notes(self, notes: OptionalValue[str]) -> str | None:
+        return from_optional_value(notes)
 
 
 class CreatePrescriptionRequest(BaseModel):
     """Create prescription request."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     patient_id: str
     doctor_id: str
@@ -69,8 +77,15 @@ class CreatePrescriptionRequest(BaseModel):
     frequency: str
     duration_days: int
     refills_remaining: int
-    notes: str | None = None
+    notes: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
     existing_medications: list[str] = Field(default_factory=list)
+
+    @field_validator("notes", mode="before")
+    @classmethod
+    def normalize_notes(cls, value: object) -> OptionalValue[str]:
+        if isinstance(value, OptionalValue):
+            return value
+        return to_optional_value(value if isinstance(value, str) else None, reason="not_provided")
 
 
 def prescription_to_response(prescription: Prescription) -> PrescriptionResponse:
@@ -84,7 +99,7 @@ def prescription_to_response(prescription: Prescription) -> PrescriptionResponse
         frequency=prescription.frequency,
         duration_days=prescription.duration_days,
         refills_remaining=prescription.refills_remaining,
-        notes=from_optional_value(prescription.notes),
+        notes=prescription.notes,
         created_at=prescription.created_at,
         expires_at=prescription.expires_at,
     )
@@ -124,12 +139,15 @@ async def list_prescriptions(
             pass  # No filtering for admins
 
     def list_program() -> Generator[AllEffects, object, list[Prescription]]:
-        prescriptions = yield ListPrescriptions(patient_id=patient_id, doctor_id=doctor_id)
+        prescriptions = yield ListPrescriptions(
+            patient_id=to_optional_value(patient_id, reason="role_scope"),
+            doctor_id=to_optional_value(doctor_id, reason="role_scope"),
+        )
         assert isinstance(prescriptions, list)
         return prescriptions
 
     # Run effect program
-    prescriptions = await run_program(list_program(), interpreter)
+    prescriptions = unwrap_program_result(await run_program(list_program(), interpreter))
 
     return [prescription_to_response(p) for p in prescriptions]
 
@@ -203,7 +221,7 @@ async def create_prescription(
         existing_medications=request.existing_medications,
     )
 
-    result = await run_program(program, interpreter)
+    result = unwrap_program_result(await run_program(program, interpreter))
 
     # Handle result
     match result:
@@ -267,7 +285,7 @@ async def get_prescription(
         return result
 
     # Run effect program
-    prescription_result = await run_program(get_program(), interpreter)
+    prescription_result = unwrap_program_result(await run_program(get_program(), interpreter))
 
     match prescription_result:
         case PrescriptionFound(prescription=prescription):
@@ -306,6 +324,6 @@ async def get_patient_prescriptions(
         return prescriptions
 
     # Run effect program
-    prescriptions = await run_program(list_program(), interpreter)
+    prescriptions = unwrap_program_result(await run_program(list_program(), interpreter))
 
     return [prescription_to_response(p) for p in prescriptions]

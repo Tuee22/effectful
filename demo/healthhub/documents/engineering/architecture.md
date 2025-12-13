@@ -1,11 +1,10 @@
 # Architecture
 
-**Status**: Reference only
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/readme.md
+**Referenced by**: | **📖 Base Standard**: [architecture.md](../../../../documents/engineering/architecture.md)
 
 > **Purpose**: HealthHub overlay deltas for Architecture. See base SSoT for canonical guidance.
-> **📖 Base Standard**: [architecture.md](../../../../documents/engineering/architecture.md)
 > **📖 Authoritative Reference**: [architecture.md](../../../../documents/engineering/architecture.md)
 
 ## Deltas

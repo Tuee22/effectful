@@ -1,11 +1,10 @@
 # Medical State Machines
 
-**Status**: Reference only
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/readme.md
+**Referenced by**: | **📖 Base Standard**: [medical_state_machines.md](../../../../documents/domain/medical_state_machines.md)
 
 > **Purpose**: HealthHub overlay deltas for Medical State Machines. See base SSoT for canonical patterns and transition rules.
-> **📖 Base Standard**: [medical_state_machines.md](../../../../documents/domain/medical_state_machines.md)
 > **📖 Authoritative Reference**: [medical_state_machines.md](../../../../documents/domain/medical_state_machines.md)
 
 ## Deltas

@@ -1,6 +1,6 @@
-# Functional Catalogue
-
 <!-- AUTO-GENERATED FILE. DO NOT EDIT BY HAND. -->
+
+# Functional Catalogue
 
 **Status**: Authoritative source
 **Supersedes**: none

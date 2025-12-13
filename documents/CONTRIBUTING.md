@@ -58,7 +58,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
 bash scripts/validate_optional_value_doctrine.sh
 
 # Pattern checker (if modifying effects)
-python3 scripts/check_optional_value_pattern.py
+docker compose -f docker/docker-compose.yml exec effectful poetry run python scripts/check_optional_value_pattern.py
 ```
 
 **Checks**:

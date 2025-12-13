@@ -50,22 +50,22 @@ class DoctorAuthorized:
 
 ### ✅ What Doctors CAN Do
 
-| Capability                 | Description                                           | API Endpoint                           | Tutorial Reference                                                                                                |
-| -------------------------- | ----------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| **View all patients**      | View patient list and individual profiles             | `GET /api/patients`                    | [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md#step-6-view-doctor-dashboard)                  |
-| **View patient details**   | View patient demographics, allergies, medical history | `GET /api/patients/{id}`               | [Patient Guide](patient_guide.md)                                                                                 |
-| **View all appointments**  | View all appointments (not just own)                  | `GET /api/appointments`                | [Appointments Feature](../../engineering/features/appointments.md)                                                |
-| **Confirm appointments**   | Confirm patient-requested appointments                | `POST /api/appointments/{id}/confirm`  | [Appointments Feature](../../engineering/features/appointments.md#workflow-2-doctor-confirms-appointment)         |
-| **Start appointments**     | Start confirmed appointments                          | `POST /api/appointments/{id}/start`    | [Appointments Feature](../../engineering/features/appointments.md#workflow-3-doctor-starts-appointment)           |
-| **Complete appointments**  | Complete appointments with clinical notes             | `POST /api/appointments/{id}/complete` | [Appointments Feature](../../engineering/features/appointments.md#workflow-4-doctor-completes-appointment)        |
-| **Cancel appointments**    | Cancel appointments in non-terminal states            | `POST /api/appointments/{id}/cancel`   | [Appointments Feature](../../engineering/features/appointments.md#cancellation-workflow)                          |
-| **Create prescriptions**   | Create prescriptions (if `can_prescribe=true`)        | `POST /api/prescriptions`              | [Prescriptions Feature](../../engineering/features/prescriptions.md)                                              |
-| **View all prescriptions** | View all prescriptions (with patient filter)          | `GET /api/prescriptions`               | [Prescriptions Feature](../../engineering/features/prescriptions.md#doctor-view-all-prescriptions-with-filtering) |
-| **Review lab results**     | Review lab results and add clinical notes             | `POST /api/lab-results/{id}/review`    | [Lab Results Feature](../../engineering/features/lab_results.md#doctor-review-workflow)                           |
-| **View all lab results**   | View all lab results (with patient filter)            | `GET /api/lab-results`                 | [Lab Results Feature](../../engineering/features/lab_results.md)                                                  |
-| **Update own profile**     | Update contact information                            | `PUT /api/doctors/me`                  | -                                                                                                                 |
-| **Change password**        | Change account password                               | `POST /api/auth/change-password`       | [Authentication Feature](../../engineering/features/authentication.md)                                            |
-| **Logout**                 | End session and clear JWT token                       | `POST /api/auth/logout`                | [Authentication Feature](../../engineering/features/authentication.md#step-4-logout)                              |
+| Capability                 | Description                                           | API Endpoint                           | Tutorial Reference                                                     |
+| -------------------------- | ----------------------------------------------------- | -------------------------------------- | ---------------------------------------------------------------------- |
+| **View all patients**      | View patient list and individual profiles             | `GET /api/patients`                    | [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md)    |
+| **View patient details**   | View patient demographics, allergies, medical history | `GET /api/patients/{id}`               | [Patient Guide](patient_guide.md)                                      |
+| **View all appointments**  | View all appointments (not just own)                  | `GET /api/appointments`                | [Appointments Feature](../../engineering/features/appointments.md)     |
+| **Confirm appointments**   | Confirm patient-requested appointments                | `POST /api/appointments/{id}/confirm`  | [Appointments Feature](../../engineering/features/appointments.md)     |
+| **Start appointments**     | Start confirmed appointments                          | `POST /api/appointments/{id}/start`    | [Appointments Feature](../../engineering/features/appointments.md)     |
+| **Complete appointments**  | Complete appointments with clinical notes             | `POST /api/appointments/{id}/complete` | [Appointments Feature](../../engineering/features/appointments.md)     |
+| **Cancel appointments**    | Cancel appointments in non-terminal states            | `POST /api/appointments/{id}/cancel`   | [Appointments Feature](../../engineering/features/appointments.md)     |
+| **Create prescriptions**   | Create prescriptions (if `can_prescribe=true`)        | `POST /api/prescriptions`              | [Prescriptions Feature](../../engineering/features/prescriptions.md)   |
+| **View all prescriptions** | View all prescriptions (with patient filter)          | `GET /api/prescriptions`               | [Prescriptions Feature](../../engineering/features/prescriptions.md)   |
+| **Review lab results**     | Review lab results and add clinical notes             | `POST /api/lab-results/{id}/review`    | [Lab Results Feature](../../engineering/features/lab_results.md)       |
+| **View all lab results**   | View all lab results (with patient filter)            | `GET /api/lab-results`                 | [Lab Results Feature](../../engineering/features/lab_results.md)       |
+| **Update own profile**     | Update contact information                            | `PUT /api/doctors/me`                  | -                                                                      |
+| **Change password**        | Change account password                               | `POST /api/auth/change-password`       | [Authentication Feature](../../engineering/features/authentication.md) |
+| **Logout**                 | End session and clear JWT token                       | `POST /api/auth/logout`                | [Authentication Feature](../../engineering/features/authentication.md) |
 
 ### ❌ What Doctors CANNOT Do
 
@@ -619,7 +619,7 @@ ______________________________________________________________________
 
 ## Cross-References
 
-- [Beginner Journey - Doctor Login](../../tutorials/01_journeys/beginner_journey.md#step-5-login-as-doctor)
+- [Beginner Journey - Doctor Login](../../tutorials/01_journeys/beginner_journey.md)
 - [Intermediate Journey - Doctor Workflows](../../tutorials/01_journeys/intermediate_journey.md)
 - [Authentication Feature](../../engineering/features/authentication.md)
 - [Appointments Feature](../../engineering/features/appointments.md)

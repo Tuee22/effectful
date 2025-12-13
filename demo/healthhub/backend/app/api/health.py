@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from app.api.dependencies import get_composite_interpreter
 from app.effects.healthcare import CheckDatabaseHealth
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
-from app.programs.runner import run_program
+from app.programs.runner import run_program, unwrap_program_result
 
 router = APIRouter()
 
@@ -29,7 +29,7 @@ async def health_check(
         return result
 
     try:
-        is_healthy = await run_program(health_program(), interpreter)
+        is_healthy = unwrap_program_result(await run_program(health_program(), interpreter))
     except Exception as e:
         return JSONResponse(
             {

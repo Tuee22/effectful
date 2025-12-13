@@ -16,6 +16,7 @@ from app.database import (
     safe_str,
     safe_uuid,
 )
+from effectful.domain.optional_value import Absent, OptionalValue, Provided
 from app.domain.patient import Patient
 from effectful.domain.optional_value import to_optional_value
 
@@ -31,14 +32,14 @@ class PatientRepository:
         """
         self.pool = pool
 
-    async def get_by_id(self, patient_id: UUID) -> Patient | None:
+    async def get_by_id(self, patient_id: UUID) -> OptionalValue[Patient]:
         """Get patient by ID.
 
         Args:
             patient_id: Patient UUID
 
         Returns:
-            Patient if found, None otherwise
+            Provided[Patient] if found, Absent otherwise with explicit reason
         """
         row = await self.pool.fetchrow(
             """
@@ -52,18 +53,18 @@ class PatientRepository:
         )
 
         if row is None:
-            return None
+            return Absent(reason="patient_not_found")
 
-        return self._row_to_patient(row)
+        return Provided(self._row_to_patient(row))
 
-    async def get_by_user_id(self, user_id: UUID) -> Patient | None:
+    async def get_by_user_id(self, user_id: UUID) -> OptionalValue[Patient]:
         """Get patient by user ID.
 
         Args:
             user_id: User UUID
 
         Returns:
-            Patient if found, None otherwise
+            Provided[Patient] if found, Absent otherwise with explicit reason
         """
         row = await self.pool.fetchrow(
             """
@@ -77,9 +78,9 @@ class PatientRepository:
         )
 
         if row is None:
-            return None
+            return Absent(reason="patient_not_found")
 
-        return self._row_to_patient(row)
+        return Provided(self._row_to_patient(row))
 
     async def create(
         self,

@@ -1,11 +1,10 @@
 # Patient Onboarding Workflow
 
-**Status**: Reference only\
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/tutorials/README.md
+**Referenced by**: | **📖 Base Standard**: [patient_onboarding.md](../../../../../documents/product/workflows/patient_onboarding.md)
 
 > **Purpose**: HealthHub overlay deltas for Patient Onboarding.
-> **📖 Base Standard**: [patient_onboarding.md](../../../../../documents/product/workflows/patient_onboarding.md)
 > **📖 Authoritative Reference**: [patient_onboarding.md](../../../../../documents/product/workflows/patient_onboarding.md)
 
 ## Deltas

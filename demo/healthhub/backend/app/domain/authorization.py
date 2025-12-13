@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from typing import Literal
 from uuid import UUID
 
+from effectful.domain.optional_value import OptionalValue, to_optional_value
 from app.domain.user import User
 
 
@@ -82,7 +83,7 @@ class Unauthorized:
     """
 
     reason: str
-    detail: str | None = None
+    detail: OptionalValue[str]
 
 
 # Authorization state ADT - makes illegal states unrepresentable
@@ -133,4 +134,4 @@ def create_admin_authorized(user: User) -> AdminAuthorized:
 
 def create_unauthorized(reason: str, detail: str | None = None) -> Unauthorized:
     """Create unauthorized state with reason."""
-    return Unauthorized(reason=reason, detail=detail)
+    return Unauthorized(reason=reason, detail=to_optional_value(detail, reason="not_provided"))

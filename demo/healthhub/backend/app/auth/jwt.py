@@ -13,7 +13,7 @@ from uuid import UUID
 import jwt
 
 from app.config import Settings
-from effectful.domain.optional_value import OptionalValue, to_optional_value
+from effectful.domain.optional_value import OptionalValue, from_optional_value, to_optional_value
 
 
 class TokenType(str, Enum):
@@ -60,8 +60,8 @@ def create_access_token(
     user_id: UUID,
     email: str,
     role: str,
-    patient_id: UUID | None = None,
-    doctor_id: UUID | None = None,
+    patient_id: OptionalValue[UUID] = to_optional_value(None, reason="not_included"),
+    doctor_id: OptionalValue[UUID] = to_optional_value(None, reason="not_included"),
 ) -> str:
     """Create a short-lived JWT access token (15 minutes) with profile IDs.
 
@@ -85,8 +85,12 @@ def create_access_token(
         "email": email,
         "role": role,
         "token_type": TokenType.ACCESS.value,
-        "patient_id": str(patient_id) if patient_id else None,
-        "doctor_id": str(doctor_id) if doctor_id else None,
+        "patient_id": (
+            str(from_optional_value(patient_id)) if from_optional_value(patient_id) else None
+        ),
+        "doctor_id": (
+            str(from_optional_value(doctor_id)) if from_optional_value(doctor_id) else None
+        ),
         "exp": expire,
         "iat": now,
     }
@@ -99,8 +103,8 @@ def create_refresh_token(
     user_id: UUID,
     email: str,
     role: str,
-    patient_id: UUID | None = None,
-    doctor_id: UUID | None = None,
+    patient_id: OptionalValue[UUID] = to_optional_value(None, reason="not_included"),
+    doctor_id: OptionalValue[UUID] = to_optional_value(None, reason="not_included"),
 ) -> str:
     """Create a long-lived JWT refresh token (7 days) with profile IDs.
 
@@ -124,8 +128,12 @@ def create_refresh_token(
         "email": email,
         "role": role,
         "token_type": TokenType.REFRESH.value,
-        "patient_id": str(patient_id) if patient_id else None,
-        "doctor_id": str(doctor_id) if doctor_id else None,
+        "patient_id": (
+            str(from_optional_value(patient_id)) if from_optional_value(patient_id) else None
+        ),
+        "doctor_id": (
+            str(from_optional_value(doctor_id)) if from_optional_value(doctor_id) else None
+        ),
         "exp": expire,
         "iat": now,
     }

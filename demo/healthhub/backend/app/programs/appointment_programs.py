@@ -33,7 +33,7 @@ from app.domain.lookup_result import (
     is_patient_lookup_result,
 )
 from app.domain.patient import Patient
-from effectful.domain.optional_value import to_optional_value
+from effectful.domain.optional_value import OptionalValue, to_optional_value
 from app.effects.healthcare import (
     CreateAppointment,
     GetAppointmentById,
@@ -94,7 +94,7 @@ Variants:
 def schedule_appointment_program(
     patient_id: UUID,
     doctor_id: UUID,
-    requested_time: datetime | None,
+    requested_time: OptionalValue[datetime],
     reason: str,
     actor_id: UUID,
 ) -> Generator[AllEffects, object, ScheduleAppointmentResult]:
@@ -153,7 +153,7 @@ def schedule_appointment_program(
     appointment = yield CreateAppointment(
         patient_id=patient_id,
         doctor_id=doctor_id,
-        requested_time=to_optional_value(requested_time, reason="not_requested"),
+        requested_time=requested_time,
         reason=reason,
     )
     assert isinstance(appointment, Appointment)

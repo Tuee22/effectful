@@ -27,7 +27,7 @@ from app.domain.prescription import (
     NoInteractions,
     Prescription,
 )
-from effectful.domain.optional_value import to_optional_value
+from effectful.domain.optional_value import OptionalValue, to_optional_value
 from app.effects.healthcare import (
     CheckMedicationInteractions,
     CreatePrescription,
@@ -120,7 +120,7 @@ def create_prescription_program(
     frequency: str,
     duration_days: int,
     refills_remaining: int,
-    notes: str | None,
+    notes: OptionalValue[str],
     actor_id: UUID,
     existing_medications: list[str],
 ) -> Generator[AllEffects, object, PrescriptionCreationResult]:
@@ -223,7 +223,7 @@ def create_prescription_program(
         frequency=frequency,
         duration_days=duration_days,
         refills_remaining=refills_remaining,
-        notes=to_optional_value(notes, reason="no_notes"),
+        notes=notes,
     )
     assert isinstance(prescription, Prescription)
 

@@ -73,61 +73,61 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.container = container
     app.state.settings = settings  # Store for auth endpoints
 
+    # Configure app metadata and middleware once per startup (no module-level Settings)
+    app.title = settings.app_name
+    app.description = "Healthcare portal demo with Effectful effect system"
+    app.version = "1.0.0"
+
+    # CORS middleware (idempotent add guarded by state flag)
+    if not getattr(app.state, "cors_configured", False):
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=settings.cors_origins,
+            allow_credentials=settings.cors_allow_credentials,
+            allow_methods=settings.cors_allow_methods,
+            allow_headers=settings.cors_allow_headers,
+        )
+        app.state.cors_configured = True
+
+    # Register routers using settings-derived prefixes (guard to avoid duplicate registration)
+    if not getattr(app.state, "routers_registered", False):
+        app.include_router(health_router, tags=["health"])
+        app.include_router(auth_router, prefix=f"{settings.api_prefix}/auth", tags=["auth"])
+        app.include_router(
+            patients_router, prefix=f"{settings.api_prefix}/patients", tags=["patients"]
+        )
+        app.include_router(
+            appointments_router,
+            prefix=f"{settings.api_prefix}/appointments",
+            tags=["appointments"],
+        )
+        app.include_router(
+            prescriptions_router,
+            prefix=f"{settings.api_prefix}/prescriptions",
+            tags=["prescriptions"],
+        )
+        app.include_router(
+            lab_results_router,
+            prefix=f"{settings.api_prefix}/lab-results",
+            tags=["lab-results"],
+        )
+        app.include_router(
+            invoices_router, prefix=f"{settings.api_prefix}/invoices", tags=["invoices"]
+        )
+        app.state.routers_registered = True
+
     yield
 
     # Shutdown
     await database_pool_adapter.close()
 
 
-# Bootstrap settings for app construction (before lifespan)
-#
-# Doctrine 7 Exception: This is a necessary violation because FastAPI requires
-# title, description, and version at module level during app construction,
-# which happens before the lifespan context manager runs.
-#
-# The runtime Settings instance is correctly created in the lifespan context
-# manager above (line 45) and stored in app.state for dependency injection.
-# Effect programs never access this bootstrap instance.
-_bootstrap_settings = Settings()
-
-# Create FastAPI application
+# Create FastAPI application (no settings instantiated at module import)
 app = FastAPI(
-    title=_bootstrap_settings.app_name,
+    title="HealthHub",
     description="Healthcare portal demo with Effectful effect system",
     version="1.0.0",
     lifespan=lifespan,
-)
-
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=_bootstrap_settings.cors_origins,
-    allow_credentials=_bootstrap_settings.cors_allow_credentials,
-    allow_methods=_bootstrap_settings.cors_allow_methods,
-    allow_headers=_bootstrap_settings.cors_allow_headers,
-)
-
-# Include routers
-app.include_router(health_router, tags=["health"])
-app.include_router(auth_router, prefix=f"{_bootstrap_settings.api_prefix}/auth", tags=["auth"])
-app.include_router(
-    patients_router, prefix=f"{_bootstrap_settings.api_prefix}/patients", tags=["patients"]
-)
-app.include_router(
-    appointments_router,
-    prefix=f"{_bootstrap_settings.api_prefix}/appointments",
-    tags=["appointments"],
-)
-app.include_router(
-    prescriptions_router,
-    prefix=f"{_bootstrap_settings.api_prefix}/prescriptions",
-    tags=["prescriptions"],
-)
-app.include_router(
-    lab_results_router, prefix=f"{_bootstrap_settings.api_prefix}/lab-results", tags=["lab-results"]
-)
-app.include_router(
-    invoices_router, prefix=f"{_bootstrap_settings.api_prefix}/invoices", tags=["invoices"]
 )
 
 

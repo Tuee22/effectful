@@ -9,6 +9,7 @@ from typing import Protocol
 from uuid import UUID
 
 from effectful.domain.message import ChatMessage
+from effectful.domain.optional_value import OptionalValue
 from effectful.domain.user import User, UserLookupResult
 
 
@@ -38,7 +39,7 @@ class UserRepository(Protocol):
         """
         ...
 
-    async def list_users(self, limit: int | None, offset: int | None) -> list[User]:
+    async def list_users(self, limit: OptionalValue[int], offset: OptionalValue[int]) -> list[User]:
         """List all users with optional pagination.
 
         Args:
@@ -64,7 +65,7 @@ class UserRepository(Protocol):
         ...
 
     async def update_user(
-        self, user_id: UUID, email: str | None, name: str | None
+        self, user_id: UUID, email: OptionalValue[str], name: OptionalValue[str]
     ) -> UserLookupResult:
         """Update user fields.
 

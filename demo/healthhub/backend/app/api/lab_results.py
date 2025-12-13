@@ -9,7 +9,7 @@ from typing import Annotated
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from app.database.converters import (
     safe_bool,
@@ -18,7 +18,7 @@ from app.database.converters import (
     safe_uuid,
 )
 from app.domain.lab_result import LabResult
-from effectful.domain.optional_value import from_optional_value, to_optional_value
+from effectful.domain.optional_value import Absent, OptionalValue, from_optional_value, to_optional_value
 from app.domain.lookup_result import LabResultFound, LabResultMissing, is_lab_result_lookup_result
 from app.effects.healthcare import (
     CreateLabResult,
@@ -29,7 +29,7 @@ from app.effects.healthcare import (
 from app.infrastructure.rate_limiter import rate_limit
 from app.interpreters.auditing_interpreter import AuditedCompositeInterpreter
 from app.interpreters.composite_interpreter import AllEffects
-from app.programs.runner import run_program
+from app.programs.runner import run_program, unwrap_program_result
 from app.api.dependencies import (
     AdminAuthorized,
     DoctorAuthorized,
@@ -45,6 +45,8 @@ router = APIRouter()
 class LabResultResponse(BaseModel):
     """Lab result response model."""
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     id: str
     patient_id: str
     doctor_id: str
@@ -52,25 +54,47 @@ class LabResultResponse(BaseModel):
     result_data: dict[str, str]
     critical: bool
     reviewed_by_doctor: bool
-    doctor_notes: str | None
+    doctor_notes: OptionalValue[str] = Field(default_factory=lambda: Absent("not_recorded"))
     created_at: datetime
+
+    @field_serializer("doctor_notes")
+    def serialize_doctor_notes(self, doctor_notes: OptionalValue[str]) -> str | None:
+        return from_optional_value(doctor_notes)
 
 
 class CreateLabResultRequest(BaseModel):
     """Create lab result request."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     patient_id: str
     doctor_id: str
     test_type: str
     result_data: dict[str, str]
     critical: bool = False
-    doctor_notes: str | None = None
+    doctor_notes: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
+
+    @field_validator("doctor_notes", mode="before")
+    @classmethod
+    def normalize_doctor_notes(cls, value: object) -> OptionalValue[str]:
+        if isinstance(value, OptionalValue):
+            return value
+        return to_optional_value(value if value is not None else None, reason="not_provided")
 
 
 class ReviewLabResultRequest(BaseModel):
     """Review lab result request (doctor marks as reviewed)."""
 
-    doctor_notes: str | None = None
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    doctor_notes: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
+
+    @field_validator("doctor_notes", mode="before")
+    @classmethod
+    def normalize_doctor_notes(cls, value: object) -> OptionalValue[str]:
+        if isinstance(value, OptionalValue):
+            return value
+        return to_optional_value(value if value is not None else None, reason="not_provided")
 
 
 def _row_to_lab_result(row: dict[str, object]) -> LabResult:
@@ -106,7 +130,7 @@ def lab_result_to_response(lab_result: LabResult) -> LabResultResponse:
         result_data=lab_result.result_data,
         critical=lab_result.critical,
         reviewed_by_doctor=lab_result.reviewed_by_doctor,
-        doctor_notes=from_optional_value(lab_result.doctor_notes),
+        doctor_notes=lab_result.doctor_notes,
         created_at=lab_result.created_at,
     )
 
@@ -144,12 +168,15 @@ async def list_lab_results(
             pass  # No filtering for admins
 
     def list_program() -> Generator[AllEffects, object, list[LabResult]]:
-        lab_results = yield ListLabResults(patient_id=patient_id, doctor_id=doctor_id)
+        lab_results = yield ListLabResults(
+            patient_id=to_optional_value(patient_id, reason="role_scope"),
+            doctor_id=to_optional_value(doctor_id, reason="role_scope"),
+        )
         assert isinstance(lab_results, list)
         return lab_results
 
     # Run effect program
-    lab_results = await run_program(list_program(), interpreter)
+    lab_results = unwrap_program_result(await run_program(list_program(), interpreter))
 
     return [lab_result_to_response(lr) for lr in lab_results]
 
@@ -182,13 +209,13 @@ async def create_lab_result(
             test_type=request_data.test_type,
             result_data=request_data.result_data,
             critical=request_data.critical,
-            doctor_notes=to_optional_value(request_data.doctor_notes, reason="not_provided"),
+            doctor_notes=request_data.doctor_notes,
         )
         assert isinstance(lab_result, LabResult)
         return lab_result
 
     # Run effect program
-    lab_result = await run_program(create_program(), interpreter)
+    lab_result = unwrap_program_result(await run_program(create_program(), interpreter))
 
     return lab_result_to_response(lab_result)
 
@@ -220,7 +247,7 @@ async def get_lab_result(
         return result
 
     # Run effect program
-    lab_result_result = await run_program(get_program(), interpreter)
+    lab_result_result = unwrap_program_result(await run_program(get_program(), interpreter))
 
     match lab_result_result:
         case LabResultFound(lab_result=lab_result):
@@ -270,13 +297,13 @@ async def review_lab_result(
     def review_program() -> Generator[AllEffects, object, LabResultFound | LabResultMissing]:
         result = yield ReviewLabResult(
             result_id=UUID(lab_result_id),
-            doctor_notes=request.doctor_notes,
+            doctor_notes=to_optional_value(request.doctor_notes, reason="not_provided"),
         )
         assert is_lab_result_lookup_result(result)
         return result
 
     # Run effect program
-    lab_result_result = await run_program(review_program(), interpreter)
+    lab_result_result = unwrap_program_result(await run_program(review_program(), interpreter))
 
     match lab_result_result:
         case LabResultFound(lab_result=lab_result):
@@ -325,6 +352,6 @@ async def get_patient_lab_results(
         return lab_results
 
     # Run effect program
-    lab_results = await run_program(list_program(), interpreter)
+    lab_results = unwrap_program_result(await run_program(list_program(), interpreter))
 
     return [lab_result_to_response(lr) for lr in lab_results]

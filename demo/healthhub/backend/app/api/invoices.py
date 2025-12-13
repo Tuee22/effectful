@@ -10,7 +10,7 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from app.database import (
     safe_datetime,
@@ -29,7 +29,13 @@ from app.domain.lookup_result import (
     InvoiceMissing,
     is_invoice_lookup_result,
 )
-from effectful.domain.optional_value import from_optional_value, to_optional_value
+from effectful.domain.optional_value import (
+    Absent,
+    OptionalValue,
+    Provided,
+    from_optional_value,
+    to_optional_value,
+)
 from app.effects.healthcare import (
     AddInvoiceLineItem,
     CreateInvoice,
@@ -41,7 +47,7 @@ from app.effects.healthcare import (
 from app.infrastructure.rate_limiter import rate_limit
 from app.interpreters.auditing_interpreter import AuditedCompositeInterpreter
 from app.interpreters.composite_interpreter import AllEffects
-from app.programs.runner import run_program
+from app.programs.runner import run_program, unwrap_program_result
 from app.api.dependencies import (
     AdminAuthorized,
     DoctorAuthorized,
@@ -52,6 +58,45 @@ from app.api.dependencies import (
 )
 
 router = APIRouter()
+
+
+def _normalize_optional_uuid(value: object, *, reason: str) -> OptionalValue[UUID]:
+    """Normalize incoming UUID values to OptionalValue."""
+    if isinstance(value, OptionalValue):
+        return value
+    if value is None:
+        return Absent(reason=reason)
+    if isinstance(value, UUID):
+        return Provided(value=value)
+    if isinstance(value, str):
+        return Provided(value=UUID(value))
+    raise TypeError(f"Expected UUID, str, OptionalValue, or None but received {type(value)}")
+
+
+def _normalize_optional_date(value: object, *, reason: str) -> OptionalValue[date]:
+    """Normalize incoming date values to OptionalValue."""
+    if isinstance(value, OptionalValue):
+        return value
+    if value is None:
+        return Absent(reason=reason)
+    if isinstance(value, date):
+        return Provided(value=value)
+    if isinstance(value, str):
+        return Provided(value=date.fromisoformat(value))
+    raise TypeError(f"Expected date, str, OptionalValue, or None but received {type(value)}")
+
+
+def _normalize_optional_datetime(value: object, *, reason: str) -> OptionalValue[datetime]:
+    """Normalize incoming datetime values to OptionalValue."""
+    if isinstance(value, OptionalValue):
+        return value
+    if value is None:
+        return Absent(reason=reason)
+    if isinstance(value, datetime):
+        return Provided(value=value)
+    if isinstance(value, str):
+        return Provided(value=datetime.fromisoformat(value))
+    raise TypeError(f"Expected datetime, str, OptionalValue, or None but received {type(value)}")
 
 
 class LineItemResponse(BaseModel):
@@ -69,17 +114,32 @@ class LineItemResponse(BaseModel):
 class InvoiceResponse(BaseModel):
     """Invoice response model."""
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     id: str
     patient_id: str
-    appointment_id: str | None
+    appointment_id: OptionalValue[UUID] = Field(default_factory=lambda: Absent("no_associated_appointment"))
     status: Literal["draft", "sent", "paid", "overdue"]
     subtotal: float
     tax_amount: float
     total_amount: float
-    due_date: date | None
-    paid_at: datetime | None
+    due_date: OptionalValue[date] = Field(default_factory=lambda: Absent("not_set"))
+    paid_at: OptionalValue[datetime] = Field(default_factory=lambda: Absent("not_paid"))
     created_at: datetime
     updated_at: datetime
+
+    @field_serializer("appointment_id")
+    def serialize_appointment_id(self, appointment_id: OptionalValue[UUID]) -> str | None:
+        resolved = from_optional_value(appointment_id)
+        return str(resolved) if resolved is not None else None
+
+    @field_serializer("due_date")
+    def serialize_due_date(self, due_date: OptionalValue[date]) -> date | None:
+        return from_optional_value(due_date)
+
+    @field_serializer("paid_at")
+    def serialize_paid_at(self, paid_at: OptionalValue[datetime]) -> datetime | None:
+        return from_optional_value(paid_at)
 
 
 class InvoiceWithLineItemsResponse(BaseModel):
@@ -92,9 +152,21 @@ class InvoiceWithLineItemsResponse(BaseModel):
 class CreateInvoiceRequest(BaseModel):
     """Create invoice request."""
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     patient_id: str
-    appointment_id: str | None = None
-    due_date: date | None = None
+    appointment_id: OptionalValue[UUID] = Field(default_factory=lambda: Absent("not_linked"))
+    due_date: OptionalValue[date] = Field(default_factory=lambda: Absent("not_provided"))
+
+    @field_validator("appointment_id", mode="before")
+    @classmethod
+    def normalize_appointment_id(cls, value: object) -> OptionalValue[UUID]:
+        return _normalize_optional_uuid(value, reason="not_linked")
+
+    @field_validator("due_date", mode="before")
+    @classmethod
+    def normalize_due_date(cls, value: object) -> OptionalValue[date]:
+        return _normalize_optional_date(value, reason="not_provided")
 
 
 class CreateLineItemRequest(BaseModel):
@@ -108,7 +180,15 @@ class CreateLineItemRequest(BaseModel):
 class UpdateInvoiceStatusRequest(BaseModel):
     """Update invoice status request."""
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     status: Literal["draft", "sent", "paid", "overdue"]
+    paid_at: OptionalValue[datetime] = Field(default_factory=lambda: Absent("not_paid"))
+
+    @field_validator("paid_at", mode="before")
+    @classmethod
+    def normalize_paid_at(cls, value: object) -> OptionalValue[datetime]:
+        return _normalize_optional_datetime(value, reason="not_paid")
 
 
 def _row_to_invoice(row: dict[str, object]) -> Invoice:
@@ -148,17 +228,13 @@ def invoice_to_response(invoice: Invoice) -> InvoiceResponse:
     return InvoiceResponse(
         id=str(invoice.id),
         patient_id=str(invoice.patient_id),
-        appointment_id=(
-            str(from_optional_value(invoice.appointment_id))
-            if from_optional_value(invoice.appointment_id)
-            else None
-        ),
+        appointment_id=invoice.appointment_id,
         status=invoice.status,
         subtotal=float(invoice.subtotal),
         tax_amount=float(invoice.tax_amount),
         total_amount=float(invoice.total_amount),
-        due_date=from_optional_value(invoice.due_date),
-        paid_at=from_optional_value(invoice.paid_at),
+        due_date=invoice.due_date,
+        paid_at=invoice.paid_at,
         created_at=invoice.created_at,
         updated_at=invoice.updated_at,
     )
@@ -209,12 +285,12 @@ async def list_invoices(
             pass  # No filtering
 
     def list_program() -> Generator[AllEffects, object, list[Invoice]]:
-        invoices = yield ListInvoices(patient_id=patient_id)
+        invoices = yield ListInvoices(patient_id=to_optional_value(patient_id, reason="role_scope"))
         assert isinstance(invoices, list)
         return invoices
 
     # Run effect program
-    invoices = await run_program(list_program(), interpreter)
+    invoices = unwrap_program_result(await run_program(list_program(), interpreter))
 
     return [invoice_to_response(inv) for inv in invoices]
 
@@ -241,19 +317,16 @@ async def create_invoice(
     def create_program() -> Generator[AllEffects, object, Invoice]:
         invoice = yield CreateInvoice(
             patient_id=UUID(request_data.patient_id),
-            appointment_id=to_optional_value(
-                UUID(request_data.appointment_id) if request_data.appointment_id else None,
-                reason="not_linked",
-            ),
+            appointment_id=request_data.appointment_id,
             line_items=[],  # Empty invoice, line items added later
-            due_date=to_optional_value(request_data.due_date, reason="not_provided"),
+            due_date=request_data.due_date,
         )
 
         assert isinstance(invoice, Invoice)
         return invoice
 
     # Run effect program
-    invoice = await run_program(create_program(), interpreter)
+    invoice = unwrap_program_result(await run_program(create_program(), interpreter))
 
     return invoice_to_response(invoice)
 
@@ -293,7 +366,7 @@ async def get_invoice(
             # MyPy enforces exhaustiveness - no fallback needed
 
     # Run effect program
-    result = await run_program(get_program(), interpreter)
+    result = unwrap_program_result(await run_program(get_program(), interpreter))
 
     match result:
         case InvoiceMissing():
@@ -357,7 +430,7 @@ async def add_line_item(
         return line_item
 
     # Run effect program
-    line_item = await run_program(add_line_item_program(), interpreter)
+    line_item = unwrap_program_result(await run_program(add_line_item_program(), interpreter))
 
     return line_item_to_response(line_item)
 
@@ -386,12 +459,13 @@ async def update_invoice_status(
         result = yield UpdateInvoiceStatus(
             invoice_id=UUID(invoice_id),
             status=request_data.status,
+            paid_at=request_data.paid_at,
         )
         assert is_invoice_lookup_result(result)
         return result
 
     # Run effect program
-    invoice_result = await run_program(update_status_program(), interpreter)
+    invoice_result = unwrap_program_result(await run_program(update_status_program(), interpreter))
 
     match invoice_result:
         case InvoiceFound(invoice=invoice):
@@ -435,11 +509,13 @@ async def get_patient_invoices(
             pass  # Doctors and admins can view any patient's invoices
 
     def list_program() -> Generator[AllEffects, object, list[Invoice]]:
-        invoices = yield ListInvoices(patient_id=UUID(patient_id))
+        invoices = yield ListInvoices(
+            patient_id=to_optional_value(UUID(patient_id), reason="explicit_filter")
+        )
         assert isinstance(invoices, list)
         return invoices
 
     # Run effect program
-    invoices = await run_program(list_program(), interpreter)
+    invoices = unwrap_program_result(await run_program(list_program(), interpreter))
 
     return [invoice_to_response(inv) for inv in invoices]

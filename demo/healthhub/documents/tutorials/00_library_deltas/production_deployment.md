@@ -1,11 +1,10 @@
 # Tutorial 05: Production Deployment
 
-**Status**: Reference only
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/readme.md
+**Referenced by**: | **📖 Base Standard**: [production_deployment.md](../../../../../documents/tutorials/00_library_deltas/production_deployment.md)
 
 > **Purpose**: HealthHub overlay deltas for Production Deployment. See base SSoT for canonical guidance.
-> **📖 Base Standard**: [production_deployment.md](../../../../../documents/tutorials/00_library_deltas/production_deployment.md)
 > **📖 Authoritative Reference**: [production_deployment.md](../../../../../documents/tutorials/00_library_deltas/production_deployment.md)
 
 ## Deltas

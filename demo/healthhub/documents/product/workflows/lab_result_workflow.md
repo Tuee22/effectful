@@ -1,11 +1,10 @@
 # Lab Result Workflow
 
-**Status**: Reference only\
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/tutorials/README.md
+**Referenced by**: | **📖 Base Standard**: [lab_result_workflow.md](../../../../../documents/product/workflows/lab_result_workflow.md)
 
 > **Purpose**: HealthHub overlay deltas for Lab Result Workflow.
-> **📖 Base Standard**: [lab_result_workflow.md](../../../../../documents/product/workflows/lab_result_workflow.md)
 > **📖 Authoritative Reference**: [lab_result_workflow.md](../../../../../documents/product/workflows/lab_result_workflow.md)
 
 ## Deltas

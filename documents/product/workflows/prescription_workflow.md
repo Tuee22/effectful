@@ -621,8 +621,8 @@ docker compose -f docker/docker-compose.yml exec healthhub poetry run pytest tes
 
 ## Cross-References
 
-- [Intermediate Journey - Prescription Creation](../../tutorials/01_journeys/intermediate_journey.md#step-3-create-prescription-with-interaction-checking)
+- [Intermediate Journey - Prescription Creation](../../tutorials/01_journeys/intermediate_journey.md)
 - [Prescriptions Feature](../../engineering/features/prescriptions.md)
 - [Patient Guide](../../product/roles/patient_guide.md)
 - [Doctor Guide](../../product/roles/doctor_guide.md)
-- [Code Quality](../../../../../documents/engineering/code_quality.md)
+- [Code Quality](../../engineering/code_quality.md)

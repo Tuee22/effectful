@@ -10,7 +10,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from app.api.dependencies import (
     AdminAuthorized,
@@ -32,7 +32,7 @@ from app.domain.lookup_result import (
     is_patient_lookup_result,
     is_patient_update_result,
 )
-from effectful.domain.optional_value import from_optional_value
+from effectful.domain.optional_value import Absent, OptionalValue, from_optional_value, to_optional_value
 from app.domain.patient import Patient
 from app.effects.healthcare import (
     CreatePatient as CreatePatientEffect,
@@ -45,7 +45,7 @@ from app.effects.healthcare import (
 from app.infrastructure.rate_limiter import rate_limit
 from app.interpreters.auditing_interpreter import AuditedCompositeInterpreter
 from app.interpreters.composite_interpreter import AllEffects
-from app.programs.runner import run_program
+from app.programs.runner import run_program, unwrap_program_result
 
 router = APIRouter()
 
@@ -66,45 +66,101 @@ type PatientDeleteResult = PatientDeleted | PatientDeleteMissing
 class PatientResponse(BaseModel):
     """Patient response model."""
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     id: str
     user_id: str
     first_name: str
     last_name: str
     date_of_birth: date
-    blood_type: str | None
+    blood_type: OptionalValue[str] = Field(default_factory=lambda: Absent("not_recorded"))
     allergies: list[str]
-    insurance_id: str | None
+    insurance_id: OptionalValue[str] = Field(default_factory=lambda: Absent("not_recorded"))
     emergency_contact: str
-    phone: str | None
-    address: str | None
+    phone: OptionalValue[str] = Field(default_factory=lambda: Absent("not_recorded"))
+    address: OptionalValue[str] = Field(default_factory=lambda: Absent("not_recorded"))
+
+    @field_serializer("blood_type")
+    def serialize_blood_type(self, blood_type: OptionalValue[str]) -> str | None:
+        return from_optional_value(blood_type)
+
+    @field_serializer("insurance_id")
+    def serialize_insurance_id(self, insurance_id: OptionalValue[str]) -> str | None:
+        return from_optional_value(insurance_id)
+
+    @field_serializer("phone")
+    def serialize_phone(self, phone: OptionalValue[str]) -> str | None:
+        return from_optional_value(phone)
+
+    @field_serializer("address")
+    def serialize_address(self, address: OptionalValue[str]) -> str | None:
+        return from_optional_value(address)
 
 
 class CreatePatientRequest(BaseModel):
     """Create patient request."""
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     user_id: str
     first_name: str
     last_name: str
     date_of_birth: date
-    blood_type: str | None = None
+    blood_type: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
     allergies: list[str] = Field(default_factory=list)
-    insurance_id: str | None = None
+    insurance_id: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
     emergency_contact: str
-    phone: str | None = None
-    address: str | None = None
+    phone: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
+    address: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
+
+    @field_validator("blood_type", "insurance_id", "phone", "address", mode="before")
+    @classmethod
+    def normalize_optional_str(cls, value: object) -> OptionalValue[str]:
+        if isinstance(value, OptionalValue):
+            return value
+        return to_optional_value(value if isinstance(value, str) else None, reason="not_provided")
 
 
 class UpdatePatientRequest(BaseModel):
     """Update patient request."""
 
-    first_name: str | None = None
-    last_name: str | None = None
-    blood_type: str | None = None
-    allergies: list[str] | None = None
-    insurance_id: str | None = None
-    emergency_contact: str | None = None
-    phone: str | None = None
-    address: str | None = None
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    first_name: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
+    last_name: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
+    blood_type: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
+    allergies: OptionalValue[list[str]] = Field(default_factory=lambda: Absent("not_provided"))
+    insurance_id: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
+    emergency_contact: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
+    phone: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
+    address: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
+
+    @field_validator(
+        "first_name",
+        "last_name",
+        "blood_type",
+        "insurance_id",
+        "emergency_contact",
+        "phone",
+        "address",
+        mode="before",
+    )
+    @classmethod
+    def normalize_optional_str(cls, value: object) -> OptionalValue[str]:
+        if isinstance(value, OptionalValue):
+            return value
+        return to_optional_value(value if isinstance(value, str) else None, reason="not_provided")
+
+    @field_validator("allergies", mode="before")
+    @classmethod
+    def normalize_optional_list(cls, value: object) -> OptionalValue[list[str]]:
+        if isinstance(value, OptionalValue):
+            return value
+        if value is None:
+            return Absent("not_provided")
+        if isinstance(value, list):
+            return to_optional_value(value, reason="not_provided")
+        raise TypeError("allergies must be a list of strings when provided")
 
 
 def patient_to_response(patient: Patient) -> PatientResponse:
@@ -115,12 +171,12 @@ def patient_to_response(patient: Patient) -> PatientResponse:
         first_name=patient.first_name,
         last_name=patient.last_name,
         date_of_birth=patient.date_of_birth,
-        blood_type=from_optional_value(patient.blood_type),
+        blood_type=patient.blood_type,
         allergies=patient.allergies,
-        insurance_id=from_optional_value(patient.insurance_id),
+        insurance_id=patient.insurance_id,
         emergency_contact=patient.emergency_contact,
-        phone=from_optional_value(patient.phone),
-        address=from_optional_value(patient.address),
+        phone=patient.phone,
+        address=patient.address,
     )
 
 
@@ -162,7 +218,7 @@ async def list_patients(
         return patients
 
     # Run effect program
-    patients = await run_program(list_program(), interpreter)
+    patients = unwrap_program_result(await run_program(list_program(), interpreter))
 
     return [patient_to_response(p) for p in patients]
 
@@ -214,7 +270,7 @@ async def create_patient(
         return patient
 
     # Run effect program
-    patient = await run_program(create_program(), interpreter)
+    patient = unwrap_program_result(await run_program(create_program(), interpreter))
 
     return patient_to_response(patient)
 
@@ -258,7 +314,7 @@ async def get_patient(
         return result
 
     # Run effect program
-    lookup_result = await run_program(get_program(), interpreter)
+    lookup_result = unwrap_program_result(await run_program(get_program(), interpreter))
 
     match lookup_result:
         case PatientFound(patient=patient):
@@ -312,7 +368,7 @@ async def get_patient_by_user(
         assert is_patient_lookup_result(result)
         return result
 
-    patient_result = await run_program(get_by_user_program(), interpreter)
+    patient_result = unwrap_program_result(await run_program(get_by_user_program(), interpreter))
 
     match patient_result:
         case PatientFound(patient=patient):
@@ -380,7 +436,7 @@ async def update_patient(
         assert is_patient_lookup_result(result)
         return result
 
-    patient_lookup = await run_program(fetch_program(), interpreter)
+    patient_lookup = unwrap_program_result(await run_program(fetch_program(), interpreter))
     match patient_lookup:
         case PatientFound():
             pass
@@ -411,7 +467,7 @@ async def update_patient(
         assert is_patient_update_result(result)
         return result
 
-    update_result = await run_program(update_program(), interpreter)
+    update_result = unwrap_program_result(await run_program(update_program(), interpreter))
 
     match update_result:
         case PatientUpdated(patient=patient):
@@ -464,7 +520,7 @@ async def delete_patient(
 
         return PatientDeleted(patient_id=UUID(patient_id))
 
-    delete_result = await run_program(delete_program(), interpreter)
+    delete_result = unwrap_program_result(await run_program(delete_program(), interpreter))
 
     match delete_result:
         case PatientDeleted():

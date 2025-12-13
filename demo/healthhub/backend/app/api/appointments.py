@@ -9,7 +9,7 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.dependencies import (
     AdminAuthorized,
@@ -46,7 +46,8 @@ from app.programs.appointment_programs import (
     schedule_appointment_program,
     transition_appointment_program,
 )
-from app.programs.runner import run_program
+from app.programs.runner import run_program, unwrap_program_result
+from effectful.domain.optional_value import Absent, OptionalValue, to_optional_value
 
 router = APIRouter()
 StatusFilter = Literal["requested", "confirmed", "in_progress", "completed", "cancelled"]
@@ -54,6 +55,8 @@ StatusFilter = Literal["requested", "confirmed", "in_progress", "completed", "ca
 
 class AppointmentResponse(BaseModel):
     """Appointment response model."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     id: str
     patient_id: str
@@ -67,10 +70,28 @@ class AppointmentResponse(BaseModel):
 class CreateAppointmentRequest(BaseModel):
     """Create appointment request."""
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     patient_id: str
     doctor_id: str
-    requested_time: datetime | None = None
+    requested_time: OptionalValue[datetime] = Field(default_factory=lambda: Absent("not_requested"))
     reason: str
+
+    @field_validator("requested_time", mode="before")
+    @classmethod
+    def normalize_requested_time(cls, value: object) -> OptionalValue[datetime]:
+        if isinstance(value, OptionalValue):
+            return value
+        if isinstance(value, str):
+            try:
+                parsed = datetime.fromisoformat(value)
+            except Exception as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="requested_time must be ISO-8601 datetime when provided",
+                ) from exc
+            return to_optional_value(parsed, reason="not_requested")
+        return to_optional_value(value if isinstance(value, datetime) else None, reason="not_requested")
 
 
 class TransitionStatusRequest(BaseModel):
@@ -182,14 +203,16 @@ async def list_appointments(
     # Create effect program with audit logging
     def list_program() -> Generator[AllEffects, object, list[Appointment]]:
         appointments = yield ListAppointments(
-            patient_id=patient_id, doctor_id=doctor_id, status=status_value
+            patient_id=to_optional_value(patient_id, reason="role_scope"),
+            doctor_id=to_optional_value(doctor_id, reason="role_scope"),
+            status=to_optional_value(status_value, reason="not_filtered"),
         )
         assert isinstance(appointments, list)
 
         return appointments
 
     # Run effect program
-    appointments = await run_program(list_program(), interpreter)
+    appointments = unwrap_program_result(await run_program(list_program(), interpreter))
 
     return [appointment_to_response(a) for a in appointments]
 
@@ -252,7 +275,9 @@ async def create_appointment(
         actor_id=actor_id,
     )
 
-    result: ScheduleAppointmentResult = await run_program(program, interpreter)
+    result: ScheduleAppointmentResult = unwrap_program_result(
+        await run_program(program, interpreter)
+    )
 
     match result:
         case AppointmentScheduled(appointment=appointment):
@@ -316,7 +341,7 @@ async def get_appointment(
         return result
 
     # Run effect program
-    appointment_result = await run_program(get_program(), interpreter)
+    appointment_result = unwrap_program_result(await run_program(get_program(), interpreter))
 
     match appointment_result:
         case AppointmentFound(appointment=appointment):
@@ -368,7 +393,7 @@ async def transition_status(
         assert is_appointment_lookup_result(result)
         return result
 
-    appointment_result = await run_program(get_program(), interpreter)
+    appointment_result = unwrap_program_result(await run_program(get_program(), interpreter))
 
     match appointment_result:
         case AppointmentFound(appointment=appointment):
@@ -441,7 +466,7 @@ async def transition_status(
         transition_time=datetime.now(timezone.utc),
     )
 
-    result = await run_program(program, interpreter)
+    result = unwrap_program_result(await run_program(program, interpreter))
 
     # Handle result
     match result:

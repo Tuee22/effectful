@@ -12,7 +12,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.auth import (
     TokenType,
@@ -39,7 +39,7 @@ from app.domain.lookup_result import (
     is_patient_lookup_result,
     is_user_lookup_result,
 )
-from effectful.domain.optional_value import from_optional_value, to_optional_value
+from effectful.domain.optional_value import Absent, OptionalValue, from_optional_value, to_optional_value
 from app.domain.patient import Patient
 from app.domain.user import User, UserRole
 from app.effects.healthcare import (
@@ -54,7 +54,7 @@ from app.api.dependencies import get_composite_interpreter
 from app.effects.notification import LogAuditEvent
 from app.infrastructure.rate_limiter import rate_limit
 from app.interpreters.composite_interpreter import AllEffects, CompositeInterpreter
-from app.programs.runner import run_program
+from app.programs.runner import run_program, unwrap_program_result
 
 
 router = APIRouter()
@@ -80,20 +80,58 @@ class LoginResponse(BaseModel):
 class RegisterRequest(BaseModel):
     """User registration request."""
 
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     email: EmailStr
     password: str
     role: UserRole
 
     # Patient-specific fields (required when role="patient")
-    first_name: str | None = None
-    last_name: str | None = None
-    date_of_birth: date | None = None
-    blood_type: str | None = None
+    first_name: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
+    last_name: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
+    date_of_birth: OptionalValue[date] = Field(default_factory=lambda: Absent("not_provided"))
+    blood_type: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
     allergies: list[str] = Field(default_factory=list)
-    insurance_id: str | None = None
-    emergency_contact: str | None = None
-    phone: str | None = None
-    address: str | None = None
+    insurance_id: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
+    emergency_contact: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
+    phone: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
+    address: OptionalValue[str] = Field(default_factory=lambda: Absent("not_provided"))
+
+    @field_validator(
+        "first_name",
+        "last_name",
+        "blood_type",
+        "insurance_id",
+        "emergency_contact",
+        "phone",
+        "address",
+        mode="before",
+    )
+    @classmethod
+    def normalize_optional_str(cls, value: object) -> OptionalValue[str]:
+        if isinstance(value, OptionalValue):
+            return value
+        return to_optional_value(value if isinstance(value, str) else None, reason="not_provided")
+
+    @field_validator("date_of_birth", mode="before")
+    @classmethod
+    def normalize_optional_date(cls, value: object) -> OptionalValue[date]:
+        if isinstance(value, OptionalValue):
+            return value
+        if value is None:
+            return Absent("not_provided")
+        if isinstance(value, date):
+            return to_optional_value(value, reason="not_provided")
+        if isinstance(value, str):
+            try:
+                parsed = date.fromisoformat(value)
+            except Exception as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="date_of_birth must be ISO date when provided",
+                ) from exc
+            return to_optional_value(parsed, reason="not_provided")
+        raise TypeError("date_of_birth must be a date or ISO date string when provided")
 
 
 class RegisterResponse(BaseModel):
@@ -174,6 +212,45 @@ class RegisterEmailExists:
 
 
 type RegisterResult = RegisterSuccess | RegisterEmailExists
+
+
+@dataclass(frozen=True)
+class NormalizedPatientRegistration:
+    first_name: str
+    last_name: str
+    date_of_birth: date
+    blood_type: OptionalValue[str]
+    allergies: list[str]
+    insurance_id: OptionalValue[str]
+    emergency_contact: str
+    phone: OptionalValue[str]
+    address: OptionalValue[str]
+
+
+def _normalize_patient_registration(request: RegisterRequest) -> NormalizedPatientRegistration:
+    """Normalize patient-specific registration fields to OptionalValue semantics."""
+    first_name = from_optional_value(request.first_name)
+    last_name = from_optional_value(request.last_name)
+    date_of_birth = from_optional_value(request.date_of_birth)
+    emergency_contact = from_optional_value(request.emergency_contact)
+
+    if not first_name or not last_name or date_of_birth is None or not emergency_contact:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Patient registration requires: first_name, last_name, date_of_birth, emergency_contact",
+        )
+
+    return NormalizedPatientRegistration(
+        first_name=first_name,
+        last_name=last_name,
+        date_of_birth=date_of_birth,
+        blood_type=request.blood_type,
+        allergies=request.allergies,
+        insurance_id=request.insurance_id,
+        emergency_contact=emergency_contact,
+        phone=request.phone,
+        address=request.address,
+    )
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -269,7 +346,7 @@ async def login(
 
         return result
 
-    login_result = await run_program(login_program(), interpreter)
+    login_result = unwrap_program_result(await run_program(login_program(), interpreter))
 
     patient_id_for_token: UUID | None = None
     doctor_id_for_token: UUID | None = None
@@ -318,8 +395,8 @@ async def login(
         authed_user.id,
         authed_user.email,
         authed_user.role.value,
-        patient_id=patient_id_for_token,
-        doctor_id=doctor_id_for_token,
+        patient_id=to_optional_value(patient_id_for_token, reason="not_included"),
+        doctor_id=to_optional_value(doctor_id_for_token, reason="not_included"),
     )
     response.set_cookie(
         key="refresh_token",
@@ -335,8 +412,8 @@ async def login(
         authed_user.id,
         authed_user.email,
         authed_user.role.value,
-        patient_id=patient_id_for_token,
-        doctor_id=doctor_id_for_token,
+        patient_id=to_optional_value(patient_id_for_token, reason="not_included"),
+        doctor_id=to_optional_value(doctor_id_for_token, reason="not_included"),
     )
 
     return LoginResponse(
@@ -376,20 +453,9 @@ async def register(
         LogAuditEvent
     """
 
-    # Validate patient-specific fields if registering as patient
+    patient_registration: NormalizedPatientRegistration | None = None
     if request.role == UserRole.PATIENT:
-        if not all(
-            [
-                request.first_name,
-                request.last_name,
-                request.date_of_birth,
-                request.emergency_contact,
-            ]
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Patient registration requires: first_name, last_name, date_of_birth, emergency_contact",
-            )
+        patient_registration = _normalize_patient_registration(request)
 
     def register_program() -> Generator[AllEffects, object, RegisterResult]:
         existing_user_result = yield GetUserByEmail(email=request.email)
@@ -411,17 +477,18 @@ async def register(
 
         # Create patient record if registering as patient
         if request.role == UserRole.PATIENT:
+            assert patient_registration is not None
             patient = yield CreatePatient(
                 user_id=created_user.id,
-                first_name=request.first_name or "",
-                last_name=request.last_name or "",
-                date_of_birth=request.date_of_birth or date(1900, 1, 1),
-                blood_type=request.blood_type,
-                allergies=request.allergies,
-                insurance_id=request.insurance_id,
-                emergency_contact=request.emergency_contact or "",
-                phone=request.phone,
-                address=request.address,
+                first_name=patient_registration.first_name,
+                last_name=patient_registration.last_name,
+                date_of_birth=patient_registration.date_of_birth,
+                blood_type=patient_registration.blood_type,
+                allergies=patient_registration.allergies,
+                insurance_id=patient_registration.insurance_id,
+                emergency_contact=patient_registration.emergency_contact,
+                phone=patient_registration.phone,
+                address=patient_registration.address,
             )
             assert isinstance(patient, Patient)
 
@@ -441,7 +508,7 @@ async def register(
         )
         return RegisterSuccess(user=created_user)
 
-    register_result = await run_program(register_program(), interpreter)
+    register_result = unwrap_program_result(await run_program(register_program(), interpreter))
 
     match register_result:
         case RegisterEmailExists(email=email):
@@ -523,16 +590,24 @@ async def refresh(
                 token_data.user_id,
                 token_data.email,
                 token_data.role,
-                patient_id=from_optional_value(token_data.patient_id),
-                doctor_id=from_optional_value(token_data.doctor_id),
+                patient_id=to_optional_value(
+                    from_optional_value(token_data.patient_id), reason="not_included"
+                ),
+                doctor_id=to_optional_value(
+                    from_optional_value(token_data.doctor_id), reason="not_included"
+                ),
             )
             new_refresh_token = create_refresh_token(
                 settings,
                 token_data.user_id,
                 token_data.email,
                 token_data.role,
-                patient_id=from_optional_value(token_data.patient_id),
-                doctor_id=from_optional_value(token_data.doctor_id),
+                patient_id=to_optional_value(
+                    from_optional_value(token_data.patient_id), reason="not_included"
+                ),
+                doctor_id=to_optional_value(
+                    from_optional_value(token_data.doctor_id), reason="not_included"
+                ),
             )
 
             # Set new refresh token in HttpOnly cookie (7 days)

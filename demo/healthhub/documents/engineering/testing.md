@@ -1,11 +1,10 @@
 # Testing
 
-**Status**: Reference only
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/readme.md
+**Referenced by**: | **📖 Base Standard**: [testing.md](../../../../documents/engineering/testing.md)
 
 > **Purpose**: HealthHub overlay deltas for Testing. See base SSoT for canonical guidance.
-> **📖 Base Standard**: [testing.md](../../../../documents/engineering/testing.md)
 > **📖 Authoritative Reference**: [testing.md](../../../../documents/engineering/testing.md)
 
 ## Deltas

@@ -323,6 +323,7 @@ class UpdateInvoiceStatus:
     Attributes:
         invoice_id: Invoice identifier.
         status: New invoice status literal value.
+        paid_at: OptionalValue paid timestamp (for marking paid).
 
     Returns:
         Invoice
@@ -330,6 +331,17 @@ class UpdateInvoiceStatus:
 
     invoice_id: UUID
     status: Literal["draft", "sent", "paid", "overdue"]
+    paid_at: OptionalValue[datetime]
+
+    def __init__(
+        self,
+        invoice_id: UUID,
+        status: Literal["draft", "sent", "paid", "overdue"],
+        paid_at: datetime | OptionalValue[datetime] | None = None,
+    ) -> None:
+        object.__setattr__(self, "invoice_id", invoice_id)
+        object.__setattr__(self, "status", status)
+        object.__setattr__(self, "paid_at", _normalize_optional_value(paid_at))
 
 
 @dataclass(frozen=True, init=False)
@@ -497,12 +509,12 @@ class CreatePatient:
         first_name: First name.
         last_name: Last name.
         date_of_birth: Date of birth.
-        blood_type: Blood type (optional).
+        blood_type: Blood type (OptionalValue).
         allergies: Recorded allergies.
-        insurance_id: Insurance identifier (optional).
+        insurance_id: Insurance identifier (OptionalValue).
         emergency_contact: Emergency contact details.
-        phone: Phone number (optional).
-        address: Address (optional).
+        phone: Phone number (OptionalValue).
+        address: Address (OptionalValue).
 
     Returns:
         Patient
@@ -512,12 +524,36 @@ class CreatePatient:
     first_name: str
     last_name: str
     date_of_birth: date
-    blood_type: str | None
+    blood_type: OptionalValue[str]
     allergies: list[str]
-    insurance_id: str | None
+    insurance_id: OptionalValue[str]
     emergency_contact: str
-    phone: str | None
-    address: str | None
+    phone: OptionalValue[str]
+    address: OptionalValue[str]
+
+    def __init__(
+        self,
+        user_id: UUID,
+        first_name: str,
+        last_name: str,
+        date_of_birth: date,
+        blood_type: str | OptionalValue[str] | None,
+        allergies: list[str],
+        insurance_id: str | OptionalValue[str] | None,
+        emergency_contact: str,
+        phone: str | OptionalValue[str] | None,
+        address: str | OptionalValue[str] | None,
+    ) -> None:
+        object.__setattr__(self, "user_id", user_id)
+        object.__setattr__(self, "first_name", first_name)
+        object.__setattr__(self, "last_name", last_name)
+        object.__setattr__(self, "date_of_birth", date_of_birth)
+        object.__setattr__(self, "blood_type", _normalize_optional_value(blood_type))
+        object.__setattr__(self, "allergies", allergies)
+        object.__setattr__(self, "insurance_id", _normalize_optional_value(insurance_id))
+        object.__setattr__(self, "emergency_contact", emergency_contact)
+        object.__setattr__(self, "phone", _normalize_optional_value(phone))
+        object.__setattr__(self, "address", _normalize_optional_value(address))
 
 
 @dataclass(frozen=True)
@@ -526,28 +562,50 @@ class UpdatePatient:
 
     Attributes:
         patient_id: Patient identifier.
-        first_name: Optional updated first name.
-        last_name: Optional updated last name.
-        blood_type: Optional blood type update.
-        allergies: Optional allergy updates.
-        insurance_id: Optional insurance identifier update.
-        emergency_contact: Optional emergency contact update.
-        phone: Optional phone update.
-        address: Optional address update.
+        first_name: OptionalValue updated first name.
+        last_name: OptionalValue updated last name.
+        blood_type: OptionalValue blood type update.
+        allergies: OptionalValue allergy updates.
+        insurance_id: OptionalValue insurance identifier update.
+        emergency_contact: OptionalValue emergency contact update.
+        phone: OptionalValue phone update.
+        address: OptionalValue address update.
 
     Returns:
         Patient | None
     """
 
     patient_id: UUID
-    first_name: str | None
-    last_name: str | None
-    blood_type: str | None
-    allergies: list[str] | None
-    insurance_id: str | None
-    emergency_contact: str | None
-    phone: str | None
-    address: str | None
+    first_name: OptionalValue[str]
+    last_name: OptionalValue[str]
+    blood_type: OptionalValue[str]
+    allergies: OptionalValue[list[str]]
+    insurance_id: OptionalValue[str]
+    emergency_contact: OptionalValue[str]
+    phone: OptionalValue[str]
+    address: OptionalValue[str]
+
+    def __init__(
+        self,
+        patient_id: UUID,
+        first_name: str | OptionalValue[str] | None = None,
+        last_name: str | OptionalValue[str] | None = None,
+        blood_type: str | OptionalValue[str] | None = None,
+        allergies: list[str] | OptionalValue[list[str]] | None = None,
+        insurance_id: str | OptionalValue[str] | None = None,
+        emergency_contact: str | OptionalValue[str] | None = None,
+        phone: str | OptionalValue[str] | None = None,
+        address: str | OptionalValue[str] | None = None,
+    ) -> None:
+        object.__setattr__(self, "patient_id", patient_id)
+        object.__setattr__(self, "first_name", _normalize_optional_value(first_name))
+        object.__setattr__(self, "last_name", _normalize_optional_value(last_name))
+        object.__setattr__(self, "blood_type", _normalize_optional_value(blood_type))
+        object.__setattr__(self, "allergies", _normalize_optional_value(allergies))
+        object.__setattr__(self, "insurance_id", _normalize_optional_value(insurance_id))
+        object.__setattr__(self, "emergency_contact", _normalize_optional_value(emergency_contact))
+        object.__setattr__(self, "phone", _normalize_optional_value(phone))
+        object.__setattr__(self, "address", _normalize_optional_value(address))
 
 
 @dataclass(frozen=True)

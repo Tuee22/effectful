@@ -1,11 +1,10 @@
 # Patient Guide
 
-**Status**: Reference only\
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/tutorials/README.md
+**Referenced by**: | **📖 Base Standard**: [patient_guide.md](../../../../../documents/product/roles/patient_guide.md)
 
 > **Purpose**: HealthHub overlay deltas for Patient Guide.
-> **📖 Base Standard**: [patient_guide.md](../../../../../documents/product/roles/patient_guide.md)
 > **📖 Authoritative Reference**: [patient_guide.md](../../../../../documents/product/roles/patient_guide.md)
 
 ## Deltas

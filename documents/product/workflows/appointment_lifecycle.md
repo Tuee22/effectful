@@ -696,10 +696,10 @@ docker compose -f docker/docker-compose.yml exec healthhub poetry run pytest tes
 
 ## Cross-References
 
-- [Intermediate Journey - Appointment State Machine](../../tutorials/01_journeys/intermediate_journey.md#step-2-create-appointment-with-state-machine)
+- [Intermediate Journey - Appointment State Machine](../../tutorials/01_journeys/intermediate_journey.md)
 - [Appointments Feature](../../engineering/features/appointments.md)
 - [Invoices Feature](../../engineering/features/invoices.md)
 - [Patient Guide](../../product/roles/patient_guide.md)
 - [Doctor Guide](../../product/roles/doctor_guide.md)
 - [Admin Guide](../../product/roles/admin_guide.md)
-- [Effect Patterns - State Machines](../../../../../documents/engineering/effect_patterns.md#state-machines)
+- [Effect Patterns - State Machines](../../engineering/effect_patterns.md)

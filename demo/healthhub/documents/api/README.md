@@ -1,11 +1,10 @@
 # API Reference
 
-**Status**: Reference only
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/readme.md
+**Referenced by**: | **📖 Base Standard**: [README.md](../../../../documents/api/README.md)
 
 > **Purpose**: HealthHub overlay deltas for API Reference. See base SSoT for canonical endpoints and ADTs.
-> **📖 Base Standard**: [README.md](../../../../documents/api/README.md)
 > **📖 Authoritative Reference**: [README.md](../../../../documents/api/README.md)
 
 ## Deltas

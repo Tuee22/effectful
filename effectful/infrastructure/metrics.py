@@ -14,7 +14,15 @@ The metrics system supports:
 from typing import Protocol
 
 from effectful.domain.metrics_result import MetricQueryResult, MetricResult
+from effectful.domain.optional_value import Absent, OptionalValue, Provided, to_optional_value
 from effectful.observability import MetricsRegistry
+
+
+def _normalize_optional_value[T](value: T | OptionalValue[T] | None) -> OptionalValue[T]:
+    """Normalize plain values to OptionalValue for protocol implementors."""
+    if isinstance(value, (Provided, Absent)):
+        return value
+    return to_optional_value(value)
 
 
 class MetricsCollector(Protocol):
@@ -148,8 +156,8 @@ class MetricsCollector(Protocol):
 
     async def query_metrics(
         self,
-        metric_name: str | None,
-        labels: dict[str, str] | None,
+        metric_name: str | OptionalValue[str] | None,
+        labels: dict[str, str] | OptionalValue[dict[str, str]] | None,
     ) -> MetricQueryResult:
         """Query current metric values.
 

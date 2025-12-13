@@ -2,8 +2,8 @@
 -- Description: Demo users and sample data for development and testing
 -- Password for all users: "password123" (hashed with bcrypt, cost=12)
 
--- Note: In production, generate these passwords with Python bcrypt
--- python3 -c "import bcrypt; print(bcrypt.hashpw(b'password123', bcrypt.gensalt(12)).decode())"
+-- Note: In production, generate these passwords with Python bcrypt (inside the container)
+-- docker compose -f demo/healthhub/docker/docker-compose.yml exec healthhub poetry run python -c "import bcrypt; print(bcrypt.hashpw(b'password123', bcrypt.gensalt(12)).decode())"
 
 -- Clear existing data (for development resets)
 TRUNCATE TABLE

@@ -12,6 +12,7 @@ from uuid import UUID
 from redis.asyncio import Redis
 
 from effectful.domain.cache_result import CacheHit, CacheLookupResult, CacheMiss
+from effectful.domain.optional_value import Absent, OptionalValue, Provided
 from effectful.domain.profile import ProfileData
 from effectful.infrastructure.cache import ProfileCache
 
@@ -34,25 +35,26 @@ class RedisProfileCache(ProfileCache):
         """
         self._redis = redis_client
 
-    async def _get_ttl_or_expired(self, key: str) -> int | None:
-        """Get TTL from Redis, returning None if key expired or deleted.
+    async def _get_ttl_or_expired(self, key: str) -> OptionalValue[int]:
+        """Get TTL from Redis, returning explicit ADT for absence.
 
         Args:
             key: Cache key to check TTL for
 
         Returns:
-            TTL in seconds (0 if no expiration), or None if key doesn't exist
+            Provided TTL in seconds (0 if no expiration),
+            Absent when key expired or missing
         """
         ttl = await self._redis.ttl(key)
         # Redis returns int but mypy doesn't know, so ensure it's int
         ttl_int = int(ttl)
         if ttl_int == -1:
             # No expiration set
-            return 0
+            return Provided(0)
         elif ttl_int == -2:
             # Key doesn't exist (expired/deleted)
-            return None
-        return ttl_int
+            return Absent(reason="expired_or_missing")
+        return Provided(ttl_int)
 
     async def get_profile(self, user_id: UUID) -> CacheLookupResult[ProfileData]:
         """Get cached profile from Redis.
@@ -76,11 +78,12 @@ class RedisProfileCache(ProfileCache):
 
         # Get remaining TTL
         ttl = await self._get_ttl_or_expired(key)
-        if ttl is None:
-            # Key doesn't exist (race condition between get and ttl)
-            return CacheMiss(key=key, reason="expired")
-
-        return CacheHit(value=profile, ttl_remaining=ttl)
+        match ttl:
+            case Provided(value=ttl_value):
+                return CacheHit(value=profile, ttl_remaining=ttl_value)
+            case Absent():
+                # Key doesn't exist (race condition between get and ttl)
+                return CacheMiss(key=key, reason="expired")
 
     async def put_profile(self, user_id: UUID, data: ProfileData, ttl_seconds: int) -> None:
         """Store profile in Redis with TTL.
@@ -118,10 +121,11 @@ class RedisProfileCache(ProfileCache):
 
         # Get remaining TTL
         ttl = await self._get_ttl_or_expired(key)
-        if ttl is None:
-            return CacheMiss(key=key, reason="expired")
-
-        return CacheHit(value=data, ttl_remaining=ttl)
+        match ttl:
+            case Provided(value=ttl_value):
+                return CacheHit(value=data, ttl_remaining=ttl_value)
+            case Absent():
+                return CacheMiss(key=key, reason="expired")
 
     async def put_value(self, key: str, value: bytes, ttl_seconds: int) -> None:
         """Store value in Redis with TTL.

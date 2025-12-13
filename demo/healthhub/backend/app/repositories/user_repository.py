@@ -9,6 +9,7 @@ import asyncpg
 
 from app.protocols.database import DatabasePool
 from app.database import safe_datetime, safe_optional_datetime, safe_str, safe_uuid
+from effectful.domain.optional_value import OptionalValue, Provided, Absent
 from effectful.domain.optional_value import to_optional_value
 from app.domain.user import User, UserRole, UserStatus
 
@@ -63,14 +64,14 @@ class UserRepository:
 
         return self._row_to_user(row)
 
-    async def get_by_id(self, user_id: UUID) -> User | None:
+    async def get_by_id(self, user_id: UUID) -> OptionalValue[User]:
         """Get user by ID.
 
         Args:
             user_id: User UUID
 
         Returns:
-            User if found, None otherwise
+            Provided[User] if found, Absent otherwise with explicit reason
         """
         row = await self.pool.fetchrow(
             """
@@ -82,18 +83,18 @@ class UserRepository:
         )
 
         if row is None:
-            return None
+            return Absent(reason="user_not_found")
 
-        return self._row_to_user(row)
+        return Provided(self._row_to_user(row))
 
-    async def get_by_email(self, email: str) -> User | None:
+    async def get_by_email(self, email: str) -> OptionalValue[User]:
         """Get user by email.
 
         Args:
             email: User email
 
         Returns:
-            User if found, None otherwise
+            Provided[User] if found, Absent otherwise with explicit reason
         """
         row = await self.pool.fetchrow(
             """
@@ -105,9 +106,9 @@ class UserRepository:
         )
 
         if row is None:
-            return None
+            return Absent(reason="user_not_found")
 
-        return self._row_to_user(row)
+        return Provided(self._row_to_user(row))
 
     async def update_last_login(self, user_id: UUID) -> None:
         """Update user's last login timestamp.

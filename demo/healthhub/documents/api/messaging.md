@@ -1,11 +1,10 @@
 # Messaging API
 
-**Status**: Reference only
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/readme.md
+**Referenced by**: | **📖 Base Standard**: [messaging.md](../../../../documents/api/messaging.md)
 
 > **Purpose**: HealthHub overlay deltas for Messaging. See base SSoT for canonical definitions.
-> **📖 Base Standard**: [messaging.md](../../../../documents/api/messaging.md)
 > **📖 Authoritative Reference**: [messaging.md](../../../../documents/api/messaging.md)
 
 ## Deltas

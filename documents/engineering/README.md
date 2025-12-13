@@ -204,7 +204,7 @@ All engineering documents marked with "**SSoT**" are authoritative. When conflic
 
 **How to update these standards:**
 
-1. Read [Documentation Guidelines](../documentation_standards.md) for standards and open items in [Documentation Migration Plan](../MIGRATION_PLAN.md)
+1. Read [Documentation Guidelines](../documentation_standards.md) for standards and open items in the Documentation Migration Plan (see repo TODOs)
 1. Make changes to appropriate SSoT document
 1. Confirm header metadata (Status/Supersedes/Referenced by/Purpose) is correct
 1. Update "Referenced by" list if adding new cross-references

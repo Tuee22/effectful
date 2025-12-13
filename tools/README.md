@@ -4,7 +4,7 @@ This directory contains development and build tools for the Effectful project.
 
 ## Overview
 
-All tools are designed to be run via Poetry scripts defined in `pyproject.toml`. This ensures:
+All tools are designed to be run via Poetry scripts defined in `pyproject.toml` **inside the effectful Docker container**. This ensures:
 - Consistent execution environment
 - Proper dependency isolation
 - Clear entrypoints for CI/CD
@@ -18,7 +18,7 @@ Runs type checking, formatting, and linting in sequence with fail-fast behavior.
 
 **Usage:**
 ```bash
-poetry run check-code
+docker compose -f docker/docker-compose.yml exec effectful poetry run check-code
 ```
 
 **Steps:**
@@ -38,13 +38,13 @@ Orchestrates test execution across different test categories.
 **Usage:**
 ```bash
 # Run all tests
-poetry run test-all
+docker compose -f docker/docker-compose.yml exec effectful poetry run test-all
 
 # Run unit tests only (pytest-mock, <1s)
-poetry run test-unit
+docker compose -f docker/docker-compose.yml exec effectful poetry run test-unit
 
 # Run integration tests only (real infrastructure, 1-2s)
-poetry run test-integration
+docker compose -f docker/docker-compose.yml exec effectful poetry run test-integration
 ```
 
 **Test Categories:**

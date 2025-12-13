@@ -431,6 +431,13 @@ class PutObject:
         object.__setattr__(self, "key", key)
         object.__setattr__(self, "content", content)
         object.__setattr__(self, "metadata", _normalize_optional_value(metadata))
+
+### Apply the same rule to Pydantic/FastAPI request models
+
+- **Total Pure Modelling** forbids nullable gaps: request DTOs are boundaries that must not leak `None` into domain code.
+- **Do this**: accept ergonomics in the Pydantic model, then immediately normalize fields to `OptionalValue` or a domain ADT before any business logic.
+- **Do not do this**: carry `str | None` / `UUID | None` through handlers or programs—replace with `Absent(reason=...)`/`Provided(...)` at the boundary.
+- **Reference**: [total_pure_modelling.md](total_pure_modelling.md) for “no illegal states” and `OptionalValue` doctrine; keep backend/frontend shapes aligned to these ADTs.
 ```
 
 ### Why Local (Not Shared)?

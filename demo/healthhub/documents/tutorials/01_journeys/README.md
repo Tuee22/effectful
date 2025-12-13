@@ -1,11 +1,10 @@
 # Journey-Based Tutorials
 
-**Status**: Reference only
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/tutorials/README.md
+**Referenced by**: | **📖 Base Standard**: [README.md](../../../../../documents/tutorials/01_journeys/README.md)
 
 > **Purpose**: HealthHub overlay deltas for journeys. See base SSoT for canonical learning paths.
-> **📖 Base Standard**: [README.md](../../../../../documents/tutorials/01_journeys/README.md)
 > **📖 Authoritative Reference**: [README.md](../../../../../documents/tutorials/01_journeys/README.md)
 
 ## Deltas

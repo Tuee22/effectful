@@ -365,7 +365,7 @@ The codebase enforces OptionalValue doctrine through multiple layers:
    - Validates ADT usage in domain layer
    - Exit code 0 = all checks pass
 
-1. **Pattern Checker** - `python3 scripts/check_optional_value_pattern.py`
+1. **Pattern Checker** - `docker compose -f docker/docker-compose.yml exec effectful poetry run python scripts/check_optional_value_pattern.py`
 
    - Validates canonical normalization pattern
    - Ensures frozen=True and init=False on effects
@@ -386,7 +386,7 @@ The codebase enforces OptionalValue doctrine through multiple layers:
 bash scripts/validate_optional_value_doctrine.sh
 
 # Pattern checking only
-python3 scripts/check_optional_value_pattern.py
+docker compose -f docker/docker-compose.yml exec effectful poetry run python scripts/check_optional_value_pattern.py
 
 # Pre-commit (automatic on git commit)
 pre-commit install  # One-time setup

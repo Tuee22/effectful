@@ -25,6 +25,7 @@ from effectful.domain.metrics_result import (
     MetricResult,
     QueryFailure,
 )
+from effectful.domain.optional_value import OptionalValue
 from effectful.observability import MetricsRegistry
 
 
@@ -527,8 +528,8 @@ class PrometheusMetricsCollector:
 
     async def query_metrics(
         self,
-        metric_name: str | None,
-        labels: dict[str, str] | None,
+        metric_name: str | OptionalValue[str] | None,
+        labels: dict[str, str] | OptionalValue[dict[str, str]] | None,
     ) -> MetricQueryResult:
         """Query current metric values from Prometheus.
 

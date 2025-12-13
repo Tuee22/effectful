@@ -1,11 +1,10 @@
 # Development Workflow
 
-**Status**: Reference only
+**Status**: reference only
 **Supersedes**: none
-**Referenced by**: demo/healthhub/documents/readme.md
+**Referenced by**: | **📖 Base Standard**: [development_workflow.md](../../../../documents/engineering/development_workflow.md)
 
 > **Purpose**: HealthHub overlay deltas for Development Workflow. See base SSoT for canonical steps.
-> **📖 Base Standard**: [development_workflow.md](../../../../documents/engineering/development_workflow.md)
 > **📖 Authoritative Reference**: [development_workflow.md](../../../../documents/engineering/development_workflow.md)
 
 ## Deltas
