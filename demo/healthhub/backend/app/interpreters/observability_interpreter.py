@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Mapping
 
-from prometheus_client import CollectorRegistry, Counter, Histogram, REGISTRY
+from prometheus_client import CollectorRegistry, Counter, Histogram, REGISTRY, generate_latest
 
 from app.effects.observability import (
     CounterMetricName,
@@ -37,7 +37,7 @@ class ObservabilityInterpreter:
     def __init__(
         self,
         registry: MetricsRegistry = HEALTHHUB_METRICS,
-        collector_registry: CollectorRegistry = REGISTRY,
+        collector_registry: CollectorRegistry | None = None,
     ) -> None:
         """Initialize interpreter with metric registry.
 
@@ -45,13 +45,14 @@ class ObservabilityInterpreter:
             registry: Metric definitions (counters and histograms)
             collector_registry: Prometheus collector registry
         """
+        resolved_registry = collector_registry or REGISTRY
         # Initialize counters from registry definitions
         counters = {
             counter_definition.name: Counter(
                 counter_definition.name,
                 counter_definition.help_text,
                 counter_definition.label_names,
-                registry=collector_registry,
+                registry=resolved_registry,
             )
             for counter_definition in registry.counters
         }
@@ -63,7 +64,7 @@ class ObservabilityInterpreter:
                 histogram_definition.help_text,
                 histogram_definition.label_names,
                 buckets=histogram_definition.buckets,
-                registry=collector_registry,
+                registry=resolved_registry,
             )
             for histogram_definition in registry.histograms
         }
@@ -77,7 +78,7 @@ class ObservabilityInterpreter:
         }
 
         # Use object.__setattr__ to initialize frozen dataclass fields
-        object.__setattr__(self, "_collector_registry", collector_registry)
+        object.__setattr__(self, "_collector_registry", resolved_registry)
         object.__setattr__(self, "_counters", counters)
         object.__setattr__(self, "_histograms", histograms)
         object.__setattr__(self, "_counter_definitions", counter_definitions)
@@ -134,6 +135,10 @@ class ObservabilityInterpreter:
             labels=labels,
             value=value,
         )
+
+    def render_latest(self) -> bytes:
+        """Render Prometheus metrics from the bound collector registry."""
+        return generate_latest(self._collector_registry)
 
     def _validate_labels(
         self, expected: tuple[str, ...], provided: Mapping[str, str], metric_name: str

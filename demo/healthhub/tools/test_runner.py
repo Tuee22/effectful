@@ -144,8 +144,16 @@ def run_e2e() -> int:
     print("HEALTHHUB E2E BROWSER TESTS")
     print("=" * 80)
     print("Infrastructure: Playwright (Chromium, Firefox, WebKit)")
-    frontend_url = "http://localhost:8851"
-    backend_url = "http://localhost:8851"
+    frontend_url = os.environ.get("E2E_FRONTEND_URL", "http://localhost:8851")
+    backend_url = os.environ.get("E2E_BACKEND_URL", "http://localhost:8851")
+    expected_url = "http://localhost:8851"
+    if frontend_url != expected_url or backend_url != expected_url:
+        print(
+            "❌ E2E base URLs must target the compose-managed server (http://localhost:8851). "
+            "Do not start ad-hoc uvicorn servers or override ports. "
+            "See documents/engineering/docker_workflow.md#port-and-server-policy."
+        )
+        return 1
     print(f"Target: Frontend at {frontend_url}")
     print("Expected duration: 5-15 minutes (53 tests × 3 browsers)")
     print("=" * 80)

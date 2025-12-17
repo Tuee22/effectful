@@ -194,9 +194,15 @@ ______________________________________________________________________
 
 1. **Not Business Logic**: Configuration is infrastructure concern, lives outside purity constraints
 
-   - Settings MAY be passed to infrastructure constructors (DatabaseManager, RedisClientFactory)
+   - Settings MAY be passed to infrastructure constructors (e.g., RedisClientFactory) when building effect interpreter inputs
    - Settings MUST NOT be accessed in effect programs (programs remain pure)
    - Settings MUST NOT be passed to interpreters (interpreters use configured resources)
+
+### Doctrine 8: Pure Interpreter Assembly (Core Primitives First)
+
+- **SSoT**: `architecture.md#pure-interpreter-assembly-doctrine`.
+- **Rule**: Express startup/config flows (middleware, routing, pools, observability) as pure effect programs composed from core effectful primitives; demos add domain overlays but do not fork core effects.
+- **Interpreter boundary**: Keep impure interpreter code minimal—map effect data to I/O and return typed handles/tokens (`Result[T, E]`), no ambient globals.
 
 1. **No Singletons**: Settings MUST NOT be module-level singletons
 
@@ -229,9 +235,9 @@ class Settings(BaseSettings):
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = Settings()  # Created here
-    db_manager = DatabaseManager(settings)  # Passed to infrastructure
-    await db_manager.setup()
-    yield
+    # Pass settings-derived config into pure startup program
+    result = await run_ws_program(startup_program(settings, app_handle=app_handle), runtime_interpreter)
+    ...
 
 app = FastAPI(lifespan=lifespan)
 ```

@@ -46,7 +46,7 @@ class TestAppointmentListDisplay:
             ".appointments-page, "
             "table, "
             ".appointment-card"
-        )
+        ).first
         await expect(content).to_be_visible(timeout=10000)
 
     async def test_appointments_can_be_filtered_by_status(
@@ -70,9 +70,7 @@ class TestAppointmentListDisplay:
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]
     ) -> None:
         """Test that appointment detail page is accessible."""
-        await navigate_and_wait_for_ready(
-            authenticated_doctor_page, make_url("/appointments"), data=False
-        )
+        await navigate_and_wait_for_ready(authenticated_doctor_page, make_url("/appointments"))
 
         # Try to find an appointment link/button
         appointment_link = authenticated_doctor_page.locator(
@@ -83,9 +81,12 @@ class TestAppointmentListDisplay:
         ).first
 
         # If there are appointments, click one
-        is_visible = await appointment_link.is_visible()
-        if is_visible:
-            await appointment_link.click()
+        if await appointment_link.is_visible():
+            await expect(appointment_link).to_be_enabled(timeout=10000)
+            href = await appointment_link.get_attribute("href")
+            if href:
+                target_url = href if href.startswith("http") else make_url(href)
+                await authenticated_doctor_page.goto(target_url)
             # Should navigate to detail page - wait for URL change
             await authenticated_doctor_page.wait_for_url("**/appointments/**", timeout=5000)
             # Verify navigation occurred - URL should change to detail page
@@ -144,21 +145,24 @@ class TestAppointmentStateMachine:
             authenticated_doctor_page, make_url("/appointments"), data=False
         )
 
-        # Look for appointments with "Confirmed" status
-        confirmed_appointment = authenticated_doctor_page.locator(
-            "[data-status='confirmed'], " ":has-text('Confirmed'):not(button)"
-        ).first
-
-        # If there's a confirmed appointment, it should have a start option
-        is_visible = await confirmed_appointment.is_visible()
-        if is_visible:
-            # Verify start action button is visible
-            start_button = authenticated_doctor_page.locator(
-                "button:has-text('Start'), "
-                "[data-action='start'], "
-                "[data-testid='start-appointment']"
-            ).first
-            await expect(start_button).to_be_visible(timeout=5000)
+        # Look for a confirmed appointment row
+        confirmed_row = authenticated_doctor_page.locator("tr:has-text('Confirmed')").first
+        if await confirmed_row.is_visible():
+            view_link = confirmed_row.locator("a:has-text('View'), .appointment-view-link").first
+            if await view_link.is_visible():
+                href = await view_link.get_attribute("href")
+                if href:
+                    target_url = href if href.startswith("http") else make_url(href)
+                    await authenticated_doctor_page.goto(target_url)
+                await authenticated_doctor_page.wait_for_url("**/appointments/**", timeout=10000)
+                await authenticated_doctor_page.wait_for_load_state("networkidle")
+                # On detail page, the Start action should be available for confirmed
+                start_button = authenticated_doctor_page.locator(
+                    "button:has-text('Start'), "
+                    "[data-action='start'], "
+                    "[data-testid='start-appointment']"
+                ).first
+                await expect(start_button).to_be_visible(timeout=10000)
 
     async def test_in_progress_appointment_shows_complete_option(
         self, authenticated_doctor_page: Page, make_url: Callable[[str], str]

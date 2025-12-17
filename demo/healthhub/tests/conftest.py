@@ -3,17 +3,26 @@
 from __future__ import annotations
 
 import asyncio
-import json
 from collections.abc import AsyncIterator, Iterator
 from datetime import date, datetime, timezone
-from uuid import UUID, uuid4
+from pathlib import Path
 from typing import Protocol, TypeGuard
+from uuid import UUID
 
 import asyncpg
 import pytest
 import redis.asyncio as redis
-from pytest_mock import MockerFixture
+from fastapi import FastAPI
+from prometheus_client import CollectorRegistry
 from typing import NoReturn
+
+from effectful.algebraic.result import Ok
+from effectful.effects.runtime import ResourceHandle
+from effectful.programs.runners import run_ws_program
+
+from app.config import Settings
+from app.programs.startup import StartupAssembly, StaticMountSpec, shutdown_program, startup_program
+from app.interpreters.runtime_interpreter import build_runtime_interpreter
 
 
 # Override pytest.skip to enforce "zero skipped tests" policy
@@ -58,49 +67,77 @@ async def close_pubsub(pubsub: redis.client.PubSub | SupportsAclose) -> None:
     await pubsub.aclose()
 
 
-async def _init_connection(conn: asyncpg.Connection[asyncpg.Record]) -> None:
-    """Initialize connection with JSON codec for JSONB columns."""
-    await conn.set_type_codec(
-        "jsonb",
-        encoder=json.dumps,
-        decoder=json.loads,
-        schema="pg_catalog",
-    )
-    await conn.set_type_codec(
-        "json",
-        encoder=json.dumps,
-        decoder=json.loads,
-        schema="pg_catalog",
+@pytest.fixture
+async def runtime_startup(tmp_path: Path) -> AsyncIterator[StartupAssembly]:
+    """Start the runtime via pure startup program to obtain handles."""
+    frontend_dir = tmp_path / "frontend-build"
+    static_dir = frontend_dir / "static"
+    assets_dir = frontend_dir / "assets"
+    static_dir.mkdir(parents=True, exist_ok=True)
+    assets_dir.mkdir(parents=True, exist_ok=True)
+
+    settings = Settings(
+        postgres_host="postgres",
+        postgres_port=5432,
+        postgres_db="healthhub_db",
+        postgres_user="healthhub",
+        postgres_password="healthhub_secure_pass",
+        redis_host="redis",
+        redis_port=6379,
+        redis_db=0,
+        pulsar_url="pulsar://pulsar:6650",
+        pulsar_admin_url="http://pulsar:8080",
+        minio_endpoint="minio:9000",
+        minio_access_key="minioadmin",
+        minio_secret_key="minioadmin",
+        minio_bucket="healthhub",
+        minio_secure=False,
+        jwt_secret_key="dev-secret",
+        jwt_algorithm="HS256",
+        jwt_access_token_expire_minutes=15,
+        jwt_refresh_token_expire_days=7,
+        cors_origins=["http://localhost:8851"],
+        cors_allow_credentials=True,
+        cors_allow_methods=["*"],
+        cors_allow_headers=["*"],
+        app_env="integration",
+        log_level="INFO",
+        frontend_build_path=str(frontend_dir),
     )
 
+    app = FastAPI()
+    runtime_interpreter = build_runtime_interpreter()
+    startup_result = await run_ws_program(
+        startup_program(
+            settings=settings,
+            app_handle=ResourceHandle(kind="fastapi_app", resource=app),
+            routers=(),
+            static_mounts=(
+                StaticMountSpec(path="/static", directory=str(static_dir), name="static"),
+                StaticMountSpec(path="/assets", directory=str(assets_dir), name="assets"),
+            ),
+            frontend_build_path=frontend_dir,
+            collector_registry=CollectorRegistry(),
+        ),
+        runtime_interpreter,
+    )
 
-@pytest.fixture(scope="session")
-def event_loop() -> Iterator[asyncio.AbstractEventLoop]:
-    """Create event loop for async tests."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
+    if not isinstance(startup_result, Ok):
+        pytest.fail(f"Runtime startup failed: {startup_result}")
+
+    assembly = startup_result.value
+    try:
+        yield assembly
+    finally:
+        shutdown_result = await run_ws_program(shutdown_program(assembly), runtime_interpreter)
+        if not isinstance(shutdown_result, Ok):
+            pytest.fail(f"Runtime shutdown failed: {shutdown_result}")
 
 
 @pytest.fixture
-async def db_pool() -> AsyncIterator[asyncpg.Pool[asyncpg.Record]]:
-    """Create database connection pool for integration tests."""
-    pool: asyncpg.Pool[asyncpg.Record] = await asyncpg.create_pool(
-        host="postgres",
-        port=5432,
-        database="healthhub_db",
-        user="healthhub",
-        password="healthhub_secure_pass",
-        min_size=1,
-        max_size=5,
-        init=_init_connection,
-    )
-
-    assert pool is not None
-
-    yield pool
-
-    await pool.close()
+async def db_pool(runtime_startup: StartupAssembly) -> AsyncIterator[asyncpg.Pool[asyncpg.Record]]:
+    """Provide the asyncpg pool created by the runtime interpreter."""
+    yield runtime_startup.database_pool.resource
 
 
 @pytest.fixture
@@ -139,17 +176,13 @@ async def clean_db(db_pool: asyncpg.Pool[asyncpg.Record]) -> None:
 
 
 @pytest.fixture
-async def redis_client() -> AsyncIterator[redis.Redis[bytes]]:
-    """Create Redis client for integration tests."""
-    client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
-
-    yield client
-
-    await client.aclose()
+async def redis_client(
+    runtime_startup: StartupAssembly,
+) -> AsyncIterator[redis.Redis[bytes]]:
+    """Provide Redis client via runtime-managed factory."""
+    factory = runtime_startup.redis_factory.resource
+    async with factory.managed() as client:
+        yield client
 
 
 async def _clear_all_redis_keys(client: redis.Redis[bytes]) -> None:
@@ -170,6 +203,7 @@ async def _clear_all_redis_keys(client: redis.Redis[bytes]) -> None:
 @pytest.fixture
 async def clean_healthhub_state(
     db_pool: asyncpg.Pool[asyncpg.Record],
+    runtime_startup: StartupAssembly,
 ) -> AsyncIterator[None]:
     """Fixture-level isolation: Idempotent base state across all microservices.
 
@@ -230,15 +264,9 @@ async def clean_healthhub_state(
         pytest.fail(f"Failed to load seed data: {result.stderr}")
 
     # 3. Clean Redis: Clear all keys
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
-    try:
-        await _clear_all_redis_keys(redis_client)
-    finally:
-        await redis_client.aclose()
+    redis_factory = runtime_startup.redis_factory.resource
+    async with redis_factory.managed() as client:
+        await _clear_all_redis_keys(client)
 
     # 4. (Future) MinIO cleanup would go here:
     # - Delete all buckets and objects
@@ -251,28 +279,16 @@ async def clean_healthhub_state(
     yield
 
     # Post-test cleanup (optional, but ensures no leakage)
-    redis_client_post: redis.Redis[bytes] = redis.Redis(
-        host="redis",
-        port=6379,
-        decode_responses=False,
-    )
-    try:
-        await _clear_all_redis_keys(redis_client_post)
-    finally:
-        await redis_client_post.aclose()
+    async with redis_factory.managed() as client:
+        await _clear_all_redis_keys(client)
 
 
-@pytest.fixture(scope="session")
-def observability_interpreter() -> Iterator[object]:
-    """Create observability interpreter singleton for testing.
-
-    Scope: session - Created once per test session to avoid Prometheus
-    metric duplicate registration errors.
-    """
-    from app.interpreters.observability_interpreter import ObservabilityInterpreter
-
-    interpreter = ObservabilityInterpreter()
-    yield interpreter
+@pytest.fixture
+async def observability_interpreter(
+    runtime_startup: StartupAssembly,
+) -> AsyncIterator[object]:
+    """Provide observability interpreter handle created by startup program."""
+    yield runtime_startup.observability.resource
 
 
 # Sample data fixtures for testing

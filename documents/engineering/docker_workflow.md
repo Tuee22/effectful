@@ -94,6 +94,13 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run <command>
 | Add dependency     | `docker compose -f docker/docker-compose.yml exec effectful poetry add <package>`                |
 | Add dev dependency | `docker compose -f docker/docker-compose.yml exec effectful poetry add --group dev <package>`    |
 
+### Port and server policy
+
+- **Single port only**: Use the port exposed by the compose service (`8851` for HealthHub). Do not start ad-hoc uvicorn instances on alternate ports for testing or debugging.
+- **No host-local servers**: The only accepted application server is the one started by `docker compose ... up` for the target service. Rely on that process for API/SPA endpoints.
+- **E2E base URLs**: When running Playwright, point `E2E_FRONTEND_URL` and `E2E_BACKEND_URL` to the compose service port (e.g., `http://localhost:8851`). Do not override to alternate ports unless the compose definition itself changes.
+- **Stability changes in git**: If you need to adjust server settings (e.g., disable `--reload`), change the compose service command in version control instead of launching sidecar uvicorn processes.
+
 ### Shell Alias (Optional)
 
 For convenience, add to your shell profile:

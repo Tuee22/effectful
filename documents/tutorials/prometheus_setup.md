@@ -291,63 +291,172 @@ ______________________________________________________________________
 
 ## Step 5: Expose /metrics Endpoint in Application
 
-Add metrics endpoint to your FastAPI application:
+Expose `/metrics` via the **pure runtime-effects** assembly (no globals). See `examples/07_metrics_endpoint.py` for a complete reference.
 
 ```python
-# snippet
+# Expose /metrics route using runtime assembly
+from collections.abc import Generator
+from contextlib import asynccontextmanager
+from dataclasses import dataclass
+
 from fastapi import FastAPI
-from prometheus_client import (
-    CollectorRegistry,
-    Counter,
-    Histogram,
-    Gauge,
-    generate_latest,
-    CONTENT_TYPE_LATEST,
-)
+from fastapi.routing import APIRoute
 from fastapi.responses import Response
+from prometheus_client import CollectorRegistry, CONTENT_TYPE_LATEST, generate_latest
 
-app = FastAPI()
+from effectful.adapters.prometheus_metrics import PrometheusMetricsCollector
+from effectful.algebraic.result import Err, Ok
+from effectful.effects.runtime import (
+    CloseObservabilityInterpreter,
+    CreateObservabilityInterpreter,
+    RegisterHttpRoute,
+    ResourceHandle,
+    RuntimeEffect,
+    SetAppMetadata,
+)
+from effectful.interpreters.metrics import MetricsInterpreter
+from effectful.interpreters.runtime import RuntimeInterpreter
+from effectful.observability import MetricsRegistry, CounterDefinition
+from effectful.observability.instrumentation import create_instrumented_interpreter
+from effectful.programs.runners import run_ws_program
 
-# Create Prometheus registry
-registry = CollectorRegistry()
 
-# Define metrics (matching your MetricsRegistry)
-effects_total = Counter(
-    'effectful_effects_total',
-    'Total effects executed',
-    ['effect_type', 'result'],
-    registry=registry,
+APP_METRICS = MetricsRegistry(
+    counters=(
+        CounterDefinition(
+            name="app_requests_total",
+            help_text="Total requests by endpoint",
+            label_names=("endpoint",),
+        ),
+    ),
+    gauges=(),
+    histograms=(),
+    summaries=(),
 )
 
-effect_duration = Histogram(
-    'effectful_effect_duration_seconds',
-    'Effect execution duration',
-    ['effect_type'],
-    buckets=(0.001, 0.01, 0.1, 0.5, 1.0, 5.0, 10.0),
-    registry=registry,
-)
 
-active_programs = Gauge(
-    'effectful_programs_active',
-    'Currently executing programs',
-    registry=registry,
-)
+@dataclass(frozen=True)
+class MetricsRuntime:
+    collector: PrometheusMetricsCollector
+    interpreter: object
+    registry: CollectorRegistry
 
-# Metrics endpoint
-@app.get("/metrics")
-async def metrics() -> Response:
-    """Expose Prometheus metrics in text format."""
-    metrics_output = generate_latest(registry)
-    return Response(
-        content=metrics_output,
-        media_type=CONTENT_TYPE_LATEST,
+    def render_latest(self) -> bytes:
+        return generate_latest(self.registry)
+
+    async def close(self) -> None:
+        return None
+
+
+@dataclass(frozen=True)
+class StartupAssembly:
+    app: ResourceHandle[FastAPI]
+    metrics: ResourceHandle[MetricsRuntime]
+
+
+def startup_program(
+    app_handle: ResourceHandle[FastAPI],
+) -> Generator[RuntimeEffect, ResourceHandle[object], StartupAssembly]:
+    yield SetAppMetadata(
+        app=app_handle,
+        title="Effectful Metrics Example",
+        description="Pure runtime effects wiring",
+        version="1.0.0",
     )
 
-# Health check endpoint
-@app.get("/health")
-async def health() -> dict[str, str]:
-    """Health check endpoint."""
-    return {"status": "healthy"}
+    metrics_runtime = yield CreateObservabilityInterpreter(metrics_registry=APP_METRICS)
+
+    async def _metrics() -> Response:
+        return Response(
+            content=metrics_runtime.resource.render_latest(),
+            media_type=CONTENT_TYPE_LATEST,
+        )
+
+    yield RegisterHttpRoute(
+        app=app_handle,
+        path="/metrics",
+        endpoint=_metrics,
+        methods=("GET",),
+        include_in_schema=False,
+        response_model=None,
+    )
+
+    return StartupAssembly(app=app_handle, metrics=metrics_runtime)
+
+
+def shutdown_program(
+    assembly: StartupAssembly,
+) -> Generator[RuntimeEffect, object, None]:
+    yield CloseObservabilityInterpreter(handle=assembly.metrics)
+
+
+async def _create_observability_interpreter(
+    effect: CreateObservabilityInterpreter,
+) -> ResourceHandle[MetricsRuntime]:
+    registry = CollectorRegistry()
+    collector = PrometheusMetricsCollector(registry=registry)
+    if effect.metrics_registry is not None:
+        await collector.register_metrics(effect.metrics_registry)
+
+    metrics_interp = MetricsInterpreter(metrics_collector=collector)
+    instrumented = await create_instrumented_interpreter(
+        wrapped=metrics_interp, metrics_collector=collector
+    )
+
+    return ResourceHandle(
+        kind="metrics_runtime",
+        resource=MetricsRuntime(
+            collector=collector,
+            interpreter=instrumented,
+            registry=registry,
+        ),
+    )
+
+
+def build_runtime_interpreter() -> RuntimeInterpreter:
+    async def _set_app_metadata(effect: SetAppMetadata) -> None:
+        app = effect.app.resource
+        app.title = effect.title
+        app.description = effect.description
+        app.version = effect.version
+
+    async def _register_route(effect: RegisterHttpRoute) -> None:
+        app = effect.app.resource
+        app.router.routes.append(
+            APIRoute(
+                path=effect.path,
+                endpoint=effect.endpoint,
+                methods=list(effect.methods),
+                include_in_schema=effect.include_in_schema,
+                response_model=effect.response_model,
+            )
+        )
+
+    return RuntimeInterpreter(
+        set_app_metadata=_set_app_metadata,
+        register_route=_register_route,
+        create_observability_interpreter=_create_observability_interpreter,
+        close_observability_interpreter=lambda effect: effect.handle.resource.close(),
+    )
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app_handle = ResourceHandle(kind="fastapi_app", resource=app)
+    runtime = build_runtime_interpreter()
+    startup = await run_ws_program(startup_program(app_handle), runtime)
+    if isinstance(startup, Err):
+        raise RuntimeError(startup.error)
+
+    assembly = startup.value
+    app.state.metrics_runtime = assembly.metrics.resource
+    try:
+        yield
+    finally:
+        await run_ws_program(shutdown_program(assembly), runtime)
+
+
+app = FastAPI(lifespan=lifespan)
 ```
 
 **Metrics Endpoint Output**:

@@ -22,3 +22,11 @@ class PrometheusObservabilityAdapter:
     async def handle(self, effect: ObservabilityEffect) -> MetricRecordingResult:
         """Handle observability effect (implements protocol)."""
         return await self._interpreter.handle(effect)
+
+    async def close(self) -> None:
+        """Close underlying interpreter resources (no-op for Prometheus)."""
+        return None
+
+    def render_latest(self) -> bytes:
+        """Render all registered metrics for the bound registry."""
+        return self._interpreter.render_latest()

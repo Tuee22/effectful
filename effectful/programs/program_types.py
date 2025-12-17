@@ -36,6 +36,7 @@ from effectful.effects.cache import CacheEffect
 from effectful.effects.database import DatabaseEffect
 from effectful.effects.messaging import MessagingEffect
 from effectful.effects.metrics import MetricsEffect
+from effectful.effects.runtime import ResourceHandle, RuntimeEffect
 from effectful.effects.storage import StorageEffect
 from effectful.effects.system import SystemEffect
 from effectful.effects.websocket import WebSocketEffect
@@ -50,6 +51,7 @@ type AllEffects = (
     | AuthEffect
     | SystemEffect
     | MetricsEffect
+    | RuntimeEffect
 )
 
 # Union of all possible return values from effects
@@ -94,6 +96,7 @@ type EffectResult = (
     | list[ChatMessage]  # ListMessagesForUser returns list[ChatMessage]
     | list[str]  # ListObjects returns list[str] (object keys)
     | list[User]  # ListUsers returns list[User]
+    | ResourceHandle[object]  # Runtime assembly effects return opaque handles
 )
 
 # Program type alias: Generator that yields effects and receives results

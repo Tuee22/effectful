@@ -132,6 +132,16 @@ flowchart TB
 - Specialized interpreters interact with infrastructure
 - Results flow back up through the same path (fail-fast on errors)
 
+<a id="pure-interpreter-assembly-doctrine"></a>
+
+## Pure Interpreter Assembly Doctrine
+
+- **End state**: Startup/config flows (middleware, routing, pool creation, observability wiring) are expressed as pure effect programs that compose **core effectful library primitives**; the impure layer only instantiates external handles (e.g., asyncpg pool, FastAPI app) and returns typed handles/tokens.
+- **Domain-agnostic primitives**: Infrastructure/config effects live in the core library with generic names. Demos/apps (e.g., HealthHub) compose these primitives with domain-specific data instead of forking effects.
+- **Settings boundary**: Lifespan creates Pydantic `Settings` once; all subsequent steps run through effects returning `Result[T, E]` handles.
+- **Composition-first**: Prefer effect composition (`yield from` pure programs) and shared interpreters over bespoke imperative wiring; interpreter code stays terse and I/O-focused.
+- **Overlays**: Demo overlays must link here and describe only deltas; see `documentation_standards.md` for SSoT/link rules.
+
 ______________________________________________________________________
 
 ## Core Abstractions

@@ -55,6 +55,7 @@ from effectful.interpreters.composite import (
 )
 from effectful.interpreters.database import DatabaseInterpreter
 from effectful.interpreters.messaging import MessagingInterpreter
+from effectful.interpreters.runtime import RuntimeInterpreter
 from effectful.interpreters.storage import StorageInterpreter
 from effectful.interpreters.system import SystemInterpreter
 from effectful.interpreters.websocket import WebSocketInterpreter
@@ -67,6 +68,7 @@ __all__ = [
     "StorageInterpreter",
     "AuthInterpreter",
     "SystemInterpreter",
+    "RuntimeInterpreter",
     "CompositeInterpreter",
     "create_composite_interpreter",
 ]

@@ -13,3 +13,7 @@ class ObservabilityInterpreter(Protocol):
     async def handle(self, effect: ObservabilityEffect) -> MetricRecordingResult:
         """Handle an observability effect (increment counter, observe histogram)."""
         ...
+
+    def render_latest(self) -> bytes:
+        """Render registered metrics for scraping."""
+        ...

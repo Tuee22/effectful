@@ -57,6 +57,24 @@ def expect_scheduled(
     return result.appointment
 
 
+def expect_transition_success(
+    result: TransitionSuccess | Result[TransitionSuccess, InterpreterFailure],
+) -> TransitionSuccess:
+    if isinstance(result, (Ok, Err)):
+        result = unwrap_program_result(result)
+    assert isinstance(result, TransitionSuccess)
+    return result
+
+
+def expect_transition_invalid(
+    result: TransitionInvalid | Result[TransitionInvalid, InterpreterFailure],
+) -> TransitionInvalid:
+    if isinstance(result, (Ok, Err)):
+        result = unwrap_program_result(result)
+    assert isinstance(result, TransitionInvalid)
+    return result
+
+
 class TestAppointmentScheduling:
     """Test appointment scheduling workflow with real infrastructure."""
 
@@ -81,19 +99,18 @@ class TestAppointmentScheduling:
         requested_time = datetime(2024, 12, 15, 14, 0, 0, tzinfo=timezone.utc)
         reason = "Annual checkup"
 
-        result = await run_program(
-            schedule_appointment_program(
-                patient_id=seed_test_patient,
-                doctor_id=seed_test_doctor,
-                requested_time=to_optional_value(requested_time),
-                reason=reason,
-                actor_id=sample_user_id,
-            ),
-            composite_interpreter,
+        appointment = expect_scheduled(
+            await run_program(
+                schedule_appointment_program(
+                    patient_id=seed_test_patient,
+                    doctor_id=seed_test_doctor,
+                    requested_time=to_optional_value(requested_time),
+                    reason=reason,
+                    actor_id=sample_user_id,
+                ),
+                composite_interpreter,
+            )
         )
-
-        assert isinstance(result, AppointmentScheduled)
-        appointment = result.appointment
         assert appointment.patient_id == seed_test_patient
         assert appointment.doctor_id == seed_test_doctor
         assert appointment.reason == reason
@@ -207,18 +224,17 @@ class TestAppointmentStateTransitions:
         )
         transition_time = datetime.now(timezone.utc)
 
-        result = await run_program(
-            transition_appointment_program(
-                appointment_id=appointment.id,
-                new_status=new_status,
-                actor_id=sample_user_id,
-                transition_time=transition_time,
-            ),
-            composite_interpreter,
+        expect_transition_success(
+            await run_program(
+                transition_appointment_program(
+                    appointment_id=appointment.id,
+                    new_status=new_status,
+                    actor_id=sample_user_id,
+                    transition_time=transition_time,
+                ),
+                composite_interpreter,
+            )
         )
-
-        # Verify transition succeeded
-        assert isinstance(result, TransitionSuccess)
 
         # CRITICAL: Verify DB updated (antipattern #13)
         async with db_pool.acquire() as conn:
@@ -297,19 +313,18 @@ class TestAppointmentStateTransitions:
         new_status = Requested(requested_at=datetime.now(timezone.utc))
         transition_time = datetime.now(timezone.utc)
 
-        result = await run_program(
-            transition_appointment_program(
-                appointment_id=appointment.id,
-                new_status=new_status,
-                actor_id=sample_user_id,
-                transition_time=transition_time,
-            ),
-            composite_interpreter,
+        invalid = expect_transition_invalid(
+            await run_program(
+                transition_appointment_program(
+                    appointment_id=appointment.id,
+                    new_status=new_status,
+                    actor_id=sample_user_id,
+                    transition_time=transition_time,
+                ),
+                composite_interpreter,
+            )
         )
-
-        # Verify transition failed (antipattern #5)
-        assert isinstance(result, TransitionInvalid)
-        assert "cannot transition from completed to requested" in result.reason.lower()
+        assert "cannot transition from completed to requested" in invalid.reason.lower()
 
         # CRITICAL: Verify DB unchanged (antipattern #13)
         async with db_pool.acquire() as conn:
@@ -354,19 +369,20 @@ class TestAppointmentStateTransitions:
         assert isinstance(appointment.status, Requested)
 
         # Transition 1: Requested → Confirmed
-        result1 = await run_program(
-            transition_appointment_program(
-                appointment_id=appointment.id,
-                new_status=Confirmed(
-                    confirmed_at=datetime.now(timezone.utc),
-                    scheduled_time=datetime(2024, 12, 25, 10, 0, 0, tzinfo=timezone.utc),
+        expect_transition_success(
+            await run_program(
+                transition_appointment_program(
+                    appointment_id=appointment.id,
+                    new_status=Confirmed(
+                        confirmed_at=datetime.now(timezone.utc),
+                        scheduled_time=datetime(2024, 12, 25, 10, 0, 0, tzinfo=timezone.utc),
+                    ),
+                    actor_id=sample_user_id,
+                    transition_time=datetime.now(timezone.utc),
                 ),
-                actor_id=sample_user_id,
-                transition_time=datetime.now(timezone.utc),
-            ),
-            composite_interpreter,
+                composite_interpreter,
+            )
         )
-        assert isinstance(result1, TransitionSuccess)
 
         # Verify DB: status = confirmed
         async with db_pool.acquire() as conn:
@@ -378,16 +394,17 @@ class TestAppointmentStateTransitions:
             assert row["status"] == "confirmed"
 
         # Transition 2: Confirmed → InProgress
-        result2 = await run_program(
-            transition_appointment_program(
-                appointment_id=appointment.id,
-                new_status=InProgress(started_at=datetime.now(timezone.utc)),
-                actor_id=sample_user_id,
-                transition_time=datetime.now(timezone.utc),
-            ),
-            composite_interpreter,
+        expect_transition_success(
+            await run_program(
+                transition_appointment_program(
+                    appointment_id=appointment.id,
+                    new_status=InProgress(started_at=datetime.now(timezone.utc)),
+                    actor_id=sample_user_id,
+                    transition_time=datetime.now(timezone.utc),
+                ),
+                composite_interpreter,
+            )
         )
-        assert isinstance(result2, TransitionSuccess)
 
         # Verify DB: status = in_progress
         async with db_pool.acquire() as conn:
@@ -399,19 +416,20 @@ class TestAppointmentStateTransitions:
             assert row["status"] == "in_progress"
 
         # Transition 3: InProgress → Completed
-        result3 = await run_program(
-            transition_appointment_program(
-                appointment_id=appointment.id,
-                new_status=Completed(
-                    completed_at=datetime.now(timezone.utc),
-                    notes="Patient examined, no issues found",
+        expect_transition_success(
+            await run_program(
+                transition_appointment_program(
+                    appointment_id=appointment.id,
+                    new_status=Completed(
+                        completed_at=datetime.now(timezone.utc),
+                        notes="Patient examined, no issues found",
+                    ),
+                    actor_id=sample_user_id,
+                    transition_time=datetime.now(timezone.utc),
                 ),
-                actor_id=sample_user_id,
-                transition_time=datetime.now(timezone.utc),
-            ),
-            composite_interpreter,
+                composite_interpreter,
+            )
         )
-        assert isinstance(result3, TransitionSuccess)
 
         # Verify DB: status = completed
         async with db_pool.acquire() as conn:
@@ -453,21 +471,21 @@ class TestAppointmentStateTransitions:
             )
         )
 
-        result = await run_program(
-            transition_appointment_program(
-                appointment_id=appointment.id,
-                new_status=Cancelled(
-                    cancelled_at=datetime.now(timezone.utc),
-                    cancelled_by="patient",
-                    reason="Patient conflict",
+        expect_transition_success(
+            await run_program(
+                transition_appointment_program(
+                    appointment_id=appointment.id,
+                    new_status=Cancelled(
+                        cancelled_at=datetime.now(timezone.utc),
+                        cancelled_by="patient",
+                        reason="Patient conflict",
+                    ),
+                    actor_id=sample_user_id,
+                    transition_time=datetime.now(timezone.utc),
                 ),
-                actor_id=sample_user_id,
-                transition_time=datetime.now(timezone.utc),
-            ),
-            composite_interpreter,
+                composite_interpreter,
+            )
         )
-
-        assert isinstance(result, TransitionSuccess)
 
         # Verify DB: status = cancelled with metadata
         async with db_pool.acquire() as conn:

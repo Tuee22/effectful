@@ -9,8 +9,6 @@ from typing import TYPE_CHECKING
 
 import redis.asyncio as redis
 
-from app.config import Settings
-
 if TYPE_CHECKING:
     from redis.asyncio import Redis
 
@@ -32,9 +30,11 @@ class ProductionRedisClientFactory:
         # Client automatically closed
     """
 
-    def __init__(self, settings: Settings) -> None:
-        """Initialize factory with settings."""
-        self._settings = settings
+    def __init__(self, host: str, port: int, db: int) -> None:
+        """Initialize factory with connection parameters."""
+        self._host = host
+        self._port = port
+        self._db = db
 
     def create(self) -> "Redis[bytes]":
         """Create new Redis client for single request.
@@ -47,11 +47,15 @@ class ProductionRedisClientFactory:
             Consider using managed() for automatic cleanup.
         """
         return redis.Redis(
-            host=self._settings.redis_host,
-            port=self._settings.redis_port,
-            db=self._settings.redis_db,
+            host=self._host,
+            port=self._port,
+            db=self._db,
             decode_responses=False,
         )
+
+    async def close(self) -> None:
+        """Close resources held by the factory (no-op for managed clients)."""
+        return None
 
     @asynccontextmanager
     async def managed(self) -> "AsyncIterator[Redis[bytes]]":

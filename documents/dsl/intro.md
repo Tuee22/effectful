@@ -1,12 +1,12 @@
 # Effectual DSL and Effectful Compiler Specification
 
-**Status**: Authoritative source  
-**Supersedes**: effectual_dsl_and_effectful_compiler_spec_final.md  
-**Referenced by**: none  
+**Status**: Authoritative source\
+**Supersedes**: effectual_dsl_and_effectful_compiler_spec_final.md\
+**Referenced by**: none
 
 > **Purpose**: Define the **Effectual DSL** for expressing real-world business behavior as a **total, pure mathematical model** in **TLA+/PlusCal** (SSoT), and define the **Effectful Compiler** (Haskell) that deterministically generates **pure ADTs**, **pure state machines**, **Mermaid**, and **typed execution boundaries** for use in **Python**, **TypeScript**, and other languages.
 
----
+______________________________________________________________________
 
 ## 1. Total Pure Modelling
 
@@ -43,6 +43,7 @@ TPM is not primarily a coding style. It is a discipline of **representation**:
 - Missing cases are treated as specification errors.
 
 **Illegal states are impossible to represent** means:
+
 - Absence, partiality, and intermediate states are expressed as explicit ADT variants.
 - If an “authenticated session” requires user identity and roles, those must be payload fields of the corresponding variant, not scattered nullable values.
 
@@ -89,7 +90,7 @@ Model --> Generate[Generate]
 Model --> Audit[Audit]
 ```
 
----
+______________________________________________________________________
 
 ## 2. System overview
 
@@ -116,7 +117,7 @@ GenPureTs --> RuntimeTs[RuntimeTs]
 - **GenPurePy / GenPureTs**: generated Tier 2 pure code
 - **RuntimePy / RuntimeTs**: Tier 3 interpreters + Tier 4 effect runners + Tier 5 framework glue
 
----
+______________________________________________________________________
 
 ## 3. Tier taxonomy
 
@@ -129,18 +130,18 @@ T3 --> T4[Tier4 Runner]
 T4 --> T5[Tier5 Framework]
 ```
 
-| Tier | Name | Must be | Examples |
-|---|---|---|---|
-| 0 | Model | TLA+/PlusCal SSoT | `documents/models/healthhub/*.tla` |
-| 1 | IR | compiler-internal | Haskell IR values |
-| 2 | Pure | total and pure | generated ADTs, reducers, decisions |
-| 3 | Interpreter | generic orchestration | dispatch, scheduling, retries policy |
-| 4 | Runner | one impure function per effect type | `runDbQuery(eff) -> Result[...]` |
-| 5 | Framework | glue only | FastAPI routes, React components |
+| Tier | Name        | Must be                             | Examples                             |
+| ---- | ----------- | ----------------------------------- | ------------------------------------ |
+| 0    | Model       | TLA+/PlusCal SSoT                   | `documents/models/healthhub/*.tla`   |
+| 1    | IR          | compiler-internal                   | Haskell IR values                    |
+| 2    | Pure        | total and pure                      | generated ADTs, reducers, decisions  |
+| 3    | Interpreter | generic orchestration               | dispatch, scheduling, retries policy |
+| 4    | Runner      | one impure function per effect type | `runDbQuery(eff) -> Result[...]`     |
+| 5    | Framework   | glue only                           | FastAPI routes, React components     |
 
 **Hard rule**: Tier 5 contains no business decisions. It only translates external inputs into pure events and pure outputs into framework responses.
 
----
+______________________________________________________________________
 
 ## 4. Effect runners
 
@@ -149,6 +150,7 @@ T4 --> T5[Tier5 Framework]
 Runners execute the same real-world operation regardless of language. The operation is determined by the effect value.
 
 Example:
+
 - a SQL query effect describes a SQL query
 - running that effect executes that SQL query
 - this meaning is identical across Python, TypeScript, Rust, etc
@@ -223,6 +225,7 @@ Catch --> Err[Err]
 Runners must not hang forever without returning.
 
 Policy:
+
 - Each runner has a deterministic timeout and cancellation policy.
 - Timeouts are represented as typed `Err(Timeout(...))`.
 
@@ -234,7 +237,7 @@ Work --> Timeout[Timeout]
 Timeout --> Err[Err]
 ```
 
----
+______________________________________________________________________
 
 ## 5. Generic effects are mandatory
 
@@ -276,7 +279,7 @@ RandomBytes["RandomBytes(n)"]
 Log["Log(level, message)"]
 ```
 
----
+______________________________________________________________________
 
 ## 6. Generic DB query effect
 
@@ -332,7 +335,7 @@ Repo --> Res[DomainResult]
 - Mapping `DbRows` to domain ADTs is pure.
 - Only the runner is impure.
 
----
+______________________________________________________________________
 
 ## 7. Effectual DSL in TLA+/PlusCal
 
@@ -366,7 +369,7 @@ Authenticated --> Unauthenticated: Logout
 SessionExpired --> Unauthenticated: RedirectLogin
 ```
 
----
+______________________________________________________________________
 
 ## 8. Effectful Compiler responsibilities
 
@@ -393,7 +396,7 @@ Pure --> T2Code[Tier2Code]
 Tests --> T2Tests[Tier2Tests]
 ```
 
----
+______________________________________________________________________
 
 ## 9. Why Haskell for the compiler
 
@@ -412,7 +415,7 @@ PureXforms --> Backends[Backends]
 Backends --> Outputs[Outputs]
 ```
 
----
+______________________________________________________________________
 
 ## 10. Generated code structure
 
@@ -438,7 +441,7 @@ Demo --> Healthhub[healthhub]
 - `generated/typescript/effectful_std/**` (Tier 2)
 - `generated/typescript/healthhub_pure/**` (Tier 2)
 
----
+______________________________________________________________________
 
 ## 11. Interpreter and runner sketches
 
@@ -446,13 +449,13 @@ Demo --> Healthhub[healthhub]
 
 #### Tier map
 
-| Artifact | Tier |
-|---|---|
-| `effectful_std` ADTs | 2 |
-| `healthhub_pure` logic | 2 |
-| interpreter orchestration | 3 |
-| runner implementations | 4 |
-| FastAPI glue | 5 |
+| Artifact                  | Tier |
+| ------------------------- | ---- |
+| `effectful_std` ADTs      | 2    |
+| `healthhub_pure` logic    | 2    |
+| interpreter orchestration | 3    |
+| runner implementations    | 4    |
+| FastAPI glue              | 5    |
 
 #### Generated runner signature (generic)
 
@@ -529,7 +532,7 @@ export const runHttpRequest = async (eff: HttpRequest): Promise<Result<HttpFailu
 }
 ```
 
----
+______________________________________________________________________
 
 ## 12. Deterministic enforcement
 
@@ -550,7 +553,7 @@ Conf --> Ship[Ship]
 - typechecking ensures generated code and handwritten glue compile
 - conformance tests ensure state machines and decisions match the model
 
----
+______________________________________________________________________
 
 ## 13. Summary of required handwritten artifacts
 
@@ -566,7 +569,7 @@ Conf --> Ship[Ship]
 - Runner implementations with timeouts (Tier 4)
 - Interpreter orchestration (Tier 3)
 
----
+______________________________________________________________________
 
 ## Cross-References
 

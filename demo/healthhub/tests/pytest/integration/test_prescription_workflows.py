@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from uuid import UUID
+from typing import TypeVar
 
 import asyncpg
 import pytest
@@ -32,8 +33,19 @@ from app.programs.prescription_programs import (
     PrescriptionPatientMissing,
     create_prescription_program,
 )
-from app.programs.runner import run_program
+from app.programs.runner import run_program, unwrap_program_result
+from effectful.algebraic.result import Ok, Err
 from tests.conftest import close_pubsub
+
+T = TypeVar("T")
+
+
+def expect_result(result: object, expected_type: type[T]) -> T:
+    """Unwrap program result and assert it is expected_type."""
+    if isinstance(result, (Ok, Err)):
+        result = unwrap_program_result(result)
+    assert isinstance(result, expected_type)
+    return result
 
 
 class TestPrescriptionCreation:
@@ -57,23 +69,25 @@ class TestPrescriptionCreation:
         - Side effects validated (antipattern #13)
         """
         # Execute prescription creation
-        result = await run_program(
-            create_prescription_program(
-                patient_id=seed_test_patient,
-                doctor_id=seed_test_doctor,
-                medication="Lisinopril",
-                dosage="10mg",
-                frequency="Once daily",
-                duration_days=30,
-                refills_remaining=2,
-                notes=to_optional_value("For blood pressure management"),
-                actor_id=sample_user_id,
-                existing_medications=[],  # No existing medications
+        result = expect_result(
+            await run_program(
+                create_prescription_program(
+                    patient_id=seed_test_patient,
+                    doctor_id=seed_test_doctor,
+                    medication="Lisinopril",
+                    dosage="10mg",
+                    frequency="Once daily",
+                    duration_days=30,
+                    refills_remaining=2,
+                    notes=to_optional_value("For blood pressure management"),
+                    actor_id=sample_user_id,
+                    existing_medications=[],  # No existing medications
+                ),
+                composite_interpreter,
             ),
-            composite_interpreter,
+            PrescriptionCreated,
         )
 
-        assert isinstance(result, PrescriptionCreated)
         prescription = result.prescription
         assert prescription.patient_id == seed_test_patient
         assert prescription.doctor_id == seed_test_doctor
@@ -117,23 +131,25 @@ class TestPrescriptionCreation:
         - Side effect validated (antipattern #13)
         """
         # Execute
-        result = await run_program(
-            create_prescription_program(
-                patient_id=seed_test_patient,
-                doctor_id=seed_test_doctor,
-                medication="Metformin",
-                dosage="500mg",
-                frequency="Twice daily",
-                duration_days=90,
-                refills_remaining=3,
-                notes=to_optional_value(None, reason="not_provided"),
-                actor_id=sample_user_id,
-                existing_medications=[],
+        result = expect_result(
+            await run_program(
+                create_prescription_program(
+                    patient_id=seed_test_patient,
+                    doctor_id=seed_test_doctor,
+                    medication="Metformin",
+                    dosage="500mg",
+                    frequency="Twice daily",
+                    duration_days=90,
+                    refills_remaining=3,
+                    notes=to_optional_value(None, reason="not_provided"),
+                    actor_id=sample_user_id,
+                    existing_medications=[],
+                ),
+                composite_interpreter,
             ),
-            composite_interpreter,
+            PrescriptionCreated,
         )
 
-        assert isinstance(result, PrescriptionCreated)
         prescription = result.prescription
 
         # CRITICAL: Verify audit log created (antipattern #13)
@@ -175,23 +191,25 @@ class TestMedicationInteractionChecking:
         - Side effects validated (antipattern #13)
         """
         # Execute with severe interaction (Warfarin + Aspirin)
-        result = await run_program(
-            create_prescription_program(
-                patient_id=seed_test_patient,
-                doctor_id=seed_test_doctor,
-                medication="Warfarin",
-                dosage="5mg",
-                frequency="Once daily",
-                duration_days=30,
-                refills_remaining=0,
-                notes=to_optional_value(None, reason="not_provided"),
-                actor_id=sample_user_id,
-                existing_medications=["Aspirin"],  # Known severe interaction
+        result = expect_result(
+            await run_program(
+                create_prescription_program(
+                    patient_id=seed_test_patient,
+                    doctor_id=seed_test_doctor,
+                    medication="Warfarin",
+                    dosage="5mg",
+                    frequency="Once daily",
+                    duration_days=30,
+                    refills_remaining=0,
+                    notes=to_optional_value(None, reason="not_provided"),
+                    actor_id=sample_user_id,
+                    existing_medications=["Aspirin"],  # Known severe interaction
+                ),
+                composite_interpreter,
             ),
-            composite_interpreter,
+            PrescriptionBlocked,
         )
 
-        assert isinstance(result, PrescriptionBlocked)
         warning = result.warning
         assert warning.severity == "severe"
         assert "warfarin" in warning.description.lower() or "aspirin" in warning.description.lower()
@@ -247,23 +265,25 @@ class TestMedicationInteractionChecking:
         await pubsub.subscribe(patient_channel)
 
         # Execute with moderate interaction
-        result = await run_program(
-            create_prescription_program(
-                patient_id=seed_test_patient,
-                doctor_id=seed_test_doctor,
-                medication="Ibuprofen",
-                dosage="400mg",
-                frequency="Every 6 hours as needed",
-                duration_days=7,
-                refills_remaining=0,
-                notes=to_optional_value(None, reason="not_provided"),
-                actor_id=sample_user_id,
-                existing_medications=["Lisinopril"],  # Known moderate interaction
+        result = expect_result(
+            await run_program(
+                create_prescription_program(
+                    patient_id=seed_test_patient,
+                    doctor_id=seed_test_doctor,
+                    medication="Ibuprofen",
+                    dosage="400mg",
+                    frequency="Every 6 hours as needed",
+                    duration_days=7,
+                    refills_remaining=0,
+                    notes=to_optional_value(None, reason="not_provided"),
+                    actor_id=sample_user_id,
+                    existing_medications=["Lisinopril"],  # Known moderate interaction
+                ),
+                composite_interpreter,
             ),
-            composite_interpreter,
+            PrescriptionCreated,
         )
 
-        assert isinstance(result, PrescriptionCreated)
         prescription = result.prescription
         assert prescription.medication == "Ibuprofen"
 
@@ -315,23 +335,25 @@ class TestMedicationInteractionChecking:
         - Strict validation applied (antipattern #14)
         """
         # Execute with minor interaction
-        result = await run_program(
-            create_prescription_program(
-                patient_id=seed_test_patient,
-                doctor_id=seed_test_doctor,
-                medication="Calcium Carbonate",
-                dosage="500mg",
-                frequency="Three times daily with meals",
-                duration_days=60,
-                refills_remaining=1,
-                notes=to_optional_value(None, reason="not_provided"),
-                actor_id=sample_user_id,
-                existing_medications=["Levothyroxine"],  # Known minor interaction
+        result = expect_result(
+            await run_program(
+                create_prescription_program(
+                    patient_id=seed_test_patient,
+                    doctor_id=seed_test_doctor,
+                    medication="Calcium Carbonate",
+                    dosage="500mg",
+                    frequency="Three times daily with meals",
+                    duration_days=60,
+                    refills_remaining=1,
+                    notes=to_optional_value(None, reason="not_provided"),
+                    actor_id=sample_user_id,
+                    existing_medications=["Levothyroxine"],  # Known minor interaction
+                ),
+                composite_interpreter,
             ),
-            composite_interpreter,
+            PrescriptionCreated,
         )
 
-        assert isinstance(result, PrescriptionCreated)
         prescription = result.prescription
         assert prescription.medication == "Calcium Carbonate"
 
@@ -370,24 +392,26 @@ class TestPrescriptionAuthorization:
         unauthorized_doctor_id, _ = unauthorized_doctor
 
         # Attempt prescription creation
-        result = await run_program(
-            create_prescription_program(
-                patient_id=seed_test_patient,
-                doctor_id=unauthorized_doctor_id,
-                medication="Amoxicillin",
-                dosage="500mg",
-                frequency="Three times daily",
-                duration_days=10,
-                refills_remaining=0,
-                notes=to_optional_value(None, reason="not_provided"),
-                actor_id=sample_user_id,
-                existing_medications=[],
+        result = expect_result(
+            await run_program(
+                create_prescription_program(
+                    patient_id=seed_test_patient,
+                    doctor_id=unauthorized_doctor_id,
+                    medication="Amoxicillin",
+                    dosage="500mg",
+                    frequency="Three times daily",
+                    duration_days=10,
+                    refills_remaining=0,
+                    notes=to_optional_value(None, reason="not_provided"),
+                    actor_id=sample_user_id,
+                    existing_medications=[],
+                ),
+                composite_interpreter,
             ),
-            composite_interpreter,
+            PrescriptionDoctorUnauthorized,
         )
 
         # Verify authorization error (antipattern #12, #14)
-        assert isinstance(result, PrescriptionDoctorUnauthorized)
         assert result.doctor_id == unauthorized_doctor_id
 
         # CRITICAL: Verify prescription NOT created (antipattern #13)
@@ -420,24 +444,26 @@ class TestPrescriptionAuthorization:
         # Use nonexistent patient ID
         nonexistent_patient_id = UUID("ffffffff-ffff-ffff-ffff-ffffffffffff")
 
-        result = await run_program(
-            create_prescription_program(
-                patient_id=nonexistent_patient_id,
-                doctor_id=seed_test_doctor,
-                medication="Simvastatin",
-                dosage="20mg",
-                frequency="Once daily at bedtime",
-                duration_days=90,
-                refills_remaining=2,
-                notes=to_optional_value(None, reason="not_provided"),
-                actor_id=sample_user_id,
-                existing_medications=[],
+        result = expect_result(
+            await run_program(
+                create_prescription_program(
+                    patient_id=nonexistent_patient_id,
+                    doctor_id=seed_test_doctor,
+                    medication="Simvastatin",
+                    dosage="20mg",
+                    frequency="Once daily at bedtime",
+                    duration_days=90,
+                    refills_remaining=2,
+                    notes=to_optional_value(None, reason="not_provided"),
+                    actor_id=sample_user_id,
+                    existing_medications=[],
+                ),
+                composite_interpreter,
             ),
-            composite_interpreter,
+            PrescriptionPatientMissing,
         )
 
         # Verify error returned (antipattern #12)
-        assert isinstance(result, PrescriptionPatientMissing)
         assert result.patient_id == nonexistent_patient_id
 
 
@@ -468,23 +494,25 @@ class TestPrescriptionNotifications:
         await pubsub.subscribe(patient_channel)
 
         # Execute prescription creation
-        result = await run_program(
-            create_prescription_program(
-                patient_id=seed_test_patient,
-                doctor_id=seed_test_doctor,
-                medication="Atorvastatin",
-                dosage="10mg",
-                frequency="Once daily",
-                duration_days=30,
-                refills_remaining=3,
-                notes=to_optional_value("For cholesterol management"),
-                actor_id=sample_user_id,
-                existing_medications=[],
+        result = expect_result(
+            await run_program(
+                create_prescription_program(
+                    patient_id=seed_test_patient,
+                    doctor_id=seed_test_doctor,
+                    medication="Atorvastatin",
+                    dosage="10mg",
+                    frequency="Once daily",
+                    duration_days=30,
+                    refills_remaining=3,
+                    notes=to_optional_value("For cholesterol management"),
+                    actor_id=sample_user_id,
+                    existing_medications=[],
+                ),
+                composite_interpreter,
             ),
-            composite_interpreter,
+            PrescriptionCreated,
         )
 
-        assert isinstance(result, PrescriptionCreated)
         prescription = result.prescription
 
         # CRITICAL: Verify Redis pub/sub message received (antipattern #13)

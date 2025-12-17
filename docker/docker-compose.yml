@@ -9,6 +9,9 @@ services:
     container_name: effectful
     volumes:
       - ..:/app  # Mount source code for development
+      - effectful-pytest-cache:/app/.pytest_cache
+      - effectful-mypy-cache:/app/.mypy_cache
+      - effectful-ruff-cache:/app/.ruff_cache
     environment:
       # PostgreSQL
       POSTGRES_HOST: postgres
@@ -189,6 +192,12 @@ volumes:
   effectful-prometheusdata:
     driver: local
   effectful-grafanadata:
+    driver: local
+  effectful-pytest-cache:
+    driver: local
+  effectful-mypy-cache:
+    driver: local
+  effectful-ruff-cache:
     driver: local
 
 networks:

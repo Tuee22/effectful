@@ -197,6 +197,8 @@ from effectful.interpreters.errors import (
     DatabaseError,
     InterpreterError,
     MessagingError,
+    ObservabilityError,
+    RuntimeAssemblyError,
     StorageError,
     UnhandledEffectError,
     WebSocketClosedError,
@@ -314,6 +316,8 @@ __all__ = [
     "CacheError",
     "DatabaseError",
     "MessagingError",
+    "ObservabilityError",
+    "RuntimeAssemblyError",
     "StorageError",
     "WebSocketClosedError",
     # Program types

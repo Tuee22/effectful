@@ -31,6 +31,7 @@
 - pytest-timeout default is 60s **per test** (unit, integration, e2e), including fixture setup/teardown; increase per test only with evidence, never disable globally.
 - Use `mocker.AsyncMock(spec=Protocol)` for infrastructure fakes; fixtures in `tests/fixtures/` seed deterministic data.
 - Integration/e2e tests require Docker services running; they operate on real infra and may TRUNCATE/seed state per test.
+- Tests run **only inside Docker via Poetry** (`docker compose -f <compose> exec <service> poetry run pytest ...`); never invoke `pytest` or `poetry run pytest` on the host (see documents/engineering/docker_workflow.md#forbidden-running-pytest-locally).
 
 ## Commit & Pull Request Guidelines
 

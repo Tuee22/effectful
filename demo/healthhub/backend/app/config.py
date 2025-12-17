@@ -60,6 +60,9 @@ class Settings(BaseSettings):
     cors_allow_methods: list[str] = ["*"]
     cors_allow_headers: list[str] = ["*"]
 
+    # Frontend assets
+    frontend_build_path: str = "/opt/healthhub/frontend-build/build"
+
     @property
     def database_url(self) -> str:
         """Build PostgreSQL connection URL."""

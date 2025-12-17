@@ -27,197 +27,243 @@ By the end of this tutorial, you will:
 
 ______________________________________________________________________
 
-## Step 1: Infrastructure setup
+## Step 1: Settings boundary (single injection point)
 
-### PostgreSQL Configuration
-
-**Install Dependencies**:
-
-```bash
-# For library users adding effectful to YOUR application
-poetry add asyncpg
-
-# For effectful contributors (inside Docker)
-docker compose -f docker/docker-compose.yml exec effectful poetry add asyncpg
-```
-
-**Connection Pool Setup**:
+Create a frozen Pydantic settings class and instantiate it **only** inside the FastAPI lifespan. All downstream assembly flows derive from this instance.
 
 ```python
-# file: examples/05_production_deployment.py
-# src/infrastructure/database.py
-import asyncpg
-from contextlib import asynccontextmanager
-from typing import AsyncIterator
+# config.py
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-DATABASE_URL = "postgresql://user:password@localhost:5432/mydb"
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(frozen=True, extra="ignore")
 
-# Create connection pool
-db_pool: asyncpg.Pool | None = None
+    postgres_host: str
+    postgres_port: int
+    postgres_db: str
+    postgres_user: str
+    postgres_password: str
+    redis_host: str
+    redis_port: int
+    redis_db: int = 0
 
-async def init_database_pool() -> None:
-    """Initialize PostgreSQL connection pool."""
-    global db_pool
-    db_pool = await asyncpg.create_pool(
-        dsn=DATABASE_URL,
-        min_size=5,          # Minimum connections
-        max_size=20,         # Maximum connections
-        command_timeout=60.0, # Query timeout (seconds)
-        max_inactive_connection_lifetime=300.0,  # 5 minutes
-    )
-
-async def close_database_pool() -> None:
-    """Close PostgreSQL connection pool."""
-    global db_pool
-    if db_pool is not None:
-        await db_pool.close()
-
-@asynccontextmanager
-async def get_db_connection() -> AsyncIterator[asyncpg.Connection]:
-    """Get a database connection from the pool."""
-    if db_pool is None:
-        raise RuntimeError("Database pool not initialized")
-
-    async with db_pool.acquire() as connection:
-        yield connection
-```
-
-### Redis Configuration
-
-**Install Dependencies**:
-
-```bash
-# For library users adding effectful to YOUR application
-poetry add redis[hiredis]
-
-# For effectful contributors (inside Docker)
-docker compose -f docker/docker-compose.yml exec effectful poetry add redis[hiredis]
-```
-
-**Connection Pool Setup**:
-
-```python
-# file: examples/05_production_deployment.py
-# src/infrastructure/cache.py
-import redis.asyncio as aioredis
-
-REDIS_URL = "redis://localhost:6379/0"
-
-# Create Redis connection pool
-redis_pool: aioredis.Redis | None = None
-
-async def init_redis_pool() -> None:
-    """Initialize Redis connection pool."""
-    global redis_pool
-    redis_pool = await aioredis.from_url(
-        REDIS_URL,
-        encoding="utf-8",
-        decode_responses=True,
-        max_connections=10,
-    )
-
-async def close_redis_pool() -> None:
-    """Close Redis connection pool."""
-    global redis_pool
-    if redis_pool is not None:
-        await redis_pool.close()
-
-def get_redis() -> aioredis.Redis:
-    """Get Redis connection from pool."""
-    if redis_pool is None:
-        raise RuntimeError("Redis pool not initialized")
-    return redis_pool
+    app_name: str = "Effectful Demo"
+    app_env: str = "production"
+    api_prefix: str = "/api"
+    cors_origins: list[str] = ["http://localhost:8000"]
+    cors_allow_credentials: bool = True
+    cors_allow_methods: list[str] = ["*"]
+    cors_allow_headers: list[str] = ["*"]
 ```
 
 ______________________________________________________________________
 
-## Step 2: FastAPI integration
+## Step 2: Pure startup/shutdown programs
 
-### Application Lifespan
+Use the core runtime effects to model middleware, routing, static mounts, observability, and infrastructure handles as pure data. Programs return opaque handles (`ResourceHandle`) on success.
 
 ```python
-# file: examples/05_production_deployment.py
-# src/main.py
-from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket
-from effectful import run_ws_program, create_composite_interpreter
+# programs/startup.py
+from collections.abc import Generator
+from dataclasses import dataclass
+from effectful.effects.runtime import (
+    CloseDatabasePool,
+    CloseRedisClientFactory,
+    ConfigureCors,
+    CreateDatabasePool,
+    CreateRedisClientFactory,
+    IncludeRouter,
+    MountStatic,
+    RegisterHttpRoute,
+    ResourceHandle,
+    RuntimeEffect,
+    SetAppMetadata,
+)
+from fastapi.responses import Response
+from prometheus_client import CONTENT_TYPE_LATEST, REGISTRY, generate_latest
 
-from src.infrastructure.database import init_database_pool, close_database_pool
-from src.infrastructure.cache import init_redis_pool, close_redis_pool
+@dataclass(frozen=True)
+class RouterSpec:
+    router: object
+    prefix: str
+    tags: tuple[str, ...]
+
+@dataclass(frozen=True)
+class StaticMountSpec:
+    path: str
+    directory: str
+    name: str
+
+@dataclass(frozen=True)
+class StartupAssembly:
+    app: ResourceHandle[object]
+    db_pool: ResourceHandle[object]
+    redis_factory: ResourceHandle[object]
+
+async def _metrics() -> Response:
+    return Response(content=generate_latest(REGISTRY), media_type=CONTENT_TYPE_LATEST)
+
+def startup_program(
+    settings: Settings,
+    app_handle: ResourceHandle[object],
+    routers: tuple[RouterSpec, ...],
+    static_mounts: tuple[StaticMountSpec, ...],
+) -> Generator[RuntimeEffect, ResourceHandle[object], StartupAssembly]:
+    yield SetAppMetadata(
+        app=app_handle,
+        title=settings.app_name,
+        description="Effectful production deployment",
+        version="1.0.0",
+    )
+    yield ConfigureCors(
+        app=app_handle,
+        allow_origins=tuple(settings.cors_origins),
+        allow_credentials=settings.cors_allow_credentials,
+        allow_methods=tuple(settings.cors_allow_methods),
+        allow_headers=tuple(settings.cors_allow_headers),
+    )
+    for spec in routers:
+        yield IncludeRouter(app=app_handle, router=spec.router, prefix=spec.prefix, tags=spec.tags)
+    for mount in static_mounts:
+        yield MountStatic(app=app_handle, path=mount.path, directory=mount.directory, name=mount.name)
+
+    yield RegisterHttpRoute(
+        app=app_handle,
+        path="/metrics",
+        endpoint=_metrics,
+        methods=("GET",),
+        include_in_schema=False,
+        response_model=None,
+    )
+
+    redis_handle = yield CreateRedisClientFactory(
+        host=settings.redis_host, port=settings.redis_port, db=settings.redis_db
+    )
+    pool_handle = yield CreateDatabasePool(
+        host=settings.postgres_host,
+        port=settings.postgres_port,
+        database=settings.postgres_db,
+        user=settings.postgres_user,
+        password=settings.postgres_password,
+        min_size=5,
+        max_size=20,
+        command_timeout=60.0,
+    )
+    return StartupAssembly(app=app_handle, db_pool=pool_handle, redis_factory=redis_handle)
+
+def shutdown_program(startup: StartupAssembly) -> Generator[RuntimeEffect, object, None]:
+    yield CloseRedisClientFactory(handle=startup.redis_factory)
+    yield CloseDatabasePool(handle=startup.db_pool)
+```
+
+______________________________________________________________________
+
+## Step 3: Interpreter + FastAPI lifespan
+
+Keep I/O confined to the interpreter. Lifespan constructs settings, runs the pure program with `run_ws_program`, stores handles on `app.state`, and runs teardown on shutdown.
+
+```python
+# main.py
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from fastapi.routing import APIRouter
+from fastapi.staticfiles import StaticFiles
+import asyncpg
+import redis.asyncio as redis
+
+from effectful.algebraic.result import Err, Ok
+from effectful.effects.runtime import (
+    CreateDatabasePool,
+    CreateRedisClientFactory,
+    MountStatic,
+    ResourceHandle,
+)
+from effectful.interpreters.runtime import RuntimeInterpreter
+from effectful.programs.runners import run_ws_program
+
+from config import Settings
+from programs.startup import RouterSpec, StaticMountSpec, startup_program, shutdown_program
+
+async def _create_asyncpg_pool(effect: CreateDatabasePool) -> ResourceHandle[asyncpg.Pool]:
+    pool = await asyncpg.create_pool(
+        host=effect.host,
+        port=effect.port,
+        database=effect.database,
+        user=effect.user,
+        password=effect.password,
+        min_size=effect.min_size,
+        max_size=effect.max_size,
+        command_timeout=effect.command_timeout,
+    )
+    return ResourceHandle(kind="database_pool", resource=pool)
+
+class RedisFactory:
+    def __init__(self, host: str, port: int, db: int) -> None:
+        self._host, self._port, self._db = host, port, db
+    def create(self) -> redis.Redis[bytes]:
+        return redis.Redis(host=self._host, port=self._port, db=self._db, decode_responses=False)
+    async def close(self) -> None:  # matches CloseRedisClientFactory expectation
+        return None
+    async def managed(self):
+        client = self.create()
+        try:
+            yield client
+        finally:
+            await client.aclose()
+
+async def _create_redis_factory(
+    effect: CreateRedisClientFactory,
+) -> ResourceHandle[RedisFactory]:
+    factory = RedisFactory(effect.host, effect.port, effect.db)
+    return ResourceHandle(kind="redis_factory", resource=factory)
+
+async def _mount_static(effect: MountStatic) -> None:
+    app: FastAPI = effect.app.resource
+    app.mount(effect.path, StaticFiles(directory=effect.directory), name=effect.name)
+
+runtime_interpreter = RuntimeInterpreter(
+    create_db_pool=_create_asyncpg_pool,
+    close_db_pool=lambda eff: eff.handle.resource.close(),
+    create_redis_factory=_create_redis_factory,
+    close_redis_factory=lambda eff: eff.handle.resource.close(),
+    mount_static=_mount_static,
+    # include_router, configure_cors, set_app_metadata, register_route can rely on FastAPI defaults
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Manage application lifespan: startup and shutdown."""
-    # Startup
-    await init_database_pool()
-    await init_redis_pool()
+    settings = Settings()
+    app_handle = ResourceHandle(kind="fastapi_app", resource=app)
+
+    routers = (RouterSpec(router=APIRouter(), prefix=f"{settings.api_prefix}/health", tags=("health",)),)
+    static_dir = "/opt/frontend-build/static"
+    static_mounts = (
+        StaticMountSpec(path="/static", directory=static_dir, name="static"),
+    )
+
+    startup_result = await run_ws_program(
+        startup_program(settings, app_handle=app_handle, routers=routers, static_mounts=static_mounts),
+        runtime_interpreter,
+    )
+    match startup_result:
+        case Ok(startup):
+            app.state.startup = startup
+        case Err(error):
+            raise RuntimeError(f"Startup failed: {error}")
+    app.state.settings = settings
     yield
-    # Shutdown
-    await close_database_pool()
-    await close_redis_pool()
+
+    shutdown_result = await run_ws_program(shutdown_program(app.state.startup), runtime_interpreter)
+    match shutdown_result:
+        case Ok():
+            pass
+        case Err(error):
+            raise RuntimeError(f"Shutdown failed: {error}")
 
 app = FastAPI(lifespan=lifespan)
 ```
 
-### WebSocket Endpoint
-
-```python
-# file: examples/05_production_deployment.py
-from fastapi import WebSocket, WebSocketDisconnect
-from effectful.adapters.postgres import PostgresUserRepository, PostgresChatMessageRepository
-from effectful.adapters.redis_cache import RedisProfileCache
-from effectful.adapters.websocket_connection import FastAPIWebSocketConnection
-
-from src.programs.chat import chat_program
-
-@app.websocket("/ws/chat")
-async def websocket_chat_endpoint(websocket: WebSocket) -> None:
-    """WebSocket endpoint for chat application."""
-    await websocket.accept()
-
-    try:
-        # Create infrastructure connections
-        async with get_db_connection() as db_conn:
-            # Create repositories
-            user_repo = PostgresUserRepository(connection=db_conn)
-            message_repo = PostgresChatMessageRepository(connection=db_conn)
-            cache = RedisProfileCache(redis=get_redis())
-
-            # Create WebSocket connection wrapper
-            ws_conn = FastAPIWebSocketConnection(websocket)
-
-            # Create interpreter
-            interpreter = create_composite_interpreter(
-                websocket_connection=ws_conn,
-                user_repo=user_repo,
-                message_repo=message_repo,
-                cache=cache,
-            )
-
-            # Run program with timeout
-            result = await asyncio.wait_for(
-                run_ws_program(chat_program(), interpreter),
-                timeout=300.0  # 5 minutes max
-            )
-
-            # Handle result
-            match result:
-                case Ok(_):
-                    logger.info("Chat program completed successfully")
-                case Err(error):
-                    logger.error(f"Chat program failed: {error}")
-
-    except WebSocketDisconnect:
-        logger.info("Client disconnected")
-    except asyncio.TimeoutError:
-        logger.error("Chat program timeout")
-        await websocket.close(code=1008, reason="Timeout")
-    except Exception as e:
-        logger.exception(f"Unexpected error: {e}")
-        await websocket.close(code=1011, reason="Internal error")
-```
-
-______________________________________________________________________
+This pattern satisfies the Purity Migration Plan: settings are the only injected input, interpreters own all I/O, and startup/shutdown flows are pure effect programs returning handles. Any demo overlays should link back to `architecture.md#pure-interpreter-assembly-doctrine` and describe deltas only.
 
 ## Step 3: Error monitoring
 
@@ -329,8 +375,6 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
-
-settings = Settings()
 ```
 
 **Environment File (.env)**:
@@ -558,12 +602,43 @@ ______________________________________________________________________
 
 ### ✅ DO
 
-1. **Use Connection Pools**
+1. **Use Pure Startup Programs for Pools/Infra**
 
    ```python
    # file: examples/05_production_deployment.py
-   db_pool = await asyncpg.create_pool(dsn=DATABASE_URL, min_size=5, max_size=20)
+   from pathlib import Path
+   from fastapi import APIRouter, FastAPI
+   from effectful.algebraic.result import Err, Ok
+   from effectful.effects.runtime import ResourceHandle
+   from effectful.programs.runners import run_ws_program
+   from app.config import Settings
+   from app.interpreters.runtime_interpreter import build_runtime_interpreter
+   from app.programs.startup import RouterSpec, StaticMountSpec, startup_program
+
+   app = FastAPI()
+   router = APIRouter()
+   runtime = build_runtime_interpreter()
+   settings = Settings()
+   app_handle = ResourceHandle(kind="fastapi_app", resource=app)
+
+   match await run_ws_program(
+       startup_program(
+           settings,
+           app_handle=app_handle,
+           routers=(RouterSpec(router=router, prefix="/api", tags=("api",)),),
+           static_mounts=(StaticMountSpec(path="/static", directory="/opt/frontend", name="static"),),
+           frontend_build_path=Path("/opt/frontend"),
+       ),
+       runtime,
+   ):
+       case Ok(assembly):
+           db_pool = assembly.database_pool.resource
+           redis_factory = assembly.redis_factory.resource
+       case Err(error):
+           raise RuntimeError(f"Startup failed: {error}")
    ```
+
+   (Pure program describes wiring; interpreter owns I/O. See `documents/engineering/architecture.md#pure-interpreter-assembly-doctrine`.)
 
 1. **Configure Timeouts**
 
@@ -596,11 +671,11 @@ ______________________________________________________________________
 
 ### ❌ DON'T
 
-1. **Don't Create Connections Per Request**
+1. **Don't Create Connections Per Request or Outside Interpreters**
 
    ```python
    # file: examples/05_production_deployment.py
-   # ❌ Creates new connection every request
+   # ❌ Imperative wiring that bypasses the pure interpreter boundary
    conn = await asyncpg.connect(DATABASE_URL)
    ```
 

@@ -10,7 +10,7 @@ import { AppointmentDetail } from '../components/appointments/AppointmentDetail'
 import './AppointmentDetailPage.css'
 
 export const AppointmentDetailPage = () => {
-  const { appointmentId } = useParams<{ appointmentId: string }>()
+  const { id: appointmentId } = useParams<{ id: string }>()
   const { currentAppointment, fetchAppointment, transitionStatus } = useAppointments()
 
   useEffect(() => {

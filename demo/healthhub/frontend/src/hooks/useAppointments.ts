@@ -2,7 +2,7 @@
  * useAppointments hook - Convenience wrapper for appointment store.
  */
 
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useAppointmentStore } from '../stores/appointmentStore'
 import { useAuth } from './useAuth'
 import { isSuccess, isLoading, isFailure, isNotAsked } from '../algebraic/RemoteData'
@@ -39,32 +39,46 @@ export const useAppointments = () => {
     error: isFailure(currentAppointment) ? currentAppointment.error : null,
 
     // Actions (with token injection)
-    fetchAppointment: async (appointmentId: string) => {
-      const token = await getValidAccessToken()
-      if (token) {
-        await fetchAppointmentAction(appointmentId, token)
-      }
-    },
-    fetchAppointments: async (statusFilter?: string) => {
-      const token = await getValidAccessToken()
-      if (token) {
-        await fetchAppointmentsAction(token, statusFilter)
-      }
-    },
-    createAppointment: async (data: Parameters<typeof createAppointmentAction>[0]) => {
-      const token = await getValidAccessToken()
-      if (!token) {
-        return false
-      }
-      return createAppointmentAction(data, token)
-    },
-    transitionStatus: async (appointmentId: string, newStatus: string) => {
-      const token = await getValidAccessToken()
-      if (token && userId) {
-        return transitionStatusAction(appointmentId, newStatus, userId, token)
-      }
-      return Promise.resolve(false)
-    },
-    clearCurrentAppointment,
+    fetchAppointment: useCallback(
+      async (appointmentId: string) => {
+        const token = await getValidAccessToken()
+        if (token) {
+          await fetchAppointmentAction(appointmentId, token)
+        }
+      },
+      [fetchAppointmentAction, getValidAccessToken]
+    ),
+    fetchAppointments: useCallback(
+      async (statusFilter?: string) => {
+        const token = await getValidAccessToken()
+        if (token) {
+          await fetchAppointmentsAction(token, statusFilter)
+        }
+      },
+      [fetchAppointmentsAction, getValidAccessToken]
+    ),
+    createAppointment: useCallback(
+      async (data: Parameters<typeof createAppointmentAction>[0]) => {
+        const token = await getValidAccessToken()
+        if (!token) {
+          return false
+        }
+        return createAppointmentAction(data, token)
+      },
+      [createAppointmentAction, getValidAccessToken]
+    ),
+    transitionStatus: useCallback(
+      async (appointmentId: string, newStatus: string) => {
+        const token = await getValidAccessToken()
+        if (token && userId) {
+          return transitionStatusAction(appointmentId, newStatus, userId, token)
+        }
+        return Promise.resolve(false)
+      },
+      [getValidAccessToken, transitionStatusAction, userId]
+    ),
+    clearCurrentAppointment: useCallback(() => {
+      clearCurrentAppointment()
+    }, [clearCurrentAppointment]),
   }
 }

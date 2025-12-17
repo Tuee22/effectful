@@ -145,33 +145,26 @@ See [Docker Workflow](docker_workflow.md) for rationale on named volumes vs bind
 
 See [Observability](observability.md) for production monitoring standards.
 
-## Connection Pooling
+## Connection Assembly (pure-first)
 
-**PostgreSQL** (asyncpg):
+Follow the **Pure Interpreter Assembly Doctrine** (`architecture.md#pure-interpreter-assembly-doctrine`):
+
+- Settings are instantiated once inside the FastAPI lifespan.
+- Startup/shutdown flows are pure programs that yield runtime effects (SetAppMetadata, ConfigureCors, CreateDatabasePool, CreateRedisClientFactory, CreateObservabilityInterpreter, MountStatic, RegisterHttpRoute).
+- Interpreters own all I/O (asyncpg pool creation/close, Redis factory lifecycle, Prometheus registry binding); programs return opaque `ResourceHandle`s.
+
+Example pattern:
 
 ```python
-# file: examples/configuration.py
-pool = await asyncpg.create_pool(
-    host=os.environ["POSTGRES_HOST"],
-    port=int(os.environ["POSTGRES_PORT"]),
-    database=os.environ["POSTGRES_DB"],
-    user=os.environ["POSTGRES_USER"],
-    password=os.environ["POSTGRES_PASSWORD"],
-    min_size=5,
-    max_size=20,
+# FastAPI lifespan (inside container exec … poetry run …)
+app_handle = ResourceHandle(kind="fastapi_app", resource=app)
+startup_result = await run_ws_program(
+    startup_program(settings, app_handle=app_handle, routers=routers, static_mounts=mounts),
+    build_runtime_interpreter(),
 )
 ```
 
-**Redis** (redis-py):
-
-```python
-# file: examples/configuration.py
-pool = redis.ConnectionPool(
-    host=os.environ["REDIS_HOST"],
-    port=int(os.environ["REDIS_PORT"]),
-    max_connections=10,
-)
-```
+Avoid host-level `asyncpg.create_pool`/`redis.ConnectionPool` snippets; they bypass the pure boundary and reintroduce imperative wiring.
 
 ## See Also
 

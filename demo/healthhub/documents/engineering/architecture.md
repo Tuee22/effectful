@@ -12,6 +12,7 @@
 This follows base with no changes beyond service name (`healthhub`) and compose location.
 
 Domain modelling, architecture overview, and medication interaction handling all defer to the base architecture doc; apply HealthHub-specific ports, credentials, and service names where applicable.
+Startup/config assembly follows the base **Pure Interpreter Assembly Doctrine** (`../../../../documents/engineering/architecture.md#pure-interpreter-assembly-doctrine`); no HealthHub-specific deviations beyond settings values/paths.
 
 ## Cross-References
 

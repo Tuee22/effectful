@@ -157,6 +157,34 @@ class AuthError:
     is_retryable: bool
 
 
+@dataclass(frozen=True)
+class ObservabilityError:
+    """Observability operation failed.
+
+    Attributes:
+        effect: The effect that was being interpreted
+        observability_error: Error message from observability client
+        is_retryable: Whether retry might succeed (transient registry issues)
+    """
+
+    effect: Effect
+    observability_error: str
+    is_retryable: bool
+
+
+@dataclass(frozen=True)
+class RuntimeAssemblyError:
+    """Runtime assembly step failed (e.g., router mount, CORS wiring).
+
+    Attributes:
+        effect: The effect that failed
+        runtime_error: Descriptive error message
+    """
+
+    effect: Effect
+    runtime_error: str
+
+
 # ADT: Union of all interpreter errors using PEP 695 type statement
 type InterpreterError = (
     UnhandledEffectError
@@ -166,4 +194,6 @@ type InterpreterError = (
     | MessagingError
     | StorageError
     | AuthError
+    | ObservabilityError
+    | RuntimeAssemblyError
 )

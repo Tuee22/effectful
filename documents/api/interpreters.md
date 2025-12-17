@@ -663,45 +663,57 @@ ______________________________________________________________________
 
 ## Production Configuration
 
-### Connection Pooling
+### Connection Pooling (pure interpreter assembly)
 
-Use connection pools for production workloads:
+Follow the **Pure Interpreter Assembly Doctrine** (`../engineering/architecture.md#pure-interpreter-assembly-doctrine`): pure programs describe the wiring; interpreters perform I/O and return opaque `ResourceHandle`s.
 
 ```python
 # file: examples/interpreters.py
-import asyncpg
-import aioredis
+from fastapi import APIRouter, FastAPI
+from pathlib import Path
 
-# PostgreSQL connection pool
-db_pool = await asyncpg.create_pool(
-    dsn=DATABASE_URL,
-    min_size=5,
-    max_size=20,
-    command_timeout=60.0,
+from effectful.algebraic.result import Err, Ok
+from effectful.effects.runtime import ResourceHandle
+from effectful.interpreters.runtime import RuntimeInterpreter
+from effectful.programs.runners import run_ws_program
+
+from app.programs.startup import RouterSpec, StaticMountSpec, startup_program
+from app.interpreters.runtime_interpreter import build_runtime_interpreter
+from app.config import Settings
+
+app = FastAPI()
+app_handle = ResourceHandle(kind="fastapi_app", resource=app)
+runtime: RuntimeInterpreter = build_runtime_interpreter()
+settings = Settings()  # Settings instantiated once at the lifespan boundary
+router = APIRouter()
+
+startup_result = await run_ws_program(
+    startup_program(
+        settings,
+        app_handle=app_handle,
+        routers=(RouterSpec(router=router, prefix="/api", tags=("api",)),),
+        static_mounts=(
+            StaticMountSpec(path="/static", directory="/opt/frontend/static", name="static"),
+        ),
+        frontend_build_path=Path("/opt/frontend"),
+    ),
+    runtime,
 )
+match startup_result:
+    case Ok(startup_assembly):
+        pass
+    case Err(error):
+        raise RuntimeError(f"startup failed: {error}")
 
-# Redis connection pool
-redis_pool = await aioredis.create_redis_pool(
-    REDIS_URL,
-    minsize=5,
-    maxsize=10,
-)
+# Production resources are opaque handles owned by the interpreter
+db_pool = startup_assembly.database_pool.resource
+redis_factory = startup_assembly.redis_factory.resource
 
-# Use pooled connections
-async with db_pool.acquire() as db_conn:
-    user_repo = PostgresUserRepository(connection=db_conn)
-    message_repo = PostgresChatMessageRepository(connection=db_conn)
+async with db_pool.acquire() as conn:
+    ...
 
-    cache = RedisProfileCache(redis=redis_pool)
-
-    interpreter = create_composite_interpreter(
-        websocket_connection=ws_conn,
-        user_repo=user_repo,
-        message_repo=message_repo,
-        cache=cache,
-    )
-
-    result = await run_ws_program(my_program(), interpreter)
+async with redis_factory.managed() as redis_client:
+    ...
 ```
 
 ### Error Monitoring

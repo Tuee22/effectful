@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
-from typing import Annotated
+from typing import Annotated, AsyncIterator
 
 from fastapi import Depends, HTTPException, Request, status
 import redis.asyncio as redis
 
+from app.container import ApplicationContainer
 from app.config import Settings
 
 
@@ -67,21 +68,13 @@ class RateLimiter:
         return int(current_count) < max_requests
 
 
-def get_rate_limiter(request: Request) -> RateLimiter:
-    """Dependency to get rate limiter instance.
-
-    DEPRECATED: This creates a new Redis client on every request which is inefficient.
-    Rate limiting should be refactored to use RedisClientFactory from container.
-    For now, we get settings from app.state to avoid singleton pattern violation.
-    """
-    settings: Settings = request.app.state.settings
-    redis_client: redis.Redis[bytes] = redis.Redis(
-        host=settings.redis_host,
-        port=settings.redis_port,
-        db=settings.redis_db,
-        decode_responses=False,
-    )
-    return RateLimiter(RedisWrapper(redis_client))
+async def get_rate_limiter(
+    request: Request,
+) -> AsyncIterator[RateLimiter]:
+    """Dependency to get rate limiter instance using container-managed factory."""
+    container: ApplicationContainer = request.app.state.container
+    async with container.redis_factory.managed() as client:
+        yield RateLimiter(RedisWrapper(client))
 
 
 def rate_limit(
@@ -101,20 +94,20 @@ def rate_limit(
         request: Request,
         limiter: Annotated[RateLimiter, Depends(get_rate_limiter)],
     ) -> None:
-        try:
-            # Use IP address as rate limit key
-            ip_address = request.client.host if request.client else "unknown"
-            endpoint = request.url.path
-            key = f"rate_limit:{endpoint}:{ip_address}"
+        settings: Settings | None = getattr(request.app.state, "settings", None)
+        if settings is not None and settings.app_env != "production":
+            return None
+        # Use IP address as rate limit key
+        ip_address = request.client.host if request.client else "unknown"
+        endpoint = request.url.path
+        key = f"rate_limit:{endpoint}:{ip_address}"
 
-            allowed = await limiter.check_rate_limit(key, max_requests, window_seconds)
+        allowed = await limiter.check_rate_limit(key, max_requests, window_seconds)
 
-            if not allowed:
-                raise HTTPException(
-                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                    detail=f"Rate limit exceeded. Max {max_requests} requests per {window_seconds} seconds.",
-                )
-        finally:
-            await limiter.redis_client.close()
+        if not allowed:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Rate limit exceeded. Max {max_requests} requests per {window_seconds} seconds.",
+            )
 
     return rate_limit_dependency

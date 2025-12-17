@@ -12,6 +12,7 @@
 
 | Kind         | ID                                                  | Name                  | Module                            | Doc                                                                       |
 | ------------ | --------------------------------------------------- | --------------------- | --------------------------------- | ------------------------------------------------------------------------- |
+| ADT          | effectful.core.Result                               | Result                | effectful.core                    | [intro.md](../dsl/intro.md)                                               |
 | ADT          | effectful.domain.cache_result.CacheLookupResult     | CacheLookupResult     | effectful.domain.cache_result     | [adts_and_results.md](../tutorials/adts_and_results.md)                   |
 | ADT          | effectful.domain.message_envelope.AcknowledgeResult | AcknowledgeResult     | effectful.domain.message_envelope | [messaging.md](../api/messaging.md)                                       |
 | ADT          | effectful.domain.message_envelope.ConsumeResult     | ConsumeResult         | effectful.domain.message_envelope | [messaging.md](../api/messaging.md)                                       |
@@ -26,6 +27,10 @@
 | ADT          | effectful.domain.token_result.TokenRefreshResult    | TokenRefreshResult    | effectful.domain.token_result     | [auth.md](../api/auth.md)                                                 |
 | ADT          | effectful.domain.token_result.TokenValidationResult | TokenValidationResult | effectful.domain.token_result     | [auth.md](../api/auth.md)                                                 |
 | ADT          | effectful.domain.user.UserLookupResult              | UserLookupResult      | effectful.domain.user             | [adts_and_results.md](../tutorials/adts_and_results.md)                   |
+| ADT          | effectful.std.Effect                                | Effect                | effectful.std                     | [intro.md](../dsl/intro.md)                                               |
+| ADT          | effectful.std.db.DbFailure                          | DbFailure             | effectful.std.db                  | [intro.md](../dsl/intro.md)                                               |
+| ADT          | effectful.std.db.DbMode                             | DbMode                | effectful.std.db                  | [intro.md](../dsl/intro.md)                                               |
+| StateMachine | healthhub.auth.AuthFlow                             | AuthFlow              | healthhub.auth                    | [intro.md](../dsl/intro.md)                                               |
 | StateMachine | product.appointments.Lifecycle                      | Lifecycle             | product.appointments              | [appointment_lifecycle.md](../product/workflows/appointment_lifecycle.md) |
 
 ## Cross-References

@@ -16,6 +16,7 @@ ______________________________________________________________________
 - Authoritative docs use `**Status**: Authoritative source` in their metadata header.
 - When an authoritative doc replaces an older one, set `Supersedes` accordingly.
 - Demo/overlay docs must list **deltas only** and link back to the base SSoT.
+- **Pure interpreter assembly SSoT**: The canonical statement lives in `documents/engineering/architecture.md#pure-interpreter-assembly-doctrine`. Any doc describing startup/config flows must link to that section; overlays note only deltas.
 
 ### 1.2 DRY + link liberally
 
