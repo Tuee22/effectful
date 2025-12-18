@@ -206,6 +206,8 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tes
 docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tests/unit/test_interpreters/test_cache.py
 ```
 
+Pytest cache placement is configured in `pyproject.toml` (`cache_dir = "/opt/pytest_cache"`) so caches stay under `/opt/**` inside the container per [Build Artifact Management](build_artifact_management.md#cache-placement-contract); do not pass the deprecated `--cache-dir` CLI flag (removed in pytest 7.4+).
+
 **Pre-flight:** always run `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code` (includes docs/tooling) before invoking pytest.
 
 ### Why Docker-Only?

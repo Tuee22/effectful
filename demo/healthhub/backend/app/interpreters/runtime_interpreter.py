@@ -85,7 +85,8 @@ def _require_fastapi(handle: ResourceHandle[object]) -> FastAPI:
 async def _configure_cors(effect: ConfigureCors) -> None:
     app = _require_fastapi(effect.app)
     for middleware in app.user_middleware:
-        if middleware.cls is CORSMiddleware:
+        middleware_cls = middleware.cls
+        if isinstance(middleware_cls, type) and issubclass(middleware_cls, CORSMiddleware):
             app.state.cors_configured = True
             return
     if getattr(app.state, "cors_configured", False):

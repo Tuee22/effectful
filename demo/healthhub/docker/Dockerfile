@@ -6,17 +6,21 @@ FROM python:3.12-slim
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Environment variables (ShipNorth pattern)
-ENV PYTHONUNBUFFERED=1 \
+ENV PYTHONPYCACHEPREFIX=/opt/healthhub/pycache \
+    PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     POETRY_NO_INTERACTION=1 \
     PYTHONPATH=/app/effectful-root:/app/effectful-root/demo/healthhub:/app/effectful-root/demo/healthhub/backend \
-    DOCKER_CONTAINER=1
+    MYPY_CACHE_DIR=/opt/healthhub/mypy_cache \
+    XDG_CACHE_HOME=/opt/healthhub/cache \
+    RUFF_CACHE_DIR=/opt/healthhub/ruff_cache
 
 WORKDIR /app
 
 # Create directories for build artifacts (ShipNorth pattern)
-RUN mkdir -p /opt/healthhub/backend-build /opt/healthhub/frontend-build
+RUN mkdir -p /opt/healthhub/backend-build /opt/healthhub/frontend-build \
+    /opt/healthhub/cache /opt/healthhub/mypy_cache /opt/healthhub/pytest_cache /opt/healthhub/ruff_cache
 
 # Install system dependencies including Node.js for Playwright
 RUN apt-get update && apt-get install -y --no-install-recommends \

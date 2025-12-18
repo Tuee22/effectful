@@ -14,6 +14,7 @@ from app.config import Settings
 from app.interpreters.runtime_interpreter import build_runtime_interpreter
 from app.programs.startup import (
     RouterSpec,
+    StartupAssembly,
     StaticMountSpec,
     shutdown_program,
     startup_program,
@@ -84,6 +85,7 @@ async def test_startup_and_shutdown_run_against_real_infrastructure(tmp_path: Pa
     )
     assert isinstance(startup_result, Ok)
     startup = startup_result.value
+    assert isinstance(startup, StartupAssembly)
 
     # Database handle works against real Postgres
     pool = startup.database_pool.resource

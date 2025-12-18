@@ -31,7 +31,7 @@ Act --> Reality
 
 TPM is not primarily a coding style. It is a discipline of **representation**:
 
-- If something can happen in reality, the model has a representation for it.
+- If somdething can happen in reality, the model has a representation for it.
 - If something cannot happen in reality, the model must not be able to represent it.
 - If the model does not decide, the system must not “guess”.
 

@@ -32,6 +32,7 @@ from app.domain.appointment import (
     InProgress,
     Requested,
     TransitionInvalid,
+    TransitionResult,
     TransitionSuccess,
 )
 from app.domain.doctor import Doctor
@@ -58,7 +59,7 @@ def expect_scheduled(
 
 
 def expect_transition_success(
-    result: TransitionSuccess | Result[TransitionSuccess, InterpreterFailure],
+    result: TransitionResult | Result[TransitionResult, InterpreterFailure],
 ) -> TransitionSuccess:
     if isinstance(result, (Ok, Err)):
         result = unwrap_program_result(result)
@@ -67,7 +68,7 @@ def expect_transition_success(
 
 
 def expect_transition_invalid(
-    result: TransitionInvalid | Result[TransitionInvalid, InterpreterFailure],
+    result: TransitionResult | Result[TransitionResult, InterpreterFailure],
 ) -> TransitionInvalid:
     if isinstance(result, (Ok, Err)):
         result = unwrap_program_result(result)

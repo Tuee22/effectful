@@ -6,7 +6,7 @@ from collections.abc import Generator
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TypeVar
+from typing import TypeVar, cast
 
 from asyncpg import Pool, Record
 from fastapi import FastAPI, Request
@@ -26,6 +26,7 @@ from effectful.effects.runtime import (
     IncludeRouter,
     MountStatic,
     RegisterHttpRoute,
+    RouteCallable,
     ResourceHandle,
     RuntimeEffect,
     SetAppMetadata,
@@ -220,8 +221,6 @@ def startup_program(
     )
 
     async def _serve_react_app(request: Request, full_path: str) -> FileResponse | JSONResponse:
-        if not isinstance(request, Request) or not isinstance(full_path, str):
-            raise TypeError("Unexpected request parameters for React app route")
         if full_path.startswith("api/") or full_path.startswith("health"):
             return JSONResponse({"error": "Not found"}, status_code=404)
 
@@ -240,7 +239,7 @@ def startup_program(
     yield RegisterHttpRoute(
         app=app_handle,
         path="/{full_path:path}",
-        endpoint=_serve_react_app,
+        endpoint=cast(RouteCallable, _serve_react_app),
         methods=("GET",),
         include_in_schema=False,
         response_model=None,

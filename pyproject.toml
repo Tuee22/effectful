@@ -59,6 +59,7 @@ addopts = [
     "--cov-report=html",
     "--cov-report=xml",
 ]
+cache_dir = "/opt/pytest_cache"
 timeout = 60
 timeout_method = "thread"
 markers = [

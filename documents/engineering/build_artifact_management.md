@@ -24,7 +24,7 @@ ______________________________________________________________________
 
 ### Locations
 
-- **Container-only outputs**: `/opt/**` (backend + frontend build products). These remain inside the container; do not copy them into the final image or host.
+- **Container-only outputs**: `/opt/**` (backend + frontend build products **including caches**). These remain inside the container; do not copy them into the final image or host, and do not map them back through bind mounts.
 - **Lockfiles as artifacts**: `poetry.lock`, `package-lock.json` are regenerated as part of dependency resolution and are not versioned.
 
 ### Rationale
@@ -46,7 +46,14 @@ ______________________________________________________________________
 
 - **Lockfiles**: `poetry.lock`, `package-lock.json` (regenerated during builds).
 - **Container build outputs**: Anything under `/opt/**` created during Docker builds.
-- **Caches/binaries**: `__pycache__/`, `.mypy_cache/`, `.pytest_cache/`, `dist/`, `build/`, `*.egg-info/`.
+- **Caches/binaries**: `__pycache__/`, `.mypy_cache/`, `.pytest_cache/`, `.ruff_cache/`, `dist/`, `build/`, `*.egg-info/`.
+  - **Placement rule**: All cache-style artifacts (`__pycache__`, `.mypy_cache`, `.pytest_cache`, `.ruff_cache`) must reside under `/opt/**` inside containers so they never appear in bind-mounted source trees.
+
+### Cache placement contract
+
+- **Location**: All runtime/tooling caches live under `/opt/**` (e.g., `/opt/mypy_cache`, `/opt/pytest_cache`, `/opt/ruff_cache`, `/opt/__pycache__` if created).
+- **Propagation**: These caches must not be bind-mounted back to the host; they are container-only artifacts.
+- **Configuration examples**: Set `MYPY_CACHE_DIR=/opt/mypy_cache`, `RUFF_CACHE_DIR=/opt/ruff_cache`, `XDG_CACHE_HOME=/opt/cache`, and `PYTHONDONTWRITEBYTECODE=1` to keep `__pycache__` out of the bind mount. For pytest, set `cache_dir = "/opt/pytest_cache"` in `[tool.pytest.ini_options]` (do **not** use the removed `--cache-dir` CLI flag from pytest 7.4+).
 
 ______________________________________________________________________
 
