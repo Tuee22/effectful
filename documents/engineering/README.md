@@ -2,7 +2,7 @@
 
 **Status**: Reference only\
 **Supersedes**: none\
-**Referenced by**: documents/readme.md, CLAUDE.md, contributing.md
+**Referenced by**: documents/readme.md, CLAUDE.md, contributing.md, engineering/warnings_policy.md
 
 > **Purpose**: Navigation hub for engineering practices, coding standards, and development workflows.
 > **📖 Authoritative Reference**: [Documentation Standards](../documentation_standards.md)
@@ -16,6 +16,7 @@ flowchart TB
   Hub[Engineering Hub SSoT]
   Arch[Architecture SSoT]
   CodeQuality[Code Quality SSoT]
+  Warnings[Warnings Policy SSoT]
   Testing[Testing SSoT]
   TestingArch[Testing Architecture SSoT]
   Docker[Docker Workflow SSoT]
@@ -25,6 +26,7 @@ flowchart TB
 
   Hub --> Arch
   Hub --> CodeQuality
+  Hub --> Warnings
   Hub --> Testing
   Hub --> TestingArch
   Hub --> Docker
@@ -42,6 +44,7 @@ flowchart TB
 | Understand system design          | [Architecture](architecture.md)                           |
 | Model authentication flows        | [Authentication](authentication.md)                       |
 | Write type-safe, pure code        | [Code Quality](code_quality.md)                           |
+| Enforce zero warnings             | [Warnings Policy](warnings_policy.md)                     |
 | Test programs correctly           | [Testing](testing.md)                                     |
 | Organize test suites and fixtures | [Testing Architecture](testing_architecture.md)           |
 | Set up development environment    | [Docker Workflow](docker_workflow.md)                     |
@@ -87,6 +90,12 @@ flowchart TB
 - Named volumes vs bind mounts
 - Forbidden local commands
 - Why Docker for all operations
+
+**[Warnings Policy](warnings_policy.md)** (new)
+
+- Zero-warning expectations across linting, builds, and runtime logs
+- Exception criteria for external library warnings
+- Enforcement links for check-code, tests, and Docker builds
 
 ## Development Guides
 
@@ -195,7 +204,7 @@ All engineering decisions flow from this principle. Every standard, pattern, and
 
 ## Document Status
 
-**Total**: 15 engineering documents (8 core + 7 guides)
+**Total**: 16 engineering documents (9 core + 7 guides)
 **Lines of Code**: ~7,600 lines of engineering documentation
 
 All engineering documents marked with "**SSoT**" are authoritative. When conflicts arise between documents, SSoT documents take precedence.
@@ -229,5 +238,6 @@ All engineering documents marked with "**SSoT**" are authoritative. When conflic
 - [Command Reference](command_reference.md) - All Docker commands
 - [Development Workflow](development_workflow.md) - Daily development loop
 - [Effect Patterns](effect_patterns.md) - Functional composition patterns
+- [Warnings Policy](warnings_policy.md) - Zero-warning standard and exceptions
 - [Documentation Standards](../documentation_standards.md) - SSoT and DRY principles
 - [Contributing Guide](../contributing.md) - How to contribute

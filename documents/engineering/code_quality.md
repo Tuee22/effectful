@@ -2,7 +2,7 @@
 
 **Status**: Authoritative source\
 **Supersedes**: type_safety_enforcement.md, purity.md\
-**Referenced by**: engineering/README.md, documents/readme.md
+**Referenced by**: engineering/README.md, documents/readme.md, engineering/warnings_policy.md
 
 > **Purpose**: Single Source of Truth for type safety, purity, and code quality enforcement in Effectful.
 
@@ -459,3 +459,4 @@ ______________________________________________________________________
 - **Documentation:** SSoT/DRY rules and mermaid safety in [documentation_standards.md](../documentation_standards.md).
 - **Architecture:** import boundaries and layer rules in [architecture.md](architecture.md).
 - **Effect Patterns:** canonical program and interpreter shapes in [effect_patterns.md](effect_patterns.md).
+- **Warnings Policy:** zero-warning enforcement and exceptions in [warnings_policy.md](warnings_policy.md).

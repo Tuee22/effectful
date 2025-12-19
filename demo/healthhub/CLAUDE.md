@@ -50,8 +50,9 @@ HealthHub commands follow the base pattern `docker compose -f docker/docker-comp
 ## 🐳 Docker Development Policy
 
 > **📖 Base**: [Effectful CLAUDE.md](../../CLAUDE.md) | [Docker Workflow SSoT](../../documents/engineering/docker_workflow.md)
+> **📖 HealthHub**: [Docker & Environment Variables](documents/engineering/docker.md) | [Build Artifact Management](documents/engineering/build_artifact_management.md)
 
-HealthHub follows base Docker-only policy. HealthHub-specific: requires real infrastructure services (PostgreSQL, Redis, Pulsar, MinIO) for integration tests. See [Docker Workflow](../../documents/engineering/docker_workflow.md) for complete policy.
+HealthHub follows base Docker-only policy. HealthHub-specific: requires real infrastructure services (PostgreSQL, Redis, Pulsar, MinIO) for integration tests, includes React frontend build, and uses `/opt/healthhub/` cache namespace. See [Docker Workflow](../../documents/engineering/docker_workflow.md) for complete policy and [HealthHub Docker](documents/engineering/docker.md) for HealthHub-specific configuration.
 
 ## 📊 Test Statistics
 

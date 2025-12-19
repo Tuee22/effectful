@@ -1,29 +1,50 @@
 # HealthHub Backend Dockerfile
-# Based on ShipNorth patterns for E2E testing
+# Ubuntu 22.04 LTS + Python 3.12 + Poetry + Node.js 20 + Playwright
 
-FROM python:3.12-slim
+FROM ubuntu:22.04
 
-ARG DEBIAN_FRONTEND=noninteractive
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive \
+    TZ=Etc/UTC
 
-# Environment variables (ShipNorth pattern)
-ENV PYTHONPYCACHEPREFIX=/opt/healthhub/pycache \
-    PYTHONUNBUFFERED=1 \
+# Environment variables (SSoT - all variables defined here, nowhere else)
+ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_BREAK_SYSTEM_PACKAGES=1 \
     POETRY_NO_INTERACTION=1 \
-    PYTHONPATH=/app/effectful-root:/app/effectful-root/demo/healthhub:/app/effectful-root/demo/healthhub/backend \
+    POETRY_HOME=/usr/local \
+    PATH="/usr/local/bin:${PATH}" \
+    PYTHONPATH="/app/effectful-root:/app/effectful-root/demo/healthhub:/app/effectful-root/demo/healthhub/backend" \
+    PYTHONPYCACHEPREFIX="/opt/healthhub/pycache" \
+    XDG_CACHE_HOME="/opt/healthhub/cache" \
     MYPY_CACHE_DIR=/opt/healthhub/mypy_cache \
-    XDG_CACHE_HOME=/opt/healthhub/cache \
-    RUFF_CACHE_DIR=/opt/healthhub/ruff_cache
+    RUFF_CACHE_DIR=/opt/healthhub/ruff_cache \
+    PYTEST_CACHE_DIR=/opt/healthhub/pytest_cache \
+    DOCKER_CONTAINER=1
 
 WORKDIR /app
 
-# Create directories for build artifacts (ShipNorth pattern)
-RUN mkdir -p /opt/healthhub/backend-build /opt/healthhub/frontend-build \
-    /opt/healthhub/cache /opt/healthhub/mypy_cache /opt/healthhub/pytest_cache /opt/healthhub/ruff_cache
+# Create cache directories under /opt/healthhub/ namespace
+RUN mkdir -p \
+    /opt/healthhub/cache \
+    /opt/healthhub/mypy_cache \
+    /opt/healthhub/pytest_cache \
+    /opt/healthhub/ruff_cache \
+    /opt/healthhub/pycache \
+    /opt/healthhub/backend-build \
+    /opt/healthhub/frontend-build
 
-# Install system dependencies including Node.js for Playwright
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install system dependencies including Python 3.12 and Node.js
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    && add-apt-repository -y ppa:deadsnakes/ppa \
+    && apt-get update && apt-get install -y \
+    python3.12 \
+    python3.12-dev \
+    python3-pip \
+    build-essential \
+    libpq-dev \
     curl \
     wget \
     gnupg \
@@ -50,14 +71,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgtk-3-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Node.js 20 LTS for Playwright (ShipNorth pattern)
+# Set Python 3.12 as default python3 and create python symlink
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1 \
+    && update-alternatives --set python3 /usr/bin/python3.12 \
+    && ln -sf /usr/bin/python3.12 /usr/bin/python \
+    && ln -sf /usr/bin/python3.12 /bin/python
+
+# Install pip for Python 3.12 using get-pip.py
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.12
+
+# Install Poetry via pip
+RUN python3.12 -m pip install --upgrade pip setuptools wheel \
+    && python3.12 -m pip install poetry==1.7.1 \
+    && poetry --version
+
+# Install Node.js 20 LTS for Playwright
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && node --version && npm --version \
     && rm -rf /var/lib/apt/lists/*
-
-# Install Poetry
-RUN pip install --no-cache-dir poetry==1.7.1
 
 # Configure poetry to not create virtualenv
 RUN poetry config virtualenvs.create false
@@ -66,7 +98,7 @@ RUN poetry config virtualenvs.create false
 # Step 1: Install effectful (parent library)
 # ============================================
 
-# Copy effectful library from root (resolve deps from pyproject only; lockfile is a build artifact)
+# Copy effectful library from root
 COPY pyproject.toml /app/effectful-root/
 COPY README.md /app/effectful-root/
 COPY CLAUDE.md /app/effectful-root/
@@ -97,7 +129,7 @@ COPY demo/healthhub/tools/ /app/effectful-root/demo/healthhub/tools/
 COPY demo/healthhub/tests/ /app/effectful-root/demo/healthhub/tests/
 COPY demo/healthhub/stubs/ /app/effectful-root/demo/healthhub/stubs/
 
-# Install healthhub dependencies (runtime + dev tooling/tests) with lock guard and fallback
+# Install healthhub dependencies with lock guard and fallback
 RUN poetry lock --no-update 2>/dev/null || true && \
     poetry install --with dev --no-root --no-interaction --no-ansi 2>/dev/null || \
     pip install \
@@ -108,14 +140,14 @@ RUN poetry lock --no-update 2>/dev/null || true && \
     mypy black ruff mdformat mdformat-gfm mdformat-frontmatter mdformat-footnote mdformat-tables \
     pymarkdownlnt codespell playwright pytest-playwright
 
-# Install Playwright browsers (ShipNorth pattern)
+# Install Playwright browsers
 RUN python -m playwright install --with-deps chromium firefox webkit
 
 # ============================================
 # Step 3: Build Frontend
 # ============================================
 
-# Copy frontend source (lockfile is regenerated in-container)
+# Copy frontend source
 COPY demo/healthhub/frontend/package.json /opt/healthhub/frontend-build/
 COPY demo/healthhub/frontend/src /opt/healthhub/frontend-build/src
 COPY demo/healthhub/frontend/index.html /opt/healthhub/frontend-build/
@@ -123,7 +155,7 @@ COPY demo/healthhub/frontend/vite.config.ts /opt/healthhub/frontend-build/
 COPY demo/healthhub/frontend/tsconfig.json /opt/healthhub/frontend-build/
 COPY demo/healthhub/frontend/tsconfig.node.json /opt/healthhub/frontend-build/
 
-# Install frontend dependencies and build (no host lockfile)
+# Install frontend dependencies and build
 WORKDIR /opt/healthhub/frontend-build
 RUN npm install --quiet && \
     BUILD_PATH=build npm run build && \
@@ -133,16 +165,13 @@ RUN npm install --quiet && \
 WORKDIR /app/effectful-root/demo/healthhub
 
 # ============================================
-# Policy Enforcement (ShipNorth pattern)
+# Policy Enforcement
 # ============================================
 
 # Block direct pytest command (enforces using Poetry scripts)
 RUN if [ -f /usr/local/bin/pytest ]; then mv /usr/local/bin/pytest /usr/local/bin/pytest.real; fi && \
     echo '#!/bin/sh\necho "❌ ERROR: Direct pytest forbidden"\necho "✅ USE: poetry run test-<category> (test-all, test-backend, test-integration, test-e2e)"\nexit 1' > /usr/local/bin/pytest && \
     chmod +x /usr/local/bin/pytest
-
-# Set PYTHONPATH so both effectful and healthhub are importable
-ENV PYTHONPATH=/app/effectful-root:/app/effectful-root/demo/healthhub:/app/effectful-root/demo/healthhub/backend
 
 # Expose port
 EXPOSE 8851

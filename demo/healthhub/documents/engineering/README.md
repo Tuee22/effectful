@@ -17,6 +17,36 @@ ______________________________________________________________________
 
 ## HealthHub-Specific Engineering Documentation
 
+### Docker & Environment Variables
+
+HealthHub-specific environment variables, cache directories, frontend build management, and pytest enforcement.
+
+**Location**: [docker.md](docker.md)
+
+**Content**:
+
+- PYTHONPATH configuration for dual effectful/healthhub imports
+- `/opt/healthhub/` cache namespace (separate from effectful)
+- Frontend build management (vite build in Dockerfile)
+- Pytest wrapper (4 test categories: test-all, test-backend, test-integration, test-e2e)
+
+**Use Case**: Understanding HealthHub-specific Docker configuration and build artifacts
+
+### Build Artifact Management
+
+HealthHub-specific build artifacts including frontend build output, lock file patterns, and cache namespace.
+
+**Location**: [build_artifact_management.md](build_artifact_management.md)
+
+**Content**:
+
+- Frontend build artifacts (`/opt/healthhub/frontend-build/build/`)
+- Frontend lock file pattern (regenerated in-container)
+- HealthHub cache namespace (prevents conflicts with effectful)
+- Enhanced lock guard with pip fallback
+
+**Use Case**: Understanding HealthHub build process and artifact lifecycle
+
 ### Feature Engineering Patterns
 
 HealthHub-specific feature implementation patterns documenting domain models, state machines, effect programs, and RBAC enforcement.
@@ -37,4 +67,7 @@ HealthHub-specific feature implementation patterns documenting domain models, st
 
 - [HealthHub Documentation Guide](../documentation_standards.md)
 - [Effectful Engineering Standards](../../../../documents/engineering/README.md)
+- [HealthHub Docker & Environment Variables](docker.md)
+- [HealthHub Build Artifact Management](build_artifact_management.md)
+- [HealthHub Warnings Policy](warnings_policy.md)
 - [HealthHub Feature Engineering Patterns](features/README.md)

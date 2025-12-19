@@ -30,7 +30,7 @@ def run_unit() -> int:
     print("=" * 80)
 
     result = subprocess.run(
-        ["pytest", "tests/unit", "-v"],
+        ["/usr/local/bin/pytest.real", "tests/unit", "-v"],
         check=False,
     )
 
@@ -62,7 +62,7 @@ def run_integration() -> int:
     print("=" * 80)
 
     result = subprocess.run(
-        ["pytest", "tests/integration", "-v"],
+        ["/usr/local/bin/pytest.real", "tests/integration", "-v"],
         check=False,
     )
 
@@ -90,7 +90,7 @@ def run_all() -> int:
     print("=" * 80)
 
     result = subprocess.run(
-        ["pytest", "-v"],
+        ["/usr/local/bin/pytest.real", "-v"],
         check=False,
     )
 

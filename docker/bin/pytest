@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Pytest wrapper enforcing Poetry test command usage
+# See: documents/engineering/docker.md#testing-policy-enforcement
+
+cat >&2 <<'EOF'
+❌ Direct pytest execution is blocked.
+
+Use Poetry test commands instead:
+  poetry run test-all          # All tests
+  poetry run test-unit          # Unit tests only
+  poetry run test-integration   # Integration tests only
+
+Rationale:
+  1. Output Management: Ensures /tmp/test-output.txt pattern (Bash tool truncates at 30,000 chars)
+  2. Command Consistency: Same commands across all environments
+  3. Standards Enforcement: Prevents anti-patterns
+
+Emergency override (debugging enforcement only):
+  /usr/local/bin/pytest.real tests/
+
+See: documents/engineering/docker.md#testing-policy-enforcement
+EOF
+
+exit 1

@@ -2,7 +2,7 @@
 
 **Status**: Authoritative source
 **Supersedes**: none
-**Referenced by**: docker_workflow.md, development_workflow.md, testing.md, README.md
+**Referenced by**: docker_workflow.md, development_workflow.md, testing.md, README.md, warnings_policy.md
 
 > **Purpose**: SSoT for all Docker commands, test execution patterns, and output management in effectful.
 
@@ -165,10 +165,12 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest > /
 - [Docker Workflow](docker_workflow.md) - Complete Docker development policy
 - [Testing](testing.md) - Testing standards and anti-patterns
 - [Code Quality](code_quality.md) - check-code workflow and MyPy strict enforcement
+- [Warnings Policy](warnings_policy.md) - Zero-warning expectations and exceptions
 
 ## Cross-References
 
 - [Docker Workflow](docker_workflow.md)
 - [Testing](testing.md)
 - [Development Workflow](development_workflow.md)
+- [Warnings Policy](warnings_policy.md)
 - [Documentation Standards](../documentation_standards.md)

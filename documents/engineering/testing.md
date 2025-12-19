@@ -2,7 +2,7 @@
 
 **Status**: Authoritative source
 **Supersedes**: none
-**Referenced by**: engineering/README.md, testing_architecture.md, documents/readme.md
+**Referenced by**: engineering/README.md, testing_architecture.md, documents/readme.md, engineering/warnings_policy.md
 
 > **Purpose**: Single Source of Truth for test execution, service-specific patterns, and anti-patterns in Effectful.
 
@@ -206,7 +206,7 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tes
 docker compose -f docker/docker-compose.yml exec effectful poetry run pytest tests/unit/test_interpreters/test_cache.py
 ```
 
-Pytest cache placement is configured in `pyproject.toml` (`cache_dir = "/opt/pytest_cache"`) so caches stay under `/opt/**` inside the container per [Build Artifact Management](build_artifact_management.md#cache-placement-contract); do not pass the deprecated `--cache-dir` CLI flag (removed in pytest 7.4+).
+Pytest cache is controlled by the `PYTEST_CACHE_DIR=/opt/effectful/pytest_cache` environment variable (set in `docker/Dockerfile`) so caches stay under `/opt/effectful/` inside the container per [Build Artifact Management](build_artifact_management.md#cache-placement-contract). See [Docker & Environment Variables](docker.md#environment-variables) for complete cache directory documentation.
 
 **Pre-flight:** always run `docker compose -f docker/docker-compose.yml exec effectful poetry run check-code` (includes docs/tooling) before invoking pytest.
 
@@ -216,6 +216,37 @@ Pytest cache placement is configured in `pyproject.toml` (`cache_dir = "/opt/pyt
 1. **Environment Consistency**: Same Python version, dependencies, system libraries
 1. **Reproducibility**: Tests behave identically across all developer machines
 1. **CI Parity**: Local tests match CI behavior exactly
+
+### Pytest Enforcement
+
+Direct pytest execution is blocked in containers to enforce testing standards.
+
+**Blocked commands**:
+```bash
+# ❌ FORBIDDEN - Will fail with enforcement message
+pytest tests/
+python -m pytest
+```
+
+**Required commands**:
+```bash
+# ✅ CORRECT - Use Poetry test commands
+docker compose -f docker/docker-compose.yml exec effectful poetry run test-all
+docker compose -f docker/docker-compose.yml exec effectful poetry run test-unit
+docker compose -f docker/docker-compose.yml exec effectful poetry run test-integration
+```
+
+**Rationale**:
+1. **Output Management**: Ensures `/tmp/test-output.txt` pattern is followed (Bash tool truncates at 30,000 chars)
+2. **Command Consistency**: Everyone uses same commands regardless of environment
+3. **Standards Enforcement**: Prevents common anti-patterns that violate engineering standards
+
+**Emergency Override** (debugging enforcement mechanism only):
+```bash
+/usr/local/bin/pytest.real tests/
+```
+
+**See**: [Docker & Environment Variables](docker.md#testing-policy-enforcement) for complete enforcement documentation.
 
 ### Timeouts (SSoT)
 
@@ -3479,7 +3510,10 @@ ______________________________________________________________________
 
 - [Testing Architecture](testing_architecture.md)
 - [Code Quality](code_quality.md)
+- [Warnings Policy](warnings_policy.md)
+- [Docker & Environment Variables](docker.md)
 - [Docker Workflow](docker_workflow.md)
 - [Command Reference](command_reference.md)
+- [Build Artifact Management](build_artifact_management.md)
 - [Documentation Standards](../documentation_standards.md)
 - [Monitoring & Alerting](monitoring_and_alerting.md)

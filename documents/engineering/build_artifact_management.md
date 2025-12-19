@@ -51,9 +51,20 @@ ______________________________________________________________________
 
 ### Cache placement contract
 
-- **Location**: All runtime/tooling caches live under `/opt/**` (e.g., `/opt/mypy_cache`, `/opt/pytest_cache`, `/opt/ruff_cache`, `/opt/__pycache__` if created).
+- **Location**: All runtime/tooling caches live under `/opt/**` with project namespacing (e.g., `/opt/effectful/mypy_cache`, `/opt/effectful/pytest_cache`, `/opt/effectful/ruff_cache`, `/opt/pycache` for Python bytecode).
 - **Propagation**: These caches must not be bind-mounted back to the host; they are container-only artifacts.
-- **Configuration examples**: Set `MYPY_CACHE_DIR=/opt/mypy_cache`, `RUFF_CACHE_DIR=/opt/ruff_cache`, `XDG_CACHE_HOME=/opt/cache`, and `PYTHONDONTWRITEBYTECODE=1` to keep `__pycache__` out of the bind mount. For pytest, set `cache_dir = "/opt/pytest_cache"` in `[tool.pytest.ini_options]` (do **not** use the removed `--cache-dir` CLI flag from pytest 7.4+).
+- **Configuration**: Cache locations are controlled exclusively by environment variables set in `docker/Dockerfile` (SSoT policy).
+
+**Effectful Namespace** (`/opt/effectful/`):
+- `MYPY_CACHE_DIR=/opt/effectful/mypy_cache` - MyPy type checker cache
+- `PYTEST_CACHE_DIR=/opt/effectful/pytest_cache` - Pytest cache
+- `RUFF_CACHE_DIR=/opt/effectful/ruff_cache` - Ruff linter cache
+- `XDG_CACHE_HOME=/opt/effectful/cache` - General tool cache
+
+**Shared** (not namespaced):
+- `PYTHONPYCACHEPREFIX=/opt/pycache` - Python bytecode cache (shared across containers)
+
+📖 **See**: [docker.md](docker.md#environment-variables) for complete environment variable documentation.
 
 ______________________________________________________________________
 
@@ -125,9 +136,10 @@ ______________________________________________________________________
 
 ## Cross-References
 
-- Upstream doctrine: [Documentation Standards](../documentation_standards.md) — SSoT/link hygiene and ignore file commentary.
-- Build workflows: [Docker Workflow](docker_workflow.md) — container-only development contract.
-- Code quality gates: [Code Quality](code_quality.md) — enforcement pipeline that regenerates artifacts.
+- 📖 [Docker & Environment Variables](docker.md) — Environment variable SSoT, cache directory policy, and namespacing
+- 📖 [Docker Workflow](docker_workflow.md) — Container-only development contract and daily patterns
+- 📖 [Documentation Standards](../documentation_standards.md) — SSoT/link hygiene and ignore file commentary
+- 📖 [Code Quality](code_quality.md) — Enforcement pipeline that regenerates artifacts
 
 ______________________________________________________________________
 

@@ -2,7 +2,7 @@
 
 **Status**: Authoritative source\
 **Supersedes**: none\
-**Referenced by**: CLAUDE.md, command_reference.md, configuration.md, development_workflow.md, engineering/README.md, README.md
+**Referenced by**: CLAUDE.md, command_reference.md, configuration.md, development_workflow.md, engineering/README.md, README.md, engineering/warnings_policy.md
 
 > **Purpose**: Single Source of Truth for all Docker development workflow and environment setup in effectful.
 
@@ -31,7 +31,7 @@ flowchart TB
 | -------------------------- | -------------------------------------------------------- |
 | Exact command syntax       | [Command Reference](command_reference.md)                |
 | Daily loop                 | [Development Workflow](development_workflow.md)          |
-| Environment variables      | [Configuration](configuration.md)                        |
+| Environment variables      | [Docker & Environment Variables](docker.md)              |
 | How to test                | [Testing](testing.md#running-tests)                      |
 | Documentation requirements | [Documentation Standards](../documentation_standards.md) |
 
@@ -386,6 +386,37 @@ Configure a remote Python interpreter pointing to the Docker container:
 
 Edit files on host, run commands via Docker exec as shown above.
 
+## Environment Variables
+
+All environment variables are defined exclusively in `docker/Dockerfile` following the SSoT principle.
+
+**Key variables**:
+- `PYTHONPATH=/app` - Enables `from effectful import ...` style imports
+- `PYTHONPYCACHEPREFIX=/opt/pycache` - Centralizes Python bytecode cache
+- `MYPY_CACHE_DIR=/opt/effectful/mypy_cache` - MyPy type checker cache
+- `PYTEST_CACHE_DIR=/opt/effectful/pytest_cache` - Pytest cache
+- `RUFF_CACHE_DIR=/opt/effectful/ruff_cache` - Ruff linter cache
+- `XDG_CACHE_HOME=/opt/effectful/cache` - General tool cache
+
+**See**: [Docker & Environment Variables](docker.md) for complete documentation of all environment variables, rationale, and enforcement policy.
+
+## Cache Management
+
+All build artifacts and caches live under `/opt/` with project namespacing:
+
+**Effectful Namespace** (`/opt/effectful/`):
+- `/opt/effectful/cache` - General cache (XDG_CACHE_HOME)
+- `/opt/effectful/mypy_cache` - MyPy type checker cache
+- `/opt/effectful/pytest_cache` - Pytest cache
+- `/opt/effectful/ruff_cache` - Ruff linter cache
+
+**Shared** (not namespaced):
+- `/opt/pycache` - Python bytecode cache (shared across containers for performance)
+
+**Why `/opt/effectful/` namespace?** Prevents conflicts when multiple containers run simultaneously. Demo applications (like HealthHub) use their own namespaces (e.g., `/opt/healthhub/`).
+
+**PYTHONPYCACHEPREFIX impact**: Python now generates and caches `.pyc` files in `/opt/pycache`, improving import performance. Source directories stay clean.
+
 ## Troubleshooting
 
 ### "Container not running"
@@ -436,4 +467,5 @@ docker compose -f docker/docker-compose.yml ps
 - [Development Workflow](development_workflow.md)
 - [Configuration](configuration.md)
 - [Testing](testing.md)
+- [Warnings Policy](warnings_policy.md)
 - [Documentation Standards](../documentation_standards.md)

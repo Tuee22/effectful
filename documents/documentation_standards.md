@@ -2,7 +2,7 @@
 
 **Status**: Authoritative source\
 **Supersedes**: previous Unified Documentation Guide (documents/documentation_standards.md)\
-**Referenced by**: ../CLAUDE.md, documents/readme.md, documents/engineering/code_quality.md, documents/engineering/navigation.md, documents/engineering/testing.md, documents/engineering/docker_workflow.md, documents/engineering/monitoring_and_alerting.md
+**Referenced by**: ../CLAUDE.md, documents/readme.md, documents/engineering/code_quality.md, documents/engineering/navigation.md, documents/engineering/testing.md, documents/engineering/docker_workflow.md, documents/engineering/monitoring_and_alerting.md, documents/engineering/warnings_policy.md
 
 > **Purpose**: Single Source of Truth (SSoT) for writing and maintaining documentation across BBY, Effectful, and SpectralMC. Defines rules that can be enforced deterministically (via Markdown tooling and Python scripts) so human/LLM review can focus on semantics, architecture, and higher-level consistency.
 
