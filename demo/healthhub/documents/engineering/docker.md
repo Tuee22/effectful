@@ -1,12 +1,21 @@
 # Docker & Environment Variables (HealthHub Overlay)
 
-**Status**: Demo overlay (delta-only)
-**Base**: [Effectful docker.md](../../../../documents/engineering/docker.md)
-**Referenced by**: [docker_workflow.md](../../../../documents/engineering/docker_workflow.md), [build_artifact_management.md](build_artifact_management.md), [README.md](README.md), [CLAUDE.md](../../CLAUDE.md)
+**Status**: Reference only\
+**Supersedes**: none\
+**Referenced by**: engineering/docker_workflow.md, demo/healthhub/documents/engineering/build_artifact_management.md, demo/healthhub/documents/engineering/README.md, demo/healthhub/CLAUDE.md
 
-> **Pattern**: This document contains ONLY HealthHub-specific deltas. For shared patterns, see base effectful documentation.
+> **Purpose**: Documents HealthHub-specific Docker environment variables, frontend build management, and pytest enforcement. This is a delta-only overlay that extends the base effectful documentation with application-specific configuration.
+> **📖 Authoritative Reference**: [Effectful docker.md](../../../../documents/engineering/docker.md)
+> **📖 Base Standard**: [docker.md](../../../../documents/engineering/docker.md)
 
----
+## Deltas
+
+- HealthHub-specific PYTHONPATH configuration for dual dependency loading
+- Frontend build management (React + Vite)
+- Inline pytest wrapper vs separate file
+- `/opt/healthhub/` cache namespace separate from effectful
+
+______________________________________________________________________
 
 ## Environment Variables (HealthHub-Specific)
 
@@ -40,7 +49,7 @@
 
 **See also**: [Base docker.md - Environment Variables](../../../../documents/engineering/docker.md#environment-variables) for complete cache directory documentation and enforcement pattern.
 
----
+______________________________________________________________________
 
 ## Build Directory Structure (HealthHub-Specific)
 
@@ -70,7 +79,7 @@
 - Different PYTHONPATH means different bytecode cache requirements
 - Prevents cache invalidation issues during integration validation
 
----
+______________________________________________________________________
 
 ## Testing Policy Enforcement (HealthHub-Specific)
 
@@ -105,12 +114,13 @@ docker compose -f docker/docker-compose.yml exec healthhub poetry run test-e2e
 **Emergency override** (debugging enforcement only):
 
 ```bash
+# Emergency override to bypass pytest wrapper
 /usr/local/bin/pytest.real tests/
 ```
 
 **See**: [testing.md](../../../../documents/engineering/testing.md#pytest-enforcement) for complete enforcement rationale.
 
----
+______________________________________________________________________
 
 ## Frontend Build Management
 
@@ -123,9 +133,9 @@ docker compose -f docker/docker-compose.yml exec healthhub poetry run test-e2e
 **Build steps** (in Dockerfile):
 
 1. Copy frontend source (`package.json`, `src/`, `index.html`, vite config, TypeScript config)
-2. Run `npm install --quiet` (regenerates package-lock.json in container)
-3. Run `BUILD_PATH=build npm run build` (vite build output to `build/`)
-4. Verify `build/index.html` exists
+1. Run `npm install --quiet` (regenerates package-lock.json in container)
+1. Run `BUILD_PATH=build npm run build` (vite build output to `build/`)
+1. Verify `build/index.html` exists
 
 **Why in Dockerfile, not at runtime?**
 
@@ -140,6 +150,7 @@ docker compose -f docker/docker-compose.yml exec healthhub poetry run test-e2e
 **Frontend changes**: Rebuild Docker image
 
 ```bash
+# Rebuild HealthHub Docker image with frontend changes
 docker compose -f docker/docker-compose.yml build healthhub
 docker compose -f docker/docker-compose.yml up -d healthhub
 ```
@@ -147,6 +158,7 @@ docker compose -f docker/docker-compose.yml up -d healthhub
 **Alternative** (local development only): Run `npm run dev` locally
 
 ```bash
+# Run frontend development server locally
 cd demo/healthhub/frontend
 npm install
 npm run dev
@@ -154,29 +166,26 @@ npm run dev
 
 Frontend available at http://localhost:5173 with hot reload.
 
-**See also**: [frontend_architecture.md](frontend_architecture.md) for complete frontend architecture and routing patterns.
-
----
+______________________________________________________________________
 
 ## SSoT Link Map
 
-| Topic                          | SSoT                                                                                                   |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| Environment variables (shared) | [Effectful docker.md](../../../../documents/engineering/docker.md#environment-variables)              |
-| Environment variable policy    | [Effectful docker.md](../../../../documents/engineering/docker.md#environment-variable-policy)        |
-| Build directory structure      | [Effectful docker.md](../../../../documents/engineering/docker.md#build-directory-structure)          |
-| Testing policy enforcement     | [Effectful docker.md](../../../../documents/engineering/docker.md#testing-policy-enforcement)         |
-| HealthHub-specific caches      | This document                                                                                          |
-| Frontend build management      | This document                                                                                          |
-| Pytest wrapper (HealthHub)     | This document                                                                                          |
-| Cache placement contract       | [build_artifact_management.md](build_artifact_management.md#cache-placement-contract)                 |
-| Docker workflow                | [docker_workflow.md](../../../../documents/engineering/docker_workflow.md)                            |
-| Test execution                 | [testing.md](../../../../documents/engineering/testing.md)                                            |
-| Command reference              | [command_reference.md](../../../../documents/engineering/command_reference.md)                        |
-| Development workflow           | [development_workflow.md](../../../../documents/engineering/development_workflow.md)                  |
-| Build artifact management      | [build_artifact_management.md](../../../../documents/engineering/build_artifact_management.md)        |
-| Architecture                   | [architecture.md](../../../../documents/engineering/architecture.md)                                  |
-| Code quality                   | [code_quality.md](../../../../documents/engineering/code_quality.md)                                  |
-| HealthHub overview             | [CLAUDE.md](../../CLAUDE.md)                                                                          |
-| Engineering standards index    | [Engineering README](../../../../documents/engineering/README.md)                                     |
-| Frontend architecture          | [frontend_architecture.md](frontend_architecture.md)                                                  |
+| Topic                          | SSoT                                                                                                     |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| Environment variables (shared) | [Effectful docker.md](../../../../documents/engineering/docker.md#environment-variables)                 |
+| Environment variable policy    | [Effectful docker.md](../../../../documents/engineering/docker.md#environment-variable-policy)           |
+| Build directory structure      | [Effectful docker.md](../../../../documents/engineering/docker.md#build-directory-structure)             |
+| Testing policy enforcement     | [Effectful docker.md](../../../../documents/engineering/docker.md#testing-policy-enforcement)            |
+| HealthHub-specific caches      | This document                                                                                            |
+| Frontend build management      | This document                                                                                            |
+| Pytest wrapper (HealthHub)     | This document                                                                                            |
+| Cache placement contract       | [build_artifact_management.md](build_artifact_management.md#cache-placement-contract-healthhub-specific) |
+| Docker workflow                | [docker_workflow.md](../../../../documents/engineering/docker_workflow.md)                               |
+| Test execution                 | [testing.md](../../../../documents/engineering/testing.md)                                               |
+| Command reference              | [command_reference.md](../../../../documents/engineering/command_reference.md)                           |
+| Development workflow           | [development_workflow.md](../../../../documents/engineering/development_workflow.md)                     |
+| Build artifact management      | [build_artifact_management.md](../../../../documents/engineering/build_artifact_management.md)           |
+| Architecture                   | [architecture.md](../../../../documents/engineering/architecture.md)                                     |
+| Code quality                   | [code_quality.md](../../../../documents/engineering/code_quality.md)                                     |
+| HealthHub overview             | [CLAUDE.md](../../CLAUDE.md)                                                                             |
+| Engineering standards index    | [Engineering README](../../../../documents/engineering/README.md)                                        |

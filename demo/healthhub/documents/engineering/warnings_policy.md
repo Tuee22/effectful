@@ -6,7 +6,7 @@
 
 > **Purpose**: HealthHub overlay for the warnings policy.
 > **📖 Authoritative Reference**: [Warnings Policy](../../../../documents/engineering/warnings_policy.md)
-> **📖 Base Standard**: [Warnings Policy](../../../../documents/engineering/warnings_policy.md)
+> **📖 Base Standard**: [warnings_policy.md](../../../../documents/engineering/warnings_policy.md)
 
 ## Deltas
 

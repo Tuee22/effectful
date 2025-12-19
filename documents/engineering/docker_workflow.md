@@ -391,6 +391,7 @@ Edit files on host, run commands via Docker exec as shown above.
 All environment variables are defined exclusively in `docker/Dockerfile` following the SSoT principle.
 
 **Key variables**:
+
 - `PYTHONPATH=/app` - Enables `from effectful import ...` style imports
 - `PYTHONPYCACHEPREFIX=/opt/pycache` - Centralizes Python bytecode cache
 - `MYPY_CACHE_DIR=/opt/effectful/mypy_cache` - MyPy type checker cache
@@ -405,12 +406,14 @@ All environment variables are defined exclusively in `docker/Dockerfile` followi
 All build artifacts and caches live under `/opt/` with project namespacing:
 
 **Effectful Namespace** (`/opt/effectful/`):
+
 - `/opt/effectful/cache` - General cache (XDG_CACHE_HOME)
 - `/opt/effectful/mypy_cache` - MyPy type checker cache
 - `/opt/effectful/pytest_cache` - Pytest cache
 - `/opt/effectful/ruff_cache` - Ruff linter cache
 
 **Shared** (not namespaced):
+
 - `/opt/pycache` - Python bytecode cache (shared across containers for performance)
 
 **Why `/opt/effectful/` namespace?** Prevents conflicts when multiple containers run simultaneously. Demo applications (like HealthHub) use their own namespaces (e.g., `/opt/healthhub/`).

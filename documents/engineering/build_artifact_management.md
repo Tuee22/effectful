@@ -56,12 +56,14 @@ ______________________________________________________________________
 - **Configuration**: Cache locations are controlled exclusively by environment variables set in `docker/Dockerfile` (SSoT policy).
 
 **Effectful Namespace** (`/opt/effectful/`):
+
 - `MYPY_CACHE_DIR=/opt/effectful/mypy_cache` - MyPy type checker cache
 - `PYTEST_CACHE_DIR=/opt/effectful/pytest_cache` - Pytest cache
 - `RUFF_CACHE_DIR=/opt/effectful/ruff_cache` - Ruff linter cache
 - `XDG_CACHE_HOME=/opt/effectful/cache` - General tool cache
 
 **Shared** (not namespaced):
+
 - `PYTHONPYCACHEPREFIX=/opt/pycache` - Python bytecode cache (shared across containers)
 
 📖 **See**: [docker.md](docker.md#environment-variables) for complete environment variable documentation.

@@ -23,7 +23,7 @@ def base_doc_for_demo(path: Path) -> Path:
 
 def has_base_link(lines: list[str], expected_link: str) -> bool:
     """True if a base standard link appears near the top with the expected target."""
-    return any("**📖 Base Standard**" in line and expected_link in line for line in lines[:5])
+    return any("**📖 Base Standard**" in line and expected_link in line for line in lines[:15])
 
 
 def _strip_metadata(lines: Iterable[str]) -> list[str]:

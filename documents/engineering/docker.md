@@ -156,6 +156,7 @@ Custom flag indicating code is running in Docker.
 ### Prohibited Practices
 
 ❌ **NEVER** set or override environment variables in:
+
 - Python scripts (`effectful_tools/*.py`)
 - Shell scripts
 - Poetry scripts in `pyproject.toml`
@@ -166,14 +167,15 @@ Custom flag indicating code is running in Docker.
 ### Rationale
 
 1. **Single Source of Truth**: Dockerfile is the canonical definition of the container environment
-2. **Predictability**: Same environment in development, testing, and CI
-3. **Simplicity**: No conditional logic based on environment type
-4. **Debuggability**: Environment is defined in one place, easy to audit
-5. **Immutability**: Container behavior doesn't change based on how it's invoked
+1. **Predictability**: Same environment in development, testing, and CI
+1. **Simplicity**: No conditional logic based on environment type
+1. **Debuggability**: Environment is defined in one place, easy to audit
+1. **Immutability**: Container behavior doesn't change based on how it's invoked
 
 ### Allowed Exception
 
 The ONLY exception is runtime secrets that cannot be baked into images:
+
 - Database passwords (PostgreSQL, Redis)
 - API keys for external services
 - Service credentials (MinIO, Pulsar)
@@ -203,9 +205,10 @@ cache_dir = Path(os.getenv("MYPY_CACHE_DIR", "/default"))
 ```
 
 If different behavior is needed for different contexts, use:
+
 1. **Feature flags**: Application-level configuration
-2. **Build arguments**: Docker ARG (compile-time only, not runtime)
-3. **Configuration files**: Explicit config files read by application
+1. **Build arguments**: Docker ARG (compile-time only, not runtime)
+1. **Configuration files**: Explicit config files read by application
 
 Do NOT use environment variables for context-dependent behavior.
 
@@ -214,12 +217,14 @@ Do NOT use environment variables for context-dependent behavior.
 All build artifacts live under `/opt/` hierarchy with project namespacing:
 
 **Effectful Namespace** (`/opt/effectful/`):
+
 - `/opt/effectful/cache` - General cache (XDG_CACHE_HOME)
 - `/opt/effectful/mypy_cache` - MyPy type checker cache
 - `/opt/effectful/pytest_cache` - Pytest cache
 - `/opt/effectful/ruff_cache` - Ruff linter cache
 
 **Shared** (not namespaced):
+
 - `/opt/pycache` - Python bytecode cache (PYTHONPYCACHEPREFIX)
   - Shared across all Python containers for performance
   - Lives outside project namespace to enable cross-project sharing
@@ -231,30 +236,38 @@ All build artifacts live under `/opt/` hierarchy with project namespacing:
 ### Pytest Wrapper
 
 Direct pytest execution is blocked in containers. This enforces:
+
 1. Test output redirection pattern (required for Claude Code compatibility)
-2. Use of Poetry test commands (standardization)
-3. Consistent test execution across all environments
+1. Use of Poetry test commands (standardization)
+1. Consistent test execution across all environments
 
 **Blocked**:
+
 ```bash
+# ❌ BLOCKED - These commands are forbidden
 pytest tests/
 python -m pytest
 ```
 
 **Required**:
+
 ```bash
+# ✅ REQUIRED - Use these Poetry commands
 poetry run test-all
 poetry run test-unit
 poetry run test-integration
 ```
 
 **Rationale**:
+
 - **Output Management**: Ensures `/tmp/test-output.txt` pattern is followed (Bash tool truncates at 30,000 chars)
 - **Command Consistency**: Everyone uses same commands regardless of environment
 - **Claude Code Safety**: Prevents common anti-patterns that violate engineering standards
 
 **Override** (Emergency Only):
+
 ```bash
+# Emergency override to bypass pytest wrapper
 /usr/local/bin/pytest.real tests/
 ```
 
@@ -264,17 +277,18 @@ This should only be used for debugging the enforcement mechanism itself.
 
 Effectful development requires real infrastructure for integration testing:
 
-| Service    | Image                      | Port | Purpose                         |
-| ---------- | -------------------------- | ---- | ------------------------------- |
-| effectful  | Ubuntu 22.04 + Python 3.12 | N/A  | Library development             |
-| postgres   | postgres:15-alpine         | 5432 | PostgreSQL integration tests    |
-| redis      | redis:7-alpine             | 6379 | Redis integration tests         |
-| pulsar     | apachepulsar/pulsar:3.0.0  | 6650 | Pulsar messaging tests          |
-| minio      | minio/minio:latest         | 9000 | S3-compatible storage tests     |
-| prometheus | prom/prometheus:latest     | 9090 | Metrics collection (optional)   |
+| Service    | Image                      | Port | Purpose                          |
+| ---------- | -------------------------- | ---- | -------------------------------- |
+| effectful  | Ubuntu 22.04 + Python 3.12 | N/A  | Library development              |
+| postgres   | postgres:15-alpine         | 5432 | PostgreSQL integration tests     |
+| redis      | redis:7-alpine             | 6379 | Redis integration tests          |
+| pulsar     | apachepulsar/pulsar:3.0.0  | 6650 | Pulsar messaging tests           |
+| minio      | minio/minio:latest         | 9000 | S3-compatible storage tests      |
+| prometheus | prom/prometheus:latest     | 9090 | Metrics collection (optional)    |
 | grafana    | grafana/grafana:latest     | 3000 | Metrics visualization (optional) |
 
 **Named Volumes** (required for macOS):
+
 - PostgreSQL: `effectful_pgdata:/var/lib/postgresql/data`
 - Redis: `effectful_redisdata:/data`
 - Remove with: `docker compose -f docker/docker-compose.yml down -v`

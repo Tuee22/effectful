@@ -59,10 +59,10 @@ flowchart TB
 Suppression is allowed only when all conditions are met:
 
 1. The warning originates in a third-party dependency.
-2. No supported API change eliminates it.
-3. An upstream issue is open and linked.
-4. Suppression is scoped and documented.
-5. A review date is recorded (quarterly cadence).
+1. No supported API change eliminates it.
+1. An upstream issue is open and linked.
+1. Suppression is scoped and documented.
+1. A review date is recorded (quarterly cadence).
 
 **Example (documented exception):**
 

@@ -23,6 +23,16 @@ ENV PYTHONUNBUFFERED=1 \
     PYTEST_CACHE_DIR=/opt/effectful/pytest_cache \
     DOCKER_CONTAINER=1
 
+# Create cache directories under /opt/effectful/ namespace
+RUN mkdir -p \
+    /opt/effectful/cache \
+    /opt/effectful/mypy_cache \
+    /opt/effectful/pytest_cache \
+    /opt/effectful/ruff_cache \
+    /opt/pycache
+
+WORKDIR /app
+
 # Install system dependencies and Python 3.12
 RUN apt-get update && apt-get install -y \
     software-properties-common \
@@ -49,17 +59,6 @@ RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.12
 RUN python3.12 -m pip install --upgrade pip setuptools wheel \
     && python3.12 -m pip install poetry==1.7.1 \
     && poetry --version
-
-# Create cache directories under /opt/effectful/ namespace
-RUN mkdir -p \
-    /opt/effectful/cache \
-    /opt/effectful/mypy_cache \
-    /opt/effectful/pytest_cache \
-    /opt/effectful/ruff_cache \
-    /opt/pycache
-
-# Set working directory
-WORKDIR /app
 
 # Copy dependency files
 COPY pyproject.toml ./

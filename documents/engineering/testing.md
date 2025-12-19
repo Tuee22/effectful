@@ -222,6 +222,7 @@ Pytest cache is controlled by the `PYTEST_CACHE_DIR=/opt/effectful/pytest_cache`
 Direct pytest execution is blocked in containers to enforce testing standards.
 
 **Blocked commands**:
+
 ```bash
 # ❌ FORBIDDEN - Will fail with enforcement message
 pytest tests/
@@ -229,6 +230,7 @@ python -m pytest
 ```
 
 **Required commands**:
+
 ```bash
 # ✅ CORRECT - Use Poetry test commands
 docker compose -f docker/docker-compose.yml exec effectful poetry run test-all
@@ -237,12 +239,15 @@ docker compose -f docker/docker-compose.yml exec effectful poetry run test-integ
 ```
 
 **Rationale**:
+
 1. **Output Management**: Ensures `/tmp/test-output.txt` pattern is followed (Bash tool truncates at 30,000 chars)
-2. **Command Consistency**: Everyone uses same commands regardless of environment
-3. **Standards Enforcement**: Prevents common anti-patterns that violate engineering standards
+1. **Command Consistency**: Everyone uses same commands regardless of environment
+1. **Standards Enforcement**: Prevents common anti-patterns that violate engineering standards
 
 **Emergency Override** (debugging enforcement mechanism only):
+
 ```bash
+# Emergency override to bypass pytest wrapper
 /usr/local/bin/pytest.real tests/
 ```
 
