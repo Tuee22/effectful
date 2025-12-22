@@ -1,7 +1,7 @@
 # Warnings Policy
 
-**Status**: Reference only\
-**Supersedes**: none\
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: engineering/README.md
 
 > **Purpose**: HealthHub overlay for the warnings policy.

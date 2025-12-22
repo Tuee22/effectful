@@ -1,7 +1,7 @@
 # Warnings Policy
 
-**Status**: Authoritative source\
-**Supersedes**: none\
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: engineering/README.md, engineering/code_quality.md, engineering/testing.md, engineering/docker_workflow.md, engineering/command_reference.md, demo/healthhub/documents/engineering/warnings_policy.md
 
 > **Purpose**: Single Source of Truth for zero-warning expectations across linting, builds,

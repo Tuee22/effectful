@@ -1,10 +1,20 @@
 # Messaging Effects
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: documents/readme.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: README.md, documents/readme.md, documents/api/messaging.md, documents/tutorials/effect_types.md, documents/tutorials/adts_and_results.md, documents/tutorials/testing_guide.md, documents/tutorials/00_library_deltas/messaging_effects.md, demo/healthhub/documents/tutorials/00_library_deltas/README.md, demo/healthhub/documents/tutorials/00_library_deltas/messaging_effects.md
 
 > **Purpose**: Tutorial covering messaging effects for Apache Pulsar publish/subscribe workflows in effectful.
+
+## SSoT Link Map
+
+| Need                    | Link                                                            |
+| ----------------------- | --------------------------------------------------------------- |
+| Messaging API reference | [Messaging API](../api/messaging.md)                            |
+| Architecture data flow  | [Architecture](../engineering/architecture.md#visual-data-flow) |
+| Effect Types            | [Effect Types](effect_types.md)                                 |
+| ADTs and Results        | [ADTs and Results](adts_and_results.md)                         |
+| Testing guide           | [Testing Guide](testing_guide.md)                               |
 
 ## Prerequisites
 

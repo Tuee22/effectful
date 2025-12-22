@@ -1,12 +1,21 @@
 # ADTs and Result Types
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: documents/readme.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: readme.md, documents/readme.md, documents/api/result.md, documents/api/optional_value.md, documents/engineering/README.md, documents/engineering/code_quality.md, documents/engineering/functional_catalogue.md, documents/tutorials/quickstart.md, documents/tutorials/effect_types.md, documents/tutorials/storage_effects.md, documents/tutorials/messaging_effects.md, documents/tutorials/auth_effects.md, documents/tutorials/testing_guide.md, documents/tutorials/metrics_quickstart.md, documents/tutorials/00_library_deltas/adts_and_results.md, demo/healthhub/documents/tutorials/README.md, demo/healthhub/documents/tutorials/00_library_deltas/README.md, demo/healthhub/documents/tutorials/00_library_deltas/adts_and_results.md, demo/healthhub/documents/tutorials/01_journeys/intermediate_journey.md
 
 > **Purpose**: Tutorial on using Algebraic Data Types (ADTs) and the Result type to write type-safe, self-documenting code.
 
-> **Core Doctrine**: For the complete type safety patterns and diagrams, see [Code Quality](../engineering/code_quality.md#type-safety-doctrines).
+## SSoT Link Map
+
+| Need                       | Link                                                                      |
+| -------------------------- | ------------------------------------------------------------------------- |
+| Type safety doctrines      | [Code Quality](../engineering/code_quality.md#type-safety-doctrines)      |
+| ADT vs Optional comparison | [Code Quality](../engineering/code_quality.md#2-adts-over-optional-types) |
+| Result type API            | [Result API](../api/result.md)                                            |
+| Optional value API         | [Optional Value API](../api/optional_value.md)                            |
+| Testing ADTs               | [Testing Guide](testing_guide.md)                                         |
+| Quickstart tutorial        | [Quickstart](quickstart.md)                                               |
 
 ## Prerequisites
 

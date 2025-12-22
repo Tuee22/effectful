@@ -1,10 +1,23 @@
 # Storage Effects API Reference
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: documents/api/README.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: api/README.md, api/effects.md, api/messaging.md, tutorials/storage_effects.md, engineering/functional_catalogue.md, readme.md
 
 > **Purpose**: Reference for storage effect types used for S3-compatible object storage operations.
+
+> **Core Doctrine**: For S3 workflow patterns and error handling, see [Effect Patterns](../engineering/effect_patterns.md)
+
+## SSoT Link Map
+
+| Need                       | Link                                                                 |
+| -------------------------- | -------------------------------------------------------------------- |
+| S3 workflow patterns       | [Effect Patterns](../engineering/effect_patterns.md#state-machines)  |
+| Effect hierarchy placement | [Architecture](../engineering/architecture.md#effect-type-hierarchy) |
+| Storage effects tutorial   | [Storage Effects Tutorial](../tutorials/storage_effects.md)          |
+| Testing storage effects    | [Testing](../engineering/testing.md)                                 |
+
+______________________________________________________________________
 
 ## Effect Types
 

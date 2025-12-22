@@ -6,6 +6,15 @@
 
 > **Purpose**: Base SSoT placeholder for Invoices. Demo overlays must list deltas only.
 
+## SSoT Link Map
+
+| Need                    | Link                                                                      |
+| ----------------------- | ------------------------------------------------------------------------- |
+| Documentation standards | [Documentation Standards](../../documentation_standards.md)               |
+| Appointment lifecycle   | [Appointment Lifecycle](../../product/workflows/appointment_lifecycle.md) |
+| Patient guide           | [Patient Guide](../../product/roles/patient_guide.md)                     |
+| Admin guide             | [Admin Guide](../../product/roles/admin_guide.md)                         |
+
 ______________________________________________________________________
 
 ## Summary

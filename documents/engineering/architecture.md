@@ -1,7 +1,7 @@
 # Architecture
 
-**Status**: Authoritative source\
-**Supersedes**: none\
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: documents/readme.md, engineering/README.md
 
 > **Purpose**: Single Source of Truth for the Effectful architecture, including layers, effect hierarchy, and data flow patterns.

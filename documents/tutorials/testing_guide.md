@@ -1,15 +1,20 @@
 # Tutorial 04: Testing Effect Programs
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: documents/readme.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: README.md, documents/readme.md, documents/api/auth.md, documents/api/metrics.md, documents/engineering/testing.md, documents/tutorials/quickstart.md, documents/tutorials/effect_types.md, documents/tutorials/adts_and_results.md, documents/tutorials/storage_effects.md, documents/tutorials/messaging_effects.md, documents/tutorials/auth_effects.md, documents/tutorials/metrics_quickstart.md, documents/tutorials/00_library_deltas/testing_guide.md, demo/healthhub/documents/tutorials/00_library_deltas/README.md, demo/healthhub/documents/tutorials/00_library_deltas/testing_guide.md
 
 > **Purpose**: Tutorial on testing effect programs using generator-based mocking with pytest-mock.
 
-> **Core Doctrines**:
->
-> - [Testing](../engineering/testing.md) - Coverage requirements and test patterns
-> - [Docker Workflow](../engineering/docker_workflow.md) - All commands run inside Docker
+## SSoT Link Map
+
+| Need              | Link                                                 |
+| ----------------- | ---------------------------------------------------- |
+| Testing standards | [Testing](../engineering/testing.md)                 |
+| Docker workflow   | [Docker Workflow](../engineering/docker_workflow.md) |
+| ADTs and Results  | [ADTs and Results](adts_and_results.md)              |
+| Quick Start       | [Quick Start](quickstart.md)                         |
+| Effect Types      | [Effect Types](effect_types.md)                      |
 
 ## Prerequisites
 

@@ -1,7 +1,7 @@
 # Docker & Environment Variables (HealthHub Overlay)
 
-**Status**: Reference only\
-**Supersedes**: none\
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: engineering/docker_workflow.md, demo/healthhub/documents/engineering/build_artifact_management.md, demo/healthhub/documents/engineering/README.md, demo/healthhub/CLAUDE.md
 
 > **Purpose**: Documents HealthHub-specific Docker environment variables, frontend build management, and pytest enforcement. This is a delta-only overlay that extends the base effectful documentation with application-specific configuration.

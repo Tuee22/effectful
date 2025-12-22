@@ -1,8 +1,8 @@
 # Metrics Quickstart
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: documents/readme.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: readme.md, tutorials/prometheus_setup.md, tutorials/grafana_dashboards.md, tutorials/alert_rules.md, tutorials/testing_guide.md, api/metrics.md, engineering/observability.md, tutorials/metric_types_guide.md, tutorials/auth_effects.md
 
 > **Purpose**: Tutorial for getting started with type-safe metrics in effectful applications.
 
@@ -11,6 +11,17 @@
 > **Core Doctrine**: For complete metrics philosophy, see [observability.md](../engineering/observability.md)
 
 > **API Reference**: For complete API documentation, see [metrics.md](../api/metrics.md)
+
+## SSoT Link Map
+
+| Need                   | Link                                             |
+| ---------------------- | ------------------------------------------------ |
+| Metrics philosophy     | [Observability](../engineering/observability.md) |
+| Complete API reference | [Metrics API](../api/metrics.md)                 |
+| Prometheus setup       | [Prometheus Setup](./prometheus_setup.md)        |
+| Alert rules            | [Alert Rules](./alert_rules.md)                  |
+| Metric types deep dive | [Metric Types Guide](./metric_types_guide.md)    |
+| Testing metrics        | [Testing Guide](./testing_guide.md)              |
 
 ______________________________________________________________________
 

@@ -1,12 +1,23 @@
 # Programs API Reference
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: documents/api/README.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: api/README.md, api/interpreters.md, api/effects.md, api/result.md, tutorials/advanced_composition.md, engineering/README.md, readme.md
 
 > **Purpose**: Reference for program execution helpers and program types.
 
 > **Core Doctrine**: For program composition diagrams and execution flow, see [architecture.md](../engineering/architecture.md#program-composition).
+
+## SSoT Link Map
+
+| Need                          | Link                                                                  |
+| ----------------------------- | --------------------------------------------------------------------- |
+| Program composition patterns  | [Architecture](../engineering/architecture.md#program-composition)    |
+| Real-world effect patterns    | [Effect Patterns](../engineering/effect_patterns.md)                  |
+| Testing programs              | [Testing](../engineering/testing.md)                                  |
+| Advanced composition examples | [Advanced Composition Tutorial](../tutorials/advanced_composition.md) |
+
+______________________________________________________________________
 
 ## Overview
 

@@ -1,10 +1,21 @@
 # Storage Effects
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: documents/readme.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: README.md, documents/readme.md, documents/api/storage.md, documents/tutorials/effect_types.md, documents/tutorials/adts_and_results.md, documents/tutorials/auth_effects.md, documents/tutorials/testing_guide.md, documents/tutorials/messaging_effects.md
 
 > **Purpose**: Tutorial covering storage effects for S3-compatible object storage operations in effectful.
+
+## SSoT Link Map
+
+| Need                   | Link                                                                |
+| ---------------------- | ------------------------------------------------------------------- |
+| Storage API reference  | [Storage API](../api/storage.md)                                    |
+| Architecture data flow | [Architecture](../engineering/architecture.md#visual-data-flow)     |
+| Effect patterns        | [Effect Patterns](../engineering/effect_patterns.md#state-machines) |
+| Effect Types           | [Effect Types](effect_types.md)                                     |
+| ADTs and Results       | [ADTs and Results](adts_and_results.md)                             |
+| Testing guide          | [Testing Guide](testing_guide.md)                                   |
 
 ## Prerequisites
 

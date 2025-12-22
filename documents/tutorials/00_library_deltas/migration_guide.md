@@ -6,6 +6,14 @@
 
 > **Purpose**: Base SSoT placeholder for Migration Guide. Demo overlays must list deltas only.
 
+## SSoT Link Map
+
+| Need                    | Link                                                        |
+| ----------------------- | ----------------------------------------------------------- |
+| Documentation standards | [Documentation Standards](../../documentation_standards.md) |
+| Main migration guide    | [Migration Guide Tutorial](../migration_guide.md)           |
+| Tutorial overview       | [Tutorials](../README.md)                                   |
+
 ______________________________________________________________________
 
 ## Summary

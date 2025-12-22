@@ -1,7 +1,7 @@
 # Metrics API Reference
 
-**Status**: Authoritative source\
-**Supersedes**: none\
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: documents/api/README.md
 
 > **Purpose**: Reference for metrics effects, ADT return types, and observability primitives in effectful.
@@ -11,6 +11,18 @@
 > **Core Doctrine**: For metrics philosophy and architecture, see [observability.md](../engineering/observability.md)
 
 > **Core Doctrine**: For metric naming and labeling standards, see [monitoring_and_alerting.md](../engineering/monitoring_and_alerting.md#monitoring-standards)
+
+## SSoT Link Map
+
+| Need                 | Link                                                                                      |
+| -------------------- | ----------------------------------------------------------------------------------------- |
+| Metrics philosophy   | [Observability](../engineering/observability.md)                                          |
+| Monitoring standards | [Monitoring and Alerting](../engineering/monitoring_and_alerting.md#monitoring-standards) |
+| Metrics quickstart   | [Metrics Quickstart](../tutorials/metrics_quickstart.md)                                  |
+| Metric types guide   | [Metric Types Guide](../tutorials/metric_types_guide.md)                                  |
+| Alert rules tutorial | [Alert Rules](../tutorials/alert_rules.md)                                                |
+| Grafana dashboards   | [Grafana Dashboards](../tutorials/grafana_dashboards.md)                                  |
+| Testing metrics      | [Testing](../engineering/testing.md)                                                      |
 
 ______________________________________________________________________
 

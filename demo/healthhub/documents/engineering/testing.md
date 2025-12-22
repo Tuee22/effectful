@@ -1,11 +1,20 @@
 # Testing
 
-**Status**: reference only
+**Status**: Reference only
 **Supersedes**: none
-**Referenced by**: | **📖 Base Standard**: [testing.md](../../../../documents/engineering/testing.md)
+**Referenced by**: none
 
 > **Purpose**: HealthHub overlay deltas for Testing. See base SSoT for canonical guidance.
 > **📖 Authoritative Reference**: [testing.md](../../../../documents/engineering/testing.md)
+> **📖 Base Standard**: [testing.md](../../../../documents/engineering/testing.md)
+
+## SSoT Link Map
+
+| Need                          | Link                                                              |
+| ----------------------------- | ----------------------------------------------------------------- |
+| Base testing standards        | [Effectful Testing](../../../../documents/engineering/testing.md) |
+| HealthHub documentation guide | [Documentation Standards](../documentation_standards.md)          |
+| HealthHub documentation hub   | [Documentation Hub](../readme.md)                                 |
 
 ## Deltas
 

@@ -6,7 +6,7 @@ from collections.abc import Generator
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TypeVar, cast
+from typing import TypeVar
 
 from asyncpg import Pool, Record
 from fastapi import FastAPI, Request
@@ -220,7 +220,17 @@ def startup_program(
         response_model=None,
     )
 
-    async def _serve_react_app(request: Request, full_path: str) -> FileResponse | JSONResponse:
+    async def _serve_react_app(*args: object, **kwargs: object) -> FileResponse | JSONResponse:
+        # Extract and validate parameters
+        request = kwargs.get("request")
+        full_path = kwargs.get("full_path", "")
+
+        # Type narrowing
+        if not isinstance(request, Request):
+            return JSONResponse({"error": "Invalid request"}, status_code=500)
+        if not isinstance(full_path, str):
+            return JSONResponse({"error": "Invalid path"}, status_code=500)
+
         if full_path.startswith("api/") or full_path.startswith("health"):
             return JSONResponse({"error": "Not found"}, status_code=404)
 
@@ -239,7 +249,7 @@ def startup_program(
     yield RegisterHttpRoute(
         app=app_handle,
         path="/{full_path:path}",
-        endpoint=cast(RouteCallable, _serve_react_app),
+        endpoint=_serve_react_app,
         methods=("GET",),
         include_in_schema=False,
         response_model=None,

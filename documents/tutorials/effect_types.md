@@ -1,12 +1,23 @@
 # Effect Types
 
-**Status**: Authoritative source\
-**Supersedes**: none\
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: documents/readme.md
 
 > **Purpose**: Tutorial covering all available effect types in effectful and how to use them.
 
 > **Core Doctrine**: For the complete architecture including effect hierarchy diagrams, see [architecture.md](../engineering/architecture.md).
+
+## SSoT Link Map
+
+| Need                              | Link                                                 |
+| --------------------------------- | ---------------------------------------------------- |
+| Architecture and effect hierarchy | [Architecture](../engineering/architecture.md)       |
+| Effects API reference             | [Effects API](../api/effects.md)                     |
+| Docker workflow                   | [Docker Workflow](../engineering/docker_workflow.md) |
+| Quickstart tutorial               | [Quickstart](quickstart.md)                          |
+| Code quality standards            | [Code Quality](../engineering/code_quality.md)       |
+| Testing effects                   | [Testing](../engineering/testing.md)                 |
 
 ## Prerequisites
 

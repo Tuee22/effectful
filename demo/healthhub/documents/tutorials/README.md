@@ -1,11 +1,23 @@
 # HealthHub Tutorials
 
-**Status**: reference only
+**Status**: Reference only
 **Supersedes**: none
-**Referenced by**: | **📖 Base Standard**: [README.md](../../../../documents/tutorials/README.md)
+**Referenced by**: none
 
 > **Purpose**: HealthHub overlay deltas for tutorials. See base SSoT for canonical journeys and guides.
 > **📖 Authoritative Reference**: [README.md](../../../../documents/tutorials/README.md)
+> **📖 Base Standard**: [README.md](../../../../documents/tutorials/README.md)
+
+## SSoT Link Map
+
+| Need                    | Link                                                                                                                                          |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Base tutorial structure | [Effectful Tutorials](../../../../documents/tutorials/README.md)                                                                              |
+| Journey guides          | [Beginner](01_journeys/beginner_journey.md), [Intermediate](01_journeys/intermediate_journey.md), [Advanced](01_journeys/advanced_journey.md) |
+| Library deltas          | [Library Deltas](00_library_deltas/README.md)                                                                                                 |
+| Role guides             | [Product Documentation - Roles](../product/roles/README.md)                                                                                   |
+| Workflows               | [Product Documentation - Workflows](../product/workflows/README.md)                                                                           |
+| Engineering patterns    | [Engineering Documentation](../engineering/README.md)                                                                                         |
 
 ## Deltas
 

@@ -1,30 +1,12 @@
 # Development Workflow
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: engineering/README.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: CLAUDE.md, demo/healthhub/CLAUDE.md, demo/healthhub/documents/engineering/build_artifact_management.md, demo/healthhub/documents/engineering/development_workflow.md, demo/healthhub/documents/engineering/docker.md, documents/engineering/README.md, documents/engineering/command_reference.md, documents/engineering/configuration.md, documents/engineering/docker_workflow.md, documents/readme.md
 
 > **Purpose**: SSoT for daily development procedures, adding features, and database management in effectful.
 
 ## SSoT Link Map
-
-```mermaid
-flowchart TB
-  DevWorkflow[Development Workflow SSoT]
-  Docker[Docker Workflow SSoT]
-  Commands[Command Reference]
-  Config[Configuration SSoT]
-  Docs[Documentation Standards]
-  Testing[Testing SSoT]
-
-  DevWorkflow --> Docker
-  DevWorkflow --> Commands
-  DevWorkflow --> Config
-  DevWorkflow --> Docs
-  DevWorkflow --> Testing
-  Docker --> Commands
-  Testing --> Docs
-```
 
 | Need                  | Link                                                     |
 | --------------------- | -------------------------------------------------------- |
@@ -33,6 +15,8 @@ flowchart TB
 | Environment variables | [Configuration](configuration.md)                        |
 | Documentation rules   | [Documentation Standards](../documentation_standards.md) |
 | Test sequencing       | [Testing](testing.md#running-tests)                      |
+| Architecture          | [Architecture](architecture.md)                          |
+| Code quality          | [Code Quality](code_quality.md)                          |
 
 ## Daily Development Loop
 

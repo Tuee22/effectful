@@ -1,11 +1,23 @@
 # HealthHub Engineering Best Practices
 
-**Status**: reference only
+**Status**: Reference only
 **Supersedes**: none
-**Referenced by**: | **📖 Base Standard**: [README.md](../../../../documents/engineering/README.md)
+**Referenced by**: demo/healthhub/documents/engineering/build_artifact_management.md, demo/healthhub/documents/engineering/docker.md
 
 > **Purpose**: HealthHub overlay deltas for Engineering Standards. See base SSoT for canonical navigation and policies.
 > **📖 Authoritative Reference**: [README.md](../../../../documents/engineering/README.md)
+> **📖 Base Standard**: [README.md](../../../../documents/engineering/README.md)
+
+## SSoT Link Map
+
+| Need                           | Link                                                                           |
+| ------------------------------ | ------------------------------------------------------------------------------ |
+| Base engineering standards     | [Effectful Engineering Standards](../../../../documents/engineering/README.md) |
+| HealthHub Docker configuration | [Docker & Environment Variables](docker.md)                                    |
+| HealthHub build artifacts      | [Build Artifact Management](build_artifact_management.md)                      |
+| HealthHub warnings policy      | [Warnings Policy](warnings_policy.md)                                          |
+| Feature engineering patterns   | [Feature Engineering Patterns](features/README.md)                             |
+| Documentation standards        | [Documentation Standards](../documentation_standards.md)                       |
 
 ______________________________________________________________________
 

@@ -33,10 +33,6 @@ services:
       # Pulsar
       PULSAR_URL: pulsar://pulsar:6650
       PULSAR_ADMIN_URL: http://pulsar:8080
-
-      # Python environment
-      PYTHONPATH: /app
-      PYTHONUNBUFFERED: "1"
     depends_on:
       postgres:
         condition: service_healthy

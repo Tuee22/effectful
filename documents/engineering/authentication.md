@@ -6,6 +6,17 @@
 
 > **Purpose**: Single Source of Truth for authentication flows and modelling across frontend and backend. Based on the pure ADT workflow from `engineering/total_pure_modelling.md`. Applies to all services and clients unless a delta overrides with additional, system-specific constraints.
 
+## SSoT Link Map
+
+| Need                   | Link                                                  |
+| ---------------------- | ----------------------------------------------------- |
+| Total pure modelling   | [Total Pure Modelling](total_pure_modelling.md)       |
+| Code quality           | [Code Quality](code_quality.md)                       |
+| Effect patterns        | [Effect Patterns](effect_patterns.md)                 |
+| Auth effects tutorial  | [Auth Effects Tutorial](../tutorials/auth_effects.md) |
+| Auth API               | [Auth API](../api/auth.md)                            |
+| Authentication feature | [Authentication Feature](features/authentication.md)  |
+
 ______________________________________________________________________
 
 ## Scope

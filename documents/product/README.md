@@ -1,10 +1,20 @@
 # Product Documentation
 
-**Status**: Authoritative source\
-**Supersedes**: none\
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/product/README.md
 
 > **Purpose**: Single Source of Truth for product-facing documentation covering HealthHub roles and workflows.
+
+## SSoT Link Map
+
+| Need                       | Link                                                          |
+| -------------------------- | ------------------------------------------------------------- |
+| Engineering implementation | [Engineering Standards](../engineering/README.md)             |
+| Role-based guides          | [Product Roles](roles/README.md)                              |
+| Complete workflows         | [Product Workflows](workflows/README.md)                      |
+| Medical state machines     | [Medical State Machines](../domain/medical_state_machines.md) |
+| Documentation standards    | [Documentation Standards](../documentation_standards.md)      |
 
 ______________________________________________________________________
 

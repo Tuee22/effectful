@@ -6,6 +6,16 @@
 
 > **Purpose**: A friendly, practical guide for modelling domain state with total, pure ADTs and state machines that match reality. Illegal states must be impossible to represent, and timing tricks or env toggles are off-limits. By separating pure decisions from side effects, we keep frontend and backend in lockstep, avoid ghost states, and stay resilient when real networks and devices misbehave.
 
+## SSoT Link Map
+
+| Need                      | Link                                                          |
+| ------------------------- | ------------------------------------------------------------- |
+| Testing standards         | [Testing](testing.md)                                         |
+| Code quality              | [Code Quality](code_quality.md)                               |
+| Authentication            | [Authentication](authentication.md)                           |
+| Architecture              | [Architecture](architecture.md)                               |
+| ADTs and Results tutorial | [ADTs and Results Tutorial](../tutorials/adts_and_results.md) |
+
 ## Why this exists
 
 Pure modelling keeps the software and the real world in sync. When every legitimate state is explicit—and impossible states simply cannot be represented—we avoid whole classes of bugs: stuck spinners, ghost sessions, flaky tests, and security gaps from “truthy enough” checks. Without these guardrails, apps drift into partial states: a page shows “Welcome Alice” while the next API call 401s, or a websocket connects with a dead token because the UI assumed a role was present. Enforcing total models matters because auth is the foundation for everything else: if it drifts, every feature inherits intermittent 401s, confused UIs, and hard-to-reproduce failures. A boring, total model means predictable behavior, reliable rollback paths, and tests that mirror production reality instead of a happy-path mock.

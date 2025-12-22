@@ -6,6 +6,15 @@
 
 > **Purpose**: Base SSoT placeholder for Adts And Results. Demo overlays must list deltas only.
 
+## SSoT Link Map
+
+| Need                           | Link                                                        |
+| ------------------------------ | ----------------------------------------------------------- |
+| Documentation standards        | [Documentation Standards](../../documentation_standards.md) |
+| Main ADTs and Results tutorial | [ADTs and Results Tutorial](../adts_and_results.md)         |
+| Result API                     | [Result API](../../api/result.md)                           |
+| Tutorial overview              | [Tutorials](../README.md)                                   |
+
 ______________________________________________________________________
 
 ## Summary

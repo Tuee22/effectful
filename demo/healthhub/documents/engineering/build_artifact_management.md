@@ -1,7 +1,7 @@
 # Build Artifact Management (HealthHub Overlay)
 
-**Status**: Reference only\
-**Supersedes**: none\
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/engineering/docker.md, engineering/docker_workflow.md, demo/healthhub/documents/engineering/README.md, demo/healthhub/CLAUDE.md
 
 > **Purpose**: Documents HealthHub-specific build artifacts including frontend build output, lock file patterns, and cache namespace organization. This is a delta-only overlay that extends the base effectful documentation with application-specific artifacts.

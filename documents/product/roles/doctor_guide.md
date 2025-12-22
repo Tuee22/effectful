@@ -1,10 +1,20 @@
 # Doctor Guide
 
-**Status**: Authoritative source\
-**Supersedes**: none\
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
 > **Purpose**: Single Source of Truth for doctor capabilities, restrictions, and workflows in HealthHub.
+
+## SSoT Link Map
+
+| Need                   | Link                                                                        |
+| ---------------------- | --------------------------------------------------------------------------- |
+| Authentication feature | [Authentication Feature](../../engineering/features/authentication.md)      |
+| Intermediate journey   | [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md) |
+| Lab results workflow   | [Lab Result Workflow](../workflows/lab_result_workflow.md)                  |
+| Prescription workflow  | [Prescription Workflow](../workflows/prescription_workflow.md)              |
+| Appointment workflow   | [Appointment Lifecycle](../workflows/appointment_lifecycle.md)              |
 
 ## Prerequisites
 

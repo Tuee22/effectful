@@ -1,8 +1,8 @@
 # Alert Rules Tutorial
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: documents/readme.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: readme.md, tutorials/prometheus_setup.md, tutorials/metrics_quickstart.md, tutorials/metric_types_guide.md, tutorials/grafana_dashboards.md
 
 > **Purpose**: Tutorial for writing actionable Prometheus alert rules for effectful applications.
 
@@ -11,6 +11,15 @@
 > **Core Doctrine**: For alerting philosophy, see [monitoring_and_alerting.md](../engineering/monitoring_and_alerting.md#alerting-policy)
 
 > **Tutorial**: For Prometheus setup, see [prometheus_setup.md](./prometheus_setup.md)
+
+## SSoT Link Map
+
+| Need                | Link                                                                               |
+| ------------------- | ---------------------------------------------------------------------------------- |
+| Alerting philosophy | [Monitoring & Alerting](../engineering/monitoring_and_alerting.md#alerting-policy) |
+| Prometheus setup    | [Prometheus Setup](./prometheus_setup.md)                                          |
+| Metrics quickstart  | [Metrics Quickstart](./metrics_quickstart.md)                                      |
+| Grafana dashboards  | [Grafana Dashboards](./grafana_dashboards.md)                                      |
 
 ______________________________________________________________________
 

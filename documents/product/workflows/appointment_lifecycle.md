@@ -1,10 +1,20 @@
 # Appointment Lifecycle Workflow
 
-**Status**: Authoritative source\
-**Supersedes**: none\
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
 > **Purpose**: Single Source of Truth for the HealthHub appointment lifecycle from request through invoicing.
+
+## SSoT Link Map
+
+| Need                  | Link                                                               |
+| --------------------- | ------------------------------------------------------------------ |
+| Appointments feature  | [Appointments Feature](../../engineering/features/appointments.md) |
+| Invoices feature      | [Invoices Feature](../../engineering/features/invoices.md)         |
+| Appointment workflows | [Appointment Workflows](../../domain/appointment_workflows.md)     |
+| Patient guide         | [Patient Guide](../roles/patient_guide.md)                         |
+| Doctor guide          | [Doctor Guide](../roles/doctor_guide.md)                           |
 
 ## Prerequisites
 

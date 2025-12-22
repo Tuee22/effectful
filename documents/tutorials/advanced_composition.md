@@ -1,12 +1,19 @@
 # Tutorial 06: Advanced Composition
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: documents/readme.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: README.md, documents/readme.md, documents/api/programs.md, documents/tutorials/production_deployment.md, documents/tutorials/00_library_deltas/advanced_composition.md, demo/healthhub/documents/tutorials/00_library_deltas/README.md, demo/healthhub/documents/tutorials/00_library_deltas/advanced_composition.md, demo/healthhub/documents/tutorials/01_journeys/README.md, demo/healthhub/documents/tutorials/01_journeys/advanced_journey.md
 
 > **Purpose**: Tutorial on building complex workflows by composing smaller, reusable program components.
 
-> **Core Doctrine**: For the complete program composition patterns and diagrams, see [architecture.md](../engineering/architecture.md#program-composition).
+## SSoT Link Map
+
+| Need                         | Link                                                               |
+| ---------------------------- | ------------------------------------------------------------------ |
+| Program composition patterns | [Architecture](../engineering/architecture.md#program-composition) |
+| Programs API reference       | [Programs API](../api/programs.md)                                 |
+| Production deployment        | [Production Deployment](production_deployment.md)                  |
+| Effect patterns              | [Effect Patterns](../engineering/effect_patterns.md)               |
 
 ## Prerequisites
 

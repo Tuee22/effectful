@@ -1,12 +1,19 @@
 # Tutorial 05: Production Deployment
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: documents/readme.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: README.md, documents/readme.md, examples/README.md, documents/api/interpreters.md, documents/tutorials/quickstart.md, documents/tutorials/adts_and_results.md, documents/tutorials/advanced_composition.md, documents/tutorials/00_library_deltas/production_deployment.md, demo/healthhub/documents/tutorials/00_library_deltas/README.md, demo/healthhub/documents/tutorials/00_library_deltas/production_deployment.md, demo/healthhub/documents/tutorials/01_journeys/advanced_journey.md
 
 > **Purpose**: Tutorial for deploying effectful programs to production with proper infrastructure configuration.
 
-> **Core Doctrine**: For the complete infrastructure topology and architecture diagrams, see [architecture.md](../engineering/architecture.md#infrastructure-topology).
+## SSoT Link Map
+
+| Need                    | Link                                                                                         |
+| ----------------------- | -------------------------------------------------------------------------------------------- |
+| Infrastructure topology | [Architecture](../engineering/architecture.md#infrastructure-topology)                       |
+| Interpreters API        | [Interpreters API](../api/interpreters.md)                                                   |
+| Advanced composition    | [Advanced Composition](advanced_composition.md)                                              |
+| Configuration lifecycle | [Code Quality](../engineering/code_quality.md#doctrine-7-configuration-lifecycle-management) |
 
 ## Prerequisites
 

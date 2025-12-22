@@ -6,6 +6,16 @@
 
 > **Purpose**: Base SSoT placeholder for Authentication. Demo overlays must list deltas only.
 
+## SSoT Link Map
+
+| Need                       | Link                                                        |
+| -------------------------- | ----------------------------------------------------------- |
+| Documentation standards    | [Documentation Standards](../../documentation_standards.md) |
+| Auth API                   | [Auth API](../../api/auth.md)                               |
+| Auth effects tutorial      | [Auth Effects Tutorial](../../tutorials/auth_effects.md)    |
+| Authentication engineering | [Authentication Engineering](../authentication.md)          |
+| Role-based guides          | [Role-Based Guides](../../product/roles/README.md)          |
+
 ______________________________________________________________________
 
 ## Summary

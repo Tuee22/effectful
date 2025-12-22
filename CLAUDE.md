@@ -1,5 +1,11 @@
 # Claude Code Patterns for Effectful
 
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: README.md, demo/healthhub/CLAUDE.md, demo/healthhub/documents/engineering/build_artifact_management.md, demo/healthhub/documents/engineering/docker.md, documents/api/README.md, documents/contributing.md, documents/documentation_standards.md, documents/engineering/README.md, documents/engineering/command_reference.md, documents/engineering/development_workflow.md, documents/engineering/docker_workflow.md, documents/engineering/effect_patterns.md
+
+> **Purpose**: Developer guide for Claude Code AI assistant when working on the effectful codebase, covering engineering standards, testing patterns, Docker workflow, and AI-specific policies.
+
 ## Project Overview
 
 **Effectful** is a pure functional effect system library for Python that brings algebraic data types, explicit error handling, and composable programs to async Python applications.
@@ -14,18 +20,18 @@
 
 Quick links to key standards:
 
-| Standard | Purpose |
-|----------|---------|
-| [Engineering Standards](documents/engineering/README.md) | Master index of all standards |
-| [Architecture](documents/engineering/architecture.md) | 5-layer architecture design |
-| [Code Quality](documents/engineering/code_quality.md) | Type safety + purity doctrines and anti-pattern routing |
-| [Testing](documents/engineering/testing.md) | 22 test anti-patterns |
-| [Testing Architecture](documents/engineering/testing_architecture.md) | Test organization and Test Terseness Doctrine |
-| [Docker Workflow](documents/engineering/docker_workflow.md) | All development in Docker |
-| [Command Reference](documents/engineering/command_reference.md) | Docker commands and test execution |
-| [Monitoring & Alerting](documents/engineering/monitoring_and_alerting.md) | Metric standards + alert policy |
-| [Development Workflow](documents/engineering/development_workflow.md) | Daily development loop |
-| [Effect Patterns](documents/engineering/effect_patterns.md) | Real-world effect program patterns |
+| Standard                                                                  | Purpose                                                 |
+| ------------------------------------------------------------------------- | ------------------------------------------------------- |
+| [Engineering Standards](documents/engineering/README.md)                  | Master index of all standards                           |
+| [Architecture](documents/engineering/architecture.md)                     | 5-layer architecture design                             |
+| [Code Quality](documents/engineering/code_quality.md)                     | Type safety + purity doctrines and anti-pattern routing |
+| [Testing](documents/engineering/testing.md)                               | 22 test anti-patterns                                   |
+| [Testing Architecture](documents/engineering/testing_architecture.md)     | Test organization and Test Terseness Doctrine           |
+| [Docker Workflow](documents/engineering/docker_workflow.md)               | All development in Docker                               |
+| [Command Reference](documents/engineering/command_reference.md)           | Docker commands and test execution                      |
+| [Monitoring & Alerting](documents/engineering/monitoring_and_alerting.md) | Metric standards + alert policy                         |
+| [Development Workflow](documents/engineering/development_workflow.md)     | Daily development loop                                  |
+| [Effect Patterns](documents/engineering/effect_patterns.md)               | Real-world effect program patterns                      |
 
 ## Quick Reference
 
@@ -40,6 +46,27 @@ All Docker commands follow the pattern `docker compose -f docker/docker-compose.
 > **📖 SSoT**: [Code Quality - Universal Success Criteria](documents/engineering/code_quality.md#universal-success-criteria)
 
 All code changes must achieve exit code 0 with zero MyPy errors, zero skipped tests, and zero escape hatches (Any/cast/type:ignore). See [Code Quality](documents/engineering/code_quality.md#universal-success-criteria) for the complete criteria list.
+
+### Governance Compliance Check
+
+> **📖 SSoT**: [Code Quality](documents/engineering/code_quality.md)
+
+Run governance compliance checks to validate adherence to the 6 core doctrines:
+
+```bash
+docker compose -f docker/docker-compose.yml exec effectful poetry run compliance-check
+```
+
+**Validates**:
+
+1. **SSoT Architecture** - Explicit link governance, SSoT Link Maps, proper metadata
+1. **Environment Variable Policy** - Dockerfile as sole source, fail-fast access (os.environ[])
+1. **Cache Placement Contract** - All caches in `/opt/**`, never bind-mounted
+1. **Delta-Only Overlay Pattern** - HealthHub docs inherit base + deltas only
+1. **Zero-Warning Policy** - No type:ignore, no pytest.skip()
+1. **Deterministic Builds** - Lockfiles not versioned, regenerated in-container
+
+**Exit codes**: 0 = all checks passed, 1 = violations found
 
 ## Claude Code-Specific Patterns
 
@@ -60,7 +87,9 @@ All code changes must achieve exit code 0 with zero MyPy errors, zero skipped te
 See [documents/contributing.md](documents/contributing.md) for complete contributing guidelines.
 
 **Quick checklist**:
+
 - [ ] Code quality: `poetry run check-code` exits 0
+- [ ] Governance compliance: `poetry run compliance-check` exits 0
 - [ ] Docs follow [documentation standards](documents/documentation_standards.md) and open items in [MIGRATION_PLAN.md](documents/MIGRATION_PLAN.md)
 - [ ] Tests for all features (unit + integration)
 - [ ] No forbidden constructs (Any/cast/type:ignore)
@@ -78,6 +107,7 @@ See [documents/contributing.md](documents/contributing.md) for complete contribu
 **Primary reference**: [documents/engineering/README.md](documents/engineering/README.md) - Complete master index
 
 **Core standards**:
+
 - [Architecture](documents/engineering/architecture.md) - 5-layer design
 - [Code Quality](documents/engineering/code_quality.md) - Type safety + purity doctrines
 - [Testing](documents/engineering/testing.md) - 22 anti-patterns
@@ -103,7 +133,21 @@ See [documents/contributing.md](documents/contributing.md) for complete contribu
 
 - [HealthHub](demo/healthhub/) - Healthcare management portal demonstrating real-world effectful usage
 
----
+______________________________________________________________________
+
+## SSoT Link Map
+
+| Need                         | Link                                                                  |
+| ---------------------------- | --------------------------------------------------------------------- |
+| Engineering standards index  | [Engineering Standards](documents/engineering/README.md)              |
+| Docker workflow and commands | [Command Reference](documents/engineering/command_reference.md)       |
+| Code quality standards       | [Code Quality](documents/engineering/code_quality.md)                 |
+| Testing standards            | [Testing Architecture](documents/engineering/testing_architecture.md) |
+| Development workflow         | [Development Workflow](documents/engineering/development_workflow.md) |
+| Documentation standards      | [Documentation Standards](documents/documentation_standards.md)       |
+| Contributing guidelines      | [Contributing Guide](documents/contributing.md)                       |
+
+______________________________________________________________________
 
 **Status**: Library foundation complete | Docker infrastructure ready | 329 tests passing
 **Philosophy**: If the type checker passes, the program is correct. Make the type system work for you, not against you.

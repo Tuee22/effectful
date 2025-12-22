@@ -1,12 +1,23 @@
 # Result Type API Reference
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: documents/api/README.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: api/README.md, api/interpreters.md, api/effects.md, api/programs.md, api/optional_value.md, tutorials/adts_and_results.md, readme.md
 
 > **Purpose**: Reference for the `Result[T, E]` type and related utilities.
 
 > **Core Doctrine**: For the Result type patterns and error handling diagrams, see [Code Quality](../engineering/code_quality.md#3-result-type-for-error-handling).
+
+## SSoT Link Map
+
+| Need                  | Link                                                                            |
+| --------------------- | ------------------------------------------------------------------------------- |
+| Type safety patterns  | [Code Quality](../engineering/code_quality.md#3-result-type-for-error-handling) |
+| Effect hierarchy      | [Architecture](../engineering/architecture.md)                                  |
+| Testing Result values | [Testing](../engineering/testing.md)                                            |
+| ADT fundamentals      | [Tutorials - ADTs and Results](../tutorials/adts_and_results.md)                |
+
+______________________________________________________________________
 
 ## Overview
 

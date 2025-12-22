@@ -38,6 +38,7 @@ codespell = "^2.4.1"
 [tool.poetry.scripts]
 # Code quality
 check-code = "effectful_tools.check_code:main"
+compliance-check = "effectful_tools.check_compliance:main"
 
 # Testing
 test-all = "effectful_tools.test_runner:run_all"
@@ -59,7 +60,7 @@ addopts = [
     "--cov-report=html",
     "--cov-report=xml",
 ]
-cache_dir = "/opt/pytest_cache"
+cache_dir = "/opt/effectful/pytest_cache"
 timeout = 60
 timeout_method = "thread"
 markers = [

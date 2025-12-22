@@ -6,6 +6,16 @@
 
 > **Purpose**: Core ADT for representing optional values using functional algebraic data types instead of Python's Optional; provides explicit absence reasons and type-safe pattern matching.
 
+## SSoT Link Map
+
+| Need                      | Link                                                          |
+| ------------------------- | ------------------------------------------------------------- |
+| Result type documentation | [Result API](result.md)                                       |
+| ADTs and Results tutorial | [ADTs and Results Tutorial](../tutorials/adts_and_results.md) |
+| Type safety patterns      | [Code Quality](../engineering/code_quality.md)                |
+| Architecture patterns     | [Architecture](../engineering/architecture.md)                |
+| Effect patterns           | [Effect Patterns](../engineering/effect_patterns.md)          |
+
 ______________________________________________________________________
 
 ## Overview

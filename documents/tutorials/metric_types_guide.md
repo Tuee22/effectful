@@ -1,8 +1,8 @@
 # Metric Types Guide
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: documents/readme.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: readme.md, tutorials/metrics_quickstart.md, tutorials/prometheus_setup.md, tutorials/alert_rules.md, api/metrics.md
 
 > **Purpose**: Guide for choosing the right Prometheus metric type for effectful applications.
 
@@ -11,6 +11,16 @@
 > **Core Doctrine**: For complete metrics philosophy, see [observability.md](../engineering/observability.md)
 
 > **Tutorial**: For quickstart, see [metrics_quickstart.md](./metrics_quickstart.md)
+
+## SSoT Link Map
+
+| Need                   | Link                                             |
+| ---------------------- | ------------------------------------------------ |
+| Metrics philosophy     | [Observability](../engineering/observability.md) |
+| Getting started        | [Metrics Quickstart](./metrics_quickstart.md)    |
+| Complete API reference | [Metrics API](../api/metrics.md)                 |
+| Prometheus setup       | [Prometheus Setup](./prometheus_setup.md)        |
+| Alert rules            | [Alert Rules](./alert_rules.md)                  |
 
 ______________________________________________________________________
 

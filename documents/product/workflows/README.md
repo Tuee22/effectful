@@ -1,10 +1,19 @@
 # Workflow Guides
 
-**Status**: Authoritative source\
-**Supersedes**: none\
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/product/workflows/README.md
 
 > **Purpose**: Single Source of Truth for HealthHub end-to-end workflow guides that span multiple features.
+
+## SSoT Link Map
+
+| Need                    | Link                                                                                                                                                                                             |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Product overview        | [Product Documentation](../README.md)                                                                                                                                                            |
+| Role-based guides       | [Product Roles](../roles/README.md)                                                                                                                                                              |
+| Individual workflows    | [Patient Onboarding](patient_onboarding.md), [Appointment Lifecycle](appointment_lifecycle.md), [Prescription Workflow](prescription_workflow.md), [Lab Result Workflow](lab_result_workflow.md) |
+| Documentation standards | [Documentation Standards](../../documentation_standards.md)                                                                                                                                      |
 
 ______________________________________________________________________
 

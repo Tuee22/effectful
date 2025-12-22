@@ -6,6 +6,14 @@
 
 > **Purpose**: Base SSoT placeholder for Quickstart. Demo overlays must list deltas only.
 
+## SSoT Link Map
+
+| Need                     | Link                                                        |
+| ------------------------ | ----------------------------------------------------------- |
+| Documentation standards  | [Documentation Standards](../../documentation_standards.md) |
+| Main quickstart tutorial | [Quickstart Tutorial](../quickstart.md)                     |
+| Tutorial overview        | [Tutorials](../README.md)                                   |
+
 ______________________________________________________________________
 
 ## Summary

@@ -1,7 +1,7 @@
 # Code Quality
 
-**Status**: Authoritative source\
-**Supersedes**: type_safety_enforcement.md, purity.md\
+**Status**: Authoritative source
+**Supersedes**: type_safety_enforcement.md, purity.md
 **Referenced by**: engineering/README.md, documents/readme.md, engineering/warnings_policy.md
 
 > **Purpose**: Single Source of Truth for type safety, purity, and code quality enforcement in Effectful.

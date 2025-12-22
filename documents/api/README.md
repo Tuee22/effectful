@@ -1,12 +1,28 @@
 # API Reference
 
-**Status**: Authoritative source\
-**Supersedes**: none\
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: documents/readme.md
 
 > **Purpose**: Navigation hub for all effectful API reference content.
 
 Complete API documentation for the effectful package.
+
+## SSoT Link Map
+
+| Need                         | Link                                           |
+| ---------------------------- | ---------------------------------------------- |
+| Effect types reference       | [Effects API](./effects.md)                    |
+| Result type documentation    | [Result Type API](./result.md)                 |
+| Optional value documentation | [OptionalValue API](./optional_value.md)       |
+| Interpreter configuration    | [Interpreters API](./interpreters.md)          |
+| Program execution            | [Programs API](./programs.md)                  |
+| Auth effects                 | [Auth API](./auth.md)                          |
+| Messaging effects            | [Messaging API](./messaging.md)                |
+| Storage effects              | [Storage API](./storage.md)                    |
+| Metrics effects              | [Metrics API](./metrics.md)                    |
+| Testing patterns             | [Testing Standards](../engineering/testing.md) |
+| Architecture overview        | [Architecture](../engineering/architecture.md) |
 
 ## Overview
 

@@ -1,10 +1,19 @@
 # Admin Guide
 
-**Status**: Authoritative source\
-**Supersedes**: none\
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
 > **Purpose**: Single Source of Truth for admin capabilities, restrictions, and workflows in HealthHub.
+
+## SSoT Link Map
+
+| Need                   | Link                                                                   |
+| ---------------------- | ---------------------------------------------------------------------- |
+| Authentication feature | [Authentication Feature](../../engineering/features/authentication.md) |
+| Advanced journey       | [Advanced Journey](../../tutorials/01_journeys/advanced_journey.md)    |
+| Patient onboarding     | [Patient Onboarding](../workflows/patient_onboarding.md)               |
+| HIPAA compliance       | [HIPAA Compliance](../../domain/hipaa_compliance.md)                   |
 
 ## Prerequisites
 

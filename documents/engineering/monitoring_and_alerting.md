@@ -1,7 +1,7 @@
 # Monitoring and Alerting
 
-**Status**: Authoritative source\
-**Supersedes**: monitoring_standards.md, alerting.md\
+**Status**: Authoritative source
+**Supersedes**: monitoring_standards.md, alerting.md
 **Referenced by**: engineering/README.md, documents/readme.md
 
 > **Purpose**: Single Source of Truth for monitoring standards and alerting policy in Effectful.

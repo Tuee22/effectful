@@ -1,7 +1,7 @@
 # Tutorial 07: Migration Guide
 
-**Status**: Authoritative source\
-**Supersedes**: none\
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: documents/readme.md
 
 > **Purpose**: Tutorial for migrating from imperative WebSocket code to effectful programs.
@@ -10,6 +10,17 @@
 >
 > - [architecture.md](../engineering/architecture.md) - 5-layer architecture
 > - [Code Quality](../engineering/code_quality.md) - Result types and ADTs
+
+## SSoT Link Map
+
+| Need                 | Link                                           |
+| -------------------- | ---------------------------------------------- |
+| 5-layer architecture | [Architecture](../engineering/architecture.md) |
+| Type safety patterns | [Code Quality](../engineering/code_quality.md) |
+| Effect types         | [Effects API](../api/effects.md)               |
+| Program patterns     | [Programs API](../api/programs.md)             |
+| Testing strategies   | [Testing](../engineering/testing.md)           |
+| Previous tutorials   | [Tutorials](README.md)                         |
 
 ## Prerequisites
 

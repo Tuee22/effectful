@@ -1,10 +1,20 @@
 # Lab Result Workflow
 
-**Status**: Authoritative source\
-**Supersedes**: none\
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
 > **Purpose**: Single Source of Truth for the HealthHub lab result workflow from submission through doctor review and notifications.
+
+## SSoT Link Map
+
+| Need                 | Link                                                                        |
+| -------------------- | --------------------------------------------------------------------------- |
+| Lab results feature  | [Lab Results Feature](../../engineering/features/lab_results.md)            |
+| Intermediate journey | [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md) |
+| Doctor guide         | [Doctor Guide](../roles/doctor_guide.md)                                    |
+| Patient guide        | [Patient Guide](../roles/patient_guide.md)                                  |
+| HIPAA compliance     | [HIPAA Compliance](../../domain/hipaa_compliance.md)                        |
 
 ## Prerequisites
 

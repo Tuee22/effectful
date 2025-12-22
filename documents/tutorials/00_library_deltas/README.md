@@ -6,6 +6,14 @@
 
 > **Purpose**: Base SSoT placeholder for Readme. Demo overlays must list deltas only.
 
+## SSoT Link Map
+
+| Need                       | Link                                                                        |
+| -------------------------- | --------------------------------------------------------------------------- |
+| Documentation standards    | [Documentation Standards](../../documentation_standards.md)                 |
+| Tutorial overview          | [Tutorials](../README.md)                                                   |
+| Delta-only overlay pattern | [Documentation Standards - Delta Pattern](../../documentation_standards.md) |
+
 ______________________________________________________________________
 
 ## Summary

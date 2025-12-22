@@ -1,12 +1,25 @@
 # Effects API Reference
 
-**Status**: Authoritative source\
-**Supersedes**: none\
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: documents/api/README.md
 
 > **Purpose**: Comprehensive reference for all effect types in the effectful package.
 
 > **Core Doctrine**: For the effect type hierarchy diagram and architecture patterns, see [architecture.md](../engineering/architecture.md#effect-type-hierarchy).
+
+## SSoT Link Map
+
+| Need                      | Link                                                                 |
+| ------------------------- | -------------------------------------------------------------------- |
+| Effect type hierarchy     | [Architecture](../engineering/architecture.md#effect-type-hierarchy) |
+| Auth effects              | [Auth API](auth.md)                                                  |
+| Messaging effects         | [Messaging API](messaging.md)                                        |
+| Storage effects           | [Storage API](storage.md)                                            |
+| Metrics effects           | [Metrics API](metrics.md)                                            |
+| Interpreter configuration | [Interpreters API](interpreters.md)                                  |
+| Program execution         | [Programs API](programs.md)                                          |
+| Testing effects           | [Testing](../engineering/testing.md)                                 |
 
 ## Overview
 

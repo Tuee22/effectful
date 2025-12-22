@@ -1,12 +1,23 @@
 # Interpreters API Reference
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: documents/api/README.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: api/README.md, api/programs.md, api/result.md, api/effects.md, api/auth.md, api/messaging.md, api/storage.md, tutorials/production_deployment.md, readme.md
 
 > **Purpose**: Reference for effect interpreters and interpreter error types.
 
 > **Core Doctrine**: For the 5-layer architecture and data flow diagrams, see [architecture.md](../engineering/architecture.md#5-layer-architecture).
+
+## SSoT Link Map
+
+| Need                         | Link                                                                        |
+| ---------------------------- | --------------------------------------------------------------------------- |
+| 5-layer architecture         | [Architecture](../engineering/architecture.md#5-layer-architecture)         |
+| Interpreter testing patterns | [Testing](../engineering/testing.md#part-4-four-layer-testing-architecture) |
+| Production deployment        | [Production Deployment Tutorial](../tutorials/production_deployment.md)     |
+| Effect execution flow        | [Effect Patterns](../engineering/effect_patterns.md)                        |
+
+______________________________________________________________________
 
 ## Overview
 

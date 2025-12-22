@@ -175,7 +175,7 @@ class RedisAuthService(AuthService):
                 new_token = await self.generate_token(
                     user_id,
                     claims,
-                    ttl_seconds=int(os.getenv("JWT_REFRESH_TOKEN_TTL_SECONDS", "3600")),
+                    ttl_seconds=int(os.environ["JWT_REFRESH_TOKEN_TTL_SECONDS"]),
                 )
                 return TokenRefreshed(access_token=new_token)
             case TokenExpired():
@@ -211,7 +211,7 @@ class RedisAuthService(AuthService):
             # If we can't decode the token, blacklist it for 24 hours as fallback
             await self._redis.setex(
                 f"auth:blacklist:{token}",
-                int(os.getenv("JWT_REVOCATION_DEFAULT_TTL_SECONDS", "86400")),
+                int(os.environ["JWT_REVOCATION_DEFAULT_TTL_SECONDS"]),
                 "revoked",
             )
 
@@ -252,7 +252,7 @@ class RedisAuthService(AuthService):
                 "sha256",
                 password.encode("utf-8"),
                 salt,
-                int(os.getenv("PASSWORD_HASH_ITERATIONS", "100000")),
+                int(os.environ["PASSWORD_HASH_ITERATIONS"]),
             ).hex()
             return hmac.compare_digest(computed_hash, stored_hash)
         except (ValueError, IndexError):
@@ -272,6 +272,6 @@ class RedisAuthService(AuthService):
             "sha256",
             password.encode("utf-8"),
             salt,
-            int(os.getenv("PASSWORD_HASH_ITERATIONS", "100000")),
+            int(os.environ["PASSWORD_HASH_ITERATIONS"]),
         ).hex()
         return f"{salt.hex()}${hashed}"

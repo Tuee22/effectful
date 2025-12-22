@@ -1,7 +1,7 @@
 # Effectful Engineering Standards
 
-**Status**: Reference only\
-**Supersedes**: none\
+**Status**: Reference only
+**Supersedes**: none
 **Referenced by**: documents/readme.md, CLAUDE.md, contributing.md, engineering/warnings_policy.md
 
 > **Purpose**: Navigation hub for engineering practices, coding standards, and development workflows.

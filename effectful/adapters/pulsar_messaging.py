@@ -106,7 +106,7 @@ class PulsarMessageProducer(MessageProducer):
                 try:
                     self._producers[topic] = self._client.create_producer(
                         topic,
-                        send_timeout_millis=int(os.getenv("PULSAR_SEND_TIMEOUT_MS", "5000")),
+                        send_timeout_millis=int(os.environ["PULSAR_SEND_TIMEOUT_MS"]),
                     )
                 except (TimeoutError, pulsar.Timeout):
                     # Timeout during producer creation indicates BookKeeper not ready

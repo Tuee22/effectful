@@ -1,25 +1,12 @@
 # Effect Program Patterns
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: engineering/README.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: CLAUDE.md, demo/healthhub/CLAUDE.md, demo/healthhub/documents/domain/medical_state_machines.md, demo/healthhub/documents/engineering/README.md, demo/healthhub/documents/engineering/effect_patterns.md, demo/healthhub/documents/engineering/features/prescriptions.md, demo/healthhub/documents/tutorials/01_journeys/advanced_journey.md, demo/healthhub/documents/tutorials/01_journeys/intermediate_journey.md, documents/api/interpreters.md, documents/api/optional_value.md, documents/api/programs.md, documents/api/storage.md, documents/engineering/README.md, documents/engineering/architecture.md, documents/engineering/authentication.md, documents/engineering/code_quality.md, documents/product/workflows/appointment_lifecycle.md, documents/readme.md, documents/tutorials/advanced_composition.md, documents/tutorials/messaging_effects.md, documents/tutorials/quickstart.md, documents/tutorials/storage_effects.md
 
 > **Purpose**: SSoT for effect program composition, error handling, and real-world code examples in effectful.
 
 ## SSoT Link Map
-
-```mermaid
-flowchart TB
-  Effects[Effect Patterns SSoT]
-  CodeQuality[Code Quality SSoT]
-  Testing[Testing SSoT]
-  Architecture[Architecture SSoT]
-
-  Effects --> CodeQuality
-  Effects --> Testing
-  Effects --> Architecture
-  CodeQuality --> Architecture
-```
 
 | Need                                    | Link                                                         |
 | --------------------------------------- | ------------------------------------------------------------ |
@@ -27,6 +14,9 @@ flowchart TB
 | Type signatures and unions              | [Code Quality](code_quality.md#type-safety-doctrines)        |
 | How to test programs                    | [Testing](testing.md#part-4-four-layer-testing-architecture) |
 | Where patterns sit in layers            | [Architecture](architecture.md#core-abstractions)            |
+| ADTs and Results                        | [ADTs and Results](../tutorials/adts_and_results.md)         |
+| Testing guide                           | [Testing Guide](../tutorials/testing_guide.md)               |
+| OptionalValue API                       | [OptionalValue API](../api/optional_value.md)                |
 
 ## Overview
 

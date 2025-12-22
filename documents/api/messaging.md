@@ -1,10 +1,20 @@
 # Messaging Effects API Reference
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: documents/api/README.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: demo/healthhub/documents/api/messaging.md, documents/api/README.md, documents/api/effects.md, documents/api/interpreters.md, documents/api/storage.md, documents/documentation_standards.md, documents/engineering/functional_catalogue.md, documents/readme.md, documents/tutorials/messaging_effects.md
 
 > **Purpose**: Reference for messaging effect types used for pub/sub communication with brokers like Apache Pulsar.
+
+## SSoT Link Map
+
+| Need                      | Link                                                            |
+| ------------------------- | --------------------------------------------------------------- |
+| All effects overview      | [Effects API](effects.md)                                       |
+| Messaging tutorial        | [Messaging Effects Tutorial](../tutorials/messaging_effects.md) |
+| Testing messaging effects | [Testing](../engineering/testing.md)                            |
+| Architecture patterns     | [Architecture](../engineering/architecture.md)                  |
+| Effect patterns           | [Effect Patterns](../engineering/effect_patterns.md)            |
 
 ## Effect Types
 
@@ -446,6 +456,19 @@ def event_processor() -> Generator[AllEffects, EffectResult, dict[str, int]]:
     yield SendText(text=f"Stats: {stats}")
     return stats
 ```
+
+## SSoT Link Map
+
+| Need                                        | Link                                                            |
+| ------------------------------------------- | --------------------------------------------------------------- |
+| Overview of all effect types                | [Effects Overview](effects.md)                                  |
+| Storage effects (S3/object storage)         | [Storage Effects](storage.md)                                   |
+| MessagingInterpreter implementation details | [Interpreters](interpreters.md)                                 |
+| Step-by-step messaging tutorial             | [Messaging Effects Tutorial](../tutorials/messaging_effects.md) |
+| Result type for error handling              | [Result API](result.md)                                         |
+| Program composition patterns                | [Programs API](programs.md)                                     |
+| Effect patterns                             | [Effect Patterns](../engineering/effect_patterns.md)            |
+| Testing messaging effects                   | [Testing Guide](../tutorials/testing_guide.md)                  |
 
 ## See Also
 

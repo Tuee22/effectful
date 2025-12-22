@@ -1,31 +1,14 @@
 # Docker Development Doctrine
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: CLAUDE.md, command_reference.md, configuration.md, development_workflow.md, engineering/README.md, README.md, engineering/warnings_policy.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: AGENTS.md, CLAUDE.md, README.md, demo/healthhub/CLAUDE.md, demo/healthhub/documents/engineering/build_artifact_management.md, demo/healthhub/documents/engineering/docker.md, demo/healthhub/documents/engineering/docker_workflow.md, demo/healthhub/documents/readme.md, demo/healthhub/documents/tutorials/01_journeys/advanced_journey.md, documents/api/README.md, documents/contributing.md, documents/documentation_standards.md, documents/engineering/README.md, documents/engineering/architecture.md, documents/engineering/build_artifact_management.md, documents/engineering/code_quality.md, documents/engineering/command_reference.md, documents/engineering/configuration.md, documents/engineering/development_workflow.md, documents/engineering/docker.md, documents/engineering/observability.md, documents/engineering/testing.md, documents/engineering/testing_architecture.md, documents/engineering/warnings_policy.md, documents/readme.md, documents/tutorials/effect_types.md, documents/tutorials/grafana_dashboards.md, documents/tutorials/prometheus_setup.md, documents/tutorials/quickstart.md, documents/tutorials/testing_guide.md
 
 > **Purpose**: Single Source of Truth for all Docker development workflow and environment setup in effectful.
 
 ______________________________________________________________________
 
 ## SSoT Link Map
-
-```mermaid
-flowchart TB
-  Docker[Docker Workflow SSoT]
-  Commands[Command Reference]
-  DevWorkflow[Development Workflow]
-  Config[Configuration SSoT]
-  Testing[Testing SSoT]
-  Docs[Documentation Standards]
-
-  Docker --> Commands
-  Docker --> DevWorkflow
-  Docker --> Config
-  Docker --> Testing
-  Docker --> Docs
-  Testing --> Docs
-```
 
 | Need                       | Link                                                     |
 | -------------------------- | -------------------------------------------------------- |
@@ -34,6 +17,8 @@ flowchart TB
 | Environment variables      | [Docker & Environment Variables](docker.md)              |
 | How to test                | [Testing](testing.md#running-tests)                      |
 | Documentation requirements | [Documentation Standards](../documentation_standards.md) |
+| Configuration              | [Configuration](configuration.md)                        |
+| Code quality               | [Code Quality](code_quality.md)                          |
 
 ## Development Contract
 

@@ -1,7 +1,7 @@
 # Build Artifact Management
 
-**Status**: Authoritative source\
-**Supersedes**: none\
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: engineering/README.md
 
 > **Purpose**: Authoritative rules for what counts as a build artifact, where it lives, and why it must never be versioned or copied out of the container.

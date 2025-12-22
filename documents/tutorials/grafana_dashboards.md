@@ -1,8 +1,8 @@
 # Grafana Dashboards Tutorial
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: documents/readme.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: readme.md, tutorials/alert_rules.md, tutorials/prometheus_setup.md, tutorials/metrics_quickstart.md, engineering/docker_workflow.md
 
 > **Purpose**: Tutorial for building actionable Grafana dashboards for effectful metrics.
 
@@ -11,6 +11,15 @@
 > **Tutorial**: For Prometheus setup, see [prometheus_setup.md](./prometheus_setup.md)
 
 > **Core Doctrine**: For observability philosophy, see [observability.md](../engineering/observability.md)
+
+## SSoT Link Map
+
+| Need                     | Link                                                                   |
+| ------------------------ | ---------------------------------------------------------------------- |
+| Observability philosophy | [Observability](../engineering/observability.md)                       |
+| Prometheus setup         | [Prometheus Setup](./prometheus_setup.md)                              |
+| Docker Grafana container | [Docker Workflow](../engineering/docker_workflow.md#grafana-container) |
+| Alert rules              | [Alert Rules](./alert_rules.md)                                        |
 
 ______________________________________________________________________
 

@@ -1,10 +1,20 @@
 # Patient Onboarding Workflow
 
-**Status**: Authoritative source\
-**Supersedes**: none\
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
 > **Purpose**: Single Source of Truth for onboarding a new HealthHub patient from registration through first appointment and billing.
+
+## SSoT Link Map
+
+| Need                   | Link                                                                   |
+| ---------------------- | ---------------------------------------------------------------------- |
+| Authentication feature | [Authentication Feature](../../engineering/features/authentication.md) |
+| Appointments feature   | [Appointments Feature](../../engineering/features/appointments.md)     |
+| Beginner journey       | [Beginner Journey](../../tutorials/01_journeys/beginner_journey.md)    |
+| Patient guide          | [Patient Guide](../roles/patient_guide.md)                             |
+| Admin guide            | [Admin Guide](../roles/admin_guide.md)                                 |
 
 ## Prerequisites
 

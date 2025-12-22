@@ -2,10 +2,22 @@
 
 **Status**: Reference only
 **Supersedes**: none
-**Referenced by**: README.md
+**Referenced by**: CLAUDE.md, documents/engineering/README.md, documents/readme.md
 
 > **Purpose**: Contributor guide for Effectful, including prerequisites and core development commands.
 > **📖 Authoritative Reference**: [Project README](../README.md)
+
+## SSoT Link Map
+
+| Need                  | Link                                                        |
+| --------------------- | ----------------------------------------------------------- |
+| Engineering standards | [Engineering Standards](engineering/README.md)              |
+| Docker workflow       | [Docker Workflow](engineering/docker_workflow.md)           |
+| Command reference     | [Command Reference](engineering/command_reference.md)       |
+| Code quality          | [Code Quality](engineering/code_quality.md)                 |
+| Testing standards     | [Testing](engineering/testing.md)                           |
+| Testing architecture  | [Testing Architecture](engineering/testing_architecture.md) |
+| Architecture          | [Architecture](engineering/architecture.md)                 |
 
 Welcome to the effectful project! We're excited to have you contribute.
 

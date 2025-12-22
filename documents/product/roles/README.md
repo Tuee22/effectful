@@ -1,10 +1,20 @@
 # Role-Based Guides
 
-**Status**: Authoritative source\
-**Supersedes**: none\
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/product/roles/README.md
 
 > **Purpose**: Single Source of Truth for HealthHub role guides detailing capabilities, restrictions, and workflows.
+
+## SSoT Link Map
+
+| Need                   | Link                                                                   |
+| ---------------------- | ---------------------------------------------------------------------- |
+| Patient guide          | [Patient Guide](patient_guide.md)                                      |
+| Doctor guide           | [Doctor Guide](doctor_guide.md)                                        |
+| Admin guide            | [Admin Guide](admin_guide.md)                                          |
+| Authentication feature | [Authentication Feature](../../engineering/features/authentication.md) |
+| HIPAA compliance       | [HIPAA Compliance](../../domain/hipaa_compliance.md)                   |
 
 ______________________________________________________________________
 

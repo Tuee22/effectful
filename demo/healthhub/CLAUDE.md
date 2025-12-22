@@ -1,5 +1,24 @@
 # Claude Code Patterns for HealthHub
 
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: demo/healthhub/documents/engineering/build_artifact_management.md, demo/healthhub/documents/engineering/docker.md
+
+> **Purpose**: Claude Code patterns, development workflow, and architectural guidance for the HealthHub healthcare management portal demonstrating effectful library.
+
+## SSoT Link Map
+
+| Need                      | Link                                                                            |
+| ------------------------- | ------------------------------------------------------------------------------- |
+| Base effectful patterns   | [Effectful CLAUDE.md](../../CLAUDE.md)                                          |
+| Architecture              | [Architecture SSoT](../../documents/engineering/architecture.md)                |
+| Docker workflow           | [Docker Workflow](../../documents/engineering/docker_workflow.md)               |
+| HealthHub Docker deltas   | [HealthHub Docker](documents/engineering/docker.md)                             |
+| Build artifact management | [Build Artifact Management](documents/engineering/build_artifact_management.md) |
+| Command reference         | [Command Reference](../../documents/engineering/command_reference.md)           |
+| Code quality              | [Code Quality](../../documents/engineering/code_quality.md)                     |
+| Testing standards         | [Testing](../../documents/engineering/testing.md)                               |
+
 ## Project Overview
 
 **HealthHub** is a comprehensive healthcare management portal demonstrating the **Effectful** pure functional effect system library. It showcases real-world complexity: patient management, appointment scheduling, prescriptions with medication interaction checking, lab results, and HIPAA-compliant audit logging.

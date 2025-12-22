@@ -6,6 +6,24 @@
 
 > **Purpose**: Base SSoT placeholder for Intermediate Journey. Demo overlays must list deltas only.
 
+> **Core Doctrines**:
+>
+> - [Architecture](../../engineering/architecture.md) - 5-layer design
+> - [Code Quality](../../engineering/code_quality.md) - Type safety + purity
+> - [Testing](../../engineering/testing.md) - Test organization
+
+## SSoT Link Map
+
+| Need                    | Link                                                        |
+| ----------------------- | ----------------------------------------------------------- |
+| Documentation standards | [Documentation Standards](../../documentation_standards.md) |
+| Architecture            | [Architecture](../../engineering/architecture.md)           |
+| Code quality            | [Code Quality](../../engineering/code_quality.md)           |
+| Testing standards       | [Testing](../../engineering/testing.md)                     |
+| Tutorial overview       | [Tutorials](../README.md)                                   |
+| Beginner journey        | [Beginner Journey](beginner_journey.md)                     |
+| Advanced journey        | [Advanced Journey](advanced_journey.md)                     |
+
 ______________________________________________________________________
 
 ## Summary

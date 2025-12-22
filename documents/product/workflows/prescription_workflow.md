@@ -1,10 +1,20 @@
 # Prescription Workflow
 
-**Status**: Authoritative source\
-**Supersedes**: none\
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: demo/healthhub/documents/tutorials/README.md
 
 > **Purpose**: Single Source of Truth for the HealthHub prescription workflow from diagnosis through patient pickup.
+
+## SSoT Link Map
+
+| Need                  | Link                                                                        |
+| --------------------- | --------------------------------------------------------------------------- |
+| Prescriptions feature | [Prescriptions Feature](../../engineering/features/prescriptions.md)        |
+| Intermediate journey  | [Intermediate Journey](../../tutorials/01_journeys/intermediate_journey.md) |
+| Doctor guide          | [Doctor Guide](../roles/doctor_guide.md)                                    |
+| Patient guide         | [Patient Guide](../roles/patient_guide.md)                                  |
+| HIPAA compliance      | [HIPAA Compliance](../../domain/hipaa_compliance.md)                        |
 
 ## Prerequisites
 

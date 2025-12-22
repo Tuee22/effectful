@@ -6,6 +6,16 @@
 
 > **Purpose**: Prescribe Docker container standards, environment variable policy, and build artifact management for Effectful library development.
 
+## SSoT Link Map
+
+| Need                      | Link                                                      |
+| ------------------------- | --------------------------------------------------------- |
+| Docker workflow           | [Docker Workflow](docker_workflow.md)                     |
+| Build artifact management | [Build Artifact Management](build_artifact_management.md) |
+| Testing standards         | [Testing](testing.md)                                     |
+| Command reference         | [Command Reference](command_reference.md)                 |
+| Engineering standards     | [Engineering Standards](README.md)                        |
+
 ## TL;DR
 
 - All development happens inside Docker containers (no local Python/Poetry installation)

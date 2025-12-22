@@ -21,7 +21,11 @@ ENV PYTHONUNBUFFERED=1 \
     MYPY_CACHE_DIR=/opt/effectful/mypy_cache \
     RUFF_CACHE_DIR=/opt/effectful/ruff_cache \
     PYTEST_CACHE_DIR=/opt/effectful/pytest_cache \
-    DOCKER_CONTAINER=1
+    DOCKER_CONTAINER=1 \
+    JWT_REFRESH_TOKEN_TTL_SECONDS=3600 \
+    JWT_REVOCATION_DEFAULT_TTL_SECONDS=86400 \
+    PASSWORD_HASH_ITERATIONS=100000 \
+    PULSAR_SEND_TIMEOUT_MS=5000
 
 # Create cache directories under /opt/effectful/ namespace
 RUN mkdir -p \

@@ -1,8 +1,8 @@
 # Prometheus Setup
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: documents/readme.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: readme.md, tutorials/grafana_dashboards.md, tutorials/alert_rules.md, api/metrics.md, tutorials/metrics_quickstart.md, tutorials/metric_types_guide.md
 
 > **Purpose**: Tutorial for setting up Prometheus and Grafana with Docker for effectful applications.
 
@@ -11,6 +11,17 @@
 > **Core Doctrine**: For Docker services overview, see [docker_workflow.md](../engineering/docker_workflow.md)
 
 > **Core Doctrine**: For observability architecture, see [observability.md](../engineering/observability.md)
+
+## SSoT Link Map
+
+| Need                     | Link                                                 |
+| ------------------------ | ---------------------------------------------------- |
+| Observability philosophy | [Observability](../engineering/observability.md)     |
+| Docker services setup    | [Docker Workflow](../engineering/docker_workflow.md) |
+| Metrics quickstart       | [Metrics Quickstart](./metrics_quickstart.md)        |
+| Alert rules              | [Alert Rules](./alert_rules.md)                      |
+| Grafana dashboards       | [Grafana Dashboards](./grafana_dashboards.md)        |
+| Metric types reference   | [Metric Types Guide](./metric_types_guide.md)        |
 
 ______________________________________________________________________
 

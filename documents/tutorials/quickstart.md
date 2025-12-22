@@ -1,19 +1,24 @@
 # Quickstart Guide
 
-**Status**: Authoritative source\
-**Supersedes**: none\
-**Referenced by**: documents/readme.md
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: README.md, documents/readme.md, documents/api/metrics.md, documents/engineering/observability.md, documents/tutorials/effect_types.md, documents/tutorials/adts_and_results.md, documents/tutorials/testing_guide.md, documents/tutorials/auth_effects.md, documents/tutorials/production_deployment.md, documents/tutorials/prometheus_setup.md, documents/tutorials/grafana_dashboards.md, documents/tutorials/alert_rules.md, documents/tutorials/metric_types_guide.md, documents/tutorials/00_library_deltas/quickstart.md, demo/healthhub/documents/tutorials/README.md, demo/healthhub/documents/tutorials/00_library_deltas/README.md, demo/healthhub/documents/tutorials/00_library_deltas/quickstart.md, demo/healthhub/documents/tutorials/01_journeys/README.md, demo/healthhub/documents/tutorials/01_journeys/beginner_journey.md
 
 > **Purpose**: Tutorial for getting started with effectful and writing your first effect program.
 
-Welcome to **effectful**! This guide will get you writing effect programs in 10 minutes.
+## SSoT Link Map
 
-> **Core Doctrines**: For comprehensive patterns, see:
->
-> - [Architecture](../engineering/architecture.md) - 5-layer architecture and design decisions
-> - [Code Quality](../engineering/code_quality.md) - Type safety + purity rules
-> - [Testing](../engineering/testing.md) - Coverage requirements and test patterns
-> - [Docker Workflow](../engineering/docker_workflow.md) - All development happens in Docker
+| Need               | Link                                                 |
+| ------------------ | ---------------------------------------------------- |
+| Architecture       | [Architecture](../engineering/architecture.md)       |
+| Code Quality       | [Code Quality](../engineering/code_quality.md)       |
+| Testing            | [Testing](../engineering/testing.md)                 |
+| Docker Workflow    | [Docker Workflow](../engineering/docker_workflow.md) |
+| Engineering README | [Engineering README](../engineering/README.md)       |
+| Effect Types       | [Effect Types](effect_types.md)                      |
+| ADTs and Results   | [ADTs and Results](adts_and_results.md)              |
+
+Welcome to **effectful**! This guide will get you writing effect programs in 10 minutes.
 
 ## Prerequisites
 

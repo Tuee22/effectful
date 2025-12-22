@@ -2,7 +2,7 @@
 
 **Status**: Authoritative source
 **Supersedes**: none
-**Referenced by**: docker_workflow.md, development_workflow.md, testing.md, README.md, warnings_policy.md
+**Referenced by**: CLAUDE.md, README.md, demo/healthhub/CLAUDE.md, demo/healthhub/documents/engineering/build_artifact_management.md, demo/healthhub/documents/engineering/command_reference.md, demo/healthhub/documents/engineering/docker.md, demo/healthhub/documents/engineering/features/appointments.md, documents/contributing.md, documents/engineering/README.md, documents/engineering/code_quality.md, documents/engineering/configuration.md, documents/engineering/development_workflow.md, documents/engineering/docker.md, documents/engineering/docker_workflow.md, documents/engineering/testing.md, documents/engineering/warnings_policy.md, documents/readme.md
 
 > **Purpose**: SSoT for all Docker commands, test execution patterns, and output management in effectful.
 
@@ -12,27 +12,14 @@ ______________________________________________________________________
 
 ## SSoT Link Map
 
-```mermaid
-flowchart TB
-  Commands[Command Reference SSoT]
-  Docker[Docker Workflow SSoT]
-  Testing[Testing SSoT]
-  Docs[Documentation Standards]
-  DevWorkflow[Development Workflow]
-
-  Commands --> Docker
-  Commands --> Testing
-  Commands --> DevWorkflow
-  Commands --> Docs
-  Testing --> Docs
-```
-
 | Need                       | Link                                                       |
 | -------------------------- | ---------------------------------------------------------- |
 | Docker contract            | [Docker Workflow](docker_workflow.md#development-contract) |
 | Which tests to run         | [Testing](testing.md#running-tests)                        |
 | Daily development loop     | [Development Workflow](development_workflow.md)            |
 | Formatting + linking rules | [Documentation Standards](../documentation_standards.md)   |
+| Code quality               | [Code Quality](code_quality.md)                            |
+| Configuration              | [Configuration](configuration.md)                          |
 
 ## Command Map (Mermaid)
 

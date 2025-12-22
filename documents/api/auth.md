@@ -1,10 +1,20 @@
 # Auth Effects API Reference
 
-**Status**: Authoritative source\
-**Supersedes**: none\
+**Status**: Authoritative source
+**Supersedes**: none
 **Referenced by**: documents/api/README.md
 
 > **Purpose**: Reference for authentication effect types used for JWT token management and password operations.
+
+## SSoT Link Map
+
+| Need                   | Link                                                                |
+| ---------------------- | ------------------------------------------------------------------- |
+| All effects overview   | [Effects API](effects.md)                                           |
+| Auth tutorial          | [Auth Effects Tutorial](../tutorials/auth_effects.md)               |
+| Authentication feature | [Authentication Feature](../engineering/features/authentication.md) |
+| Testing auth effects   | [Testing](../engineering/testing.md)                                |
+| Architecture patterns  | [Architecture](../engineering/architecture.md)                      |
 
 ## Effect Types
 
