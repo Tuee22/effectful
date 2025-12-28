@@ -152,7 +152,8 @@ def startup_program(
     if isinstance(observability_handle, HandleTypeMismatch):
         return observability_handle
 
-    async def _metrics_endpoint(*_: object, **__: object) -> Response:
+    async def _metrics_endpoint() -> Response:
+        """Serve Prometheus metrics."""
         metrics_bytes = observability_handle.resource.render_latest()
         return Response(content=metrics_bytes, media_type=CONTENT_TYPE_LATEST)
 
@@ -206,7 +207,8 @@ def startup_program(
 
     favicon_path = frontend_build_path / "favicon.ico"
 
-    async def _favicon(*_: object, **__: object) -> FileResponse | JSONResponse:
+    async def _favicon() -> FileResponse | JSONResponse:
+        """Serve favicon.ico from frontend build directory."""
         if favicon_path.exists():
             return FileResponse(str(favicon_path))
         return JSONResponse({"error": "favicon not available"}, status_code=404)
@@ -220,24 +222,22 @@ def startup_program(
         response_model=None,
     )
 
-    async def _serve_react_app(*args: object, **kwargs: object) -> FileResponse | JSONResponse:
-        # Extract and validate parameters
-        request = kwargs.get("request")
-        full_path = kwargs.get("full_path", "")
+    async def _serve_react_app(full_path: str = "") -> FileResponse | JSONResponse:
+        """Serve React SPA for all non-API routes.
 
-        # Type narrowing
-        if not isinstance(request, Request):
-            return JSONResponse({"error": "Invalid request"}, status_code=500)
-        if not isinstance(full_path, str):
-            return JSONResponse({"error": "Invalid path"}, status_code=500)
-
+        FastAPI automatically extracts full_path from /{full_path:path} route pattern.
+        No Request parameter needed as we don't use it after type narrowing.
+        """
+        # Block API routes from falling through to frontend
         if full_path.startswith("api/") or full_path.startswith("health"):
             return JSONResponse({"error": "Not found"}, status_code=404)
 
+        # Serve index.html for all valid frontend routes
         index_file = frontend_build_path / "index.html"
         if index_file.exists():
             return FileResponse(str(index_file))
 
+        # Frontend not built - clear error message
         return JSONResponse(
             {
                 "error": "Frontend not built",
