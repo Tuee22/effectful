@@ -1,6 +1,6 @@
 # The AI Glass Wall Hypothesis, and the Algebraic Representation of Institutions
 
-**Status**: authoritative source
+**Status**: Authoritative source
 **Supersedes**: none
 **Referenced by**: documents/engineering/total_pure_modelling.md, documents/engineering/architecture.md, documents/engineering/code_quality.md, documents/engineering/effect_patterns.md, documents/documentation_standards.md, documents/dsl/intro.md
 
@@ -626,6 +626,7 @@ This is not a testing improvement. **It's an epistemological shift from empirica
 This is not academic speculation. HealthHub, a healthcare management portal built with Effectful, implements this pattern in production. Consider the authentication guard that protects patient medical records:
 
 ```python
+# Example: Authentication guard with exhaustive pattern matching
 def view_medical_records(user_state: UserState) -> Result[AuthError, MedicalRecords]:
     match user_state:
         case Authenticated(user_id, session_token, expires_at):
@@ -646,6 +647,7 @@ until all cases are covered.
 Now consider what happens if a programmer tries to write insecure code—say, accessing medical records from a `SessionExpired` state:
 
 ```python
+# Wrong: Attempting to access records with expired session
 def insecure_access(user_state: SessionExpired) -> MedicalRecords:
     # Attempt to access records using expired session
     return fetch_records(user_state.user_id)  # Type error!
@@ -660,6 +662,7 @@ This is what "make invalid states unrepresentable" means in practice. The bug is
 How would traditional software handle this? Typically, with boolean flags:
 
 ```python
+# Wrong: Boolean trap with implicit invalid states
 class UserSession:
     is_authenticated: bool
     is_expired: bool
@@ -678,6 +681,7 @@ This representation allows 2^3 = 8 possible state combinations for three boolean
 The problem: The type system allows all 8 combinations. Invalid states are representable. Now consider code that checks permissions:
 
 ```python
+# Wrong: Boolean logic doesn't prevent invalid state combinations
 def can_view_records(session: UserSession) -> bool:
     if session.is_authenticated and not session.is_expired:
         return True
@@ -709,6 +713,7 @@ Now these questions become syntactically impossible to ask incorrectly:
 Traditional boolean-based representation would allow:
 
 ```python
+# Wrong: Invalid state representation with conflicting boolean flags
 cart.is_empty = True
 cart.is_checked_out = True  # Nonsensical: cart can't be both empty and checked out
 cart.items = [product1, product2]  # But it has items despite being empty?
@@ -2781,7 +2786,7 @@ flowchart LR
     Informal[Informal Domains<br/>Natural language<br/>Creative writing<br/>Brainstorming] --> LLMExcels[LLM Excels<br/>Probabilistic matching]
     Formal[Formal Domains<br/>Engineering specs<br/>Legal contracts<br/>Medical protocols] --> GlassWall[Glass Wall]
     GlassWall --> HumanVerification[Human Verification<br/>Today's reality]
-    GlassWall -.Future.-> AutomatedProof[Automated Proof<br/>Verification-assisted AI]
+    GlassWall -->|Future| AutomatedProof[Automated Proof<br/>Verification-assisted AI]
 ```
 
 **How to read this diagram**: The left side shows domains where ambiguity is tolerable (creative work, casual communication). LLMs perform well here because approximate answers are acceptable. The right side shows domains where precision is mandatory (bridges, surgical robots, financial systems).
@@ -2820,13 +2825,16 @@ parts—similar to how LEGO structures are guaranteed stable because individual 
 **Figure 4: Cost Crossover (Hypothetical)**
 
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#f0f0f0'}}}%%
-graph LR
-    subgraph "Cost Over Time"
-    A[Manual Testing<br/>Grows linearly<br/>with features]
-    B[Formal Verification<br/>High upfront cost<br/>Low marginal cost]
-    end
-    A -.Crossover Point.-> B
+flowchart LR
+    Header["Cost Over Time"]
+    A["Manual Testing<br/>• Grows linearly with features<br/>• Continuous cost increase"]
+    B["Formal Verification<br/>• High upfront cost<br/>• Low marginal cost"]
+    Crossover["⟹ Crossover Point ⟸"]
+
+    Header --> A
+    Header --> B
+    A --> Crossover
+    Crossover --> B
 ```
 
 **How to read this diagram**: Manual testing costs grow continuously—every new feature requires new tests. Formal verification has high initial costs (writing specifications, learning tools) but low marginal costs—once the verification infrastructure exists, adding new features is cheap because the
@@ -2928,6 +2936,7 @@ If you encounter Effectful code snippets in technical sidebars, here's a minimal
 **Frozen dataclasses** (immutable records):
 
 ```python
+# Example: Frozen dataclass for immutable user record
 @dataclass(frozen=True)
 class User:
     user_id: str
@@ -2939,6 +2948,7 @@ Think: A form with fields. `frozen=True` means once created, you cannot change t
 **ADTs** (exhaustive choice types):
 
 ```python
+# Example: ADT for session state with explicit variants
 @dataclass(frozen=True)
 class Authenticated:
     user_id: str
@@ -2956,6 +2966,7 @@ Think: A multiple-choice question where you *must* pick one option. Here, you're
 **Result types** (explicit error handling):
 
 ```python
+# Example: Result type for explicit error handling
 Result[Error, Success] = Ok(Success) | Err(Error)
 ```
 
@@ -2964,6 +2975,7 @@ Think: Every operation that can fail returns either `Ok(value)` or `Err(error)`.
 **Pattern matching** (exhaustive case handling):
 
 ```python
+# Example: Pattern matching with exhaustive case handling
 match session_state:
     case Authenticated(user_id, session):
         return f"Welcome, {user_id}"
@@ -3058,7 +3070,7 @@ effect DbQuery {
 
 **Free monad encoding**: Effects are represented as free monads over effect signatures:
 
-```
+```text
 data Program f a where
   Pure   : a → Program f a
   Impure : f (Program f a) → Program f a
@@ -3071,7 +3083,7 @@ data Program f a where
 
 **Denotational semantics**: A program `p: Program[E, A]` denotes a tree:
 
-```
+```text
 ⟦p⟧ = μX. A + (E × X)
 ```
 
@@ -3093,14 +3105,14 @@ A **proof obligation** is a logical assertion that must be proven true for all r
 
 **Refinement types**: Types augmented with logical predicates:
 
-```
+```text
 {v: Int | v ≥ 0}  -- non-negative integers
 {v: List[A] | len(v) > 0}  -- non-empty lists
 ```
 
 **Dependent types**: Types depending on values (Coq, Agda, Idris):
 
-```
+```text
 Vec: (n: Nat) → Type → Type
 Vec n A  -- vector of exactly n elements of type A
 ```
@@ -3118,7 +3130,7 @@ TLC verifies these invariants hold for all reachable states via exhaustive state
 
 **TLA+ temporal logic**: Formulas over infinite state sequences (behaviors):
 
-```
+```text
 □P   -- "always P" (globally)
 ◇P   -- "eventually P" (finally)
 P ⇒ ◇Q  -- "P leads to Q"
@@ -3126,7 +3138,7 @@ P ⇒ ◇Q  -- "P leads to Q"
 
 **State space exploration**: Given initial states `Init` and transition relation `Next`, model checker explores:
 
-```
+```text
 States = μS. Init ∪ { s' | ∃s ∈ S. Next(s, s') }
 ```
 
@@ -3155,7 +3167,7 @@ States = μS. Init ∪ { s' | ∃s ∈ S. Next(s, s') }
 
 **Interface contracts**: For function composition `f: A → B`, `g: B → C`:
 
-```
+```text
 {Pf} f {Qf}  and  {Pg} g {Qg}  and  Qf ⊆ Pg
 ⇒ {Pf} g ∘ f {Qg}
 ```
@@ -3168,7 +3180,7 @@ States = μS. Init ∪ { s' | ∃s ∈ S. Next(s, s') }
 
 **Effectful's approach**: Tier 2 functions are **context-free** (no ambient dependencies), enabling:
 
-```
+```text
 verify(f: A → Effect[E, B]) + verify(g: B → Effect[E, C])
 ⇒ verify(f >=> g: A → Effect[E, C])
 ```
@@ -3185,7 +3197,7 @@ Pure functions compose via function composition. Effect programs compose via mon
 
 **Scalability**: Compositional verification is **sublinear** in system size—verifying `n` components requires `O(n)` proofs, not `O(n²)` (all pairs) or `O(2ⁿ)` (all combinations).
 
-### B.5: Temporal Logic and Model Checking
+### B.7: Temporal Logic and Model Checking
 
 **Temporal Logic**: A formal system for reasoning about propositions qualified by time. TLA+ (Temporal Logic of Actions) uses:
 
@@ -3197,7 +3209,7 @@ Pure functions compose via function composition. Effect programs compose via mon
 
 **Example specification** (from Act III building permits):
 
-```
+```text
 BuildingPermit ≜
   □(Submitted ⇒ ◇(Approved ∨ Rejected))  -- All submissions eventually get decided
   ∧ □(Approved ⇒ ProofVerified)          -- Approvals always require proof
@@ -3224,7 +3236,7 @@ BuildingPermit ≜
 
 **Compositional verification in temporal logic**: If `SpecA ⊢ □InvariantA` and `SpecB ⊢ □InvariantB`, and interface requires `InvariantA ∧ InvariantB`, then composed system inherits both invariants:
 
-```
+```text
 (SpecA ∥ SpecB) ⊢ □(InvariantA ∧ InvariantB)
 ```
 
@@ -3500,7 +3512,7 @@ Correct—verification proves *consistency* (implementation matches spec), not *
 
 The oracle problem is not solved by formal verification—it's *made explicit*. Traditional systems hide assumptions ("we assume users enter valid data"). Verified systems enumerate assumptions as proof obligations:
 
-```
+```text
 Assumption: Steel tensile strength ≥ X
 Proof: If assumption holds, bridge supports 100 tons
 Audit: Is assumption realistic? How do we verify it?
@@ -3614,13 +3626,13 @@ The essay explicitly argues some domains *should not* be formalized (Act V, §5.
 
 Instead of:
 
-```
+```text
 decision = black_box_algorithm(inputs)  # discretion hidden in "algorithm"
 ```
 
 Use:
 
-```
+```text
 match analyze(inputs):
   case StandardCase(recommendation):
     return recommendation  # formalized
