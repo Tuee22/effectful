@@ -2,7 +2,7 @@
 
 **Status**: Authoritative source
 **Supersedes**: none
-**Referenced by**: [testing.md](testing.md#part-1-minimal-api-philosophy), [code_quality.md](code_quality.md)
+**Referenced by**: [testing.md](testing.md#part-1-minimal-api-philosophy), [code_quality.md](code_quality.md), ../dsl/glass_wall.md
 
 > **Purpose**: A friendly, practical guide for modelling domain state with total, pure ADTs and state machines that match reality. Illegal states must be impossible to represent, and timing tricks or env toggles are off-limits. By separating pure decisions from side effects, we keep frontend and backend in lockstep, avoid ghost states, and stay resilient when real networks and devices misbehave.
 
