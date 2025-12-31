@@ -2,7 +2,7 @@
 
 **Status**: Authoritative source
 **Supersedes**: effectual_dsl_and_effectful_compiler_spec_final.md
-**Referenced by**: documents/documentation_standards.md, documents/engineering/functional_catalogue.md, glass_wall.md
+**Referenced by**: documents/documentation_standards.md, documents/engineering/functional_catalogue.md, ai_horizon.md
 
 > **Purpose**: Define the **Effectual DSL** for expressing real-world business behavior as a **total, pure mathematical model** in **TLA+/PlusCal** (SSoT), and define the **Effectful Compiler** (Haskell) that deterministically generates **pure ADTs**, **pure state machines**, **Mermaid**, and **typed execution boundaries** for use in **Python**, **TypeScript**, and other languages.
 
@@ -120,7 +120,7 @@ GenPureTs --> RuntimeTs[RuntimeTs]
 ```
 
 - **Models**: `documents/models/**/*.tla` (Tier 0 SSoT)
-- **Verify**: SANY parse and TLC model checks (deterministic configs)
+- **Verify**: TLA+ validation and TLC model checks (deterministic configs)
 - **Extract**: parse Effectual DSL blocks from TLA+/PlusCal
 - **IR**: normalized compiler IR (Tier 1, internal)
 - **GenDocs**: generated Mermaid + model views (Tier 2)
