@@ -108,7 +108,7 @@ AI systems excel at writing [Haskell](https://www.haskell.org/) or [Rust](https:
 
 **Third: SQL Query Generation**
 
-[SQL](https://en.wikipedia.org/wiki/SQL) generation achieves remarkably high reliability compared to general code generation, with AI systems producing syntactically valid database queries at 91% success rates (compared to 58% for natural language query descriptions evaluated by humans). [SQL parsers](https://en.wikipedia.org/wiki/Parsing) enforce strict [syntax rules](https://en.wikipedia.org/wiki/SQL_syntax): every `SELECT` must have a `FROM`, every `JOIN` requires an `ON` clause, every subquery needs proper [parenthesization](https://en.wikipedia.org/wiki/Bracket). A syntactically invalid query is rejected instantly by the [database engine](https://en.wikipedia.org/wiki/Database_engine) before execution. This creates a training corpus where invalid SQL simply doesn't exist—repositories contain only queries that parse correctly. The mechanical verifier (SQL parser) filters training data, enabling AI systems to reliably generate valid queries.
+[SQL](https://en.wikipedia.org/wiki/SQL) generation achieves remarkably high reliability compared to general code generation, with AI systems producing syntactically valid database queries demonstrating higher success rates when validated by SQL parsers compared to natural language query descriptions evaluated by humans. [SQL parsers](https://en.wikipedia.org/wiki/Parsing) enforce strict [syntax rules](https://en.wikipedia.org/wiki/SQL_syntax): every `SELECT` must have a `FROM`, every `JOIN` requires an `ON` clause, every subquery needs proper [parenthesization](https://en.wikipedia.org/wiki/Bracket). A syntactically invalid query is rejected instantly by the [database engine](https://en.wikipedia.org/wiki/Database_engine) before execution. This creates a training corpus where invalid SQL simply doesn't exist—repositories contain only queries that parse correctly. The mechanical verifier (SQL parser) filters training data, enabling AI systems to reliably generate valid queries.
 
 What unites these three domains? It's not inherent simplicity—Lean proofs can be extraordinarily complex, involving intricate mathematical reasoning across hundreds of steps. It's not narrow scope either—[SQL](https://en.wikipedia.org/wiki/SQL) operates across infinite data domains, handling arbitrarily complex queries. The common factor is *mechanical verification*.
 
@@ -134,9 +134,9 @@ Where verifiers are absent—natural language understanding, legal interpretatio
 >
 > - **Lean theorem proving**: GPT-4 achieves 85% success rate on formal proof tasks with mechanical verification vs. 60% on informal mathematical reasoning without verifiers (source: [Lean benchmarks](https://leanprover.github.io/))
 > - **HumanEval**: Code generation with test suite verification (executable tests) achieves 72% correctness vs. 45% for code evaluated by human review
-> - **[SQL](https://en.wikipedia.org/wiki/SQL) generation**: 91% syntactic correctness when validated by [SQL](https://en.wikipedia.org/wiki/SQL) parsers vs. 58% for general database query descriptions evaluated by humans
+> - **[SQL](https://en.wikipedia.org/wiki/SQL) generation**: Higher syntactic correctness when validated by [SQL](https://en.wikipedia.org/wiki/SQL) parsers compared to general database query descriptions evaluated by humans
 >
-> The pattern holds: where mechanical verifiers exist, AI achieves 85-91% reliability. Where verification remains human judgment, performance degrades to 60%.
+> The pattern suggests that mechanical verifiers enable measurably higher AI reliability compared to domains relying on human judgment for validation.
 >
 > **Mechanism**: Training datasets in verified domains are self-curating. Code repositories contain only code that compiles. Mathematical proof databases contain only proofs that check. The training distribution is biased toward correctness by the existence of verifiers.
 >
@@ -162,7 +162,7 @@ This is not because CompCert's developers are more careful or more skilled. It's
 
 **The crossover point**: For safety-critical systems where miscompilation means death or multi-billion-dollar liability (aerospace software, medical devices, autonomous vehicles), CompCert's upfront cost becomes trivial compared to litigation risk.
 
-**The AI Capability Implication**: CompCert's economic advantage compounds in the AI era. AI code generators targeting CompCert-compatible C achieve 91% correctness vs. 58% for standard C compilation, because the verified compiler ensures training data contains only correct translations. Organizations adopting CompCert-style verification gain both safety guarantees AND superior AI-assisted development. This shifts the economic justification from "avoid litigation risk" to "achieve AI development velocity advantage."
+**The AI Capability Implication**: CompCert's economic advantage compounds in the AI era. AI code generators targeting CompCert-compatible C achieve higher correctness compared to standard C compilation, because the verified compiler ensures training data contains only correct translations. Organizations adopting CompCert-style verification gain both safety guarantees AND superior AI-assisted development. This shifts the economic justification from "avoid litigation risk" to "achieve AI development velocity advantage."
 
 > **📖 Technical Detail**:
 >
@@ -183,7 +183,7 @@ This is not because CompCert's developers are more careful or more skilled. It's
 
 #### seL4: The Verified Microkernel
 
-[seL4](https://sel4.systems/) is an operating system microkernel with a complete formal proof of correctness covering 10,000 lines of [C](https://www.iso.org/standard/74528.html) code. The proof establishes that the implementation satisfies the specification and that the specification itself satisfies key security properties.
+[seL4](https://sel4.systems/) is an operating system microkernel with a complete formal proof of correctness covering 10,000 lines of [C](https://www.iso.org/standard/74528.html) code ([Wikipedia: L4 microkernel family - seL4](https://en.wikipedia.org/wiki/L4_microkernel_family#seL4)). The proof establishes that the implementation satisfies the specification and that the specification itself satisfies key security properties.
 
 **Result**: Zero security vulnerabilities in the verified kernel code over 15 years of deployment in security-critical systems.
 
@@ -197,16 +197,16 @@ Formal methods adoption has historically been motivated by industrial catastroph
 
 **Automotive Software: Toyota Unintended Acceleration (2009-2011)**
 
-- **Deaths**: 89 confirmed by NHTSA investigation
-- **Litigation cost**: $1.2 billion settlement (2014)
+- **Deaths**: 89 confirmed by NHTSA investigation ([Wikipedia: 2009–2011 Toyota vehicle recalls](https://en.wikipedia.org/wiki/2009%E2%80%932011_Toyota_vehicle_recalls))
+- **Litigation cost**: $1.2 billion settlement (2014) ([Wikipedia: 2009–2011 Toyota vehicle recalls](https://en.wikipedia.org/wiki/2009%E2%80%932011_Toyota_vehicle_recalls))
 - **Root cause**: Software allowed ambiguous states—the system could simultaneously register "accelerate" and "brake" signals
 - **Industry response**: [MISRA C](https://www.misra.org.uk/) adoption accelerated from niche standard to mandatory practice within 5 years
-- **[MISRA C](https://www.misra.org.uk/) cost**: $50K-200K per project for tooling and training
+- **[MISRA C](https://www.misra.org.uk/) cost**: modest tooling and training investment per project
 - **ROI**: Obvious after $1.2B settlement
 
 **Aerospace Software: Ariane 5 Explosion (1996)**
 
-- **Loss**: $370 million rocket + payload destroyed 37 seconds after launch
+- **Loss**: $370 million rocket + payload destroyed 37 seconds after launch ([Wikipedia: Ariane flight V88](https://en.wikipedia.org/wiki/Ariane_flight_V88))
 - **Proximate cause**: 64-bit floating-point velocity value cast to 16-bit signed integer without bounds checking
 - **Root cause**: Ariane 4 IRS code reused without specification review for Ariane 5's different velocity ranges
 - **Verification gap**: No proof that velocity ranges satisfied hardware constraints
@@ -218,20 +218,20 @@ Formal methods adoption has historically been motivated by industrial catastroph
 - **Root cause**: Software bugs in dosing algorithms allowed over-delivery of insulin
 - **Example**: Incorrect state transitions between "bolus delivery" and "basal delivery" modes, allowing double-dosing
 - **Industry response**: FDA guidance on software validation tightened dramatically
-- **Cost**: Formal methods add $500K-2M to medical device software development
-- **Liability**: $50M-500M settlements for failures
-- **Crossover**: Medical device insurance premiums for unverified software: $5M-10M annually. With formal verification: 50-80% reduction
+- **Cost**: Formal methods require substantial investment in medical device software development
+- **Liability**: settlements for failures in the tens to hundreds of millions
+- **Crossover**: Medical device insurance premiums are significantly lower with formal verification
 
 **The AI Era Pivot (2020s-Present)**
 
-The historical pattern—disaster triggers adoption—is inverting. Organizations now adopt formal verification proactively because AI systems achieve 85-91% reliability in mechanically verified domains.
+The historical pattern—disaster triggers adoption—is inverting. Organizations now adopt formal verification proactively because AI systems demonstrate substantially higher reliability in mechanically verified domains.
 
 **Forward-Looking Adoption Pattern**:
 - **Healthcare AI**: Organizations adopt formal verification for AI-assisted diagnosis systems BEFORE deployment failures, anticipating that FDA approval and market trust require mechanically verified reliability
 - **Financial Systems**: Trading platforms adopt TLA+ specifications for AI-assisted risk models to achieve deterministic verification, gaining competitive advantage through faster regulatory approval
 - **Autonomous Systems**: Self-driving vehicle developers adopt formal methods BEFORE incidents because AI training data quality directly determines certification timeline
 
-**Pattern Inversion**: Early adopters gain competitive advantage through superior AI capability. Late adopters face competitive disadvantage when AI systems trained on unverified domains perform at 58-60% reliability while competitors achieve 85-91%.
+**Pattern Inversion**: Early adopters gain competitive advantage through superior AI capability. Late adopters face competitive disadvantage when AI systems trained on unverified domains perform substantially worse than competitors using mechanically verified training data.
 
 This represents fundamental economics shift: AI capability incentive alone justifies formal verification investment, independent of safety catastrophe avoidance.
 
@@ -239,24 +239,25 @@ This represents fundamental economics shift: AI capability incentive alone justi
 
 Formal methods adoption accelerates when the economic inequality is satisfied:
 
-**failure_cost × probability > verification_cost + opportunity_cost**
+```
+failure_cost × probability > verification_cost + opportunity_cost
+```
 
 **AI Horizon Extension**: The formula fundamentally changes in the AI era. AI capability gain alone can justify adoption:
 
-**Traditional (reactive)**: failure_cost × probability > verification_cost + opportunity_cost
-**AI Era (proactive)**: ai_capability_gain > verification_cost + opportunity_cost
+```
+Traditional (reactive):  failure_cost × probability > verification_cost + opportunity_cost
 
-Where `ai_capability_gain` = competitive advantage from 85-91% AI reliability vs. 58-60% unverified baseline.
+AI Era (proactive):      ai_capability_gain > verification_cost + opportunity_cost
+```
 
-**Concrete Example**: Healthcare organization generating 1000 AI-assisted diagnostic recommendations daily:
-- Unverified AI: 58% accuracy
-- Verified AI: 91% accuracy
-- Accuracy gain: 33 percentage points = 330 additional correct recommendations/day
-- Economic value: At $50/recommendation, gain = $16,500/day = $6M/year
-- Formal verification investment: $500K-2M
-- ROI: 3-12 months
+Where `ai_capability_gain` = competitive advantage from higher AI reliability in verified domains compared to unverified baseline.
 
-AI capability gain alone justifies investment, independent of litigation avoidance.
+**Forward-Looking Pattern**: Organizations are adopting formal verification proactively for AI-assisted systems before deployment failures occur.
+
+Medical AI systems, financial fraud detection, and automated code review demonstrate the pattern: formal specifications and mechanically verified training pipelines enable AI systems to achieve reliability gains that justify adoption economics independent of litigation avoidance. Early adopters gain competitive advantage through superior AI capability rather than waiting for catastrophic failures to force adoption.
+
+This represents the fundamental pattern inversion: economic incentive alone now justifies formal verification investment.
 
 ```mermaid
 flowchart TD
@@ -271,20 +272,20 @@ flowchart TD
 **Semiconductor Industry (Evidence-Based)**:
 
 Source: Intel public disclosures, ACM papers
-- **Pentium FDIV bug cost**: $475M (1994)
-- **Formal verification investment**: ~$100M tooling (1990s-2000s)
+- **Pentium FDIV bug cost**: $475M (1994) ([Wikipedia: Pentium FDIV bug](https://en.wikipedia.org/wiki/Pentium_FDIV_bug))
+- **Formal verification investment**: substantial tooling investment (1990s-2000s)
 - **Break-even**: Achieved after ~5 major chip designs
 - **Current state**: Industry standard, not optional
 
 **AI Era Impact (2015-Present)**:
-- Chip design with formal verification enables AI-assisted circuit optimization achieving 30-40% faster time-to-market
-- Organizations using verified design flows achieve 85-91% accuracy in AI-generated test vectors vs. 58-60% for unverified flows
-- Competitive advantage: Early adopters (Intel, AMD, NVIDIA) gained process node leadership; late adopters remain 18-24 months behind
+- Chip design with formal verification enables AI-assisted circuit optimization achieving significantly faster time-to-market
+- Organizations using verified design flows achieve substantially higher accuracy in AI-generated test vectors compared to unverified flows
+- Competitive advantage: Early adopters (Intel, AMD, NVIDIA) gained process node leadership; late adopters face substantial process node leadership gap
 - Economic driver shifted from "avoid $475M bugs" to "achieve AI-assisted design advantage"
 
 **Critical observation**: Formal verification adoption patterns are inverting. Historical adoption followed catastrophe (semiconductors after Pentium FDIV, automotive after Toyota). Modern adoption follows AI capability recognition.
 
-Organizations in civil engineering, legal compliance, and financial systems are adopting formal verification proactively. AI capability provides the primary economic incentive—early adopters achieve 85-91% AI reliability, gaining competitive advantage over organizations achieving 58-60% reliability without verification.
+Organizations in civil engineering, legal compliance, and financial systems are adopting formal verification proactively. AI capability provides the primary economic incentive—early adopters achieve substantially higher AI reliability through verification, gaining competitive advantage over organizations without verification.
 
 The economic calculus no longer requires disaster validation. AI performance differential alone justifies investment.
 
@@ -304,7 +305,7 @@ Formal methods create LEGO. When you modify a verified component, you only need 
 
 This is the fundamental economic advantage of compositional verification: it makes maintenance costs sub-linear with system growth.
 
-**AI Capability Connection**: Compositional verification's economic advantage becomes critical for AI-assisted development. AI systems can verify local changes mechanically because interface contracts are explicit. Without compositional structure, AI verification would require full system reanalysis, making AI-assisted refactoring impractical at enterprise scale. Organizations with compositional architectures achieve 3-5x faster AI-assisted development cycles.
+**AI Capability Connection**: Compositional verification's economic advantage becomes critical for AI-assisted development. AI systems can verify local changes mechanically because interface contracts are explicit. Without compositional structure, AI verification would require full system reanalysis, making AI-assisted refactoring impractical at enterprise scale. Organizations with compositional architectures achieve substantially faster AI-assisted development cycles.
 
 > **📖 Technical Detail**:
 >
@@ -329,7 +330,7 @@ This is the fundamental economic advantage of compositional verification: it mak
 
 #### The Linux Kernel: Anti-Compositional at Scale
 
-The [Linux kernel](https://www.kernel.org/) offers a vivid illustration of why compositional verification matters economically. With over 30 million lines of code, every kernel patch—no matter how small—must pass through extensive testing: compile-time tests, boot tests, regression tests, performance tests, integration tests.
+The [Linux kernel](https://www.kernel.org/) offers a vivid illustration of why compositional verification matters economically. With over 30 million lines of code ([Wikipedia: Linux kernel](https://en.wikipedia.org/wiki/Linux_kernel)), every kernel patch—no matter how small—must pass through extensive testing: compile-time tests, boot tests, regression tests, performance tests, integration tests.
 
 The testing cost for a 10-line kernel patch can consume hours of machine time and days of human review. What explains this burden? The kernel is Jenga, not LEGO—a system of tightly coupled subsystems where a change to memory allocation can break device drivers, where a scheduler optimization can introduce deadlocks in filesystem locking.
 
@@ -538,11 +539,11 @@ The relationship between AI capability and mechanical verification has several i
 
 **1. Formal verification tools are increasingly valuable because AI capability depends on them**
 
-AI systems achieve 85-91% reliability in domains with mechanical verifiers. Organizations adopting formal verification gain both safety guarantees and AI performance advantages. AI-generated code without verification is probabilistic. AI-generated code with verification approaches deterministic correctness.
+AI systems achieve measurably higher reliability in domains with mechanical verifiers. Organizations adopting formal verification gain both safety guarantees and AI performance advantages. AI-generated code without verification is probabilistic. AI-generated code with verification approaches deterministic correctness.
 
 **2. Investment in verification infrastructure yields immediate AI capability gains**
 
-The upfront cost of formal specifications pays dividends through superior AI performance in addition to traditional correctness guarantees. Domains with verifiers (Lean, Haskell, SQL) demonstrate 25-31 percentage point AI performance advantages over unverified domains.
+The upfront cost of formal specifications pays dividends through superior AI performance in addition to traditional correctness guarantees. Domains with verifiers (Lean, Haskell, SQL) demonstrate substantial AI performance advantages over unverified domains.
 
 **3. Type systems and proof assistants enable AI assistance**
 
