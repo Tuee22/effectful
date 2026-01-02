@@ -2,7 +2,7 @@
 
 **Status**: Authoritative source
 **Supersedes**: effectual_dsl_and_effectful_compiler_spec_final.md
-**Referenced by**: documents/documentation_standards.md, documents/engineering/functional_catalogue.md, ai_horizon.md
+**Referenced by**: documents/documentation_standards.md, documents/engineering/functional_catalogue.md, verification_boundary.md
 
 > **Purpose**: Define the **Effectual DSL** for expressing real-world business behavior as a **total, pure mathematical model** in **TLA+/PlusCal** (SSoT), and define the **Effectful Compiler** (Haskell) that deterministically generates **pure ADTs**, **pure state machines**, **Mermaid**, and **typed execution boundaries** for use in **Python**, **TypeScript**, and other languages.
 

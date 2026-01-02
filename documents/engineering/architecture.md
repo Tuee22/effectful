@@ -2,7 +2,7 @@
 
 **Status**: Authoritative source
 **Supersedes**: none
-**Referenced by**: documents/readme.md, engineering/README.md, dsl/ai_horizon.md
+**Referenced by**: documents/readme.md, engineering/README.md, dsl/verification_boundary.md
 
 > **Purpose**: Single Source of Truth for the Effectful architecture, including layers, effect hierarchy, and data flow patterns.
 
