@@ -1,44 +1,24 @@
 # The Proof Boundary: Why Humans Will Under-Utilize AI
 
-GitHub Copilot launched June 2021. By October 2023: 1.3 million paid subscribers, over $100 million in annual revenue. Developers report 55% faster feature development in typed codebases.
+Large language models can draft legal contracts, but law firms require attorneys to review every clause. Computer vision systems can identify diabetic retinopathy from retinal scans with accuracy matching ophthalmologists, but clinics require physicians to sign every diagnostic report. Quantitative trading algorithms execute millions of transactions per day, but investment firms program manual circuit breakers that force human review of unexpected patterns.
 
-The FDA has approved 1,300 AI-enabled medical devices. Over 1,000 for radiology—diagnosing fractures, detecting cancers, identifying diabetic retinopathy. Studies show these systems match radiologist accuracy on many tasks.
+These AI tools perform their narrow tasks reliably. Professionals trust them to execute specific computations. Yet across medicine, law, engineering, and finance, human oversight remains mandatory—by regulation, by professional standards, or by institutional policy.
 
-U.S. clinical adoption: approximately 2%.
+The contrast sharpens when compared to software development. Programmers use AI tools that generate entire functions, accept the output if tests pass, and deploy to production. No regulation requires a human to verify that the AI "understood" the requirement. No professional standard demands a developer sign off on every line of AI-generated code. The code runs or it fails. The tests pass or they don't.
 
-Legal AI tools analyze case law, draft contracts, summarize depositions. Every major vendor markets their product explicitly as a "research assistant." Radiologists still sign every diagnostic report. Attorneys still review every filing. Professional Engineers still stamp every structural design.
+In medicine, law, and finance, AI augments human judgment. In software engineering, AI directly replaces human effort. What makes one domain delegate while others supervise?
 
-November 2025: NVIDIA invests $10 billion in Anthropic. The same day, Anthropic commits to purchase $30 billion of NVIDIA cloud capacity. OpenAI raises $10 billion, plans to raise $100 billion more in 2026—"almost four times the amount raised by the biggest stockmarket listing ever," notes *The Economist*. Anthropic raises $6.6 billion. The models generate code that compiles, analyze medical images with professional-level accuracy, draft legal briefs that pass attorney review.
-
-The cash burns at what *The Economist* calls "Towering Inferno" rates. OpenAI will incinerate more than $115 billion by 2030. Discussion of cash burn is reportedly taboo at the firm.
-
-The capability is demonstrated. The economic incentive is clear—$4.9 trillion healthcare industry, $437 billion legal services, $430 billion cloud infrastructure. The infrastructure exists—APIs everywhere, LLMs performing at professional level.
-
-Why aren't these industries automating at scale?
+The answer lies not in technology capability but in the nature of the decisions being automated.
 
 ---
 
-**A Note on Terminology: "Proof" vs. "Evidence"**
+That nature becomes clear when we examine what "verification" means in each domain. When a radiologist reviews a chest X-ray, two equally qualified physicians might reach different conclusions from the same image. When an attorney evaluates a legal argument, reasonable experts disagree about soundness. When a code reviewer assesses business logic, professional judgment varies. These are domains where verification means professional interpretation of evidence—rigorous, yes, but not mechanical.
 
-This book uses "proof" exclusively in the formal mathematical sense:
+Contrast this with a type checker analyzing code. No interpretation. No professional disagreement. The checker applies formal rules: does this function signature match this call site? Can this variable ever be None when accessed? If the code type-checks today, it will type-check tomorrow, and every other type checker following the same specification will reach the identical conclusion. The verification is mechanical—every step executed by algorithm, every conclusion reproducible exactly.
 
-**Proof** = A logical derivation following strict formal rules, verifiable by mechanical checkers. Examples:
-- Type checker proving code type-safety
-- Model checker proving system correctness
-- Proof assistant verifying mathematical theorems
-- FEM software proving structural stress calculations
+Throughout history, we've reserved one word for this second kind of verification: **proof**. Mathematical proofs. Type safety proofs. Model checking proofs. Finite element analysis proving structural integrity. All share the same essential character—they follow explicit formal rules, they can be verified by mechanical checkers, and they produce conclusions that are not matters of professional judgment but of logical necessity.
 
-**NOT proof** (subjective verification):
-- Radiologist diagnosing ambiguous medical images
-- Attorney evaluating legal argument soundness
-- Professional Engineer certifying novel structural designs
-- Code reviewer assessing business logic appropriateness
-
-The distinction matters because **the proof boundary**—the line separating domains with mechanical proofs from domains requiring human judgment—determines where AI can assist effectively vs. where humans must review everything from scratch.
-
-Throughout this book, when "evidence" or "demonstration" is meant, those words will be used explicitly. "Proof" always means formal mathematical proof.
-
----
+The line separating these domains is the **proof boundary**. On one side: decisions that can be verified by algorithm. On the other: decisions that require human judgment. That boundary explains why programmers trust AI-generated code if tests pass, while doctors require physicians to sign every AI diagnostic report. It determines where AI can fully automate versus where humans must review everything from scratch.
 
 The pattern emerged through industrial disasters. Ariane 5, June 4, 1996.
 
