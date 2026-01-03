@@ -8,7 +8,9 @@ U.S. clinical adoption: approximately 2%.
 
 Legal AI tools analyze case law, draft contracts, summarize depositions. Every major vendor markets their product explicitly as a "research assistant." Radiologists still sign every diagnostic report. Attorneys still review every filing. Professional Engineers still stamp every structural design.
 
-November 2025: NVIDIA invests $10 billion in Anthropic. The same day, Anthropic commits to purchase $30 billion of NVIDIA cloud capacity. OpenAI raises $10 billion. Anthropic raises $6.6 billion. The models generate code that compiles, analyze medical images with professional-level accuracy, draft legal briefs that pass attorney review.
+November 2025: NVIDIA invests $10 billion in Anthropic. The same day, Anthropic commits to purchase $30 billion of NVIDIA cloud capacity. OpenAI raises $10 billion, plans to raise $100 billion more in 2026—"almost four times the amount raised by the biggest stockmarket listing ever," notes *The Economist*. Anthropic raises $6.6 billion. The models generate code that compiles, analyze medical images with professional-level accuracy, draft legal briefs that pass attorney review.
+
+The cash burns at what *The Economist* calls "Towering Inferno" rates. OpenAI will incinerate more than $115 billion by 2030. Discussion of cash burn is reportedly taboo at the firm.
 
 The capability is demonstrated. The economic incentive is clear—$4.9 trillion healthcare industry, $437 billion legal services, $430 billion cloud infrastructure. The infrastructure exists—APIs everywhere, LLMs performing at professional level.
 
@@ -115,6 +117,8 @@ But the deeper revolution was invisible: compilers validated syntax automaticall
 
 A FORTRAN compiler didn't just translate DO loops to assembly. It checked that every variable was declared. That parentheses matched. That GOTO statements pointed to valid line numbers. Syntactic correctness—previously requiring hours of human review—now took seconds of machine time.
 
+A programmer submits her code. The compiler rejects it in 3 seconds: "UNDEFINED VARIABLE AT LINE 47." She finds the typo, resubmits, gets executable output. What took a day of manual checking now takes minutes.
+
 But this didn't solve the decidability problem. It just moved it. Compilers automated syntax checking, but semantic correctness still required human validation. Did the algorithm actually compute what you intended? Were there off-by-one errors? Race conditions? Logic bugs?
 
 The compiler would happily translate perfectly syntactic nonsense into perfectly syntactic machine code that did the wrong thing entirely.
@@ -182,8 +186,6 @@ By the 2010s, this pattern proliferated. APIs meant any decision could be treate
 
 By 2017, computing had converged on a single architecture: APIs for everything, cloud infrastructure running at unprecedented scale, distributed systems requiring mathematical proofs for correctness.
 
-Then two technologies emerged that would change everything.
-
 ### Section 1.3: The Transformer Revolution
 
 **What Makes Transformers Different**
@@ -216,13 +218,11 @@ The pattern was consistent. On well-defined tasks with clear evaluation criteria
 
 Here's the cruel irony: AI performs best in domains where professionals earn the least.
 
-Code generation? GitHub Copilot excels because compilers and type checkers provide mechanical validation. But software development is relatively affordable—median developer salary $120K. Type checkers automated the cheap verification in the 1970s. AI helps developers write code faster, but the productivity gains assist work already partially automated by tooling.
+Domains with mechanical validators—code generation, SQL queries, type-safe API design—saw AI achieve 72-89% correctness rates. GitHub Copilot: 1.3 million subscribers, $100 million revenue. Median developer salary: $120K. The verification was already cheap (type checkers from the 1970s); AI made the writing faster.
 
-Medical diagnosis? AI matches radiologist sensitivity on clear cases. But radiologists earn $498K median salary because diagnostic reasoning—the expensive judgment that separates malignant from benign in ambiguous cases—has no mechanical validator. AI can flag obvious abnormalities. It can't replace the $498K judgment call.
+Domains relying on expert judgment—medical diagnosis, legal reasoning, structural engineering design review—remained at 45-58% correctness with high error variance. Medical AI: 1,300 FDA approvals, 2% clinical adoption. Radiologist median salary: $498K. Attorneys billing $200-$1,000/hour. The expensive judgment—distinguishing malignant from benign in ambiguous cases, evaluating legal soundness, certifying structural safety—has no mechanical validator.
 
-Legal analysis? AI drafts competent briefs. But attorneys billing $200-$1,000/hour aren't paid for drafting—they're paid for legal soundness judgment. Contract interpretation. Strategic litigation decisions. Settlement negotiations. No mechanical validator exists for "is this legal argument sound?" AI can assist research. It can't replace the judgment.
-
-The domains that justify AI bubble valuations—healthcare ($4.9T), legal services ($437B), professional engineering—are precisely the domains where AI remains stuck as an expensive assistant because mechanical validators don't exist.
+The 27-point gap determined the economics. The domains justifying AI bubble valuations—healthcare ($4.9T), legal services ($437B), professional engineering—are precisely where AI remains an expensive assistant.
 
 **MCP: The Connection Layer**
 
@@ -272,8 +272,6 @@ We built the infrastructure. The models performed. The economic incentive was en
 
 The technology existed. The infrastructure was deployed. The APIs were ready. The models worked. Every economic incentive pointed toward immediate, aggressive deployment.
 
-This was the perfect opportunity for humanity to take an unprecedented leap forward in automation.
-
 ### Section 1.4: The Paradox
 
 What actually happens:
@@ -308,7 +306,7 @@ This is why AI deployment patterns look so strange. Why GitHub Copilot generates
 
 The verification boundary explains what no forecast of AI capabilities alone can predict: which jobs transform, which jobs remain, and why the automation patterns follow such unexpected lines.
 
-To understand this boundary—why it exists, how it determines AI deployment, and what it means for the future of work—we need to understand decidability. The mathematical property discovered ninety years ago that now determines which professions machines can replace.
+The boundary has a mathematical foundation: decidability, discovered ninety years ago.
 
 ### Section 1.5: The Decidability Boundary
 
@@ -370,9 +368,7 @@ The disasters share a property: they were mechanically verifiable failures that 
 - Can these two threads access shared state simultaneously?
 - Are all 1,066 lookup table entries present?
 
-All decidable. All checkable by machines. All missed by humans.
-
-This is the asymmetry: humans are terrible at mechanically verifiable properties. We make arithmetic errors. We miss race conditions. We forget to check bounds. We overlook missing table entries. These are precisely the properties machines excel at verifying.
+All decidable. All checkable by machines. All missed by humans—the fundamental asymmetry. We make arithmetic errors. We miss race conditions. We forget to check bounds. We overlook missing table entries. These are precisely the properties machines excel at verifying.
 
 **Modern Validation Infrastructure**
 
@@ -1503,8 +1499,6 @@ The key property: The type system makes it impossible to access medical records 
 
 ### Section 2.3: Making Algorithmic Bias Explicit
 
-One advantage of formal specifications: they make bias *undeniable* rather than *hidden*. This isn't a small shift—it's the difference between arguing WHETHER bias exists versus WHETHER bias is JUSTIFIED.
-
 #### The Undeniability Advantage
 
 **Empirical approach** (current standard):
@@ -1566,6 +1560,8 @@ The question becomes: What if `reported_crime_rate` itself reflects biased enfor
 The debate can now focus on whether the specification's assumptions hold, rather than whether we can trust an opaque algorithm.
 
 **The key shift**: Formal verification proves **consistency** (implementation matches spec), not **justice** (spec is fair). Separating these questions moves ethical debates out of opaque mathematics into transparent policy. "We proved the algorithm follows this rule" becomes separate from "Should we follow this rule?"
+
+This is the advantage of formal specifications: they make bias *undeniable* rather than *hidden*. The difference isn't small—it shifts the debate from WHETHER bias exists to WHETHER bias is JUSTIFIED.
 
 #### The AI Capability Implication
 
@@ -2185,3 +2181,9 @@ ______________________________________________________________________
 **Status**: Library foundation complete | Docker infrastructure ready | 329 tests passing
 **Philosophy**: If the type checker passes and the model checks, the program is correct. Leverage the type system as enabler, not obstacle.
 **Central Claim**: Mechanical verifiability enables AI capability. Formal methods make assumptions explicit and checkable—a significant advance without claiming to solve governance or eliminate human judgment.
+
+______________________________________________________________________
+
+## References
+
+*The Economist*, "OpenAI's cash burn will be one of the big bubble questions of 2026," December 30, 2025.
