@@ -2,7 +2,7 @@
 
 **Status**: Authoritative source
 **Supersedes**: type_safety_enforcement.md, purity.md
-**Referenced by**: engineering/README.md, documents/readme.md, engineering/warnings_policy.md, dsl/verification_boundary.md
+**Referenced by**: engineering/README.md, documents/readme.md, engineering/warnings_policy.md, dsl/proof_boundary.md
 
 > **Purpose**: Single Source of Truth for type safety, purity, and code quality enforcement in Effectful.
 

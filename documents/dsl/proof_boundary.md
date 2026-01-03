@@ -1,4 +1,4 @@
-# The AI Verification Boundary: Why AI Will Be Under-Utilized
+# The Proof Boundary: Why Humans Will Under-Utilize AI
 
 GitHub Copilot launched June 2021. By October 2023: 1.3 million paid subscribers, over $100 million in annual revenue. Developers report 55% faster feature development in typed codebases.
 
@@ -14,15 +14,37 @@ The cash burns at what *The Economist* calls "Towering Inferno" rates. OpenAI wi
 
 The capability is demonstrated. The economic incentive is clear—$4.9 trillion healthcare industry, $437 billion legal services, $430 billion cloud infrastructure. The infrastructure exists—APIs everywhere, LLMs performing at professional level.
 
-The jobs aren't disappearing.
+Why aren't these industries automating at scale?
 
-This essay examines why: the verification boundary that separates domains where mechanical validation is possible from domains requiring human judgment. Where that boundary lies determines whether AI transforms industries or remains an expensive assistant. Right now, it's in the wrong place to justify the valuations.
+---
+
+**A Note on Terminology: "Proof" vs. "Evidence"**
+
+This book uses "proof" exclusively in the formal mathematical sense:
+
+**Proof** = A logical derivation following strict formal rules, verifiable by mechanical checkers. Examples:
+- Type checker proving code type-safety
+- Model checker proving system correctness
+- Proof assistant verifying mathematical theorems
+- FEM software proving structural stress calculations
+
+**NOT proof** (subjective verification):
+- Radiologist diagnosing ambiguous medical images
+- Attorney evaluating legal argument soundness
+- Professional Engineer certifying novel structural designs
+- Code reviewer assessing business logic appropriateness
+
+The distinction matters because **the proof boundary**—the line separating domains with mechanical proofs from domains requiring human judgment—determines where AI can assist effectively vs. where humans must review everything from scratch.
+
+Throughout this book, when "evidence" or "demonstration" is meant, those words will be used explicitly. "Proof" always means formal mathematical proof.
+
+---
 
 The pattern emerged through industrial disasters. Ariane 5, June 4, 1996.
 
 ______________________________________________________________________
 
-## Part I: The Verification Foundation
+## Part I: The Proof Foundation
 
 ### Section 1.1: When Human Expertise Failed
 
@@ -87,13 +109,13 @@ Four industries. Four catastrophes. Different technologies, different failure mo
 - **Pentium FDIV**: Thousands of Intel engineers, millions of test vectors → $475M recall
 - **Toyota**: Professional software engineers, extensive testing → 89 deaths
 
-No choice. Industries found solutions beyond human judgment because the economic stakes forced it—$370 million rockets, $475 million recalls, $3 billion settlements, regulatory liability, criminal prosecution. When catastrophic failures cost billions and destroy lives, mechanical verification becomes cheaper than fallible human review.
+No choice. Industries found solutions beyond human judgment because the economic stakes forced it—$370 million rockets, $475 million recalls, $3 billion settlements, regulatory liability, criminal prosecution. When catastrophic failures cost billions and destroy lives, mechanical proof becomes cheaper than fallible human review.
 
-The economic asymmetry: **Industries formalized domains where disasters cost enough to justify investing in mechanical validators.** Aerospace. Medical devices. Automotive safety systems. Semiconductor manufacturing. The disasters weren't philosophical problems—they were billion-dollar losses that made formal verification economically rational.
+The economic asymmetry: **Industries formalized domains where disasters cost enough to justify investing in mechanical provers.** Aerospace. Medical devices. Automotive safety systems. Semiconductor manufacturing. The disasters weren't philosophical problems—they were billion-dollar losses that made formal proof economically rational.
 
-The domains that justify AI valuations—healthcare ($4.9T), legal services ($437B), cloud infrastructure ($430B)—haven't experienced catastrophes severe enough to force complete formalization. Radiologists don't have mechanical validators for diagnostic reasoning. Attorneys don't have mechanical validators for legal argument soundness. Engineers don't have mechanical validators for operational impact assessment.
+The domains that justify AI valuations—healthcare ($4.9T), legal services ($437B), cloud infrastructure ($430B)—haven't experienced catastrophes severe enough to force complete formalization. Radiologists don't have mechanical provers for diagnostic reasoning. Attorneys don't have mechanical provers for legal argument soundness. Engineers don't have mechanical provers for operational impact assessment.
 
-AI can assist in these domains. But without mechanical validators, every AI suggestion requires slow, expensive human review from scratch. The productivity gains are real but incremental—not transformative enough to justify the valuations.
+AI can assist in these domains. But without mechanical provers, every AI suggestion requires slow, expensive human review from scratch. The productivity gains are real but incremental—not transformative enough to justify the valuations.
 
 But understanding why formal methods became necessary—and why they now determine where AI deploys—requires understanding a parallel story. The evolution of computing itself.
 
@@ -103,7 +125,7 @@ But understanding why formal methods became necessary—and why they now determi
 
 In the beginning, there were punchcards. Programmers hand-coded every instruction in assembly language. Load register A. Add register B. Store the result. Jump to line 42.
 
-Every line was validated by humans. Manually. One instruction at a time. Engineers sat at desks with printouts, checking that register allocations made sense, that memory addresses didn't overlap, that jump targets existed. The validation was exhaustive because it had to be—one wrong instruction could crash the entire program, and debugging meant re-punching cards and waiting hours or days for another run.
+Every line was validated by humans. Manually. One instruction at a time. Engineers sat at desks with printouts, checking that register allocations made sense, that memory addresses didn't overlap, that jump targets existed. This manual checking was a type of proof—following rules to verify correctness—though error-prone compared to mechanical proofs that would come with compilers. The validation was exhaustive because it had to be—one wrong instruction could crash the entire program, and debugging meant re-punching cards and waiting hours or days for another run.
 
 This didn't scale. A thousand-line program meant a thousand manual checks. Ten thousand lines was barely feasible. A hundred thousand? Impossible. Not because programmers lacked skill—ENIAC's programmers were brilliant—but because human attention has limits. Fatigue. Distraction. The sheer cognitive load of tracking hundreds of variables across thousands of lines.
 
@@ -113,13 +135,13 @@ The first crisis in computing wasn't technology. It was human validation capacit
 
 Then came the compilers. FORTRAN (1957). COBOL (1959). Revolutionary idea: write code in something resembling human language, let a program translate it to machine instructions.
 
-But the deeper revolution was invisible: compilers validated syntax automatically.
+But the deeper revolution was invisible: compilers proved syntax automatically.
 
 A FORTRAN compiler didn't just translate DO loops to assembly. It checked that every variable was declared. That parentheses matched. That GOTO statements pointed to valid line numbers. Syntactic correctness—previously requiring hours of human review—now took seconds of machine time.
 
 A programmer submits her code. The compiler rejects it in 3 seconds: "UNDEFINED VARIABLE AT LINE 47." She finds the typo, resubmits, gets executable output. What took a day of manual checking now takes minutes.
 
-But this didn't solve the decidability problem. It just moved it. Compilers automated syntax checking, but semantic correctness still required human validation. Did the algorithm actually compute what you intended? Were there off-by-one errors? Race conditions? Logic bugs?
+But this didn't solve the semantic correctness problem. It just moved it. Compilers automated syntax checking, but semantic correctness still required human validation. Did the algorithm actually compute what you intended? Were there off-by-one errors? Race conditions? Logic bugs?
 
 The compiler would happily translate perfectly syntactic nonsense into perfectly syntactic machine code that did the wrong thing entirely.
 
@@ -131,7 +153,7 @@ Declare a variable as an integer, the compiler rejects attempts to store strings
 
 This was substantial progress. NASA's Apollo Guidance Computer software, written in assembly, had no type safety—every bug required meticulous manual review. By contrast, later spacecraft using typed languages caught a whole class of errors mechanically.
 
-**The economic timeline**: By the 1970s, the software industry had already automated the cheap verification work. Syntax checking (1950s). Type checking (1970s). The mechanical validators replaced human reviewers for the low-value, high-volume error detection. This freed programmers to focus on the expensive work—algorithm design, architecture decisions, business logic.
+**The economic timeline**: By the 1970s, the software industry had already automated the cheap verification work. Syntax checking (1950s). Type checking (1970s). The mechanical provers replaced human reviewers for the low-value, high-volume error detection. This freed programmers to focus on the expensive work—algorithm design, architecture decisions, business logic.
 
 The irony: AI in 2024 excels at generating code in domains where cheap verification was automated decades ago. SQL queries validated by parsers. API calls checked by schemas. Type-checked languages verified by compilers. AI assists with work humans already largely automated through compilers and type systems. The expensive professional work—system design, requirement analysis, business logic validation—still requires human judgment.
 
@@ -155,7 +177,7 @@ The CAP theorem (2000) proved you can't have consistency, availability, and part
 
 This was when software developers really needed to start taking formal proofs of correctness seriously.
 
-But the software industry was ironically slower to adopt formal verification than industries that had learned through catastrophe. Aerospace adopted formal methods after Ariane 5's $370 million explosion. Automotive adopted after Toyota's unintended acceleration deaths. Medical devices got FDA mandates after Therac-25 killed patients.
+But the software industry was ironically slower to adopt formal proof than industries that had learned through catastrophe. Aerospace adopted formal methods after Ariane 5's $370 million explosion. Automotive adopted after Toyota's unintended acceleration deaths. Medical devices got FDA mandates after Therac-25 killed patients.
 
 Why the delay? Software engineers had developed the BEST validation tools—functional programming languages, TLA+, formal methods—yet severely underutilized them. The reason: outages and data breaches don't kill people. Websites could ship buggy, patch reactively, survive without the rigor that kept airplanes from falling or medical devices from overdosing patients.
 
@@ -163,7 +185,7 @@ Amazon was an exception. In 2011, they proactively adopted TLA+ (Temporal Logic 
 
 The famous example: a 35-step bug in DynamoDB that could only manifest under a specific sequence of failures that would likely never occur in testing but was guaranteed to eventually happen at scale. TLA+ model checking found it in hours. The cost of formal modeling was orders of magnitude less than the cost of production outages.
 
-Amazon's proactive adoption was unusual. Most of the software industry still operates reactively—shipping bugs, patching in production, treating formal verification as academic luxury rather than engineering necessity.
+Amazon's proactive adoption was unusual. Most of the software industry still operates reactively—shipping bugs, patching in production, treating formal proof as academic luxury rather than engineering necessity.
 
 **The API Revolution: How Amazon Turned Infrastructure Into Software (2002-2024)**
 
@@ -185,6 +207,26 @@ The critical abstraction: when infrastructure is exposed through APIs, it become
 By the 2010s, this pattern proliferated. APIs meant any decision could be treated like software—reproducible, auditable, formally verifiable. The API economy wasn't just about clean code. It was about turning human judgment into decidable properties.
 
 By 2017, computing had converged on a single architecture: APIs for everything, cloud infrastructure running at unprecedented scale, distributed systems requiring mathematical proofs for correctness.
+
+### Section 1.2.5: The Performance Gap
+
+Before examining why this paradox exists, consider the empirical pattern:
+
+**Code generation (mechanically checkable)**:
+- GitHub Copilot in TypeScript (type-checked): 72% correctness
+- GitHub Copilot in Python (dynamically typed): 45% correctness
+- 1.3 million paying subscribers
+- $100 million annual revenue
+
+**Medical diagnosis (expert judgment)**:
+- 1,300 FDA-approved AI diagnostic tools
+- Radiologist-level accuracy on clear cases
+- U.S. clinical adoption: ~2%
+- Radiologists must review every AI suggestion from scratch
+
+**The 27-point gap** in correctness corresponds to a **650× gap** in adoption.
+
+Why does mechanical checking help AI capability so dramatically?
 
 ### Section 1.3: The Transformer Revolution
 
@@ -218,9 +260,9 @@ The pattern was consistent. On well-defined tasks with clear evaluation criteria
 
 Here's the cruel irony: AI performs best in domains where professionals earn the least.
 
-Domains with mechanical validators—code generation, SQL queries, type-safe API design—saw AI achieve 72-89% correctness rates. GitHub Copilot: 1.3 million subscribers, $100 million revenue. Median developer salary: $120K. The verification was already cheap (type checkers from the 1970s); AI made the writing faster.
+Domains with mechanical provers—code generation, SQL queries, type-safe API design—saw AI achieve 72-89% correctness rates. GitHub Copilot: 1.3 million subscribers, $100 million revenue. Median developer salary: $120K. The verification was already cheap (type checkers from the 1970s); AI made the writing faster.
 
-Domains relying on expert judgment—medical diagnosis, legal reasoning, structural engineering design review—remained at 45-58% correctness with high error variance. Medical AI: 1,300 FDA approvals, 2% clinical adoption. Radiologist median salary: $498K. Attorneys billing $200-$1,000/hour. The expensive judgment—distinguishing malignant from benign in ambiguous cases, evaluating legal soundness, certifying structural safety—has no mechanical validator.
+Domains relying on expert judgment—medical diagnosis, legal reasoning, structural engineering design review—remained at 45-58% correctness with high error variance. Medical AI: 1,300 FDA approvals, 2% clinical adoption. Radiologist median salary: $498K. Attorneys billing $200-$1,000/hour. The expensive judgment—distinguishing malignant from benign in ambiguous cases, evaluating legal soundness, certifying structural safety—has no mechanical prover.
 
 The 27-point gap determined the economics. The domains justifying AI bubble valuations—healthcare ($4.9T), legal services ($437B), professional engineering—are precisely where AI remains an expensive assistant.
 
@@ -284,27 +326,27 @@ Software developers review every production merge even though AI generates the c
 
 The technology works. The infrastructure exists. Organizations won't delegate decision-making authority to systems they can't verify.
 
-**The Verification Boundary**
+**The Proof Boundary**
 
-This essay examines a fundamental constraint on AI deployment that most technology forecasts ignore: the verification boundary.
+This essay examines a fundamental constraint on AI deployment that most technology forecasts ignore: the proof boundary.
 
 Human experts can be held accountable. When a doctor misdiagnoses, there's malpractice liability. When an engineer deploys broken code, there's professional responsibility. When an attorney files a faulty brief, there's bar discipline. The verification mechanism is legal, professional, and social.
 
 But AI systems trained on statistical patterns? How do you verify their decisions before delegating authority?
 
-For type-checked code, there's a deterministic validator: the type checker. For database queries, there's a syntactic validator: the SQL parser. For mathematical proofs, there's a logical validator: the proof assistant. These validators provide yes/no answers in finite time.
+For type-checked code, there's a deterministic prover: the type checker. For database queries, there's a syntactic prover: the SQL parser. For mathematical proofs, there's a logical prover: the proof assistant. These provers provide yes/no answers in finite time.
 
-But—and this is crucial—even these validators don't enable autonomous AI deployment. Developers still review type-checked code before merging. The validators just mechanize one step of review (checking syntax and types), but humans still validate semantics, intent, business logic.
+But—and this is crucial—even these provers don't enable autonomous AI deployment. Developers still review type-checked code before merging. The provers just mechanize one step of review (checking syntax and types), but humans still validate semantics, intent, business logic.
 
-And for most professional work—medical diagnosis, legal analysis, engineering design—no such validators exist at all. Not even for the cheap mechanical checks.
+And for most professional work—medical diagnosis, legal analysis, engineering design—no such provers exist at all. Not even for the cheap mechanical checks.
 
 This boundary—discovered in the industrial disasters of the 20th century, formalized in the software evolution of computing, and now determining AI deployment patterns in the 21st century—isn't about model capability. It's about what can be verified mechanically versus what requires human judgment.
 
-Where mechanical validators exist, AI can be checked faster. But humans still make the final call. Where validators don't exist, AI outputs can't even be checked mechanically—every review is subjective human judgment from scratch.
+Where mechanical provers exist, AI can be checked faster. But humans still make the final call. Where provers don't exist, AI outputs can't even be checked mechanically—every review is subjective human judgment from scratch.
 
 This is why AI deployment patterns look so strange. Why GitHub Copilot generates millions of lines of code daily but can't autonomously merge to production. Why radiology AI matches human accuracy but can't autonomously sign reports. Why legal AI drafts briefs but can't autonomously file them.
 
-The verification boundary explains what no forecast of AI capabilities alone can predict: which jobs transform, which jobs remain, and why the automation patterns follow such unexpected lines.
+The proof boundary explains what no forecast of AI capabilities alone can predict: which jobs transform, which jobs remain, and why the automation patterns follow such unexpected lines.
 
 The boundary has a mathematical foundation: decidability, discovered ninety years ago.
 
@@ -326,13 +368,13 @@ By narrowing the question, we transform the impossible into the certain. The res
 
 **The Formal Definition**
 
-A property P is *mechanically verifiable* if an algorithm A exists such that, for any input x:
+A property P is *mechanically provable* if an algorithm A exists such that, for any input x:
 
 1. A terminates in finite time (guaranteed halting)
 2. A returns yes (x satisfies P) or no (x violates P)
 3. A's verdict requires no human interpretation
 
-Turing's 1936 discovery defines the border where mechanical validators can replace human validators today. Decidable questions—type checking, proof verification, contract validation—mechanical validators handle with certainty. Undecidable questions remain beyond algorithmic reach. But restrict them appropriately, and certainty returns.
+Turing's 1936 discovery defines the border where mechanical provers can replace human validators today. Decidable questions—type checking, proof verification, contract validation—mechanical provers handle with certainty. Undecidable questions remain beyond algorithmic reach. But restrict them appropriately, and certainty returns.
 
 **Return to Ariane 5**
 
@@ -342,7 +384,7 @@ Could a machine have verified that velocity values fit in 16-bit integers?
 
 **Yes.** Decidable. Checkable in microseconds.
 
-A type checker would have caught it instantly. Modern type systems like Rust's enforce integer bounds at compile-time. The code wouldn't compile. The bug would never reach production. Never make it to the launch pad. $370 million saved by a mechanical validator running in milliseconds.
+A type checker would have caught it instantly. Modern type systems like Rust's enforce integer bounds at compile-time. The code wouldn't compile. The bug would never reach production. Never make it to the launch pad. $370 million saved by a mechanical prover running in milliseconds.
 
 **Return to Therac-25**
 
@@ -358,11 +400,11 @@ Five missing lookup table entries out of 1,066. $475 million recall. Millions of
 
 Could a machine have verified the floating-point lookup table?
 
-**Yes.** Formal verification of hardware is decidable. After the FDIV disaster, Intel adopted formal methods. Modern CPU designs use model checking to verify floating-point units exhaustively. The bug wouldn't happen today—not because engineers are smarter, but because mechanical validators check properties that human review cannot.
+**Yes.** Formal verification of hardware is decidable. After the FDIV disaster, Intel adopted formal methods. Modern CPU designs use model checking to verify floating-point units exhaustively. The bug wouldn't happen today—not because engineers are smarter, but because mechanical provers check properties that human review cannot.
 
 **The Pattern**
 
-The disasters share a property: they were mechanically verifiable failures that human review missed. Not subtle algorithmic optimality questions. Not undecidable properties. Simple, checkable properties:
+The disasters share a property: they were mechanically provable failures that human review missed. Not subtle algorithmic optimality questions. Not undecidable properties. Simple, checkable properties:
 
 - Does this value fit in this integer type?
 - Can these two threads access shared state simultaneously?
@@ -376,7 +418,7 @@ Today's software industry has built extensive mechanical validation infrastructu
 
 **CI/CD Pipelines as Formal Validators**
 
-GitHub Actions, GitLab CI, CircleCI—these aren't just automation tools. They're mechanical validators that enforce decidable properties before code reaches production.
+GitHub Actions, GitLab CI, CircleCI—these aren't just automation tools. They're mechanical provers that enforce decidable properties before code reaches production.
 
 A typical CI pipeline validates:
 - Type correctness (MyPy, TypeScript compiler)
@@ -388,7 +430,9 @@ A typical CI pipeline validates:
 
 Each check is decidable. Each returns yes/no in finite time. Failed checks block merges. The validation is mechanical, deterministic, non-negotiable. No human judgment required to determine if types match or tests pass.
 
-This infrastructure enables AI code generation. GitHub Copilot can suggest code because CI pipelines will catch type errors, test failures, lint violations. The mechanical validators provide a safety net that makes AI-generated code viable. Developers trust Copilot suggestions not because they trust the AI, but because they trust the validators will catch mistakes.
+This infrastructure enables AI code generation. GitHub Copilot can suggest code because CI pipelines will catch type errors, test failures, lint violations. The mechanical provers provide a safety net that makes AI-generated code viable. Developers trust Copilot suggestions not because they trust the AI, but because they trust the validators will catch mistakes.
+
+This explains the GitHub Copilot performance gap shown earlier: type checkers provide decidable proofs of correctness properties. LLMs trained on type-checked code learned from examples that passed mechanical proof. Untyped code lacks this filtration—AI learned from a mix of correct and incorrect examples.
 
 **API Contract Validation**
 
@@ -403,11 +447,11 @@ A REST API with OpenAPI spec validates:
 
 Each validation is decidable. Each executes in microseconds. Invalid requests are rejected before reaching application logic. The contract is mechanically enforced.
 
-This enables AI-driven API orchestration. LLMs can generate API calls because the API validates them mechanically. When MCP connects an LLM to a database API, the API schema ensures malformed queries never execute. The mechanical validator acts as a safety boundary.
+This enables AI-driven API orchestration. LLMs can generate API calls because the API proves them mechanically. When MCP connects an LLM to a database API, the API schema ensures malformed queries never execute. The mechanical prover acts as a safety boundary.
 
 **Kubernetes Operators and Declarative Infrastructure**
 
-Kubernetes validates infrastructure configurations mechanically. A deployment manifest declares desired state. The Kubernetes API server validates:
+Kubernetes proves infrastructure configurations mechanically. A deployment manifest declares desired state. The Kubernetes API server validates:
 - Resource quotas (does this fit in allocated CPU/memory?)
 - Port conflicts (is port 8080 already bound?)
 - Volume mounts (does this path exist?)
@@ -416,11 +460,11 @@ Kubernetes validates infrastructure configurations mechanically. A deployment ma
 
 Each check is decidable. Each returns yes/no. Invalid manifests are rejected before applying to the cluster. The validation is mechanical and exhaustive.
 
-This enables infrastructure-as-code AI. LLMs can generate Kubernetes manifests because the API server validates them mechanically. Errors are caught before deployment. The mechanical validator prevents invalid configurations from reaching production.
+This enables infrastructure-as-code AI. LLMs can generate Kubernetes manifests because the API server validates them mechanically. Errors are caught before deployment. The mechanical prover prevents invalid configurations from reaching production.
 
 **Smart Contract Verifiers**
 
-Solidity static analyzers, formal verification tools for Ethereum smart contracts—these validate properties before blockchain deployment:
+Solidity static analyzers, formal proof tools for Ethereum smart contracts—these validate properties before blockchain deployment:
 - Reentrancy vulnerabilities (can this function be called recursively?)
 - Integer overflows (can these arithmetic operations overflow?)
 - Access control (are privileged functions properly protected?)
@@ -442,13 +486,13 @@ Notice what these modern systems share with the disasters:
 - **Kubernetes**: Validate resource quotas, port conflicts → decidable
 - **Smart contracts**: Validate reentrancy, overflows → decidable (the "infinite money glitch" has drained billions from DeFi protocols—turns out "code is law" works poorly when the law has loopholes)
 
-All mechanically verifiable. All decidable properties. All checkable without human judgment.
+All mechanically provable. All decidable properties. All checkable without human judgment.
 
 These aren't separate categories. They're the same fundamental property discovered by Turing in 1936, applied across aerospace, medicine, hardware, software infrastructure, and blockchain.
 
 **The Filtration Mechanism**
 
-These mechanical validators do more than catch errors. They filter training data.
+These mechanical provers do more than catch errors. They filter training data.
 
 When GitHub runs CI/CD on every commit, it creates a dataset filtered by decidable properties. Code in repositories is:
 - Type-correct (passed MyPy/TypeScript)
@@ -456,7 +500,7 @@ When GitHub runs CI/CD on every commit, it creates a dataset filtered by decidab
 - Lint-compliant (passed code style checks)
 - Security-scanned (passed SAST tools)
 
-Decades of commits. Millions of pull requests. All filtered through mechanical validators before merging. When LLMs train on GitHub data, they inherit this filtration. The training corpus contains primarily code that passed mechanical validation.
+Decades of commits. Millions of pull requests. All filtered through mechanical provers before merging. When LLMs train on GitHub data, they inherit this filtration. The training corpus contains primarily code that passed mechanical validation.
 
 When APIs enforce OpenAPI schemas, they create filtered interaction logs:
 - All requests are structurally valid
@@ -476,27 +520,27 @@ This filtration creates a dual benefit:
 
 **First benefit**: Better AI training data. LLMs learn from examples that passed mechanical validation, improving code generation quality.
 
-**Second benefit (more important)**: Faster human review becomes possible. When an LLM generates code, CI/CD validates it mechanically before human review. When an LLM generates API calls, schemas validate them before human approval. When an LLM generates infrastructure configs, Kubernetes validates them before engineers deploy.
+**Second benefit (more important)**: Faster human review becomes possible. When an LLM generates code, CI/CD proves it mechanically before human review. When an LLM generates API calls, schemas validate them before human approval. When an LLM generates infrastructure configs, Kubernetes proves them before engineers deploy.
 
-The mechanical validators speed up review. Not because they make the AI better, but because they catch the cheap errors automatically—freeing humans to focus on semantic validation.
+The mechanical provers speed up review. Not because they make the AI better, but because they catch the cheap errors automatically—freeing humans to focus on semantic validation.
 
 **Where the Boundary Forms**
 
 But here's the critical insight: even where mechanical verifiers exist, AI remains an assistant.
 
-- **Type-checked code**: GitHub Copilot suggests → CI/CD validates → **developer reviews** → human approves merge
-- **Database queries**: LLM generates SQL → parser validates → **DBA reviews** → human executes
-- **API orchestration**: LLM generates calls → schema validates → **engineer reviews** → human approves
-- **Infrastructure configs**: LLM generates manifest → API validates → **SRE reviews** → human deploys
-- **Smart contracts**: LLM generates Solidity → verifier validates → **auditor reviews** → human deploys
-- **Mathematical proofs**: LLM generates proof → Lean validates → **mathematician reviews** → human publishes
+- **Type-checked code**: GitHub Copilot suggests → CI/CD proves → **developer reviews** → human approves merge
+- **Database queries**: LLM generates SQL → parser proves → **DBA reviews** → human executes
+- **API orchestration**: LLM generates calls → schema proves → **engineer reviews** → human approves
+- **Infrastructure configs**: LLM generates manifest → API proves → **SRE reviews** → human deploys
+- **Smart contracts**: LLM generates Solidity → verifier proves → **auditor reviews** → human deploys
+- **Mathematical proofs**: LLM generates proof → Lean proves → **mathematician reviews** → human publishes
 
 Where do humans do even more work? Where mechanical verifiers don't exist.
 
-- **Medical diagnosis**: LLM generates diagnosis, radiologist reviews (no mechanical validator for diagnostic reasoning)
-- **Legal arguments**: LLM drafts brief, attorney reviews (no mechanical validator for legal soundness)
-- **Infrastructure approval**: LLM suggests deployment, engineer reviews (no mechanical validator for operational impact)
-- **Insurance claims**: LLM processes claim, adjuster reviews (no mechanical validator for policy interpretation)
+- **Medical diagnosis**: LLM generates diagnosis, radiologist reviews (no mechanical prover for diagnostic reasoning)
+- **Legal arguments**: LLM drafts brief, attorney reviews (no mechanical prover for legal soundness)
+- **Infrastructure approval**: LLM suggests deployment, engineer reviews (no mechanical prover for operational impact)
+- **Insurance claims**: LLM processes claim, adjuster reviews (no mechanical prover for policy interpretation)
 
 The pattern is universal. Mechanical verification determines how fast humans can review AI output—not whether AI can operate autonomously.
 
@@ -504,6 +548,22 @@ Where validators exist: AI suggests, validator catches cheap errors, humans focu
 Where validators don't exist: AI suggests, humans review everything from scratch.
 
 This boundary was discovered through disasters. Formalized through software evolution. And now determines how efficiently AI can assist professionals in the transformer era.
+
+**Temporal Precedence: Proofs Preceded AI**
+
+If mechanical proof truly determines AI capability, we should see a specific temporal pattern: proof infrastructure should PRECEDE LLM capability gains, not follow them.
+
+The data confirms this:
+
+| Domain | Verifier Created | LLM Capability Emerged | Temporal Gap |
+|--------|------------------|------------------------|--------------|
+| SQL | 1970s-1986 | 2020-2023 | 40-50 years |
+| Haskell | 1990 | 2020-2023 | 30+ years |
+| Coq | 1989 | 2020-2024 | 31+ years |
+| Rust | 2010-2015 | 2020-2024 | 10-14 years |
+| TLA+ | 1999 | 2023-2024 | 24+ years |
+
+Causation direction: Proofs enabled AI, not the reverse. The verifiers created training data filtering effects decades before transformers existed to benefit from them.
 
 ### Section 1.6: Why Machines Need What Humans Don't
 
@@ -523,7 +583,7 @@ But the FEM software can't answer certain questions:
 - Environmental factors: Freeze-thaw cycles in this specific microclimate? Salt spray corrosion patterns?
 - Maintenance realities: Inspection interval adequate given actual municipal budget constraints?
 
-The FEM analysis provides mechanical verification for structural calculations. The engineer provides judgment for everything else.
+The FEM analysis provides mechanical proof for structural calculations. The engineer provides judgment for everything else.
 
 What does the engineer do in these ambiguous cases? They make judgment calls. They apply intuition informed by experience. They consult with colleagues. They err on the side of caution or accept calculated risks based on context. They add extra safety margins where the FEM models seem uncertain. They might greenlight a design that technically violates a guideline because they understand the guideline's purpose and know when deviation is acceptable.
 
@@ -533,9 +593,9 @@ If the bridge collapses, the engineer's license is revoked. Lawsuits follow. Cri
 
 In 1907, when the Quebec Bridge collapsed during construction—killing 75 workers as 19,000 tons of steel plunged into the St. Lawrence River—the Royal Commission investigation concluded: "errors in judgment on the part of the two chief engineers." Chief engineer Theodore Cooper had approved design changes by telegram without mechanically re-verifying load calculations. Professional judgment failed catastrophically.
 
-The aftermath established mandatory mechanical verification standards, Professional Engineer licensing requirements, and building codes that formalized what could be checked deterministically. But even today, a century of formalization later, gaps remain.
+The aftermath established mandatory mechanical proof standards, Professional Engineer licensing requirements, and building codes that formalized what could be checked deterministically. But even today, a century of formalization later, gaps remain.
 
-This accountability is what makes professional judgment socially acceptable in domains where formal verification is incomplete. The engineer operates *outside* formal logic, navigating the gaps in our mathematical models using human judgment backed by professional accountability.
+This accountability is what makes professional judgment socially acceptable in domains where formal proof is incomplete. The engineer operates *outside* formal logic, navigating the gaps in our mathematical models using human judgment backed by professional accountability.
 
 #### 1.6.2: The Machine's Dilemma
 
@@ -626,28 +686,30 @@ And when those probabilities are wrong—when the AI recommends biopsy for a ben
 
 **The asymmetry explained**:
 
-This asymmetry explains why industries must invest in formalization before mechanical validators can replace human validators. Not because machines are inherently worse at pattern recognition—in many domains, they're demonstrably better. But because mechanical validators require formal completeness that human validators don't need.
+This asymmetry explains why industries must invest in formalization before mechanical provers can replace human validators. Not because machines are inherently worse at pattern recognition—in many domains, they're demonstrably better. But because mechanical provers require formal completeness that human validators don't need.
 
 The catastrophe stories we examined all follow this pattern: industries relied on human validators (engineers, code reviewers, designers) operating with professional judgment and accountability. When those systems became complex enough that human judgment failed—when the bugs were too subtle, the state spaces too large, the edge cases too numerous—catastrophe struck.
 
-The industries responded by formalizing their validation processes to a degree of completeness that enabled mechanical validators to replace human validators:
+The industries responded by formalizing their validation processes to a degree of completeness that enabled mechanical provers to replace human validators:
 
 - Ariane 5 → DO-178C software certification
-- Therac-25 → Medical device formal verification standards
+- Therac-25 → Medical device formal proof standards
 - Intel FDIV → Semiconductor formal methods
-- Toyota unintended acceleration → MISRA C + formal verification
+- Toyota unintended acceleration → MISRA C + formal proof
 
-**Medicine hasn't done this yet for most clinical decision-making.** That's why radiologists remain essential to validate AI-generated diagnoses—not because AI pattern recognition is poor (machines excel at that), but because no mechanical validators exist to verify diagnoses, leaving human expert judgment necessary.
+**Medicine hasn't done this yet for most clinical decision-making.** That's why radiologists remain essential to validate AI-generated diagnoses—not because AI pattern recognition is poor (machines excel at that), but because no mechanical provers exist to verify diagnoses, leaving human expert judgment necessary.
 
-**Software did this accidentally.** Every program requires mechanical verification to run—the compiler or interpreter is a verifier. That's why AI code generation works so much better than AI medical diagnosis. Not because code is simpler than medicine. But because code lives inside a formal system that provides mechanical verification, while medicine relies on human judgment navigating incompleteness.
+**Software did this accidentally.** Every program requires mechanical proof to run—the compiler or interpreter is a verifier. That's why AI code generation works so much better than AI medical diagnosis. Not because code is simpler than medicine. But because code lives inside a formal system that provides mechanical proof, while medicine relies on human judgment navigating incompleteness.
 
-This is the verification boundary. The line that separates domains where machines can operate (sufficient formalization exists) from domains where humans remain necessary (formalization incomplete, judgment required).
+This is the proof boundary. The line that separates domains where machines can operate (sufficient formalization exists) from domains where humans remain necessary (formalization incomplete, judgment required).
 
-Bold claim. But claims require evidence. If mechanical verification truly determines where AI succeeds and where it fails, what's the proof?
+Bold claim. But claims require evidence. If mechanical proof truly determines where AI succeeds and where it fails, what's the proof?
 
 ### Section 1.7: The Evidence
 
-The hypothesis makes a testable prediction: If mechanical verification filters training data, then LLMs should perform better in verified domains. Not just a little better. Measurably, consistently better.
+Earlier we saw the performance gap: 72% vs 45% correctness, a 650× adoption difference. We saw the temporal precedence: proofs preceded AI capability by 10-50 years across all domains. Now we examine the mechanism: how do mechanical provers determine AI capability?
+
+The hypothesis makes a testable prediction: If mechanical proof filters training data, then LLMs should perform better in verified domains. Not just a little better. Measurably, consistently better.
 
 The evidence is striking. It follows a pattern across three distinct levels of formalization.
 
@@ -661,7 +723,7 @@ Google DeepMind's [AlphaProof](https://deepmind.google/blog/ai-solves-imo-proble
 
 Unlike language models that generate plausible-sounding mathematical arguments, AlphaProof generates formal proofs in [Lean](https://leanprover.github.io/) that are mechanically verified. The proof assistant checks every logical step. Every inference. Every transformation. It either validates or rejects. No approximation. No "close enough."
 
-The system couples a pre-trained language model with [AlphaZero](https://deepmind.google/discover/blog/alphazero-shedding-new-light-on-chess-shogi-and-go/) reinforcement learning ([Nature, Nov 2025](https://www.nature.com/articles/s41586-025-09833-y)). It generates candidate proofs. Lean validates them. Invalid attempts are rejected with specific error messages. The system learns from structured feedback. When it succeeds, the proof is guaranteed correct—not probably correct, mathematically certain.
+The system couples a pre-trained language model with [AlphaZero](https://deepmind.google/discover/blog/alphazero-shedding-new-light-on-chess-shogi-and-go/) reinforcement learning ([Nature, Nov 2025](https://www.nature.com/articles/s41586-025-09833-y)). It generates candidate proofs. Lean proves them. Invalid attempts are rejected with specific error messages. The system learns from structured feedback. When it succeeds, the proof is guaranteed correct—not probably correct, mathematically certain.
 
 This is expert-level mathematical reasoning with verification-backed certainty. The gold standard: complete formalization, complete verification.
 
@@ -684,7 +746,7 @@ First developer: 72% of AI-generated code works correctly. Second developer: 45%
 Here's what that gap feels like in practice. Developer at typed codebase:
 
 1. AI suggests function
-2. Compiler validates in 200ms
+2. Compiler proves in 200ms
 3. If it compiles: review logic (30 seconds)
 4. If it doesn't: compiler shows exact error (fix in 10 seconds)
 5. Accept or reject
@@ -721,9 +783,9 @@ Complete formalization shows clear AI advantages. But what about domains caught 
 
 ### Theme 3: The Boundary Cases
 
-Bridge design reveals what happens at the verification boundary's edge—partial formalization creating partial AI capability.
+Bridge design reveals what happens at the proof boundary's edge—partial formalization creating partial AI capability.
 
-Modern structural engineering relies heavily on [Finite Element Method (FEM)](https://en.wikipedia.org/wiki/Finite_element_method) software. These programs mechanically verify core structural properties: Does maximum stress exceed yield strength? Does deflection violate safety limits? Will the structure buckle under load?
+Modern structural engineering relies heavily on [Finite Element Method (FEM)](https://en.wikipedia.org/wiki/Finite_element_method) software. These programs mechanically prove core structural properties: Does maximum stress exceed yield strength? Does deflection violate safety limits? Will the structure buckle under load?
 
 FEM analysis answers these questions deterministically. Input the geometry (beam dimensions, support locations), materials (steel grade, concrete strength), and loads (vehicle weight, wind force). The software computes stress distributions using numerical methods solving differential equations. Output: specific numbers with pass/fail judgments.
 
@@ -736,7 +798,7 @@ Result: PASS
 
 This creates filtered training data. Decades of FEM-verified designs—bridges that passed structural analysis, buildings that met code requirements—dominate engineering repositories. Failed designs rejected by verification software never made it to construction. Training data contains overwhelmingly designs that satisfied mechanical constraints.
 
-**Result**: AI systems demonstrate impressive capability on mechanically verifiable aspects. Generate beam dimensions for a simple span bridge? AI produces structurally sound proposals. Optimize truss configurations to minimize steel usage? Performance rivals human engineers on problems FEM can verify.
+**Result**: AI systems demonstrate impressive capability on mechanically provable aspects. Generate beam dimensions for a simple span bridge? AI produces structurally sound proposals. Optimize truss configurations to minimize steel usage? Performance rivals human engineers on problems FEM can verify.
 
 **But formalization is incomplete.**
 
@@ -750,11 +812,11 @@ The Professional Engineer reviews FEM output showing maximum stress 285 MPa with
 
 These require professional judgment—interpreting incomplete data, reasoning about uncertainties, applying experience from similar contexts. The PE applies judgment to gaps the mechanical verifier cannot address.
 
-AI behavior at this boundary is telling. Ask AI to optimize a truss: excellent, mechanically verifiable. Ask AI about foundation design on questionable soil: hallucination city. The system generates plausible-sounding analysis—"soil bearing capacity appears adequate based on standard assumptions"—without the PE's calibrated uncertainty. Training data contains FEM-verified structural calculations but unfiltered geotechnical judgments. The AI learned the difference.
+AI behavior at this boundary is telling. Ask AI to optimize a truss: excellent, mechanically provable. Ask AI about foundation design on questionable soil: hallucination city. The system generates plausible-sounding analysis—"soil bearing capacity appears adequate based on standard assumptions"—without the PE's calibrated uncertainty. Training data contains FEM-verified structural calculations but unfiltered geotechnical judgments. The AI learned the difference.
 
-This achieves benefit one: AI generates designs with good performance on mechanically verifiable problems, trained on filtered data. But benefit two remains unrealized: FEM (mechanical validator) cannot fully replace Professional Engineers whose licenses and legal accountability address formalization's gaps. The verification boundary runs through the middle of structural engineering, not around it.
+This achieves benefit one: AI generates designs with good performance on mechanically provable problems, trained on filtered data. But benefit two remains unrealized: FEM (mechanical prover) cannot fully replace Professional Engineers whose licenses and legal accountability address formalization's gaps. The proof boundary runs through the middle of structural engineering, not around it.
 
-The Quebec Bridge collapse in 1907 illustrates the stakes. Chief engineer Theodore Cooper approved design changes by telegram without re-verifying calculations—professional judgment failed catastrophically where mechanical verification was incomplete. Modern practice mandates FEM analysis precisely because it eliminates certain judgment errors. But gaps persist, and AI capability tracks the verification boundary exactly.
+The Quebec Bridge collapse in 1907 illustrates the stakes. Chief engineer Theodore Cooper approved design changes by telegram without re-verifying calculations—professional judgment failed catastrophically where mechanical proof was incomplete. Modern practice mandates FEM analysis precisely because it eliminates certain judgment errors. But gaps persist, and AI capability tracks the proof boundary exactly.
 
 ### Synthesis: Three Formalization Levels, One Pattern
 
@@ -764,14 +826,14 @@ Five domains examined. Three levels of formalization. The pattern is undeniable.
 
 **Software-era formalization** (type systems, SQL, compiled languages): 72% correctness in typed languages, 89% in SQL, reliable navigation of complex type systems like Rust's borrow checker. Decades of compiler filtration created training corpora where only correct patterns survived.
 
-**Partial formalization** (bridge engineering, structural FEM): High capability on mechanically verifiable aspects (truss optimization), hallucinations on unverified aspects (geotechnical judgment). AI performance tracks the verification boundary precisely.
+**Partial formalization** (bridge engineering, structural FEM): High capability on mechanically provable aspects (truss optimization), hallucinations on unverified aspects (geotechnical judgment). AI performance tracks the proof boundary precisely.
 
 What unifies these domains? Not simplicity. Lean proofs involve intricate mathematical reasoning across hundreds of steps. Rust's borrow checker requires deep understanding of pointer lifetimes. SQL operates across infinite data domains.
 
-The unifying factor is mechanical verification.
+The unifying factor is mechanical proof.
 
 Each domain has something most human activities lack: a checker that can instantly verify correctness without human judgment.
-- Mathematical proofs: proof checkers (Lean validates in milliseconds)
+- Mathematical proofs: proof checkers (Lean proves in milliseconds)
 - Type-safe code: type checkers ([GHC](https://www.haskell.org/ghc/) verifies [Haskell](https://www.haskell.org/) compiles)
 - Database queries: parsers (SQL engines reject invalid syntax)
 
@@ -785,13 +847,13 @@ Training data quality. Verifiers filter incorrect examples systematically. Code 
 
 This creates a virtuous cycle: verifiers exist, training data becomes cleaner, LLM output improves, more correct examples get generated, which further cleans the training data. The cycle reinforces itself.
 
-The verification boundary is not coincidence. It's defined by the presence or absence of mechanical verification. This is the fundamental mechanism determining where LLMs achieve reliability.
+The proof boundary is not coincidence. It's defined by the presence or absence of mechanical proof. This is the fundamental mechanism determining where LLMs achieve reliability.
 
 But these single-attempt success rates understate the transformation. In practice, AI systems with mechanical verifiers can iterate until validation succeeds, achieving near-certain correctness. The 70% single-attempt success rate for formal proofs becomes 95-99% eventual success with iterative refinement. Each failed validation provides structured error information. The AI generates a candidate solution, receives deterministic feedback from the verifier, consumes the error output, and generates a corrected version. The process repeats until validation succeeds.
 
-In domains without mechanical verifiers—medical diagnosis, structural engineering—AI systems hallucinate without correction mechanisms. Errors remain undetected until expensive human expert reviewers identify them or real-world failures occur. These industries cannot accelerate expert review because no mechanical validators catch the cheap errors first—experts must review everything from scratch.
+In domains without mechanical verifiers—medical diagnosis, structural engineering—AI systems hallucinate without correction mechanisms. Errors remain undetected until expensive human expert reviewers identify them or real-world failures occur. These industries cannot accelerate expert review because no mechanical provers catch the cheap errors first—experts must review everything from scratch.
 
-Mechanical verifiers provide dual benefits. First, they filter training data—code repositories contain only code that compiles, mathematical proof databases contain only verified proofs, creating cleaner training distributions that improve AI performance. Second, they enable runtime feedback loops where AI systems iterate until achieving deterministic correctness. This transforms mechanical verification from "AI performs better on average" to "AI achieves near-deterministic correctness," enabling industries to accelerate expensive expert human review by offloading cheap error detection to mechanical validators.
+Mechanical verifiers provide dual benefits. First, they filter training data—code repositories contain only code that compiles, mathematical proof databases contain only verified proofs, creating cleaner training distributions that improve AI performance. Second, they enable runtime feedback loops where AI systems iterate until achieving deterministic correctness. This transforms mechanical proof from "AI performs better on average" to "AI achieves near-deterministic correctness," enabling industries to accelerate expensive expert human review by offloading cheap error detection to mechanical provers.
 
 **The Deployment Velocity Chasm**
 
@@ -803,7 +865,7 @@ But these performance numbers only tell half the story. The real divide is deplo
 | SQL queries | Parsers | Fast (syntax validated mechanically) | Moderate (2-3 years) |
 | Formal proofs | Lean/Coq | Fast (mechanical proof checking) | Immediate (2024) |
 | Medical diagnosis | None | Slow (review everything from scratch) | Blocked (<2% after 11 years) |
-| Legal reasoning | None | Slow (no mechanical validators) | Blocked (assistant only) |
+| Legal reasoning | None | Slow (no mechanical provers) | Blocked (assistant only) |
 | Structural PE cert | Partial (FEM) | Mixed (some mechanical checks) | Partial adoption |
 
 **Verified domains: Rapid adoption as assistant tools**
@@ -817,7 +879,7 @@ But these performance numbers only tell half the story. The real divide is deplo
 - Deep learning radiology AI approvals accelerated beginning 2017, building on traditional CAD systems approved since 1998 (Source: [FDA AI/ML Device Database 2024](https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-and-machine-learning-aiml-enabled-medical-devices))
 - **Years later (2024): US clinical adoption remains approximately 2%** (Source: [Cleveland Clinic Study, JACR 2024](https://www.jacr.org/article/S1546-1440(23)00854-3/fulltext))
 - Barriers include liability concerns, hallucination risk, and lack of validation infrastructure (Source: [McKinsey Healthcare AI Analysis 2024](https://www.mckinsey.com/industries/healthcare/our-insights/tackling-healthcares-biggest-burdens-with-generative-ai))
-- **Critical: Radiologists must review every AI suggestion from scratch**. No mechanical validators mean no shortcuts in review.
+- **Critical: Radiologists must review every AI suggestion from scratch**. No mechanical provers mean no shortcuts in review.
 - Legal AI: ROSS Intelligence shut down December 2020 (Source: [LawSites 2020](https://www.lawnext.com/2020/12/ross-intelligence-shuts-down-as-it-lacks-funds-to-fight-thomson-reuters-lawsuit.html)), citing insufficient funding amid Thomson Reuters lawsuit
 - Current legal AI tools: Explicitly marketed as "research assistants" only, following high-profile hallucination cases where systems invented case citations that don't exist—imagine explaining to a judge that your motion cites *Fictional v. Imaginary* (2023) (Source: [Stanford HAI Legal AI Report 2024](https://hai.stanford.edu/news/hallucinating-law-legal-mistakes-large-language-models-are-pervasive))
 
@@ -831,7 +893,7 @@ This explains investor nervousness: the expensive professional work that could j
 
 #### Volume and Quality: An Interaction Effect
 
-The Verification Boundary Hypothesis claims that mechanical verification quality drives LLM performance. But empirical evidence reveals an important nuance: **quality alone is insufficient—corpus volume matters**.
+The Proof Boundary Hypothesis claims that mechanical proof quality drives LLM performance. But empirical evidence reveals an important nuance: **quality alone is insufficient—corpus volume matters**.
 
 **Counterevidence from [GitHub Copilot](https://github.com/features/copilot)**: Empirical studies of Copilot code generation show that it performs *worse* on [Rust](https://www.rust-lang.org/) than on [C++](https://en.wikipedia.org/wiki/C%2B%2B) or [Java](https://www.oracle.com/java/), despite Rust having a substantially stronger type system with compile-time [ownership checking](https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html) and [borrow checking](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html) that prevent entire categories of bugs. The relatively young age of the language (stable release 2015) explains why LLMs currently outperform on [C](https://en.wikipedia.org/wiki/C_(programming_language))/[C++](https://en.wikipedia.org/wiki/C%2B%2B) programming despite [Rust](https://www.rust-lang.org/)'s stricter type validation. If verification quality alone determined LLM performance, Rust should show the *highest* Copilot success rates.
 
@@ -855,7 +917,7 @@ When volume is below threshold ([Rust](https://www.rust-lang.org/) currently), a
 
 This prediction is falsifiable: if [Rust](https://www.rust-lang.org/) corpus grows substantially but [Copilot](https://github.com/features/copilot) performance remains below [C++](https://en.wikipedia.org/wiki/C%2B%2B), the volume threshold hypothesis would be refuted.
 
-**Verification Boundary Refinement**: The verification boundary determines LLM capability only when sufficient training volume exists. Mechanical verification provides training data *quality*, but domains need both quality and volume to demonstrate measurable LLM advantages. Nascent verified domains (Rust, [F*](https://www.fstar-lang.org/), recent proof assistants) require corpus growth before verification advantages become empirically observable.
+**Proof Boundary Refinement**: The proof boundary determines LLM capability only when sufficient training volume exists. Mechanical verification provides training data *quality*, but domains need both quality and volume to demonstrate measurable LLM advantages. Nascent verified domains (Rust, [F*](https://www.fstar-lang.org/), recent proof assistants) require corpus growth before verification advantages become empirically observable.
 
 #### Why Transformer Architecture Matters
 
@@ -881,7 +943,7 @@ The [transformer architecture](https://arxiv.org/abs/1706.03762) introduced by V
 
 **The Dual-Requirement Mechanism**:
 
-The Verification Boundary Hypothesis requires BOTH components:
+The Proof Boundary Hypothesis requires BOTH components:
 1. **Verified training data** (decades of filtering by mechanical verifiers) AND
 2. **Transformer architecture** (capability to learn from web-scale verified corpora)
 
@@ -896,19 +958,7 @@ This dual-requirement mechanism explains why the verification advantage emerged 
 
 ### Section 1.7.5: Temporal Evidence for Causation
 
-The temporal sequence provides strong evidence for causation beyond mere correlation. Mechanical verifiers didn't emerge alongside LLM capability—they preceded it by decades, creating a natural experiment in causality.
-
-#### Verifiers Preceded Capability by Decades
-
-| Domain | Verifier Created | LLM Capability Emerged | Temporal Gap |
-|--------|------------------|------------------------|--------------|
-| SQL | 1970s-1986 | 2020-2023 | 40-50 years |
-| Haskell | 1990 | 2020-2023 | 30+ years |
-| Coq | 1989 | 2020-2024 | 31+ years |
-| Rust | 2010-2015 | 2020-2024 | 10-14 years |
-| TLA+ | 1999 | 2023-2024 | 24+ years |
-
-This temporal precedence strengthens the causal argument dramatically. If LLM capability drove verifier creation, we'd expect the reverse timeline. If both were independent consequences of some third factor, we'd expect them to emerge simultaneously. Instead, the data shows verifiers consistently appeared decades before LLMs could utilize them effectively.
+Earlier we saw the timeline: mechanical verifiers preceded LLM capability by 10-50 years across all domains. This temporal precedence strengthens the causal argument dramatically. If LLM capability drove verifier creation, we'd expect the reverse timeline. If both were independent consequences of some third factor, we'd expect them to emerge simultaneously. Instead, the data shows verifiers consistently appeared decades before LLMs could utilize them effectively.
 
 **The Bradford Hill Criterion**: [Temporal precedence](https://en.wikipedia.org/wiki/Bradford_Hill_criteria) is a core criterion for establishing causation in observational studies. The cause must precede the effect. Here, mechanical verifiers (cause) existed 10-50 years before transformer-based LLMs (effect) demonstrated capability advantages. This temporal relationship eliminates many confounding variables—the verifiers created training data filtering effects long before transformers existed to benefit from them.
 
@@ -916,7 +966,7 @@ This temporal precedence strengthens the causal argument dramatically. If LLM ca
 
 **Rust Longitudinal Case Study**: Rust provides a particularly clear example because we can observe the effect over time. As the Rust ecosystem matured from 2015-2024, the corpus of borrow-checker-validated code grew from thousands to millions of programs. During this same period, LLM performance on Rust code generation improved substantially—not because LLMs "learned Rust better" in an abstract sense, but because the training corpus grew richer in verified examples.
 
-**Counterfactual Reasoning**: If mechanical verification caused LLM capability advantages, we'd predict:
+**Counterfactual Reasoning**: If mechanical proof caused LLM capability advantages, we'd predict:
 - ✅ **Observed**: Domains with older verifiers show higher LLM reliability (SQL > Rust)
 - ✅ **Observed**: LLM reliability correlates with corpus size in verified domains
 - ✅ **Observed**: Domains without verifiers show no LLM reliability advantage regardless of corpus size
@@ -924,7 +974,7 @@ This temporal precedence strengthens the causal argument dramatically. If LLM ca
 
 The temporal evidence, combined with the mechanistic explanation (training data filtering + runtime feedback), establishes verification as the most parsimonious explanation for the observed LLM performance patterns.
 
-But evidence and theory mean nothing without real-world validation. If mechanical verification truly transforms what AI can do, where's the proof? Which industries actually deployed formal methods at scale—and what happened when they did?
+But evidence and theory mean nothing without real-world validation. If mechanical proof truly transforms what AI can do, where's the proof? Which industries actually deployed formal methods at scale—and what happened when they did?
 
 ### Section 1.8: Case Studies in Verified Software
 
@@ -942,7 +992,7 @@ This isn't because CompCert's developers are more careful than the thousands of 
 
 Add a feature to CompCert? You must write a new proof. But once that proof exists, the marginal cost of *verifying* each compilation is zero. Forever.
 
-For organizations where miscompilation means multi-billion-dollar liability—aerospace, medical devices, autonomous systems—that equation changes everything. The upfront cost of formal verification becomes trivial compared to litigation risk.
+For organizations where miscompilation means multi-billion-dollar liability—aerospace, medical devices, autonomous systems—that equation changes everything. The upfront cost of formal proof becomes trivial compared to litigation risk.
 
 **The LLM Advantage**
 
@@ -1004,13 +1054,13 @@ With TLA+, they proved correctness and shipped the optimization.
 
 **Economic Threshold Crossed**: Verification cost became lower than the cost of production bugs. AWS's experience demonstrates that formal methods scale to the world's largest cloud infrastructure, finding critical bugs that all other validation techniques miss.
 
-These success stories make formal verification sound like an obvious choice. CompCert achieved fifteen years without bugs. AWS found critical failures in every system modeled. If formal methods work this well, why did it take so long for industries to adopt them? What finally forced the change?
+These success stories make formal proof sound like an obvious choice. CompCert achieved fifteen years without bugs. AWS found critical failures in every system modeled. If formal methods work this well, why did it take so long for industries to adopt them? What finally forced the change?
 
 The answer is written in steel, silicon, and human lives.
 
 ### Section 1.9: When Catastrophe Forced Change
 
-For decades, industries only adopted formal verification when disaster proved that no amount of human expertise could prevent catastrophic bugs. These are their stories.
+For decades, industries only adopted formal proof when disaster proved that no amount of human expertise could prevent catastrophic bugs. These are their stories.
 
 **The Quebec Bridge: When Professional Judgment Collapsed Into the St. Lawrence (1907)**
 
@@ -1022,7 +1072,7 @@ Nineteen thousand tons of steel—the entire southern cantilever arm—collapsed
 
 Seventy-five workers died instantly, crushed by falling steel or drowned in the St. Lawrence. Survivors described the sound as "like the crack of doom" followed by "a great roar." One witness said the bridge "seemed to shiver" before breaking apart "like a house of cards."
 
-The Quebec Bridge was supposed to prove Canada's engineering excellence. Instead, it became the deadliest bridge collapse in history and exposed the catastrophic inadequacy of professional judgment when mechanical verification is absent.
+The Quebec Bridge was supposed to prove Canada's engineering excellence. Instead, it became the deadliest bridge collapse in history and exposed the catastrophic inadequacy of professional judgment when mechanical proof is absent.
 
 **What Went Wrong: Professional Judgment Without Mechanical Verification**
 
@@ -1042,7 +1092,7 @@ The Royal Commission investigation concluded with devastating clarity: "errors i
 
 The Quebec Bridge disaster transformed civil engineering practice. Before 1907, bridge design relied heavily on engineer's judgment, experience with previous projects, and rules of thumb derived from successful precedents. Structural calculations existed but were often approximate, with safety factors chosen by judgment.
 
-After Quebec, jurisdictions began mandating mechanical verification requirements:
+After Quebec, jurisdictions began mandating mechanical proof requirements:
 
 - **Professional Engineer Licensing**: States and provinces established licensing boards requiring engineers to demonstrate competence through examination, not merely reputation. Professional Engineers became legally accountable for their calculations.
 
@@ -1052,9 +1102,9 @@ After Quebec, jurisdictions began mandating mechanical verification requirements
 
 - **Material Testing Standards**: Steel specifications formalized. Samples tested mechanically for yield strength, ultimate tensile strength, ductility—verifiable numbers replacing judgment about "good steel."
 
-Later, Finite Element Method (FEM) software automated these calculations, making mechanical verification faster and more reliable. Modern bridge designs undergo FEM analysis: input geometry, materials, loads; software computes stress distributions; deterministically verify safety margins. The Quebec Bridge collapse killed 75 workers and established the principle that critical engineering decisions require mechanical verification, not professional judgment alone.
+Later, Finite Element Method (FEM) software automated these calculations, making mechanical proof faster and more reliable. Modern bridge designs undergo FEM analysis: input geometry, materials, loads; software computes stress distributions; deterministically verify safety margins. The Quebec Bridge collapse killed 75 workers and established the principle that critical engineering decisions require mechanical proof, not professional judgment alone.
 
-But even today, mechanical verification remains incomplete. Soil mechanics, material variability, unusual loading scenarios—these still require Professional Engineer judgment. The verification boundary runs through civil engineering, not around it. AI generates designs that FEM (mechanical validator) verifies for structural aspects, but FEM cannot replace the licensed Professional Engineer who certifies the design accounts for formalization's gaps.
+But even today, mechanical proof remains incomplete. Soil mechanics, material variability, unusual loading scenarios—these still require Professional Engineer judgment. The proof boundary runs through civil engineering, not around it. AI generates designs that FEM (mechanical prover) verifies for structural aspects, but FEM cannot replace the licensed Professional Engineer who certifies the design accounts for formalization's gaps.
 
 **The Therac-25: When Radiation Therapy Became a Death Sentence (1985-1987)**
 
@@ -1100,9 +1150,9 @@ What went wrong? The bug was in the floating-point division unit's lookup table�
 
 The Pentium had undergone extensive validation before manufacturing. Intel employed thousands of world-class electrical engineers and chip designers. They ran millions of test vectors through simulation. They reviewed the design meticulously. But they missed the FDIV bug completely. It was too subtle, too rare, too deep in the complexity of floating-point arithmetic for human review and conventional testing to find.
 
-The aftermath transformed semiconductor design. Intel invested massively in formal verification—mathematical techniques to prove hardware correctness, not merely test it. By the time Intel designed the Pentium 4 in the early 2000s, formal verification had become "indispensable." Intel's verification team found that formal methods identified several "extremely subtle bugs" that eluded simulation—any of which could have caused FDIV-scale recalls costing hundreds of millions.
+The aftermath transformed semiconductor design. Intel invested massively in formal proof—mathematical techniques to prove hardware correctness, not merely test it. By the time Intel designed the Pentium 4 in the early 2000s, formal proof had become "indispensable." Intel's verification team found that formal methods identified several "extremely subtle bugs" that eluded simulation—any of which could have caused FDIV-scale recalls costing hundreds of millions.
 
-The semiconductor industry learned what the medical device industry learned from Therac-25: in critical systems, conventional validation misses bugs that formal verification catches. The FDIV bug didn't kill anyone. But it cost $475 million and nearly destroyed Intel's reputation. That was expensive enough to justify the cost of formal methods.
+The semiconductor industry learned what the medical device industry learned from Therac-25: in critical systems, conventional validation misses bugs that formal proof catches. The FDIV bug didn't kill anyone. But it cost $475 million and nearly destroyed Intel's reputation. That was expensive enough to justify the cost of formal methods.
 
 A mathematics professor. Twin primes. Five missing lookup table entries. $475 million. The price of trusting human review over mathematical proof.
 
@@ -1156,11 +1206,11 @@ The aftermath was brutal. Toyota paid $1.2 billion in a criminal settlement with
 
 The industry response was swift. MISRA C adoption accelerated from a niche best practice to an industry-standard requirement. Automotive software development transformed. The cost of MISRA C compliance—tooling, training, formal static analysis—was modest per project. The ROI was obvious after a $3 billion settlement and 89 deaths.
 
-Toyota learned what the medical device industry learned from Therac-25: in safety-critical systems, human expertise alone cannot find all bugs. Some bugs require formal verification to detect.
+Toyota learned what the medical device industry learned from Therac-25: in safety-critical systems, human expertise alone cannot find all bugs. Some bugs require formal proof to detect.
 
 **Cloud Infrastructure: The Exception That Proves the Rule (2011-Present)**
 
-The pattern was clear. Industries adopted formal verification only after catastrophe. After deaths. After hundreds of millions in losses. After their reputations lay in ruins.
+The pattern was clear. Industries adopted formal proof only after catastrophe. After deaths. After hundreds of millions in losses. After their reputations lay in ruins.
 
 Amazon Web Services broke the pattern.
 
@@ -1170,7 +1220,7 @@ But AWS hadn't suffered a catastrophe. No radiation deaths. No $475 million reca
 
 Newcombe championed formal methods anyway. Specifically, TLA+ (Temporal Logic of Actions), a specification language created by Turing Award winner Leslie Lamport for modeling concurrent and distributed systems.
 
-The skepticism was predictable. AWS already had world-class engineers. Extensive code review. Comprehensive testing. Design reviews that could last days. Why add formal verification when the existing processes seemed to work?
+The skepticism was predictable. AWS already had world-class engineers. Extensive code review. Comprehensive testing. Design reviews that could last days. Why add formal proof when the existing processes seemed to work?
 
 Newcombe convinced leadership to try TLA+ on ten large, complex systems that had already passed all traditional validation. Systems already running in production. Systems that AWS's best engineers had reviewed and tested exhaustively.
 
@@ -1190,9 +1240,9 @@ With TLA+, they proved correctness and shipped the optimization. Formal methods 
 
 The cultural transformation followed. Executive leadership began proactively encouraging teams to write TLA+ specs for new features and significant design changes. Engineers from entry-level to Principal learned TLA+ in 2-3 weeks and achieved useful results, often on personal time. AWS built organizational incentives rewarding specification-writing and cultivated a culture where engineers valued verification over shipping speed.
 
-By 2015, AWS publicly documented their formal methods adoption in a landmark ACM paper: "How Amazon Web Services Uses Formal Methods." The paper reported that formal verification had become standard practice for critical distributed systems. The verification cost—writing TLA+ specs, running model checking—was consistently lower than the cost of finding and fixing bugs in production.
+By 2015, AWS publicly documented their formal methods adoption in a landmark ACM paper: "How Amazon Web Services Uses Formal Methods." The paper reported that formal proof had become standard practice for critical distributed systems. The verification cost—writing TLA+ specs, running model checking—was consistently lower than the cost of finding and fixing bugs in production.
 
-AWS proved something revolutionary: an organization could adopt formal verification proactively, before catastrophe, if the economic calculation favored prevention over cure. No deaths forced the change. No $475 million recall. No congressional investigation. Just clear-eyed analysis showing that verification cost less than production bugs.
+AWS proved something revolutionary: an organization could adopt formal proof proactively, before catastrophe, if the economic calculation favored prevention over cure. No deaths forced the change. No $475 million recall. No congressional investigation. Just clear-eyed analysis showing that verification cost less than production bugs.
 
 But AWS was an exception. What made proactive adoption possible in 2011 when it had failed everywhere else? The answer lies in what changed in 2017.
 
@@ -1233,7 +1283,7 @@ The mechanism took years to understand, but the evidence mounted through three i
 
 **First: The Filtration Hypothesis**
 
-Decades of mechanical verification had silently filtered training data. Every program in GitHub passed a compiler—syntax errors, type mismatches, undefined variables never made it into the corpus. Every formal proof in theorem libraries passed a proof checker—invalid reasoning steps were rejected before publication. Every SQL query in database logs parsed correctly—malformed queries threw errors and didn't execute.
+Decades of mechanical proof had silently filtered training data. Every program in GitHub passed a compiler—syntax errors, type mismatches, undefined variables never made it into the corpus. Every formal proof in theorem libraries passed a proof checker—invalid reasoning steps were rejected before publication. Every SQL query in database logs parsed correctly—malformed queries threw errors and didn't execute.
 
 The verifiers had been running for 30-50 years before transformers emerged, silently processing billions of examples, removing incorrect instances, creating training corpora where only verified-correct patterns remained. LLMs trained on this filtered data learned patterns that consistently passed verification.
 
@@ -1261,13 +1311,13 @@ The timeline across domains showed the same pattern:
 - Proof assistants (1984) → AlphaProof (2024): 40-year gap
 - SQL standardization (1986) → production query generation (2023): 37-year gap
 
-Verifiers preceded LLM capability by decades. The causal arrow ran one direction: mechanical verification → filtered corpus → LLM capability.
+Verifiers preceded LLM capability by decades. The causal arrow ran one direction: mechanical proof → filtered corpus → LLM capability.
 
 Domains without verifiers remained stuck. Medical imaging AI: high concordance, low productivity. Legal reasoning AI: impressive demos, require full attorney review. Bridge design AI: plausible outputs, engineers can't delegate judgment.
 
 ### The Economic Inversion
 
-For the first time in history, organizations had an economic incentive to adopt formal verification proactively—before catastrophe—for a reason that had nothing to do with preventing disasters.
+For the first time in history, organizations had an economic incentive to adopt formal proof proactively—before catastrophe—for a reason that had nothing to do with preventing disasters.
 
 The dual benefit mechanism works like this:
 
@@ -1328,13 +1378,13 @@ Companies like Replit (30 million users, AI-native development platform) and Cur
 
 For organizations in verified domains, the answer is increasingly "yes"—even without catastrophe forcing the decision.
 
-The historical pattern is inverting. For a century, industries adopted formal verification reactively, after disasters. Therac-25 killed patients, then medical devices got formal methods. Intel lost $475 million, then semiconductors got formal verification. Ariane 5 exploded, then aerospace tightened standards. Toyota paid $3 billion and 89 deaths taught the automotive industry.
+The historical pattern is inverting. For a century, industries adopted formal proof reactively, after disasters. Therac-25 killed patients, then medical devices got formal methods. Intel lost $475 million, then semiconductors got formal proof. Ariane 5 exploded, then aerospace tightened standards. Toyota paid $3 billion and 89 deaths taught the automotive industry.
 
-But in 2024, organizations adopt formal verification proactively—not because they fear catastrophe, but because they want the AI capability advantage. Startups design their systems with formal specifications from day one, not because regulation requires it, but because LLM-assisted development only works reliably in verified domains. Established companies invest in formalizing legacy systems, not because they've suffered disasters, but because competitors with verified codebases can develop features faster with AI assistance.
+But in 2024, organizations adopt formal proof proactively—not because they fear catastrophe, but because they want the AI capability advantage. Startups design their systems with formal specifications from day one, not because regulation requires it, but because LLM-assisted development only works reliably in verified domains. Established companies invest in formalizing legacy systems, not because they've suffered disasters, but because competitors with verified codebases can develop features faster with AI assistance.
 
-The verification boundary is shifting. Domains that were "too expensive to formalize" under the old economics become "too expensive NOT to formalize" under the new economics. The catastrophe-driven pattern that held for a century is breaking down.
+The proof boundary is shifting. Domains that were "too expensive to formalize" under the old economics become "too expensive NOT to formalize" under the new economics. The catastrophe-driven pattern that held for a century is breaking down.
 
-This is the turning point. Not because transformers made AI magical. But because transformers revealed the economic value of something that had existed for decades: mechanical verification. The verifiers were always there—compilers since the 1950s, proof assistants since the 1970s, model checkers since the 1980s. They were filtering training data the entire time.
+This is the turning point. Not because transformers made AI magical. But because transformers revealed the economic value of something that had existed for decades: mechanical proof. The verifiers were always there—compilers since the 1950s, proof assistants since the 1970s, model checkers since the 1980s. They were filtering training data the entire time.
 
 We just didn't realize that filtered training data would become one of the most valuable resources in the economy.
 
@@ -1346,7 +1396,7 @@ The economic incentive has flipped. For the first time, proactive formalization 
 
 But here's the uncomfortable reality: most industries haven't made this flip. The economic incentive exists. The AI capability is real. The infrastructure is ready. Yet deployment remains stuck.
 
-For the first time in history, organizations have economic incentive to adopt formal verification proactively. But this reveals the scale of value trapped in unverified domains.
+For the first time in history, organizations have economic incentive to adopt formal proof proactively. But this reveals the scale of value trapped in unverified domains.
 
 **Industry-by-Industry Under-Utilization:**
 
@@ -1359,14 +1409,14 @@ Healthcare diagnostics:
 
 Legal research:
 - US paralegal workforce: ~376,200 paralegals (Source: [BLS Occupational Employment Statistics 2024](https://www.bls.gov/oes/current/oes232011.htm)) @ $61,010 median = ~$23B annually on legal research
-- AI excels at e-discovery (mechanically verifiable document retrieval: deployed)
+- AI excels at e-discovery (mechanically provable document retrieval: deployed)
 - AI fails at legal reasoning with citation hallucination rates of 17-34% (Source: [Stanford HAI Legal AI Report 2024](https://hai.stanford.edu/news/hallucinating-law-legal-mistakes-large-language-models-are-pervasive)): stuck as assistant
 - Result: Attorneys review every AI suggestion from scratch
 - **Wasted opportunity: $7B+ annually** (estimated: conservative 30% acceleration potential if verification infrastructure enabled faster review)
 
 Structural engineering:
 - US licensed PE workforce: ~494,542 resident Professional Engineers (Source: [NCEES Licensure Statistics 2024](https://ncees.org/licensure/)) across all engineering disciplines, with civil engineers earning ~$95K median (Source: [BLS Civil Engineers 2024](https://www.bls.gov/oes/current/oes172051.htm)) = substantial annual labor costs
-- AI generates FEM-validated structural designs that demonstrate strong performance on mechanically verifiable aspects
+- AI generates FEM-validated structural designs that demonstrate strong performance on mechanically provable aspects
 - But soil mechanics, material variability, edge cases need PE judgment (formalization incomplete)
 - Result: AI generates, expensive PE validates—stuck as co-pilot
 - **Wasted opportunity: $15B+ annually** (estimated: conservative partial acceleration potential if formalization expanded to enable faster PE review)
@@ -1381,11 +1431,11 @@ Source: Intel public disclosures, ACM papers, IEEE publications
 - **Pentium FDIV bug cost**: $475M (1994) ([Wikipedia: Pentium FDIV bug](https://en.wikipedia.org/wiki/Pentium_FDIV_bug))
 - **Formal verification investment**: substantial tooling investment (1990s-2000s)
 - **Pentium 4 success**: Formal verification "indispensable"—found several extremely subtle bugs that eluded simulation, any of which could have caused FDIV-like recalls
-- **Intel Core i7 breakthrough**: Formal verification became the **primary validation vehicle** for the core execution cluster, replacing coverage-driven testing entirely. The project involved **20 person-years** of verification work and represents one of the most ambitious formal verification efforts in the hardware industry to date ([IEEE, 2009](https://ieeexplore.ieee.org/document/1459841))
+- **Intel Core i7 breakthrough**: Formal verification became the **primary validation vehicle** for the core execution cluster, replacing coverage-driven testing entirely. The project involved **20 person-years** of verification work and represents one of the most ambitious formal proof efforts in the hardware industry to date ([IEEE, 2009](https://ieeexplore.ieee.org/document/1459841))
 - **Industry standard**: Only 14% of IC/ASIC designs achieve first-silicon success; 86% require respins. Formal verification is no longer optional
 
 **AI Era Impact (2015-Present)**:
-- Chip design with formal verification enables AI-assisted circuit optimization achieving significantly faster time-to-market
+- Chip design with formal proof enables AI-assisted circuit optimization achieving significantly faster time-to-market
 - Verified design flows enable LLMs to achieve substantially higher accuracy in generating test vectors compared to unverified flows
 - Competitive advantage: Early adopters (Intel, AMD, NVIDIA) gained process node leadership; late adopters face substantial process node leadership gap
 - Economic driver shifted from "avoid $475M bugs" to "achieve AI-assisted design advantage"
@@ -1426,7 +1476,7 @@ Legal (10+ years of development):
 - AI role: **Assistant** (drafts briefs, lawyer validates and assumes liability)
 
 Structural Engineering:
-- AI generates FEM-validated structural designs demonstrating strong performance on mechanically verifiable aspects
+- AI generates FEM-validated structural designs demonstrating strong performance on mechanically provable aspects
 - All ~494,542 Professional Engineers still required (Source: [NCEES Licensure Statistics 2024](https://ncees.org/licensure/))
 - Building codes mandate PE certification for all designs
 - AI role: **Assistant** (generates, human PE certifies and assumes liability)
@@ -1567,13 +1617,13 @@ This is the advantage of formal specifications: they make bias *undeniable* rath
 
 This has direct implications for where AI achieves higher reliability.
 
-Formal specifications of fairness properties enable LLMs to reason about bias because specifications are mechanically verifiable—exactly the filtered training data mechanism we've seen with type systems and compilers.
+Formal specifications of fairness properties enable LLMs to reason about bias because specifications are mechanically provable—exactly the filtered training data mechanism we've seen with type systems and compilers.
 
 **Contrast**:
 
 **Empirical fairness testing**: Train model → deploy → measure disparate impact → retrain if violations found. No mechanical verifier ensures fairness during training. LLMs learning from such deployed models encounter variable-quality examples—some biased, some fair, no systematic filtration.
 
-**Formal fairness specifications**: Define invariants → prove satisfaction → deploy only if proof validates. Creates filtered corpus of algorithms that CANNOT violate specified fairness properties (same mechanism as type checkers creating filtered corpus of programs that cannot have type errors).
+**Formal fairness specifications**: Define invariants → prove satisfaction → deploy only if proof checker validates. Creates filtered corpus of algorithms that CANNOT violate specified fairness properties (same mechanism as type checkers creating filtered corpus of programs that cannot have type errors).
 
 **Example**: Hiring algorithm with gender-neutral invariant formally verified. Every hiring decision in the training data provably cannot discriminate by gender (proof-checked, like type-checked code). LLMs trained on such corpora learn from implementations that mathematically cannot violate the invariant.
 
@@ -1581,9 +1631,9 @@ Formal specifications of fairness properties enable LLMs to reason about bias be
 
 The economic incentive alignment: organizations that formalize fairness properties get both regulatory compliance and competitive AI advantage. This creates proactive incentive for transparency independent of legal pressure—precisely the pattern inversion we saw with verification economics.
 
-We've seen what formal verification can do—CompCert's fifteen years without bugs, AWS finding critical failures, the Quebec Bridge disaster forcing formalization. We've seen the evidence—72% versus 45%, Olympiad problems solved, decades of filtered training data. We understand the mechanism—decidability, mechanical verification, accountability structures.
+We've seen what formal proof can do—CompCert's fifteen years without bugs, AWS finding critical failures, the Quebec Bridge disaster forcing formalization. We've seen the evidence—72% versus 45%, Olympiad problems solved, decades of filtered training data. We understand the mechanism—decidability, mechanical proof, accountability structures.
 
-But understanding a boundary means knowing both sides. What can formal verification solve? What lies forever beyond its reach? And most importantly: where should we draw the line?
+But understanding a boundary means knowing both sides. What can formal proof solve? What lies forever beyond its reach? And most importantly: where should we draw the line?
 
 ______________________________________________________________________
 
@@ -1643,11 +1693,11 @@ Societal decision-making requires human deliberation, not just mechanical checki
 - **Healthcare diagnostics**: Clinical decision rules could be formalized (symptom patterns → differential diagnoses), but medical consensus on diagnostic criteria across edge cases remains incomplete
 - **Structural engineering**: Building code compliance is partially mechanized (load calculations, safety factors), but architectural judgment and inspector approval remain subjective
 
-These domains represent **new frontiers for mechanical verification**, not permanent boundaries. In contrast, pure aesthetic judgment ("is this building beautiful?") and fundamental ethical trade-offs ("should we prioritize affordable housing over neighborhood character?") inherently resist algorithmic validation—no mechanical verifier can prove a specification is "just" or "serves community needs."
+These domains represent **new frontiers for mechanical proof**, not permanent boundaries. In contrast, pure aesthetic judgment ("is this building beautiful?") and fundamental ethical trade-offs ("should we prioritize affordable housing over neighborhood character?") inherently resist algorithmic validation—no mechanical verifier can prove a specification is "just" or "serves community needs."
 
 ### Section 3.2.5: Alternative Explanations
 
-The Verification Boundary Hypothesis attributes LLM performance advantages to mechanical verification. This section steel-mans the strongest alternative explanations and examines whether they account for the empirical evidence.
+The Proof Boundary Hypothesis attributes LLM performance advantages to mechanical proof. This section steel-mans the strongest alternative explanations and examines whether they account for the empirical evidence.
 
 #### Alternative Hypothesis 1: Structural Clarity
 
@@ -1659,7 +1709,7 @@ The Verification Boundary Hypothesis attributes LLM performance advantages to me
 
 Neither holds. Pre-transformer models did NOT demonstrate verification-correlated advantages despite having access to structured training data. And unverified structured domains (natural language parsing, chess notation) show lower LLM reliability than verified structured domains (SQL, type-checked code).
 
-The dual-requirement mechanism (structure + verification) provides better explanatory power: structure enables mechanical verification, and verification filters training data. Structure is necessary but insufficient.
+The dual-requirement mechanism (structure + verification) provides better explanatory power: structure enables mechanical proof, and verification filters training data. Structure is necessary but insufficient.
 
 #### Alternative Hypothesis 2: Feedback Density
 
@@ -1674,7 +1724,7 @@ If feedback density during human development were the primary mechanism, the adv
 
 #### Alternative Hypothesis 3: Objective Clarity
 
-**Steel-man**: Formal domains have objectively verifiable correctness (program compiles or doesn't, proof validates or doesn't), while informal domains have subjective quality judgments. Perhaps LLMs excel in domains with objective correctness criteria, not specifically domains with mechanical verifiers.
+**Steel-man**: Formal domains have objectively verifiable correctness (program compiles or doesn't, proof checker validates or doesn't), while informal domains have subjective quality judgments. Perhaps LLMs excel in domains with objective correctness criteria, not specifically domains with mechanical verifiers.
 
 **Response**: Objective clarity and mechanical verifiability are deeply connected, but not identical. Counterexamples demonstrate the distinction:
 - **Chess**: Objectively verifiable correctness (legal move or not), but LLM chess performance lags behind LLM performance in type-checked code generation or SQL queries
@@ -1682,32 +1732,32 @@ If feedback density during human development were the primary mechanism, the adv
 
 The distinguishing factor is mechanical verifiability in the *training corpus*. Chess and Go have objective rules, but human game records include both brilliant and blundering moves with no mechanical filter—training data contains the full distribution of human play. In contrast, SQL repositories contain only syntactically valid queries (parser rejects invalid SQL before commit), and proof assistant repositories contain only valid proofs.
 
-Objective clarity enables mechanical verification, but the filtration of training data is the active mechanism driving LLM performance.
+Objective clarity enables mechanical proof, but the filtration of training data is the active mechanism driving LLM performance.
 
 #### Alternative Hypothesis 4: Compositional Structure
 
 **Steel-man**: Formal domains (code, proofs, SQL) have compositional structure where complex artifacts are built from verified components. Perhaps LLMs excel because they can learn compositional patterns, not because verification filters training data.
 
-**Response**: Compositional structure is a consequence of mechanical verification, not an independent factor. The reason formal domains achieve compositionality is *because* mechanical verifiers enable local verification:
+**Response**: Compositional structure is a consequence of mechanical proof, not an independent factor. The reason formal domains achieve compositionality is *because* mechanical verifiers enable local verification:
 - Type systems enable compositional reasoning (verify each component independently)
 - Proof assistants enable lemma composition (verify each theorem using previously proven lemmas)
 - SQL parsers enable subquery composition (verify nested queries independently)
 
-Unverified domains can have compositional structure in principle, but without mechanical verification, composition boundaries aren't enforced. The temporal evidence supports this: compositional structure in verified domains emerged *after* verifiers were introduced (Haskell's compositional type system required the type checker; SQL's compositional subqueries required the parser).
+Unverified domains can have compositional structure in principle, but without mechanical proof, composition boundaries aren't enforced. The temporal evidence supports this: compositional structure in verified domains emerged *after* verifiers were introduced (Haskell's compositional type system required the type checker; SQL's compositional subqueries required the parser).
 
 Compositionality is a benefit of verification, not an alternative explanation for LLM performance.
 
 #### Synthesis: Multiple Factors, One Mechanism
 
-These alternative hypotheses identify real properties of verified domains: structural clarity, feedback density, objective clarity, and compositional structure. But temporal precedence evidence suggests these are consequences or enablers of mechanical verification, not independent explanatory factors.
+These alternative hypotheses identify real properties of verified domains: structural clarity, feedback density, objective clarity, and compositional structure. But temporal precedence evidence suggests these are consequences or enablers of mechanical proof, not independent explanatory factors.
 
 **The most parsimonious explanation**: Mechanical verifiers filter training data over decades → verified examples accumulate → transformer architecture enables learning from web-scale verified corpora → LLM performance advantages emerge.
 
-Alternative factors (structure, feedback, objectivity, compositionality) strengthen the mechanism but don't replace it. The Verification Boundary Hypothesis integrates these factors: mechanical verification enables all of them while providing the training data filtration mechanism that transformer-based LLMs demonstrably exploit.
+Alternative factors (structure, feedback, objectivity, compositionality) strengthen the mechanism but don't replace it. The Proof Boundary Hypothesis integrates these factors: mechanical proof enables all of them while providing the training data filtration mechanism that transformer-based LLMs demonstrably exploit.
 
 ### Section 3.3: The Mechanical Verification Spectrum
 
-The Verification Boundary is not a binary barrier but a spectrum from fully mechanical verification (left) through hybrid approaches (middle) to fully human judgment (right).
+The Proof Boundary is not a binary barrier but a spectrum from fully mechanical proof (left) through hybrid approaches (middle) to fully human judgment (right).
 
 **Left (Fully Mechanical)**:
 - Arithmetic (2+2=4)
@@ -1724,21 +1774,21 @@ The Verification Boundary is not a binary barrier but a spectrum from fully mech
 - Political trade-offs ("affordable housing vs. neighborhood character")
 - Ethical decisions ("is this treatment worth the risk?")
 
-Formal verification addresses the LEFT side of this spectrum. It does not eliminate the RIGHT side—it clarifies the boundary. The Verification Boundary is not a sharp barrier but a gradient where mechanical verification transitions from sufficient to insufficient.
+Formal verification addresses the LEFT side of this spectrum. It does not eliminate the RIGHT side—it clarifies the boundary. The Proof Boundary is not a sharp barrier but a gradient where mechanical proof transitions from sufficient to insufficient.
 
 **Key insight**: This is not a limitation to overcome, but a fundamental feature of human knowledge. Some questions have mechanical answers. Others require judgment, deliberation, and collective decision-making. Formal methods make the distinction explicit.
 
-**New Frontiers for Mechanical Verification**: The hybrid domains—building codes, medical diagnosis—represent opportunities for expanding mechanical verification. Each combines:
+**New Frontiers for Mechanical Verification**: The hybrid domains—building codes, medical diagnosis—represent opportunities for expanding mechanical proof. Each combines:
 - **Mechanizable components**: Test results, structural calculations, diagnostic criteria
 - **Current human judgment**: Clinical experience, inspector approval, architectural judgment
 
-Building verification infrastructure means formalizing decision criteria that currently rely on expensive expert human decision makers making subjective judgments. Industries wanting to reduce validation costs face a prerequisite: formalize their validation standards to enable mechanical validators. Healthcare could develop formal diagnostic protocols verified by algorithmic checkers, enabling mechanical validators to replace expensive radiologists and pathologists for cases with deterministic criteria. Structural engineering could expand formal verification beyond load calculations to design pattern validation, enabling mechanical validators to reduce dependence on expensive building inspectors making subjective approval decisions.
+Building verification infrastructure means formalizing decision criteria that currently rely on expensive expert human decision makers making subjective judgments. Industries wanting to reduce validation costs face a prerequisite: formalize their validation standards to enable mechanical provers. Healthcare could develop formal diagnostic protocols verified by algorithmic checkers, enabling mechanical provers to replace expensive radiologists and pathologists for cases with deterministic criteria. Structural engineering could expand formal proof beyond load calculations to design pattern validation, enabling mechanical provers to reduce dependence on expensive building inspectors making subjective approval decisions.
 
-The verification boundary is not fixed—it represents the current state of formalization, not an inherent limit. Domains on the right side can migrate left through deliberate infrastructure investment. This prerequisite is not merely technical—it requires achieving consensus among professionals whose expertise is being codified, navigating power dynamics over who decides standards, and overcoming institutional cultures built on human judgment autonomy.
+The proof boundary is not fixed—it represents the current state of formalization, not an inherent limit. Domains on the right side can migrate left through deliberate infrastructure investment. This prerequisite is not merely technical—it requires achieving consensus among professionals whose expertise is being codified, navigating power dynamics over who decides standards, and overcoming institutional cultures built on human judgment autonomy.
 
 ### Section 3.4: Implications for Software Engineering
 
-The relationship between AI capability and mechanical verification has several implications for software development. Each represents a shift in how organizations should think about verification investment.
+The relationship between AI capability and mechanical proof has several implications for software development. Each represents a shift in how organizations should think about verification investment.
 
 #### 1. Formal Verification Tools Are Increasingly Valuable Because AI Capability Depends on Them
 
@@ -1811,7 +1861,7 @@ Unverified Shell (TypeScript)     ← AI-assisted, type-checked, quick review
 ├─ UI components
 └─ External integrations
 
-Verified Core (F*/TLA+)            ← AI-assisted, proof validates
+Verified Core (F*/TLA+)            ← AI-assisted, proof checker validates
 ├─ Business logic state machines
 ├─ Payment processing
 └─ Authentication/authorization
@@ -1862,7 +1912,7 @@ Engineer reviews: Does this match intent? (5 minutes vs 45 minutes writing from 
 4. If wrong: clarify intent, regenerate (5 min)
 5. Total: 30-45 minutes
 
-**The paradox**: AI is BETTER at formal specifications than natural language descriptions because formal specs are mechanically verifiable—filtration effect again. The precision required for formal methods creates training data where only correct patterns survive.
+**The paradox**: AI is BETTER at formal specifications than natural language descriptions because formal specs are mechanically provable—filtration effect again. The precision required for formal methods creates training data where only correct patterns survive.
 
 **Common pitfall**: "AI will write all our specs!" No—AI generates candidates, humans verify intent. The engineer remains responsible for understanding what properties the system must satisfy. AI accelerates expression, not requirement discovery.
 
@@ -1896,7 +1946,7 @@ Human judgment required:
 
 **GitHub case study**:
 
-Automated enforcement (mechanically verifiable):
+Automated enforcement (mechanically provable):
 - Malware detection (hash matching): 94% of violations, 24-hour response
 - Spam (pattern matching): Immediate removal
 - DMCA takedowns (legal process automation): 48-hour response
@@ -1922,7 +1972,7 @@ Human Judgment Layer          ← Requires context and deliberation
 └─ Edge cases (novel situations)
 ```
 
-**Cultural shift**: Stop asking "Can AI do this?" Start asking "Is this decision mechanically verifiable?" If yes: invest in formalization, enable AI automation. If no: preserve human deliberation, focus AI on information gathering/summarization.
+**Cultural shift**: Stop asking "Can AI do this?" Start asking "Is this decision mechanically provable?" If yes: invest in formalization, enable AI automation. If no: preserve human deliberation, focus AI on information gathering/summarization.
 
 **Common pitfall**: Attempting to mechanize human judgment calls. Product strategy decisions, ethical trade-offs, balancing stakeholder interests—these resist formalization not as technical limitations but as domains where legitimate disagreement exists and deliberation has value.
 
@@ -1942,19 +1992,19 @@ Why do industries deploy AI autonomously in mathematics (Lean verification enabl
 
 The answer reveals why AI under-utilization, not dangerous deployment, is the actual trajectory—and why verification infrastructure is the only solution.
 
-**Mathematics has formal verification.** Proof assistants like [Lean](https://leanprover.github.io/) provide deterministic correctness guarantees. Theorems either prove or don't—no subjective judgment required. AlphaProof generates candidate proofs, [Lean](https://leanprover.github.io/) validates them with absolute certainty. This provides both benefits: thirty-five years of mechanically verified proofs (1986-2020) created filtered training data that improved AI mathematical reasoning, AND formal proof systems eliminate the need for expensive human theorem validators to subjectively assess whether proofs are valid. Mathematics has crossed the threshold—Lean (mechanical validator) eliminates the need for human validation of AI-generated proofs.
+**Mathematics has formal proof.** Proof assistants like [Lean](https://leanprover.github.io/) provide deterministic correctness guarantees. Theorems either prove or don't—no subjective judgment required. AlphaProof generates candidate proofs, [Lean](https://leanprover.github.io/) validates them with absolute certainty. This provides both benefits: thirty-five years of mechanically verified proofs (1986-2020) created filtered training data that improved AI mathematical reasoning, AND formal proof systems eliminate the need for expensive human theorem validators to subjectively assess whether proofs are valid. Mathematics has crossed the threshold—Lean (mechanical prover) eliminates the need for human validation of AI-generated proofs.
 
-**Bridge engineering has partial formal verification.** Modern structural engineering relies on Finite Element Method (FEM) software that mechanically verifies core structural properties: Does maximum stress exceed yield strength? Does deflection violate safety limits? Will the structure buckle under load? FEM analysis answers these questions deterministically. Decades of FEM-verified designs dominate engineering repositories—training data filtered by mechanical verification. AI demonstrates impressive capability on problems FEM can verify: generate beam dimensions, optimize truss configurations, satisfy structural constraints.
+**Bridge engineering has partial formal proof.** Modern structural engineering relies on Finite Element Method (FEM) software that mechanically verifies core structural properties: Does maximum stress exceed yield strength? Does deflection violate safety limits? Will the structure buckle under load? FEM analysis answers these questions deterministically. Decades of FEM-verified designs dominate engineering repositories—training data filtered by mechanical proof. AI demonstrates impressive capability on problems FEM can verify: generate beam dimensions, optimize truss configurations, satisfy structural constraints.
 
-But formalization is incomplete. Soil mechanics remains probabilistic. Material specifications don't capture real-world variability—steel batches differ, concrete cures inconsistently, welds introduce unpredictable stresses. Loading scenarios between standard cases require judgment. The Quebec Bridge collapsed in 1907 because chief engineer Theodore Cooper approved design changes without mechanically re-verifying calculations—professional judgment failed catastrophically where mechanical verification was incomplete. Modern practice mandates FEM analysis, but gaps persist.
+But formalization is incomplete. Soil mechanics remains probabilistic. Material specifications don't capture real-world variability—steel batches differ, concrete cures inconsistently, welds introduce unpredictable stresses. Loading scenarios between standard cases require judgment. The Quebec Bridge collapsed in 1907 because chief engineer Theodore Cooper approved design changes without mechanically re-verifying calculations—professional judgment failed catastrophically where mechanical proof was incomplete. Modern practice mandates FEM analysis, but gaps persist.
 
-A Professional Engineer reviews the FEM output, then applies judgment to gaps the mechanical verifier cannot address. This achieves benefit one: AI generates designs with good performance on mechanically verifiable problems, trained on filtered data. But benefit two remains unrealized: FEM (mechanical validator) cannot replace Professional Engineers whose licenses and legal accountability address formalization's gaps. Civil engineering cannot replace expensive expert human decision makers despite AI capability on mechanically verifiable aspects. America still pays billions for Professional Engineers making structural approval decisions because formalization is incomplete.
+A Professional Engineer reviews the FEM output, then applies judgment to gaps the mechanical verifier cannot address. This achieves benefit one: AI generates designs with good performance on mechanically provable problems, trained on filtered data. But benefit two remains unrealized: FEM (mechanical prover) cannot replace Professional Engineers whose licenses and legal accountability address formalization's gaps. Civil engineering cannot replace expensive expert human decision makers despite AI capability on mechanically provable aspects. America still pays billions for Professional Engineers making structural approval decisions because formalization is incomplete.
 
-**Medical diagnosis faces similar incompleteness.** AI systems match radiologist performance detecting breast cancers and identifying diabetic retinopathy. Yet healthcare cannot replace expensive radiologists and pathologists. Diagnostic standards remain informal. Radiologists disagree on ambiguous mammogram findings. Pathologists interpret tissue slides with subjective judgment. Expert consensus exists for clear cases, but edge cases—early-stage cancers, borderline abnormalities, rare conditions—lack deterministic validation criteria. Like bridge engineering, AI achieves one benefit (generates diagnoses with good average performance), but no mechanical validators exist to provide safety guarantees needed to replace expensive expert human decision makers. Healthcare pays billions for radiologists and pathologists making subjective diagnostic decisions because formalization is incomplete.
+**Medical diagnosis faces similar incompleteness.** AI systems match radiologist performance detecting breast cancers and identifying diabetic retinopathy. Yet healthcare cannot replace expensive radiologists and pathologists. Diagnostic standards remain informal. Radiologists disagree on ambiguous mammogram findings. Pathologists interpret tissue slides with subjective judgment. Expert consensus exists for clear cases, but edge cases—early-stage cancers, borderline abnormalities, rare conditions—lack deterministic validation criteria. Like bridge engineering, AI achieves one benefit (generates diagnoses with good average performance), but no mechanical provers exist to provide safety guarantees needed to replace expensive expert human decision makers. Healthcare pays billions for radiologists and pathologists making subjective diagnostic decisions because formalization is incomplete.
 
 **The Cultural and Organizational Challenge**
 
-Civil engineering already underwent this transformation—but incompletely. The Quebec Bridge disaster forced formalization: Professional Engineer licensing, building codes with specific safety factors, mandatory structural calculations, material testing standards. These created mechanical verification infrastructure for questions like "Does stress exceed yield strength?" FEM software automated these calculations, enabling AI to learn from filtered training data.
+Civil engineering already underwent this transformation—but incompletely. The Quebec Bridge disaster forced formalization: Professional Engineer licensing, building codes with specific safety factors, mandatory structural calculations, material testing standards. These created mechanical proof infrastructure for questions like "Does stress exceed yield strength?" FEM software automated these calculations, enabling AI to learn from filtered training data.
 
 Yet formalization stopped partway. Soil mechanics, material variability, unusual loading scenarios—these remain judgment calls. Why didn't civil engineering formalize further? Not because formalization is technically impossible, but because the organizational consensus required to codify every edge case judgment exceeded the economic pressure to automate. Professional Engineers maintained authority over formalization's gaps. Building codes committees—composed of practicing engineers—decide what gets mechanized versus what remains professional judgment. Each stakeholder has legitimate concerns: liability allocation, accountability for failures, professional autonomy, preservation of necessary human oversight when uncertainty resists mechanization.
 
@@ -1964,27 +2014,27 @@ Legal systems face comparable barriers. Judges trained in common law precedent m
 
 Yet the AWS experience demonstrates that cultural adoption is achievable. Executive leadership created organizational incentives for formal methods adoption. Engineers who initially resisted specification-writing came to value it once they experienced finding critical bugs before production. The culture shifted when economic benefits became undeniable—verification cost less than production bugs. Healthcare and other industries face a similar path: economic pressure to reduce costs by replacing expensive expert validators creates incentive to formalize standards, but the transition requires deliberate organizational and cultural change, not just technological capability.
 
-The timeline for this transition will vary by domain. Mathematics spent centuries formalizing intuitive proofs into mechanical verification. Software engineering took decades to normalize type systems and formal methods. Healthcare, legal systems, and structural engineering are earlier in this journey. Progress will be gradual, uneven, and contested. But the economic incentive is clear—industries that successfully formalize validation standards can leverage AI to reduce costs. Those that cannot must continue paying for expensive subjective expert judgment, even as AI demonstrates comparable average performance.
+The timeline for this transition will vary by domain. Mathematics spent centuries formalizing intuitive proofs into mechanical proof. Software engineering took decades to normalize type systems and formal methods. Healthcare, legal systems, and structural engineering are earlier in this journey. Progress will be gradual, uneven, and contested. But the economic incentive is clear—industries that successfully formalize validation standards can leverage AI to reduce costs. Those that cannot must continue paying for expensive subjective expert judgment, even as AI demonstrates comparable average performance.
 
 **The Dual Benefits Are Clear**
 
 Formal verification provides two distinct advantages. First, mechanical verifiers filter training data for decades. FEM software (1960s-present) verified structural designs. SQL parsers (1970s) eliminated invalid queries. Type checkers (1970s) rejected malformed code. Proof assistants (1986-1989) blocked invalid mathematical reasoning. Transformer-based LLMs emerged in 2017-2020, inheriting thirty to sixty years of filtered training data. This improves AI performance on average.
 
-But good average performance alone is insufficient for industries seeking to accelerate expensive expert human review. The second benefit matters more: deterministic correctness guarantees that enable mechanical validators to catch cheap errors, freeing experts to focus on high-value judgment. Mathematics achieves both benefits—AI infers well AND mechanical validators (Lean) catch cheap errors before mathematician review. Bridge engineering achieves partial benefits—AI generates designs that mechanical validators (FEM) verify for structural aspects before Professional Engineer review. Medical diagnosis achieves only the first benefit—AI infers well but no mechanical validators exist to accelerate expensive radiologist review of ambiguous cases.
+But good average performance alone is insufficient for industries seeking to accelerate expensive expert human review. The second benefit matters more: deterministic correctness guarantees that enable mechanical provers to catch cheap errors, freeing experts to focus on high-value judgment. Mathematics achieves both benefits—AI infers well AND mechanical provers (Lean) catch cheap errors before mathematician review. Bridge engineering achieves partial benefits—AI generates designs that mechanical provers (FEM) verify for structural aspects before Professional Engineer review. Medical diagnosis achieves only the first benefit—AI infers well but no mechanical provers exist to accelerate expensive radiologist review of ambiguous cases.
 
 The evidence is quantitative:
-- Formal theorem proving: 70% single-attempt success on PutnamBench, 95-99% with iterative refinement—enabling mechanical validators (Lean) to catch cheap errors before mathematician review
-- Type-safe code: 72% correctness with verification vs 45% without—enabling mechanical validators (type checkers) to catch syntax/type errors before developer review
+- Formal theorem proving: 70% single-attempt success on PutnamBench, 95-99% with iterative refinement—enabling mechanical provers (Lean) to catch cheap errors before mathematician review
+- Type-safe code: 72% correctness with verification vs 45% without—enabling mechanical provers (type checkers) to catch syntax/type errors before developer review
 - Bridge engineering: AI generates structurally sound designs on FEM-verifiable aspects—but Professional Engineers still review all aspects formalization doesn't cover
-- Medical diagnosis: AI matches radiologist sensitivity/specificity on clear cases—but radiologists still review all cases from scratch (no mechanical validators to accelerate review)
+- Medical diagnosis: AI matches radiologist sensitivity/specificity on clear cases—but radiologists still review all cases from scratch (no mechanical provers to accelerate review)
 
-Domains with complete formal verification → mechanical validators accelerate expert review by catching cheap errors automatically. Domains with partial formalization → mechanical validators accelerate review of verifiable aspects, experts still review formalization's gaps. Domains with informal standards → AI generates candidates that perform well on average, but experts review everything from scratch (no mechanical validators to accelerate review).
+Domains with complete formal proof → mechanical provers accelerate expert review by catching cheap errors automatically. Domains with partial formalization → mechanical provers accelerate review of verifiable aspects, experts still review formalization's gaps. Domains with informal standards → AI generates candidates that perform well on average, but experts review everything from scratch (no mechanical provers to accelerate review).
 
 **The Economic Implication for Infrastructure and Healthcare**
 
-The United States spends over $430 billion annually on infrastructure. Tens of thousands of Professional Engineers earn six-figure salaries approving bridge designs, building plans, and structural certifications. The economic pressure to automate is enormous. AI already generates designs that pass FEM verification—beam dimensions, truss configurations, structural constraints. Yet civil engineering cannot eliminate Professional Engineer positions. Why? Because formalization is incomplete. Soil mechanics, material variability, unusual loading scenarios—these require professional judgment. Without deterministic validation criteria for every aspect of structural safety, infrastructure projects must continue paying for expensive Professional Engineer certification, even as AI demonstrates strong capability on mechanically verifiable aspects.
+The United States spends over $430 billion annually on infrastructure. Tens of thousands of Professional Engineers earn six-figure salaries approving bridge designs, building plans, and structural certifications. The economic pressure to automate is enormous. AI already generates designs that pass FEM verification—beam dimensions, truss configurations, structural constraints. Yet civil engineering cannot eliminate Professional Engineer positions. Why? Because formalization is incomplete. Soil mechanics, material variability, unusual loading scenarios—these require professional judgment. Without deterministic validation criteria for every aspect of structural safety, infrastructure projects must continue paying for expensive Professional Engineer certification, even as AI demonstrates strong capability on mechanically provable aspects.
 
-The U.S. healthcare system faces parallel dynamics at even larger scale—$4.5 trillion annually. Radiology and pathology departments represent billions in labor costs. AI matches radiologist performance on average. Yet healthcare cannot accelerate expert review without first building mechanical validators to catch cheap errors. Average performance is insufficient—industries need mechanical validators to accelerate expensive expert review by offloading cheap error detection. Radiologists disagree on ambiguous findings, pathologists interpret borderline cases subjectively. Like civil engineering, formalization is incomplete. Without mechanical validators to catch obvious errors, radiologists must review every AI suggestion from scratch—slow, expensive review that limits AI productivity gains.
+The U.S. healthcare system faces parallel dynamics at even larger scale—$4.5 trillion annually. Radiology and pathology departments represent billions in labor costs. AI matches radiologist performance on average. Yet healthcare cannot accelerate expert review without first building mechanical provers to catch cheap errors. Average performance is insufficient—industries need mechanical provers to accelerate expensive expert review by offloading cheap error detection. Radiologists disagree on ambiguous findings, pathologists interpret borderline cases subjectively. Like civil engineering, formalization is incomplete. Without mechanical provers to catch obvious errors, radiologists must review every AI suggestion from scratch—slow, expensive review that limits AI productivity gains.
 
 Some decisions fundamentally resist formalization—not as technical limitations but as features preserving human values. Medical treatment decisions depend on individual patient preferences: aggressive intervention versus palliative care, survival maximization versus quality-of-life preservation. These reflect legitimate variation in patient values, not correctness criteria awaiting formalization. Formalizing treatment decisions would violate patient autonomy. Similarly, certain architectural decisions involve aesthetic judgment and community values that resist and should resist algorithmic determination.
 
@@ -1996,13 +2046,13 @@ The challenge is understanding where formalization can enable cost reduction and
 
 **Mathematics: Full formalization achieved**
 - Formal proof systems like Lean provide deterministic correctness guarantees
-- AI generates proofs; Lean validates them mechanically, eliminating need for human proof validators
+- AI generates proofs; Lean proves them mechanically, eliminating need for human proof validators
 - Result: Cost reduction through replacing subjective human validation with deterministic mechanical validation
 
 **Bridge Engineering: Partial formalization, organizational equilibrium**
 - FEM software mechanically verifies core structural properties (stress, deflection, buckling)
 - Decades of formalization (post-Quebec Bridge): PE licensing, building codes, material testing standards
-- AI achieves benefit one: good performance on mechanically verifiable aspects (beam dimensions, truss optimization)
+- AI achieves benefit one: good performance on mechanically provable aspects (beam dimensions, truss optimization)
 - But formalization stopped partway: soil mechanics, material variability, unusual loading scenarios remain professional judgment
 - Result: Professional Engineers still required despite AI capability on FEM-verifiable aspects
 - Economic opportunity: Further formalization possible but organizational consensus exceeds current economic pressure
@@ -2026,9 +2076,9 @@ The challenge is understanding where formalization can enable cost reduction and
 
 **The Distinction That Matters**
 
-The verification boundary is not determined by model architecture or training data size. It's determined by whether industries can formalize their validation standards to enable replacing expensive expert human decision makers with deterministic mechanical validation of AI-generated output.
+The proof boundary is not determined by model architecture or training data size. It's determined by whether industries can formalize their validation standards to enable replacing expensive expert human decision makers with deterministic mechanical validation of AI-generated output.
 
-Industries wanting to leverage AI for cost reduction face a prerequisite: formalize informal validation standards where appropriate. Civil engineering formalized structural calculations (yes—FEM-verifiable aspects) but stopped at site-specific judgment (no—soil conditions, unusual loadings). Healthcare could formalize diagnostic criteria (yes—where consensus exists) but not treatment decisions (no—patient values). Without formalization, industries must continue paying for expensive subjective expert judgment despite AI matching average performance on mechanically verifiable aspects.
+Industries wanting to leverage AI for cost reduction face a prerequisite: formalize informal validation standards where appropriate. Civil engineering formalized structural calculations (yes—FEM-verifiable aspects) but stopped at site-specific judgment (no—soil conditions, unusual loadings). Healthcare could formalize diagnostic criteria (yes—where consensus exists) but not treatment decisions (no—patient values). Without formalization, industries must continue paying for expensive subjective expert judgment despite AI matching average performance on mechanically provable aspects.
 
 **The Real AI Safety Challenge: Not Obsolescence, But Under-Utilization**
 
@@ -2052,7 +2102,7 @@ The jobs aren't disappearing. They're just getting AI assistance for the boring 
 
 The blocker isn't model capability:
 - GPT-4 solves Olympiad math problems (Source: [Google DeepMind 2024](https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/))
-- AI generates FEM-validated structural designs demonstrating strong performance on mechanically verifiable aspects
+- AI generates FEM-validated structural designs demonstrating strong performance on mechanically provable aspects
 - AI matches radiologist accuracy on clear mammogram cases (Source: [McKinsey Healthcare AI 2024](https://www.mckinsey.com/industries/healthcare/our-insights/tackling-healthcares-biggest-burdens-with-generative-ai))
 
 The blocker isn't infrastructure:
@@ -2079,7 +2129,7 @@ The wave of job displacement? Not happening. The assistant ceiling holds.
 
 The challenge is not restricting AI deployment everywhere. It's enabling safe deployment where appropriate through verification infrastructure:
 
-- Healthcare: Formalize diagnostic criteria where consensus exists, build mechanical validators for clear cases
+- Healthcare: Formalize diagnostic criteria where consensus exists, build mechanical provers for clear cases
 - Legal: Formalize statutory compliance rules, build argument validators
 - Engineering: Expand FEM verification beyond structural calculations to design patterns
 
@@ -2091,7 +2141,7 @@ Without massive investment in verification infrastructure:
 - Industries will continue paying billions for expensive human validators
 - AI will remain chatbot assistants despite apparent capability
 - Trillions in economic value will sit unrealized
-- The verification boundary will determine winners and losers
+- The proof boundary will determine winners and losers
 
 Mathematics formalized first → deployed AI autonomously first → captured value.
 Software engineering formalized gradually → deploying AI in type-checked domains → capturing value.
@@ -2106,7 +2156,7 @@ ______________________________________________________________________
 
 ### Verification Stack
 
-Effectful's verification approach combines multiple layers: TLA+ specifications (human-written formal models) undergo TLA+ validation (syntax and structural correctness), then TLC model checking (state space exploration for invariant violations), followed by code generation (TLA+ to [Python](https://www.python.org/)/[TypeScript](https://www.typescriptlang.org/)), type checking ([MyPy](https://mypy-lang.org/) with zero escape hatches), conformance testing (verify generated code matches specification), and finally production deployment. Each layer provides mechanical verification at different levels of abstraction.
+Effectful's verification approach combines multiple layers: TLA+ specifications (human-written formal models) undergo TLA+ validation (syntax and structural correctness), then TLC model checking (state space exploration for invariant violations), followed by code generation (TLA+ to [Python](https://www.python.org/)/[TypeScript](https://www.typescriptlang.org/)), type checking ([MyPy](https://mypy-lang.org/) with zero escape hatches), conformance testing (verify generated code matches specification), and finally production deployment. Each layer provides mechanical proof at different levels of abstraction.
 
 **See**: [TLA+ Specification](../dsl/intro.md#7-effectual-dsl-in-tlapluscal), [TLC Model Checker](../dsl/intro.md#81-compiler-pipeline), [Python](https://www.python.org/), [TypeScript](https://www.typescriptlang.org/), [MyPy](https://mypy-lang.org/) for documentation.
 
