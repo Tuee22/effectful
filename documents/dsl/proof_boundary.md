@@ -1,6 +1,6 @@
 # The Proof Boundary: Why Humans Will Under-Utilize AI
 
-Large language models can draft legal contracts, but law firms require attorneys to review every clause. Computer vision systems can identify diabetic retinopathy from retinal scans with accuracy matching ophthalmologists, but clinics require physicians to sign every diagnostic report. Quantitative trading algorithms execute millions of transactions per day, but investment firms program manual circuit breakers that force human review of unexpected patterns.
+Large language models can draft legal contracts, but law firms require lawyers to review every clause. Computer vision systems can identify [diabetic retinopathy](https://en.wikipedia.org/wiki/Diabetic_retinopathy) from retinal scans with accuracy matching ophthalmologists, but clinics require physicians to sign every diagnostic report. [Quantitative trading](https://en.wikipedia.org/wiki/Algorithmic_trading) algorithms execute millions of transactions per day, but investment firms program manual [circuit breakers](https://en.wikipedia.org/wiki/Circuit_breaker) that force human review of unexpected patterns.
 
 These AI tools perform their narrow tasks reliably. Professionals trust them to execute specific computations. Yet across medicine, law, engineering, and finance, human oversight remains mandatory—by regulation, by professional standards, or by institutional policy.
 
@@ -12,7 +12,7 @@ The answer lies not in technology capability but in the nature of the decisions 
 
 ---
 
-That nature becomes clear when we examine what "verification" means in each domain. When a radiologist reviews a chest X-ray, two equally qualified physicians might reach different conclusions from the same image. When an attorney evaluates a legal argument, reasonable experts disagree about soundness. When a code reviewer assesses business logic, professional judgment varies. These are domains where verification means professional interpretation of evidence—rigorous, yes, but not mechanical.
+That nature becomes clear when we examine what "verification" means in each domain. When a radiologist reviews a chest X-ray, two equally qualified physicians might reach different conclusions from the same image. When a lawyer evaluates a legal argument, reasonable experts disagree about soundness. When a code reviewer assesses business logic, professional judgment varies. These are domains where verification means professional interpretation of evidence—rigorous, yes, but not mechanical.
 
 Contrast this with a type checker analyzing code. No interpretation. No professional disagreement. The checker applies formal rules: does this function signature match this call site? Can this variable ever be None when accessed? If the code type-checks today, it will type-check tomorrow, and every other type checker following the same specification will reach the identical conclusion. The verification is mechanical—every step executed by algorithm, every conclusion reproducible exactly.
 
@@ -20,7 +20,7 @@ Throughout history, we've reserved one word for this second kind of verification
 
 The line separating these domains is the **proof boundary**. On one side: decisions that can be verified by algorithm. On the other: decisions that require human judgment. That boundary explains why programmers trust AI-generated code if tests pass, while doctors require physicians to sign every AI diagnostic report. It determines where AI can fully automate versus where humans must review everything from scratch.
 
-The pattern emerged through industrial disasters. Ariane 5, June 4, 1996.
+The pattern emerged through industrial disasters. [Ariane 5](https://en.wikipedia.org/wiki/Ariane_5), June 4, 1996.
 
 ______________________________________________________________________
 
@@ -32,7 +32,7 @@ June 4, 1996. French Guiana. The European Space Agency's maiden flight of the Ar
 
 Thirty-seven seconds later, $370 million disintegrated into a fireball over the Atlantic Ocean (Source: [Wikipedia: Ariane flight V88](https://en.wikipedia.org/wiki/Ariane_flight_V88)).
 
-The Ariane 5 Inertial Reference System tried to convert a 64-bit floating-point velocity value to a 16-bit signed integer. No bounds checking. When Ariane 5's higher horizontal velocity exceeded what a 16-bit integer could represent, the conversion overflowed. The software threw an exception. The IRS crashed. So did the backup. With no working guidance system, the rocket pitched hard, structural loads exceeded tolerances, and the vehicle tore itself apart.
+The Ariane 5 Inertial Reference System converted a 64-bit [floating-point](https://en.wikipedia.org/wiki/Floating-point_arithmetic) horizontal bias value to a 16-bit signed integer. When Ariane 5's higher horizontal velocity caused this value to [overflow](https://en.wikipedia.org/wiki/Integer_overflow), the software detected the overflow and raised an exception—but the [exception handler](https://en.wikipedia.org/wiki/Exception_handling) wasn't designed for this failure mode. The IRS crashed. So did the backup running identical code. With no working guidance system, the rocket pitched hard, structural loads exceeded tolerances, and the vehicle tore itself apart.
 
 The damning part: this wasn't new code. The IRS software was reused from Ariane 4, where it had worked perfectly for years. Dozens of successful Ariane 4 launches. Proven, reliable code. The engineers made a reasonable judgment—why rewrite software that already worked?
 
@@ -42,19 +42,19 @@ The Ariane 5 team included some of Europe's finest aerospace engineers, software
 
 The verification gap was invisible until 37 seconds after launch.
 
-**Therac-25: When Software Killed Patients (1985-1987)**
+**[Therac-25](https://en.wikipedia.org/wiki/Therac-25): When Software Killed Patients (1985-1987)**
 
-Between June 1985 and January 1987, the Therac-25 radiation therapy machine delivered massive overdoses to at least six patients. At least three died from radiation injuries. One victim received between 16,000 and 25,000 rads—up to 125 times the therapeutic dose, delivered in less than one second (Source: [Therac-25](https://en.wikipedia.org/wiki/Therac-25)).
+Between June 1985 and January 1987, the [Therac-25](https://en.wikipedia.org/wiki/Therac-25) [radiation therapy](https://en.wikipedia.org/wiki/Radiation_therapy) machine delivered massive overdoses to at least six patients. At least three died from radiation injuries. One victim received between 16,000 and 25,000 [rads](https://en.wikipedia.org/wiki/Rad_(unit))—up to 125 times the therapeutic dose, delivered in less than one second.
 
 What went wrong? The Therac-25, designed by Atomic Energy of Canada Limited (AECL), removed hardware safety interlocks that had made the previous Therac-20 safe. It relied purely on software controls.
 
-The software had a race condition. Under specific timing circumstances—if an operator entered commands too quickly—the system could bypass safety checks entirely and fire the electron beam at full, unmodulated power.
+The software had a [race condition](https://en.wikipedia.org/wiki/Race_condition). Under specific timing circumstances—if an operator entered commands too quickly—the system could bypass safety checks entirely and fire the [electron beam](https://en.wikipedia.org/wiki/Electron_beam) at full, unmodulated power.
 
 The bug was present in every Therac-25 ever manufactured.
 
-**Pentium FDIV: The Math Professor Who Cost Intel $475 Million (1994)**
+**[Pentium FDIV bug](https://en.wikipedia.org/wiki/Pentium_FDIV_bug): The Math Professor Who Cost Intel $475 Million (1994)**
 
-Fall 1994. Thomas Nicely, a mathematics professor at Lynchburg College, was computing the reciprocals of twin primes. When he cross-checked results using an older Intel 486 processor, the answers didn't match. The brand-new Pentium was giving wrong answers.
+Fall 1994. Thomas Nicely, a mathematics professor at Lynchburg College, was computing the [reciprocals](https://en.wikipedia.org/wiki/Multiplicative_inverse) of [twin primes](https://en.wikipedia.org/wiki/Twin_prime). When he cross-checked results using an older [Intel 486](https://en.wikipedia.org/wiki/Intel_80486) processor, the answers didn't match. The brand-new [Pentium](https://en.wikipedia.org/wiki/Pentium) was giving wrong answers.
 
 Not spectacularly wrong. Just... slightly off. In certain specific floating-point division operations, the Pentium returned results with errors in the fourth or fifth decimal place.
 
@@ -64,19 +64,19 @@ Then the story hit the press. CNN. The New York Times. Letterman's Top Ten list.
 
 On December 20, 1994, Intel announced a no-questions-asked replacement program. Cost: $475 million (Source: [Wikipedia: Pentium FDIV bug](https://en.wikipedia.org/wiki/Pentium_FDIV_bug)). CEO Andy Grove later called it the company's worst crisis.
 
-The bug was in the floating-point division unit's lookup table. Five entries out of 1,066 were missing due to a scripting error. Intel had run millions of test vectors through simulation. Thousands of world-class engineers reviewed the design.
+The bug was in the floating-point division unit's [lookup table](https://en.wikipedia.org/wiki/Lookup_table). Five entries out of 1,066 were missing due to a scripting error. Intel had run millions of test vectors through simulation. Thousands of world-class engineers reviewed the design.
 
 They missed it completely.
 
-**Toyota: When Your Car Became Your Enemy (2009-2011)**
+**[Toyota unintended acceleration](https://en.wikipedia.org/wiki/2009%E2%80%932011_Toyota_vehicle_recalls): When Your Car Became Your Enemy (2009-2011)**
 
-August 28, 2009. Off-duty California Highway Patrol officer Mark Saylor was driving his family in a loaner 2009 Lexus ES 350. The accelerator stuck. The Lexus surged to over 120 mph. Saylor, trained in high-speed pursuit, couldn't stop it. The 911 call captured the final moments—screaming, "Hold on... hold on and pray..."
+August 28, 2009. Off-duty California Highway Patrol officer Mark Saylor was driving his family in a loaner 2009 [Lexus](https://en.wikipedia.org/wiki/Lexus) ES 350. The accelerator stuck. The Lexus surged to over 120 mph. Saylor, trained in high-speed pursuit, couldn't stop it. The 911 call captured the final moments—screaming, "Hold on... hold on and pray..."
 
 The Lexus crashed, rolled over, burst into flames. All four occupants died.
 
-This wasn't isolated. By investigation's end, 89 deaths were linked to Toyota unintended acceleration events (Source: [Wikipedia: 2009-2011 Toyota recalls](https://en.wikipedia.org/wiki/2009%E2%80%932011_Toyota_vehicle_recalls)). Thousands of crashes. Highway patrol officers. Professional truckers. Not confused drivers mistaking pedals.
+This wasn't isolated. By investigation's end, 89 deaths were linked to [Toyota](https://en.wikipedia.org/wiki/Toyota) unintended acceleration events. Thousands of crashes. Highway patrol officers. Professional truckers. Not confused drivers mistaking pedals.
 
-NASA engineers analyzed 280,000 lines of code. The electronic throttle control software violated multiple MISRA C guidelines—industry coding standards specifically designed to prevent these bugs. MISRA C was voluntary. Toyota didn't require it across all development.
+[NASA](https://en.wikipedia.org/wiki/NASA) engineers analyzed 280,000 lines of code. The electronic throttle control software violated multiple [MISRA C](https://en.wikipedia.org/wiki/MISRA_C) guidelines—industry coding standards specifically designed to prevent these bugs. MISRA C was voluntary. Toyota didn't require it across all development.
 
 The aftermath: $1.2 billion criminal settlement, the largest ever imposed on a car company. Over $3 billion total. 89 deaths.
 
@@ -85,7 +85,7 @@ The aftermath: $1.2 billion criminal settlement, the largest ever imposed on a c
 Four industries. Four catastrophes. Different technologies, different failure modes, different consequences. One unifying pattern:
 
 - **Ariane 5**: Europe's finest aerospace engineers → $370M fireball in 37 seconds
-- **Therac-25**: World-class physicists and software developers → 6 patients killed by radiation
+- **Therac-25**: Experienced physicists and engineers relying on poorly tested software → 6 patients killed by radiation
 - **Pentium FDIV**: Thousands of Intel engineers, millions of test vectors → $475M recall
 - **Toyota**: Professional software engineers, extensive testing → 89 deaths
 
@@ -93,7 +93,7 @@ No choice. Industries found solutions beyond human judgment because the economic
 
 The economic asymmetry: **Industries formalized domains where disasters cost enough to justify investing in mechanical provers.** Aerospace. Medical devices. Automotive safety systems. Semiconductor manufacturing. The disasters weren't philosophical problems—they were billion-dollar losses that made formal proof economically rational.
 
-The domains that justify AI valuations—healthcare ($4.9T), legal services ($437B), cloud infrastructure ($430B)—haven't experienced catastrophes severe enough to force complete formalization. Radiologists don't have mechanical provers for diagnostic reasoning. Attorneys don't have mechanical provers for legal argument soundness. Engineers don't have mechanical provers for operational impact assessment.
+The domains that justify AI valuations—healthcare ($4.9T), legal services ($437B), cloud infrastructure ($430B)—haven't experienced catastrophes severe enough to force complete formalization. Radiologists don't have mechanical provers for diagnostic reasoning. Lawyers don't have mechanical provers for legal argument soundness. Engineers don't have mechanical provers for operational impact assessment.
 
 AI can assist in these domains. But without mechanical provers, every AI suggestion requires slow, expensive human review from scratch. The productivity gains are real but incremental—not transformative enough to justify the valuations.
 
@@ -121,7 +121,7 @@ A FORTRAN compiler didn't just translate DO loops to assembly. It checked that e
 
 A programmer submits her code. The compiler rejects it in 3 seconds: "UNDEFINED VARIABLE AT LINE 47." She finds the typo, resubmits, gets executable output. What took a day of manual checking now takes minutes.
 
-But this didn't solve the semantic correctness problem. It just moved it. Compilers automated syntax checking, but semantic correctness still required human validation. Did the algorithm actually compute what you intended? Were there off-by-one errors? Race conditions? Logic bugs?
+But this didn't solve the [semantic correctness](https://en.wikipedia.org/wiki/Semantics_(computer_science)) problem. It just moved it. Compilers automated syntax checking, but semantic correctness still required human validation. Did the algorithm actually compute what you intended? Were there [off-by-one errors](https://en.wikipedia.org/wiki/Off-by-one_error)? Race conditions? Logic bugs?
 
 The compiler would happily translate perfectly syntactic nonsense into perfectly syntactic machine code that did the wrong thing entirely.
 
@@ -135,37 +135,51 @@ This was substantial progress. NASA's Apollo Guidance Computer software, written
 
 **The economic timeline**: By the 1970s, the software industry had already automated the cheap verification work. Syntax checking (1950s). Type checking (1970s). The mechanical provers replaced human reviewers for the low-value, high-volume error detection. This freed programmers to focus on the expensive work—algorithm design, architecture decisions, business logic.
 
-The irony: AI in 2024 excels at generating code in domains where cheap verification was automated decades ago. SQL queries validated by parsers. API calls checked by schemas. Type-checked languages verified by compilers. AI assists with work humans already largely automated through compilers and type systems. The expensive professional work—system design, requirement analysis, business logic validation—still requires human judgment.
+The irony: AI in 2024 excels at generating code in domains where cheap verification was automated decades ago. [SQL](https://en.wikipedia.org/wiki/SQL) queries validated by [parsers](https://en.wikipedia.org/wiki/Parsing). API calls checked by schemas. Type-checked languages verified by compilers. AI assists with work humans already largely automated through compilers and type systems. The expensive professional work—system design, requirement analysis, business logic validation—still requires human judgment.
 
 But imperative programming remained dominant despite functional programming's emerging theoretical advantages. Why? Because the industry optimized for human comprehension, not mathematical elegance.
 
 **Functional Programming: The Road Not Taken (1980s-1990s)**
 
-ML (1973). Scheme (1975). Miranda (1985). Haskell (1990). Functional programming languages offered something extraordinary: referential transparency, immutability, composability. Programs that were easier to reason about mathematically. Formal verification became dramatically simpler when functions had no side effects.
+[ML](https://en.wikipedia.org/wiki/ML_(programming_language)) (1973). [Scheme](https://en.wikipedia.org/wiki/Scheme_(programming_language)) (1975). [Miranda](https://en.wikipedia.org/wiki/Miranda_(programming_language)) (1985). [Haskell](https://en.wikipedia.org/wiki/Haskell) (1990). [Functional programming](https://en.wikipedia.org/wiki/Functional_programming) languages offered something extraordinary: [referential transparency](https://en.wikipedia.org/wiki/Referential_transparency), immutability, composability. Programs that were easier to reason about mathematically. Formal verification became dramatically simpler when functions had no side effects.
 
-The academic computer science community understood the advantages. Haskell's type system could express properties that caught bugs in C programs that wouldn't be found until production. Pure functions made concurrent programming tractable in ways that shared mutable state never could.
+The academic computer science community understood the advantages. Haskell's [type system](https://en.wikipedia.org/wiki/Type_system) could express properties that caught bugs in [C](https://en.wikipedia.org/wiki/C_(programming_language)) programs that wouldn't be found until production. Pure functions made [concurrent programming](https://en.wikipedia.org/wiki/Concurrent_computing) tractable in ways that shared mutable state never could.
 
-But functional programming was difficult for humans to learn. Recursion instead of loops. Higher-order functions. Monads for side effects. The concepts were alien to programmers trained on C, C++, and Java. Unfortunately, the academic ambassadors weren't always the best salespeople—try explaining to a working programmer that "a monad is just a monoid in the category of endofunctors" and watch their eyes glaze over. The concepts were profound. The marketing needed work. Industry needed to ship products, train developers, maintain legacy systems. The learning curve was too steep.
+But adoption faced substantial barriers beyond just technical merit. The talent market already had deep expertise in [imperative languages](https://en.wikipedia.org/wiki/Imperative_programming)—[C](https://en.wikipedia.org/wiki/C_(programming_language)), [C++](https://en.wikipedia.org/wiki/C%2B%2B), [Java](https://en.wikipedia.org/wiki/Java_(programming_language)) developers were abundant and experienced. Employers faced a rational concern: hiring functional programmers would be difficult, training existing teams would be expensive, and the benefits were theoretical rather than proven at enterprise scale.
 
-So the industry stuck with imperative languages. C++ dominated. Java conquered enterprise. The theoretically superior approach remained largely academic. The decidability advantages functional programming offered were left mostly unexploited—because human developers couldn't effectively write in those languages.
+Network effects mattered. Imperative languages had mature tooling, extensive libraries, established patterns, and vast community support. Functional programming required starting from scratch in many domains. The learning curve was steep—recursion instead of loops, higher-order functions, [monads](https://en.wikipedia.org/wiki/Monad_(functional_programming)) for side effects—and the academic ambassadors sometimes struggled with communication (try explaining "a monad is just a monoid in the category of endofunctors" to a working programmer).
+
+For most businesses, sticking with imperative programming made rational sense. C++ dominated. Java conquered enterprise. The theoretically superior approach remained largely academic. The decidability advantages functional programming offered were left mostly unexploited—not because developers couldn't learn the languages, but because the business case didn't justify the switching costs.
 
 **Internet and Cloud Era: When Formal Methods Became Necessary (2000s-2010s)**
 
-Then the internet happened. Distributed systems everywhere. E-commerce. Cloud computing. Microservices. Suddenly, every application was a distributed system, and distributed systems are brutally hard to get right.
+Then the internet happened. [Distributed systems](https://en.wikipedia.org/wiki/Distributed_computing) everywhere. E-commerce. Cloud computing. [Microservices](https://en.wikipedia.org/wiki/Microservices). Suddenly, every application was a distributed system, and distributed systems are brutally hard to get right.
 
-The CAP theorem (2000) proved you can't have consistency, availability, and partition tolerance simultaneously. Consensus algorithms (Paxos, Raft) required mathematical proofs to verify correctness. Byzantine fault tolerance. Eventual consistency. Distributed state machines. The complexity exploded beyond what human review could reliably validate.
+Why? Imagine several generals surrounding a city, planning to attack at dawn. They need to coordinate—attack together and they win, attack separately and they're crushed. They can only communicate by messenger, but some messengers might be captured, some generals might be traitors sending false messages, and the network of communication is unreliable.
+
+How do the loyal generals reach agreement when they can't trust all the messages? This is the **[Byzantine Generals Problem](https://en.wikipedia.org/wiki/Byzantine_fault)** (1982), and it's precisely what happens when servers try to coordinate over the internet. Some servers might crash. Network connections drop. Messages arrive out of order or not at all. Worse, some components might be compromised and sending malicious data.
+
+Now make it concrete: three bank servers processing a withdrawal. Server A says the account has $1000. Server B says $500. Server C crashed and sent nothing. Which value is correct? What if Server B was compromised? What if the messages just arrived in the wrong order because of network delays? A single-process program never faces these questions—there's one memory, one sequence of operations, one truth.
+
+In distributed systems, you reason about **all possible orderings** of messages, crashes, and timing. Three servers exchanging messages have hundreds of possible sequences. Five servers have thousands. Add in: messages that never arrive, servers that crash mid-operation, [network partitions](https://en.wikipedia.org/wiki/Network_partition) where groups of servers can't talk to each other, clocks that drift, and malicious actors. The number of possible scenarios becomes astronomical.
+
+A critical bug in a banking system might only happen after a specific sequence: message 1 arrives, server 2 crashes, message 3 gets delayed, server 1 restarts, message 3 finally arrives, server 2 comes back up with stale data—and now you've violated an invariant and corrupted the account balance. That sequence might never occur in testing but is guaranteed to eventually happen at scale.
+
+This is why distributed systems required formal methods. The complexity exceeded what human review could reliably validate.
 
 This was when software developers really needed to start taking formal proofs of correctness seriously.
 
 But the software industry was ironically slower to adopt formal proof than industries that had learned through catastrophe. Aerospace adopted formal methods after Ariane 5's $370 million explosion. Automotive adopted after Toyota's unintended acceleration deaths. Medical devices got FDA mandates after Therac-25 killed patients.
 
-Why the delay? Software engineers had developed the BEST validation tools—functional programming languages, TLA+, formal methods—yet severely underutilized them. The reason: outages and data breaches don't kill people. Websites could ship buggy, patch reactively, survive without the rigor that kept airplanes from falling or medical devices from overdosing patients.
+Why the delay? Software engineers had developed the BEST validation tools—functional programming languages, [TLA+](https://en.wikipedia.org/wiki/TLA%2B), [formal methods](https://en.wikipedia.org/wiki/Formal_methods)—yet severely underutilized them. The reason: outages and data breaches don't kill people. Websites could ship buggy, patch reactively, survive without the rigor that kept airplanes from falling or medical devices from overdosing patients.
 
-Amazon was an exception. In 2011, they proactively adopted TLA+ (Temporal Logic of Actions) not after a catastrophe, but because distributed systems complexity exceeded what human review could validate. The results validated the approach: they found critical design flaws in every system they modeled—S3, DynamoDB, systems running in production for years.
+Amazon was an exception. In 2011, they proactively adopted [TLA+](https://en.wikipedia.org/wiki/TLA%2B) (Temporal Logic of Actions) not after a catastrophe, but because distributed systems complexity exceeded what human review could validate. They found critical design flaws in every system they modeled—[S3](https://en.wikipedia.org/wiki/Amazon_S3), [DynamoDB](https://en.wikipedia.org/wiki/Amazon_DynamoDB), systems running in production for years.
 
-The famous example: a 35-step bug in DynamoDB that could only manifest under a specific sequence of failures that would likely never occur in testing but was guaranteed to eventually happen at scale. TLA+ model checking found it in hours. The cost of formal modeling was orders of magnitude less than the cost of production outages.
+The famous example: a 35-step bug in DynamoDB that could only manifest under a specific sequence of failures that would likely never occur in testing but was guaranteed to eventually happen at scale. TLA+ [model checking](https://en.wikipedia.org/wiki/Model_checking) found it in hours. The cost of formal modeling was orders of magnitude less than the cost of production outages.
 
-Amazon's proactive adoption was unusual. Most of the software industry still operates reactively—shipping bugs, patching in production, treating formal proof as academic luxury rather than engineering necessity.
+Meanwhile, academia was proving formal methods could work at an even deeper level. [CompCert](https://en.wikipedia.org/wiki/CompCert) (2006-2011), developed by Xavier Leroy using the [Coq](https://en.wikipedia.org/wiki/Coq) proof assistant, delivered a mathematically verified [C compiler](https://en.wikipedia.org/wiki/C_(programming_language))—proven correct down to the generated assembly code. Traditional compilers have bugs that silently miscompile code, introducing errors that weren't in the source. CompCert's formal proof guarantees that if your C code has defined behavior, the compiled assembly behaves identically. Zero miscompilation bugs have been found in CompCert's verified compilation passes over 15 years of production use—though bugs have occurred in unverified components (preprocessor, assembler) and in the formal specification itself. CompCert has been qualified for safety-critical avionics software under DO-178C, with [Airbus](https://en.wikipedia.org/wiki/Airbus) among the organizations validating it for use where compiler correctness is critical. When you're compiling flight control systems, "trust the compiler" needs mathematical backing.
+
+Amazon's and CompCert's proactive adoptions were unusual. Most of the software industry still operates reactively—shipping bugs, patching in production, treating formal proof as academic luxury rather than engineering necessity.
 
 **The API Revolution: How Amazon Turned Infrastructure Into Software (2002-2024)**
 
@@ -193,18 +207,20 @@ By 2017, computing had converged on a single architecture: APIs for everything, 
 Before examining why this paradox exists, consider the empirical pattern:
 
 **Code generation (mechanically checkable)**:
-- GitHub Copilot in TypeScript (type-checked): 72% correctness
-- GitHub Copilot in Python (dynamically typed): 45% correctness
-- 1.3 million paying subscribers
-- $100 million annual revenue
+- HumanEval (unit tests as verifier): Codex solves 28.8% pass@1; 70.2% with 100 samples (Source: [Chen et al., 2021](https://arxiv.org/abs/2107.03374))
+- AlphaCode (Codeforces, test-based filtering): average top-54.3% ranking (Source: [Li et al., 2022](https://arxiv.org/abs/2203.07814))
+- SQL queries (execution accuracy): 85.3% on Spider with DIN-SQL (Source: [Pourreza & Rafiei, 2023](https://arxiv.org/abs/2304.11015))
 
 **Medical diagnosis (expert judgment)**:
 - 1,300 FDA-approved AI diagnostic tools
-- Radiologist-level accuracy on clear cases
-- U.S. clinical adoption: ~2%
+- Ophthalmologist-level diabetic retinopathy detection on validated datasets (Source: [JAMA, 2016](https://jamanetwork.com/journals/jama/fullarticle/2588763))
+- U.S. clinical adoption: ~2% (Source: [JACR, 2024](https://www.jacr.org/article/S1546-1440(23)00854-3/fulltext))
 - Radiologists must review every AI suggestion from scratch
 
-**The 27-point gap** in correctness corresponds to a **650× gap** in adoption.
+**Legal reasoning (expert judgment)**:
+- Hallucination rates 69% to 88% on legal queries (Source: [Stanford HAI / RegLab, 2024](https://hai.stanford.edu/news/hallucinating-law-legal-mistakes-large-language-models-are-pervasive); [arXiv:2401.01301](https://arxiv.org/abs/2401.01301))
+
+Where mechanical checkers exist to validate AI output, models achieve measurable correctness on testable benchmarks. Where human judgment remains the only validation, error rates remain high and review costs stay high.
 
 Why does mechanical checking help AI capability so dramatically?
 
@@ -214,9 +230,11 @@ Why does mechanical checking help AI capability so dramatically?
 
 June 2017. A team at Google published a paper with an audacious title: "[Attention Is All You Need](https://arxiv.org/abs/1706.03762)." The transformer architecture it introduced would fundamentally change what machines could do with language and code.
 
-Previous neural network architectures—RNNs, LSTMs—processed sequences token by token, struggling with long-range dependencies. They couldn't remember context from 100 tokens ago, let alone 10,000. This made them terrible at understanding code, where a function definition might be separated from its usage by thousands of lines.
+Language is sequence data—ordered tokens where position matters. "The dog bit the man" means something different from "The man bit the dog." Code is even more dependent on sequence: a function definition must come before its usage, variable declarations before references, imports before the code that needs them. Models that process language need to handle these sequential dependencies.
 
-Transformers solved this through attention mechanisms. Every token could attend to every other token in the context window. The model could learn which parts of the input mattered for predicting the next token, regardless of distance. Early transformers had 2,048-token context windows. By 2024, that had grown to 100,000+ tokens—enough to hold entire codebases in context.
+Earlier neural network models for sequence data—[RNNs](https://en.wikipedia.org/wiki/Recurrent_neural_network) (Recurrent Neural Networks) like [LSTMs](https://en.wikipedia.org/wiki/Long_short-term_memory) and [GRUs](https://en.wikipedia.org/wiki/Gated_recurrent_unit)—worked, but they had a scaling problem. Not because computers weren't powerful enough, but because the models' computational cost didn't scale linearly with sequence length. Processing token 10,000 required maintaining state from all previous 9,999 tokens, and that dependency chain made training and inference prohibitively expensive at large scales. You couldn't just throw more compute at the problem—the architecture itself bottlenecked.
+
+[Transformers](https://en.wikipedia.org/wiki/Transformer_(deep_learning_architecture)) changed the economics. The [attention mechanism](https://en.wikipedia.org/wiki/Attention_(machine_learning)) processes all tokens in parallel, with computational cost that scales quadratically with sequence length—expensive, but parallelizable and predictable. Crucially, the architecture kept scaling: more parameters, more training data, longer context windows, better performance. Early transformers had 2,048-token context windows. By 2024, that had grown to 100,000+ tokens—enough to hold entire codebases in context.
 
 The training scale was unprecedented. GPT-3 (2020) trained on 45TB of text. GPT-4 (2023) trained on even larger datasets, learning from trillions of tokens across the internet. Not just natural language—code repositories, mathematical proofs, technical documentation, API specifications.
 
@@ -228,38 +246,35 @@ The results were startling across domains.
 
 **Code generation**: GitHub Copilot (2021) trained on billions of lines of code could generate entire functions from natural language descriptions. Not perfect—but good enough that millions of professional developers adopted it. The productivity gains were measurable. Developers writing code 55% faster on certain tasks (Source: [GitHub Copilot Research](https://github.blog/2022-09-07-research-quantifying-github-copilots-impact-on-developer-productivity-and-happiness/)).
 
-**Mathematical reasoning**: AlphaProof (2024) solved International Mathematical Olympiad problems at silver medal level. Problem 6—the hardest on the exam—defeated 604 of the world's brightest young mathematicians. AlphaProof generated a formal proof that Lean verified with mathematical certainty. This wasn't statistical pattern matching. This was genuine mathematical reasoning producing verifiable proofs.
+**Mathematical reasoning**: AlphaProof (2024) solved [International Mathematical Olympiad](https://en.wikipedia.org/wiki/International_Mathematical_Olympiad) problems at silver medal level. Problem 6—the hardest on the exam—defeated 604 of the world's brightest young mathematicians. AlphaProof generated a formal proof that [Lean](https://en.wikipedia.org/wiki/Lean_(proof_assistant)) verified with mathematical certainty. This wasn't statistical pattern matching. This was genuine mathematical reasoning producing verifiable proofs.
 
-**Medical diagnosis**: AI systems matching radiologist sensitivity on clear-case mammograms. Not exceeding human experts—but matching them on specific diagnostic tasks. Studies showing AI detecting diabetic retinopathy at ophthalmologist-level accuracy (Source: [JAMA, 2016](https://jamanetwork.com/journals/jama/fullarticle/2588763)). Dermatology AI diagnosing skin cancer at dermatologist level (Source: [Nature, 2017](https://www.nature.com/articles/nature21056)).
+**Medical diagnosis**: AI systems matching radiologist sensitivity on clear-case [mammograms](https://en.wikipedia.org/wiki/Mammography). Not exceeding human experts—but matching them on specific diagnostic tasks. Studies showing AI detecting diabetic retinopathy at ophthalmologist-level accuracy (Source: [JAMA, 2016](https://jamanetwork.com/journals/jama/fullarticle/2588763)). [Dermatology](https://en.wikipedia.org/wiki/Dermatology) AI diagnosing skin cancer at dermatologist level (Source: [Nature, 2017](https://www.nature.com/articles/nature21056)).
 
-**Legal reasoning**: Large language models drafting legal briefs, analyzing case law, generating contract language at a level that made law firms take notice. Not replacing attorneys—but performing paralegal-level research and drafting that previously required years of training.
-
-The pattern was consistent. On well-defined tasks with clear evaluation criteria, transformer-based models achieved professional-level performance. Not across the board. Not at expert-level on the hardest cases. But competent professional performance on a substantial fraction of knowledge work.
+**Legal reasoning**: Large language models drafting legal briefs, analyzing case law, generating contract language at a level that made law firms take notice. Not replacing lawyers—but performing paralegal-level research and drafting that previously required years of training.
 
 **The Economic Asymmetry**
 
-Here's the cruel irony: AI performs best in domains where professionals earn the least.
+Here's the pattern: AI performs best in domains that formalized early.
 
-Domains with mechanical provers—code generation, SQL queries, type-safe API design—saw AI achieve 72-89% correctness rates. GitHub Copilot: 1.3 million subscribers, $100 million revenue. Median developer salary: $120K. The verification was already cheap (type checkers from the 1970s); AI made the writing faster.
+Domains with mechanical provers—code generation with unit tests, SQL query execution, formal proof assistants—show measurable performance on verifiable benchmarks (HumanEval, Codeforces, Spider, IMO) because outputs can be mechanically checked (Sources: [Chen et al., 2021](https://arxiv.org/abs/2107.03374), [Li et al., 2022](https://arxiv.org/abs/2203.07814), [Pourreza & Rafiei, 2023](https://arxiv.org/abs/2304.11015), [DeepMind, 2024](https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/)). Domains relying on expert judgment without mechanical verification—legal reasoning, medical diagnosis, structural engineering design review—show high error variance and require full professional review (Source: [Stanford HAI / RegLab, 2024](https://hai.stanford.edu/news/hallucinating-law-legal-mistakes-large-language-models-are-pervasive)).
 
-Domains relying on expert judgment—medical diagnosis, legal reasoning, structural engineering design review—remained at 45-58% correctness with high error variance. Medical AI: 1,300 FDA approvals, 2% clinical adoption. Radiologist median salary: $498K. Attorneys billing $200-$1,000/hour. The expensive judgment—distinguishing malignant from benign in ambiguous cases, evaluating legal soundness, certifying structural safety—has no mechanical prover.
-
-The 27-point gap determined the economics. The domains justifying AI bubble valuations—healthcare ($4.9T), legal services ($437B), professional engineering—are precisely where AI remains an expensive assistant.
+This performance difference determined the economics. The domains justifying AI bubble valuations—healthcare ($4.9T), legal services ($437B), professional engineering—are precisely where AI remains an expensive assistant.
 
 **MCP: The Connection Layer**
 
 November 2024. Anthropic announced the [Model Context Protocol](https://www.anthropic.com/news/model-context-protocol) (MCP). A standardized way for LLMs to interact with external systems.
 
-Before MCP, connecting AI to systems was bespoke. Custom integrations. Ad-hoc APIs. Every connection required custom engineering. MCP standardized this. Now LLMs could:
+Before MCP, connecting AI to systems was bespoke. Custom integrations. Ad-hoc APIs. Every connection required custom engineering. MCP standardized how LLMs access external resources—databases, APIs, file systems—through a common protocol. This simplified integration but didn't change the fundamental pattern: LLMs suggest actions, humans approve them. The protocol made AI assistance more convenient, not more autonomous.
 
-- Query databases through standardized connectors
-- Execute API calls to external services
-- Control cloud infrastructure through standard interfaces
-- Interact with development environments
-- Read from and write to enterprise systems
-- Access real-time data sources
+MCP enabled LLMs to:
 
-Not just generating text. Controlling systems. Reading databases. Executing transactions. Managing infrastructure. The same standardized protocol for connecting to anything with an API.
+- Query databases through standardized connectors (with human review of results)
+- Propose API calls to external services (with human approval before execution)
+- Suggest cloud infrastructure changes through standard interfaces (with human authorization)
+- Interact with development environments (generating code for human review)
+- Access data from enterprise systems (for context, not autonomous decision-making)
+
+The same standardized protocol for connecting to anything with an API—but maintaining human oversight at each step.
 
 **The Perfect Opportunity**
 
@@ -287,7 +302,7 @@ We built the infrastructure. The models performed. The economic incentive was en
 
 - $430 billion spent annually on cloud infrastructure that could be autonomously managed
 - $4.9 trillion healthcare industry where AI matched radiologist accuracy on clear cases
-- $437 billion legal services market where AI drafted at attorney level
+- $437 billion legal services market where AI drafted at lawyer level
 - Hundreds of billions more across finance, insurance, engineering, research
 
 **We could automate vast swaths of knowledge work right now.**
@@ -302,7 +317,7 @@ The pattern holds across industries. Engineering managers won't let GitHub Copil
 
 The technology is capable. The infrastructure exists. The models perform at professional level on measurable tasks. The economic incentive is clear—billions in potential automation gains.
 
-Software developers review every production merge even though AI generates the code. Radiologists sign every diagnostic report even though AI matches their sensitivity on clear cases. Attorneys review every legal filing even though AI drafts at professional level. Infrastructure engineers approve every production deployment. Insurance adjusters validate high-value claims.
+Software developers review every production merge even though AI generates the code. Radiologists sign every diagnostic report even though AI matches their sensitivity on clear cases. Lawyers review every legal filing even though AI drafts at professional level. Infrastructure engineers approve every production deployment. Insurance adjusters validate high-value claims.
 
 The technology works. The infrastructure exists. Organizations won't delegate decision-making authority to systems they can't verify.
 
@@ -310,7 +325,7 @@ The technology works. The infrastructure exists. Organizations won't delegate de
 
 This essay examines a fundamental constraint on AI deployment that most technology forecasts ignore: the proof boundary.
 
-Human experts can be held accountable. When a doctor misdiagnoses, there's malpractice liability. When an engineer deploys broken code, there's professional responsibility. When an attorney files a faulty brief, there's bar discipline. The verification mechanism is legal, professional, and social.
+Human experts can be held accountable. When a doctor misdiagnoses, there's malpractice liability. When an engineer deploys broken code, there's professional responsibility. When a lawyer files a faulty brief, there's bar discipline. The verification mechanism is legal, professional, and social.
 
 But AI systems trained on statistical patterns? How do you verify their decisions before delegating authority?
 
@@ -338,7 +353,7 @@ Alan Turing, 24 years old, working at Cambridge University, posed the question t
 
 He discovered something shocking. You couldn't.
 
-Certain questions—like "will this program halt?"—have no algorithmic answer. Not because we haven't found the algorithm yet. Because no such algorithm can exist. Turing proved this using a self-reference technique: assume such an algorithm exists, then construct a program that forces it into contradiction. The proof was airtight. That question is *undecidable*.
+Certain questions—like "will this program [halt](https://en.wikipedia.org/wiki/Halting_problem)?"—have no algorithmic answer. Not because we haven't found the algorithm yet. Because no such algorithm can exist. Turing proved this using a self-reference technique: assume such an algorithm exists, then construct a program that forces it into contradiction. The proof was airtight. That question is *[undecidable](https://en.wikipedia.org/wiki/Undecidable_problem)*.
 
 But Turing found hope in restriction.
 
@@ -364,7 +379,7 @@ Could a machine have verified that velocity values fit in 16-bit integers?
 
 **Yes.** Decidable. Checkable in microseconds.
 
-A type checker would have caught it instantly. Modern type systems like Rust's enforce integer bounds at compile-time. The code wouldn't compile. The bug would never reach production. Never make it to the launch pad. $370 million saved by a mechanical prover running in milliseconds.
+A type checker would have caught it instantly. Modern type systems like [Rust](https://en.wikipedia.org/wiki/Rust_(programming_language))'s enforce integer bounds at compile-time. The code wouldn't compile. The bug would never reach production. Never make it to the launch pad. $370 million saved by a mechanical prover running in milliseconds.
 
 **Return to Therac-25**
 
@@ -403,9 +418,9 @@ GitHub Actions, GitLab CI, CircleCI—these aren't just automation tools. They'r
 A typical CI pipeline validates:
 - Type correctness (MyPy, TypeScript compiler)
 - Test passage (pytest, Jest, unit tests must pass)
-- Code coverage thresholds (90%+ coverage required)
-- Linting rules (code style, complexity metrics)
-- Security vulnerabilities (dependency scanning, SAST tools)
+- [Code coverage](https://en.wikipedia.org/wiki/Code_coverage) thresholds (90%+ coverage required)
+- [Linting](https://en.wikipedia.org/wiki/Lint_(software)) rules (code style, complexity metrics)
+- Security vulnerabilities (dependency scanning, [SAST](https://en.wikipedia.org/wiki/Static_application_security_testing) tools)
 - Build success (code must compile)
 
 Each check is decidable. Each returns yes/no in finite time. Failed checks block merges. The validation is mechanical, deterministic, non-negotiable. No human judgment required to determine if types match or tests pass.
@@ -421,7 +436,7 @@ OpenAPI specifications, GraphQL schemas, Protocol Buffers—these aren't documen
 A REST API with OpenAPI spec validates:
 - Request structure (required fields present?)
 - Type correctness (is `user_id` an integer?)
-- Enum values (is `status` one of: pending/approved/rejected?)
+- [Enum](https://en.wikipedia.org/wiki/Enumerated_type) values (is `status` one of: pending/approved/rejected?)
 - Format constraints (is `email` a valid email address?)
 - Range bounds (is `age` between 0 and 150?)
 
@@ -429,14 +444,14 @@ Each validation is decidable. Each executes in microseconds. Invalid requests ar
 
 This enables AI-driven API orchestration. LLMs can generate API calls because the API proves them mechanically. When MCP connects an LLM to a database API, the API schema ensures malformed queries never execute. The mechanical prover acts as a safety boundary.
 
-**Kubernetes Operators and Declarative Infrastructure**
+**Kubernetes Operators and [Declarative](https://en.wikipedia.org/wiki/Declarative_programming) Infrastructure**
 
 Kubernetes proves infrastructure configurations mechanically. A deployment manifest declares desired state. The Kubernetes API server validates:
 - Resource quotas (does this fit in allocated CPU/memory?)
 - Port conflicts (is port 8080 already bound?)
 - Volume mounts (does this path exist?)
 - Network policies (is this connection allowed?)
-- RBAC permissions (is this service account authorized?)
+- [RBAC](https://en.wikipedia.org/wiki/Role-based_access_control) permissions (is this service account authorized?)
 
 Each check is decidable. Each returns yes/no. Invalid manifests are rejected before applying to the cluster. The validation is mechanical and exhaustive.
 
@@ -445,10 +460,10 @@ This enables infrastructure-as-code AI. LLMs can generate Kubernetes manifests b
 **Smart Contract Verifiers**
 
 Solidity static analyzers, formal proof tools for Ethereum smart contracts—these validate properties before blockchain deployment:
-- Reentrancy vulnerabilities (can this function be called recursively?)
+- [Reentrancy](https://en.wikipedia.org/wiki/Reentrancy_(computing)) vulnerabilities (can this function be called recursively?)
 - Integer overflows (can these arithmetic operations overflow?)
 - Access control (are privileged functions properly protected?)
-- Gas optimization (will this operation exceed block gas limits?)
+- Gas optimization (will this operation exceed [block gas limits](https://en.wikipedia.org/wiki/Ethereum#Gas))?
 
 Each property is decidable through static analysis or model checking. Each check runs before deployment. Failed validation blocks deployment. The verification is mechanical.
 
@@ -518,16 +533,12 @@ But here's the critical insight: even where mechanical verifiers exist, AI remai
 Where do humans do even more work? Where mechanical verifiers don't exist.
 
 - **Medical diagnosis**: LLM generates diagnosis, radiologist reviews (no mechanical prover for diagnostic reasoning)
-- **Legal arguments**: LLM drafts brief, attorney reviews (no mechanical prover for legal soundness)
+- **Legal arguments**: LLM drafts brief, lawyer reviews (no mechanical prover for legal soundness)
 - **Infrastructure approval**: LLM suggests deployment, engineer reviews (no mechanical prover for operational impact)
 - **Insurance claims**: LLM processes claim, adjuster reviews (no mechanical prover for policy interpretation)
 
-The pattern is universal. Mechanical verification determines how fast humans can review AI output—not whether AI can operate autonomously.
-
 Where validators exist: AI suggests, validator catches cheap errors, humans focus review on semantics and intent.
 Where validators don't exist: AI suggests, humans review everything from scratch.
-
-This boundary was discovered through disasters. Formalized through software evolution. And now determines how efficiently AI can assist professionals in the transformer era.
 
 **Temporal Precedence: Proofs Preceded AI**
 
@@ -543,7 +554,7 @@ The data confirms this:
 | Rust | 2010-2015 | 2020-2024 | 10-14 years |
 | TLA+ | 1999 | 2023-2024 | 24+ years |
 
-Causation direction: Proofs enabled AI, not the reverse. The verifiers created training data filtering effects decades before transformers existed to benefit from them.
+Compilers were running decades before we had transformers to learn from them. Fifty years of type-checked code created a training corpus that made modern AI reliable at Rust. We accidentally built the verification infrastructure before realizing it would become the most valuable training data in the economy.
 
 ### Section 1.6: Why Machines Need What Humans Don't
 
@@ -553,17 +564,17 @@ Before we examine the evidence, we need to understand a fundamental asymmetry th
 
 Consider how a professional engineer approves a bridge design.
 
-Picture the PE at their desk. The computer screen shows FEM output: maximum stress 285 MPa, yield strength 350 MPa, safety factor 1.23. The software says PASS. Structural calculations check out perfectly—stress values safely below yield strength, load distributions within tolerances.
+Picture the PE at their desk. The computer screen shows FEM output: load factors applied per [AASHTO](https://en.wikipedia.org/wiki/American_Association_of_State_Highway_and_Transportation_Officials) [LRFD](https://en.wikipedia.org/wiki/Load_and_Resistance_Factor_Design), stresses within limits, [deflections](https://en.wikipedia.org/wiki/Deflection_(engineering)) acceptable. The structural calculations check out—[dead load](https://en.wikipedia.org/wiki/Structural_load) factored at 1.25, live load at 1.75, resistance factors applied to member capacities.
 
-But the FEM software can't answer certain questions:
+But the FEM software calculates consequences of assumptions, it doesn't verify the assumptions themselves:
 
-- Soil bearing capacity: Estimated from samples 50 meters apart, but clay layers vary unpredictably between boring locations
-- Material variability: Steel mill certifies 350 MPa yield strength, but weld zones introduce local stresses no spec captures
-- Loading edge cases: Bridge designed for AASHTO truck loading, but what about evacuation convoy scenarios?
-- Environmental factors: Freeze-thaw cycles in this specific microclimate? Salt spray corrosion patterns?
+- [Soil bearing capacity](https://en.wikipedia.org/wiki/Bearing_capacity): Estimated from samples 50 meters apart, but clay layers vary unpredictably between boring locations. Is interpolation valid given this geology?
+- Material variability: Steel mill certifies 350 [MPa](https://en.wikipedia.org/wiki/Pascal_(unit)) [yield strength](https://en.wikipedia.org/wiki/Yield_(engineering)), but [weld](https://en.wikipedia.org/wiki/Welding) zones introduce local stresses. Are the assumed weld properties conservative enough?
+- Loading edge cases: Bridge designed for AASHTO HL-93 live load, but what about rare evacuation convoy scenarios not captured in standard load models?
+- Environmental factors: Freeze-thaw cycles in this specific microclimate? Salt spray corrosion patterns unique to this coastal location?
 - Maintenance realities: Inspection interval adequate given actual municipal budget constraints?
 
-The FEM analysis provides mechanical proof for structural calculations. The engineer provides judgment for everything else.
+The FEM analysis calculates structural response based on assumptions. The engineer provides judgment about whether those assumptions reflect reality.
 
 What does the engineer do in these ambiguous cases? They make judgment calls. They apply intuition informed by experience. They consult with colleagues. They err on the side of caution or accept calculated risks based on context. They add extra safety margins where the FEM models seem uncertain. They might greenlight a design that technically violates a guideline because they understand the guideline's purpose and know when deviation is acceptable.
 
@@ -571,7 +582,7 @@ What does the engineer do in these ambiguous cases? They make judgment calls. Th
 
 If the bridge collapses, the engineer's license is revoked. Lawsuits follow. Criminal prosecution in cases of gross negligence. Reputation destroyed. Career ended.
 
-In 1907, when the Quebec Bridge collapsed during construction—killing 75 workers as 19,000 tons of steel plunged into the St. Lawrence River—the Royal Commission investigation concluded: "errors in judgment on the part of the two chief engineers." Chief engineer Theodore Cooper had approved design changes by telegram without mechanically re-verifying load calculations. Professional judgment failed catastrophically.
+In 1907, when the Quebec Bridge collapsed during construction—killing 75 workers as 19,000 tons of steel plunged into the St. Lawrence River—the Royal Commission investigation found that chief engineer Theodore Cooper had underestimated the dead load (the weight of the structural members themselves). The calculations were performed, but the assumptions about member weights were wrong. When field engineers reported deformations in the lower chords, Cooper approved continuing construction by telegram rather than halting work to investigate. The collapse demonstrated that calculation alone—even if mechanically verified—cannot substitute for accurate physical assumptions and proper engineering judgment about warning signs.
 
 The aftermath established mandatory mechanical proof standards, Professional Engineer licensing requirements, and building codes that formalized what could be checked deterministically. But even today, a century of formalization later, gaps remain.
 
@@ -586,12 +597,12 @@ A machine cannot apply "professional judgment" informed by years of experience a
 The bridge design scenario with AI:
 
 ```
-LLM processes FEM output: "Safety factor 1.23"
-Human: "Borderline. This bridge carries school buses. I'd prefer 1.5."
-LLM: "1.23 meets AASHTO specifications. APPROVE."
+LLM processes geotechnical report: "Soil bearing capacity estimated from borings 50m apart. Interpolation meets code spacing requirements."
+Human: "But clay layers vary unpredictably in this geology. Should we add borings?"
+LLM: "Spacing meets AASHTO requirements. APPROVE."
 ```
 
-The LLM pattern-matched against specifications but missed the criticality context. It can't apply the engineer's judgment: "technically meets code but marginal for this use case."
+The LLM pattern-matched against code requirements but missed the geotechnical context. It can't apply the engineer's judgment: "code spacing is technically met, but local soil variability warrants additional investigation."
 
 When LLMs generate text that sounds like professional reasoning, they're not actually reasoning about structural engineering. They're predicting tokens based on what similar text looked like in training corpora. When those predictions venture beyond well-formalized domains, the LLM hallucinates—generating plausible-sounding content that may be completely wrong.
 
@@ -610,7 +621,7 @@ def get_user(user_id):
     return database.query(user_id).first()
 ```
 
-Developer reads it, thinks it looks good, accepts it. Code ships to production. Three weeks later: production crashes. Null pointer exception when `first()` returns `None` for nonexistent user.
+Developer reads it, thinks it looks good, accepts it. Code ships to production. Three weeks later: production crashes. `AttributeError` when `first()` returns `None` for nonexistent user and subsequent code tries to access attributes on `None`.
 
 Who gets called into the incident review? **The developer.**
 
@@ -620,19 +631,19 @@ This defense lands about as well as "the dog ate my homework" in a production po
 
 **Medical example**:
 
-Radiologist reviews AI-flagged mammogram. AI output: "BI-RADS 4B. Recommend biopsy. 73% malignancy probability."
+Radiologist reviews AI-flagged mammogram. AI output: "[BI-RADS](https://en.wikipedia.org/wiki/BI-RADS) 2. Benign findings. Routine screening in 12 months."
 
 Radiologist reviews image, agrees with assessment, signs report with medical license number.
 
-Biopsy performed. Result: benign. Patient sues for unnecessary invasive procedure causing emotional distress.
+Six months later: Patient diagnosed with stage 2 invasive ductal carcinoma. Retrospective review shows suspicious calcifications were present on the original mammogram—findings the AI classified as benign and the radiologist missed.
 
 Who's named in the lawsuit? **The radiologist.** Not the AI vendor. Not the algorithm. The physician who signed the report.
 
 The radiologist can't claim "the AI said so" any more than they could blame a medical textbook. They reviewed the image, applied their professional judgment, and signed with their license. Accountability follows the signature.
 
-**The pattern is universal**: When a Professional Engineer stamps an AI-generated bridge design, the PE assumes legal liability if the bridge fails. When a lawyer files an AI-drafted brief, the lawyer faces sanctions if it contains invented case citations—imagine explaining to a judge that your motion cites *Fictional v. Imaginary* (2023).
+When a Professional Engineer stamps an AI-generated bridge design, the PE assumes legal liability if the bridge fails. When a lawyer files an AI-drafted brief, the lawyer faces sanctions if it contains invented case citations—as happened in *Mata v. Avianca* (2023), where lawyers faced sanctions, reputation damage, and bar discipline proceedings for filing briefs with AI-generated fake citations.
 
-The accountability structure is clear: **humans who approve AI output assume responsibility for its correctness.**
+**Humans who approve AI output assume responsibility for its correctness.**
 
 Now imagine the inverse. Imagine GitHub merging Copilot's suggested pull request directly to main, no developer review. When production crashes, who attends the incident review?
 
@@ -650,7 +661,7 @@ This creates an iron constraint: **machines require complete formal systems whil
 
 Humans handle logical incompleteness through professional judgment + accountability. Machines can't. They need the rules to be sufficiently complete and mechanically checkable that verification can replace judgment.
 
-**This is why Gödel's incompleteness theorems and Turing's halting problem—abstract mathematical results about the limits of formal systems—become intensely practical constraints when industries attempt to replace subjective human validation with deterministic mechanical validation.**
+**This is why [Gödel's incompleteness theorems](https://en.wikipedia.org/wiki/Gödel%27s_incompleteness_theorems) and Turing's halting problem—abstract mathematical results about the limits of formal systems—become intensely practical constraints when industries attempt to replace subjective human validation with deterministic mechanical validation.**
 
 In pure mathematics, incompleteness is elegant philosophy. In engineering, medicine, and safety-critical systems, it's the barrier that determines where machines can and cannot operate.
 
@@ -662,7 +673,7 @@ The radiologist applies pattern recognition honed over thousands of cases, integ
 
 An AI analyzing the same mammogram operates differently. It generates probabilistic predictions based on statistical patterns in training data: "67% probability of malignancy." But it cannot apply judgment when the case is ambiguous. It cannot navigate gaps in formalization. It cannot integrate context the way humans do. It just outputs probabilities.
 
-And when those probabilities are wrong—when the AI recommends biopsy for a benign finding or misses early-stage cancer—there's no one to hold accountable.
+And when those probabilities are wrong—when the AI classifies malignant findings as benign, causing delayed diagnosis and progression to advanced disease—there's no one to hold accountable.
 
 **The asymmetry explained**:
 
@@ -687,11 +698,11 @@ Bold claim. But claims require evidence. If mechanical proof truly determines wh
 
 ### Section 1.7: The Evidence
 
-Earlier we saw the performance gap: 72% vs 45% correctness, a 650× adoption difference. We saw the temporal precedence: proofs preceded AI capability by 10-50 years across all domains. Now we examine the mechanism: how do mechanical provers determine AI capability?
+Earlier we saw the performance gap between verified and unverified domains. We saw the temporal precedence: proofs preceded AI capability by 10-50 years across all domains. Now we examine the mechanism: how do mechanical provers determine AI capability?
 
 The hypothesis makes a testable prediction: If mechanical proof filters training data, then LLMs should perform better in verified domains. Not just a little better. Measurably, consistently better.
 
-The evidence is striking. It follows a pattern across three distinct levels of formalization.
+The performance gaps range from strong-but-imperfect correctness on testable coding benchmarks (HumanEval, Codeforces, Spider) to near-certainty in formally verified mathematics (IMO problems solved with proof checking), while unverified legal queries show very high hallucination rates (69% to 88%). Three levels of formalization, three distinct performance tiers (Sources: [Chen et al., 2021](https://arxiv.org/abs/2107.03374), [Li et al., 2022](https://arxiv.org/abs/2203.07814), [Pourreza & Rafiei, 2023](https://arxiv.org/abs/2304.11015), [DeepMind, 2024](https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/), [Stanford HAI / RegLab, 2024](https://hai.stanford.edu/news/hallucinating-law-legal-mistakes-large-language-models-are-pervasive)).
 
 ### Theme 1: The Mathematical Foundation
 
@@ -719,11 +730,11 @@ The second relies on human code review. Experienced developers read AI-generated
 
 Same AI assistant. Different verification infrastructure. Radically different outcomes.
 
-First developer: 72% of AI-generated code works correctly. Second developer: 45% correct ([HumanEval](https://arxiv.org/abs/2107.03374) benchmark).
+Developer working in a codebase with unit tests and type checking: AI suggestions can be validated quickly by compilers and tests, and sampling plus filtering can lift correctness dramatically (HumanEval shows large gains with test-based sampling; AlphaCode uses test-based filtering) (Sources: [Chen et al., 2021](https://arxiv.org/abs/2107.03374), [Li et al., 2022](https://arxiv.org/abs/2203.07814)).
 
-**A 27-percentage-point chasm**. This isn't a small improvement—it's the difference between "AI saves me time" and "AI wastes my time." The difference between deploying AI assistants that accelerate development versus keeping them in research mode indefinitely.
+**This isn't a small improvement**—it's the difference between "AI saves me time" and "reviewing AI output takes longer than writing code myself." The difference between deploying AI assistants that accelerate development versus keeping them in research mode indefinitely.
 
-Here's what that gap feels like in practice. Developer at typed codebase:
+Here's what this difference feels like in practice. Developer at typed codebase:
 
 1. AI suggests function
 2. Compiler proves in 200ms
@@ -741,9 +752,9 @@ Developer at untyped codebase:
 6. Still miss edge cases
 7. Accept or reject
 
-The 27-point gap manifests as a 4× difference in review time. Mechanical verification doesn't just improve accuracy—it accelerates the entire development workflow.
+This correctness difference manifests as a 4× difference in review time. Mechanical verification doesn't just improve accuracy—it accelerates the entire development workflow.
 
-The pattern holds across verification complexity. [Haskell](https://www.haskell.org/)'s type system includes [higher-kinded types](https://wiki.haskell.org/Higher-order_type_operator), [type classes](https://www.haskell.org/tutorial/classes.html), and [parametric polymorphism](https://wiki.haskell.org/Polymorphism)—concepts many human programmers struggle with. [Rust](https://www.rust-lang.org/) enforces memory safety through compile-time [ownership rules](https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html) and [borrow checking](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html) that require deep understanding of pointer lifetimes.
+The pattern holds across verification complexity. [Haskell](https://www.haskell.org/)'s type system includes [higher-kinded types](https://wiki.haskell.org/Higher-order_type_operator), [type classes](https://www.haskell.org/tutorial/classes.html), and [parametric polymorphism](https://wiki.haskell.org/Polymorphism)—concepts many human programmers struggle with. [Rust](https://www.rust-lang.org/) enforces [memory safety](https://en.wikipedia.org/wiki/Memory_safety) through compile-time [ownership rules](https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html) and [borrow checking](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html) that require deep understanding of pointer lifetimes.
 
 Yet LLMs generate code that passes these strict type checkers at high rates. A typical borrow checker error that confuses human developers:
 
@@ -755,7 +766,7 @@ The AI navigates this complexity reliably. Why? Fifty years of compiler filtrati
 
 [SQL](https://en.wikipedia.org/wiki/SQL) demonstrates the same dynamic. [SQL parsers](https://en.wikipedia.org/wiki/Parsing) enforce strict [syntax rules](https://en.wikipedia.org/wiki/SQL_syntax): every `SELECT` needs a `FROM`, every `JOIN` requires an `ON` clause, every subquery demands proper [parenthesization](https://en.wikipedia.org/wiki/Bracket). Invalid queries are rejected instantly by [database engines](https://en.wikipedia.org/wiki/Database_engine) before execution.
 
-Result: AI-generated SQL achieves remarkably high reliability—89% correctness on complex queries. The training corpus contained only queries that parse. Invalid SQL doesn't exist in repositories. Forty-plus years of parser filtration (1980s to 2020) eliminated syntactically broken queries before LLMs learned from the data.
+Result: AI-generated SQL achieves remarkably high reliability—85.3% execution accuracy on Spider with DIN-SQL (Source: [Pourreza & Rafiei, 2023](https://arxiv.org/abs/2304.11015)). The training corpus contained only queries that parse. Invalid SQL doesn't exist in repositories. Forty-plus years of parser filtration (1980s to 2020) eliminated syntactically broken queries before LLMs learned from the data.
 
 In formal theorem proving, advanced LLM systems like HILBERT achieve 70% on PutnamBench formal proofs, approaching the ~82% baseline for informal mathematical reasoning ([arXiv:2509.22819](https://arxiv.org/abs/2509.22819)). The gap between formal and informal reasoning is narrowing—rapidly.
 
@@ -765,7 +776,7 @@ Complete formalization shows clear AI advantages. But what about domains caught 
 
 Bridge design reveals what happens at the proof boundary's edge—partial formalization creating partial AI capability.
 
-Modern structural engineering relies heavily on [Finite Element Method (FEM)](https://en.wikipedia.org/wiki/Finite_element_method) software. These programs mechanically prove core structural properties: Does maximum stress exceed yield strength? Does deflection violate safety limits? Will the structure buckle under load?
+Modern structural engineering relies heavily on [Finite Element Method (FEM)](https://en.wikipedia.org/wiki/Finite_element_method) software. These programs mechanically prove core structural properties: Does maximum [stress](https://en.wikipedia.org/wiki/Stress_(mechanics)) exceed yield strength? Does deflection violate safety limits? Will the structure [buckle](https://en.wikipedia.org/wiki/Buckling) under load?
 
 FEM analysis answers these questions deterministically. Input the geometry (beam dimensions, support locations), materials (steel grade, concrete strength), and loads (vehicle weight, wind force). The software computes stress distributions using numerical methods solving differential equations. Output: specific numbers with pass/fail judgments.
 
@@ -800,11 +811,9 @@ The Quebec Bridge collapse in 1907 illustrates the stakes. Chief engineer Theodo
 
 ### Synthesis: Three Formalization Levels, One Pattern
 
-Five domains examined. Three levels of formalization. The pattern is undeniable.
-
 **Complete formalization** (mathematics, formal proofs): AlphaProof solves IMO Problem 6, HILBERT achieves 70% on Putnam problems. Verification-backed certainty enables expert-level performance.
 
-**Software-era formalization** (type systems, SQL, compiled languages): 72% correctness in typed languages, 89% in SQL, reliable navigation of complex type systems like Rust's borrow checker. Decades of compiler filtration created training corpora where only correct patterns survived.
+**Software-era formalization** (compilers, SQL, test harnesses): measurable correctness on HumanEval and Codeforces with verification-in-the-loop, plus 85.3% execution accuracy in SQL (DIN-SQL). Decades of compiler and parser filtration created training corpora where only correct patterns survived (Sources: [Chen et al., 2021](https://arxiv.org/abs/2107.03374), [Li et al., 2022](https://arxiv.org/abs/2203.07814), [Pourreza & Rafiei, 2023](https://arxiv.org/abs/2304.11015)).
 
 **Partial formalization** (bridge engineering, structural FEM): High capability on mechanically provable aspects (truss optimization), hallucinations on unverified aspects (geotechnical judgment). AI performance tracks the proof boundary precisely.
 
@@ -861,9 +870,9 @@ But these performance numbers only tell half the story. The real divide is deplo
 - Barriers include liability concerns, hallucination risk, and lack of validation infrastructure (Source: [McKinsey Healthcare AI Analysis 2024](https://www.mckinsey.com/industries/healthcare/our-insights/tackling-healthcares-biggest-burdens-with-generative-ai))
 - **Critical: Radiologists must review every AI suggestion from scratch**. No mechanical provers mean no shortcuts in review.
 - Legal AI: ROSS Intelligence shut down December 2020 (Source: [LawSites 2020](https://www.lawnext.com/2020/12/ross-intelligence-shuts-down-as-it-lacks-funds-to-fight-thomson-reuters-lawsuit.html)), citing insufficient funding amid Thomson Reuters lawsuit
-- Current legal AI tools: Explicitly marketed as "research assistants" only, following high-profile hallucination cases where systems invented case citations that don't exist—imagine explaining to a judge that your motion cites *Fictional v. Imaginary* (2023) (Source: [Stanford HAI Legal AI Report 2024](https://hai.stanford.edu/news/hallucinating-law-legal-mistakes-large-language-models-are-pervasive))
+- Current legal AI tools: Explicitly marketed as "research assistants" only, following high-profile cases like *Mata v. Avianca* (2023) where lawyers faced sanctions for filing briefs with AI-generated fake citations (Source: [Stanford HAI Legal AI Report 2024](https://hai.stanford.edu/news/hallucinating-law-legal-mistakes-large-language-models-are-pervasive))
 
-The pattern is undeniable. Verification infrastructure determines review speed, which determines adoption velocity:
+Verification infrastructure determines review speed, which determines adoption velocity:
 - **Verified**: Fast human review (validators catch cheap errors) → rapid adoption as productivity tools
 - **Unverified**: Slow human review (review everything from scratch) → blocked at low adoption despite capability
 
@@ -1014,7 +1023,7 @@ Design reviews found nothing.
 
 Code reviews found nothing.
 
-[TLA+](https://lamport.azurewebsites.net/tla/tla.html) (Temporal Logic of Actions) found bugs in every single one of ten large complex systems AWS modeled ([How Amazon Web Services Uses Formal Methods, ACM 2015](https://dl.acm.org/doi/10.1145/2699417)).
+[TLA+](https://lamport.azurewebsites.net/tla/tla.html) (Temporal Logic of Actions) found significant issues in every single one of ten large complex systems AWS modeled—ranging from critical data-loss bugs to design ambiguities to optimization opportunities ([How Amazon Web Services Uses Formal Methods, ACM 2015](https://dl.acm.org/doi/10.1145/2699417)).
 
 **The 35-Step Bug**
 
@@ -1026,7 +1035,7 @@ The DynamoDB engineer's reaction? "Had I known about TLA+ before starting, I wou
 
 **Performance Through Proof**
 
-Modeling Aurora's commit protocol in TLA+ identified an optimization: reduce distributed commits from 2 network roundtrips to 1.5 without sacrificing safety properties. This performance improvement required mathematical proof to validate. Without verification, engineers couldn't confidently deploy the optimization—the risk of introducing subtle consistency bugs was too high.
+Modeling Aurora's commit protocol in TLA+ identified an optimization: reduce [distributed commits](https://en.wikipedia.org/wiki/Distributed_transaction) from 2 network roundtrips to 1.5 without sacrificing safety properties. This performance improvement required mathematical proof to validate. Without verification, engineers couldn't confidently deploy the optimization—the risk of introducing subtle [consistency](https://en.wikipedia.org/wiki/Consistency_(database_systems)) bugs was too high.
 
 With TLA+, they proved correctness and shipped the optimization.
 
@@ -1034,9 +1043,7 @@ With TLA+, they proved correctness and shipped the optimization.
 
 **Economic Threshold Crossed**: Verification cost became lower than the cost of production bugs. AWS's experience demonstrates that formal methods scale to the world's largest cloud infrastructure, finding critical bugs that all other validation techniques miss.
 
-These success stories make formal proof sound like an obvious choice. CompCert achieved fifteen years without bugs. AWS found critical failures in every system modeled. If formal methods work this well, why did it take so long for industries to adopt them? What finally forced the change?
-
-The answer is written in steel, silicon, and human lives.
+Yet industries didn't adopt formal proof because it worked well. They adopted it after catastrophe. The economic incentive didn't exist until failure cost more than prevention.
 
 ### Section 1.9: When Catastrophe Forced Change
 
@@ -1044,7 +1051,7 @@ For decades, industries only adopted formal proof when disaster proved that no a
 
 **The Quebec Bridge: When Professional Judgment Collapsed Into the St. Lawrence (1907)**
 
-August 29, 1907. The St. Lawrence River, nine miles upstream from Quebec City. Eighty-six workers stood on the partially completed Quebec Bridge—designed to be the longest cantilever bridge in the world, a monument to Canadian engineering ambition.
+August 29, 1907. The St. Lawrence River, nine miles upstream from Quebec City. Eighty-six workers stood on the partially completed Quebec Bridge—designed to be the longest [cantilever](https://en.wikipedia.org/wiki/Cantilever_bridge) bridge in the world, a monument to Canadian engineering ambition.
 
 At 5:37 PM, they heard sounds like rifle shots. Steel girders buckling under stress.
 
@@ -1066,7 +1073,7 @@ On June 6, 1907, workers noticed several lower chord members were bent. The brid
 
 Cooper telegraphed back: stop work immediately, investigate the bent members. But the telegram arrived too late. Before work could halt, the bridge collapsed.
 
-The Royal Commission investigation concluded with devastating clarity: "errors in judgment on the part of the two chief engineers." The commission identified the specific failure: certain compression members (specifically chord members A9L and A9R in the anchor arm) were drastically undersized for the actual loads imposed by the 1,800-foot span design. The specification was based on outdated methods and Cooper's judgment rather than rigorous calculation. Professional intuition failed catastrophically.
+The Royal Commission investigation concluded with devastating clarity: "errors in judgment on the part of the two chief engineers." The commission identified the specific failure: certain [compression members](https://en.wikipedia.org/wiki/Compression_(mechanics)) (specifically chord members A9L and A9R in the anchor arm) were drastically undersized for the actual loads imposed by the 1,800-foot span design. The specification was based on outdated methods and Cooper's judgment rather than rigorous calculation. Professional intuition failed catastrophically.
 
 **The Aftermath: Formalization Forced by Disaster**
 
@@ -1098,7 +1105,7 @@ She was not alone. Between June 1985 and January 1987, the Therac-25 delivered m
 
 What went wrong? The Therac-25 was designed by Atomic Energy of Canada Limited (AECL), built on software from earlier Therac-20 machines. But the Therac-25 had a fatal difference: it removed hardware safety interlocks that had made the Therac-20 safe, relying instead purely on software controls.
 
-The software had a race condition. Under specific timing circumstances—if an operator entered commands too quickly—the system could bypass safety checks entirely and fire the electron beam at full, unmodulated power. The bug was hiding in plain sight, present in every Therac-25 ever manufactured. Dozens of world-class physicists, electrical engineers, and software developers had reviewed the code. None spotted the race condition.
+The software had multiple critical bugs. One involved a counter overflow (Malfunction 54)—if operators entered commands rapidly, an 8-bit counter would wrap around, allowing the system to bypass safety checks. Another involved mode confusion that could enable the direct high-power electron beam when therapeutic mode was intended. These bugs were present in every Therac-25 ever manufactured. Experienced physicists, electrical engineers, and software developers had reviewed the code, but inadequate software engineering practices and lack of proper safety analysis allowed these critical flaws to persist.
 
 Why? Because software verification in 1985 meant "smart people look at the code." Code reviews. Testing. Expert judgment. The kind of human validation that works well enough for most systems. But "well enough" isn't good enough when bugs kill people.
 
@@ -1148,7 +1155,7 @@ What happened in those 37 seconds?
 
 The Ariane 5 Inertial Reference System (IRS)—responsible for calculating the rocket's position and velocity—crashed. Not a hardware failure. A software crash. The backup IRS crashed at the same moment for the same reason. With no working guidance system, the flight computer made catastrophically wrong steering decisions. The rocket pitched hard, structural loads exceeded tolerances, and the vehicle tore itself apart.
 
-The post-mortem investigation traced the failure to a single line of code. The IRS software tried to convert a 64-bit floating-point velocity value to a 16-bit signed integer. No bounds checking. When Ariane 5's higher horizontal velocity exceeded what a 16-bit integer could represent, the conversion overflowed. The software threw an exception. The exception handler wasn't designed for this scenario. The IRS crashed.
+The post-mortem investigation traced the failure to a specification mismatch. The IRS software converted a 64-bit floating-point horizontal bias value to a 16-bit signed integer. When Ariane 5's higher horizontal velocity caused this value to overflow, the software detected the overflow and raised an exception—but the exception handler wasn't designed for this failure mode. The IRS crashed. The real issue: Ariane 4 velocity ranges didn't match Ariane 5's operational envelope, and no formal requirements validation caught the mismatch.
 
 But here's the damning part: this wasn't new code. The IRS software was reused from Ariane 4, where it had worked perfectly for years. Dozens of successful Ariane 4 launches. Proven, reliable code. The engineers made a reasonable judgment—why rewrite and re-verify software that already worked?
 
@@ -1176,7 +1183,7 @@ But the victims weren't confused drivers. They were highway patrol officers. Pro
 
 In February 2010, Toyota CEO Akio Toyoda testified before Congress. The company recalled 9 million vehicles worldwide. The media coverage was relentless. Toyota's reputation for reliability—built over decades—collapsed in months.
 
-The technical investigation revealed something damning: Toyota's electronic throttle control software was a mess. NASA engineers analyzed 280,000 lines of code and found numerous violations of basic software safety practices. The system could enter ambiguous states where both "accelerate" and "brake" signals registered simultaneously. Stack overflow bugs lurked in the real-time operating system. The software violated multiple MISRA C guidelines—industry coding standards specifically designed to prevent exactly these kinds of safety-critical bugs in automotive software.
+The technical investigation revealed something damning: Toyota's electronic throttle control software was a mess. NASA engineers analyzed 280,000 lines of code and found numerous violations of basic software safety practices. The system could enter ambiguous states where both "accelerate" and "brake" signals registered simultaneously. Stack usage patterns could exceed available memory under certain conditions, creating potential for crashes. The software violated multiple MISRA C guidelines—industry coding standards specifically designed to prevent exactly these kinds of safety-critical bugs in automotive software. While NASA found code quality issues that COULD cause unintended acceleration, definitive causation was never proven. Legal settlements were for code quality violations and failure to meet safety standards.
 
 But MISRA C was a voluntary standard. Toyota's engineers knew about it. Some automotive companies used it religiously. Toyota did not require it across all their software development.
 
@@ -1204,7 +1211,7 @@ The skepticism was predictable. AWS already had world-class engineers. Extensive
 
 Newcombe convinced leadership to try TLA+ on ten large, complex systems that had already passed all traditional validation. Systems already running in production. Systems that AWS's best engineers had reviewed and tested exhaustively.
 
-TLA+ found bugs in every single one ([How Amazon Web Services Uses Formal Methods, ACM 2015](https://dl.acm.org/doi/10.1145/2699417)).
+TLA+ found significant issues in every single one—ranging from critical data-loss bugs to design ambiguities to optimization opportunities ([How Amazon Web Services Uses Formal Methods, ACM 2015](https://dl.acm.org/doi/10.1145/2699417)).
 
 Not trivial bugs. Not edge cases that would never happen. Critical correctness bugs that could cause data loss or consistency violations. The kind of bugs that, if triggered in production, could destroy AWS's reputation for reliability.
 
@@ -1228,7 +1235,7 @@ But AWS was an exception. What made proactive adoption possible in 2011 when it 
 
 **The Transformer Revolution: When Everything Changed (2017-Present)**
 
-June 2017. A team at Google Brain published a paper with an audacious title: "Attention Is All You Need."
+June 2017. A team at Google (Brain and Research) published a paper with an audacious title: "Attention Is All You Need."
 
 The paper introduced the transformer architecture—a new way to build neural networks for processing sequences. At the time, it seemed like just another incremental improvement in a field littered with overhyped breakthroughs. AI had experienced multiple "winters"—periods where grand promises collapsed into disappointment. Expert systems in the 1980s. Neural networks in the 1990s. Each wave of hype crashed when the technology couldn't deliver on its promises.
 
@@ -1242,17 +1249,16 @@ But here's what the initial hype missed: transformers didn't just make AI better
 
 When GPT-3 launched in 2020, the natural assumption was linear improvement—AI gets better at everything, just faster. "Better" hid a pattern that would reshape economics.
 
-By 2021, GitHub Copilot had 1.3 million subscribers generating $100 million+ in annual revenue. Developers reported 55% faster feature development. The workflow worked: AI suggests code, compiler validates, developer reviews only what passes. The compiler filtered nonsense automatically.
+By 2021, GitHub Copilot reached large-scale adoption and developers reported significant productivity gains (55% faster on certain tasks) (Source: [GitHub Copilot Research, 2022](https://github.blog/2022-09-07-research-quantifying-github-copilots-impact-on-developer-productivity-and-happiness/)). The workflow worked: AI suggests code, compiler validates, developer reviews only what passes. The compiler filtered nonsense automatically.
 
-Medical imaging told a different story. AI achieved 94-96% concordance with radiologist diagnoses—impressive numbers. Yet workflow acceleration remained minimal. Why? That 4-6% error rate included life-threatening misses that no mechanical verifier could catch. Every AI suggestion required full radiologist review, the same cognitive load as reading the scan from scratch. High accuracy without mechanical validation delivered minimal productivity gains.
+Medical imaging told a different story. AI matched or approached specialist performance on specific, well-scoped tasks (diabetic retinopathy, skin cancer), yet workflow acceleration remained minimal because every output still required full expert review and no mechanical verifier exists (Sources: [JAMA, 2016](https://jamanetwork.com/journals/jama/fullarticle/2588763), [Nature, 2017](https://www.nature.com/articles/nature21056)).
 
 The numbers crystallized the pattern:
 
-- **SQL query generation**: 89% correctness, deployed in production
-- **Type-safe API code**: 76% correctness, developers accept with light review
-- **Formal theorem proving**: Silver medal at International Mathematical Olympiad
-- **Medical diagnosis**: 8-15% hallucination rate, requires full physician oversight
-- **Legal reasoning**: 17-34% citation error rate, attorneys must verify every reference
+- **SQL query generation**: 85.3% execution accuracy (DIN-SQL) on Spider (Source: [Pourreza & Rafiei, 2023](https://arxiv.org/abs/2304.11015))
+- **Formal theorem proving**: Silver medal at International Mathematical Olympiad with proof checking (Source: [DeepMind, 2024](https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/))
+- **Medical diagnosis**: Narrow task-level performance is strong, but full physician oversight remains required (Sources: [JAMA, 2016](https://jamanetwork.com/journals/jama/fullarticle/2588763), [Nature, 2017](https://www.nature.com/articles/nature21056))
+- **Legal reasoning**: Hallucination rates 69% to 88% on legal queries, requiring full attorney verification (Sources: [Stanford HAI / RegLab, 2024](https://hai.stanford.edu/news/hallucinating-law-legal-mistakes-large-language-models-are-pervasive); [arXiv:2401.01301](https://arxiv.org/abs/2401.01301))
 - **Bridge design review**: Plausible-sounding analysis, structural engineers can't delegate judgment
 
 The question became unavoidable: Why does AI excel in some domains but struggle in others? Difficulty wasn't the discriminator—proving IMO Problem 6 is objectively harder than diagnosing pneumonia from an X-ray.
@@ -1275,13 +1281,9 @@ The training data was unfiltered—correct and incorrect examples mixed together
 
 The programming language evidence proved particularly compelling because it provided natural experiments within the same domain.
 
-Python repositories with strong typing annotations showed 1.2 average commits-to-merge. Repositories without type annotations: 2.8 commits-to-merge. LLM-generated code correctness: 76% for typed Python, 58% for untyped.
+The programming-language evidence is strongest where performance is directly tied to mechanical checks: unit tests on HumanEval, behavior-based filtering on Codeforces, and execution accuracy on Spider. These benchmarks are explicitly verifiable and show large gains when verification is in the loop (Sources: [Chen et al., 2021](https://arxiv.org/abs/2107.03374), [Li et al., 2022](https://arxiv.org/abs/2203.07814), [Pourreza & Rafiei, 2023](https://arxiv.org/abs/2304.11015)).
 
-JavaScript (dynamically typed) versus TypeScript (statically typed) provided even starker contrast. Same language semantics. Only difference: mechanical type verification. LLM correctness: 58% JavaScript, 68% TypeScript.
-
-But the causation proof came from temporal analysis. TypeScript adoption began in 2012. By 2020, approximately 40% of JavaScript projects had migrated. Between 2020 and 2024, as more TypeScript code entered training corpora, LLM correctness on TypeScript climbed from 54% to 68%—a 14-point gain within four years that tracked corpus growth.
-
-This wasn't just correlation. The timeline proved causation: verification infrastructure (compilers) → filtered training data → LLM capability improvement.
+This isn't just correlation. The timeline still supports the causal chain: verification infrastructure (compilers, parsers, proof assistants) preceded LLM capability by decades, creating filtered corpora and enabling verifier-in-the-loop evaluation.
 
 **Third: The Temporal Sequence**
 
@@ -1293,7 +1295,7 @@ The timeline across domains showed the same pattern:
 
 Verifiers preceded LLM capability by decades. The causal arrow ran one direction: mechanical proof → filtered corpus → LLM capability.
 
-Domains without verifiers remained stuck. Medical imaging AI: high concordance, low productivity. Legal reasoning AI: impressive demos, require full attorney review. Bridge design AI: plausible outputs, engineers can't delegate judgment.
+Domains without verifiers remained stuck. Medical imaging AI: high concordance, low productivity. Legal reasoning AI: impressive demos, require full lawyer review. Bridge design AI: plausible outputs, engineers can't delegate judgment.
 
 ### The Economic Inversion
 
@@ -1303,7 +1305,7 @@ The dual benefit mechanism works like this:
 
 **First benefit** (traditional): Formal verification prevents bugs, reducing the cost of failures. This is what drove Therac-25's medical device regulations, Intel's formal methods after FDIV, Ariane 5's DO-178C adoption, Toyota's MISRA C requirements. Catastrophe made the failure costs undeniable, justifying verification investment.
 
-**Second benefit** (new): Formal verification creates training data that enables dramatically better AI capabilities. Organizations that formalize their domains can deploy AI assistants that achieve 72% reliability instead of 45%. They can automate tasks that competitors cannot. They can develop faster while maintaining higher quality.
+**Second benefit** (new): Formal verification creates training data that enables measurably better AI capabilities on testable tasks (HumanEval, Codeforces, Spider). Organizations that formalize their domains can deploy AI assistants with higher reliability and faster review cycles (Sources: [Chen et al., 2021](https://arxiv.org/abs/2107.03374), [Li et al., 2022](https://arxiv.org/abs/2203.07814), [Pourreza & Rafiei, 2023](https://arxiv.org/abs/2304.11015)).
 
 This second benefit—the AI capability advantage—can justify formalization independent of catastrophe avoidance.
 
@@ -1368,7 +1370,7 @@ This is the turning point. Not because transformers made AI magical. But because
 
 We just didn't realize that filtered training data would become one of the most valuable resources in the economy.
 
-The pattern inversion is already visible in the data: early adopters gain competitive advantage through superior AI capability, while late adopters face competitive disadvantage. Organizations that formalize their domains can deploy AI assistants achieving 72% reliability. Their competitors, working in unverified domains, are stuck at 45%. This capability gap compounds over time—faster development, higher quality, better products, stronger market position.
+The pattern inversion is already visible in the data: early adopters gain competitive advantage through superior AI capability, while late adopters face competitive disadvantage. Organizations that formalize their domains can deploy AI assistants with higher reliability on verifiable tasks, while competitors in unverified domains lag behind (Sources: [Chen et al., 2021](https://arxiv.org/abs/2107.03374), [Li et al., 2022](https://arxiv.org/abs/2203.07814), [Pourreza & Rafiei, 2023](https://arxiv.org/abs/2304.11015), [Stanford HAI / RegLab, 2024](https://hai.stanford.edu/news/hallucinating-law-legal-mistakes-large-language-models-are-pervasive)).
 
 The economic incentive has flipped. For the first time, proactive formalization makes business sense without waiting for catastrophe to force the change.
 
@@ -1381,17 +1383,17 @@ For the first time in history, organizations have economic incentive to adopt fo
 **Industry-by-Industry Under-Utilization:**
 
 Healthcare diagnostics:
-- US radiology workforce: ~32,000 radiologists (Source: [BLS Occupational Employment Statistics 2024](https://www.bls.gov/oes/current/oes291224.htm)) @ $360K median (BLS) to $498K+ average (Source: [Medscape Physician Compensation 2024](https://www.medscape.com/slideshow/2024-compensation-radiologist-6017493)) = ~$11.5B-$16B annually
-- AI matches sensitivity/specificity on clear cases (Source: [McKinsey Healthcare AI 2024](https://www.mckinsey.com/industries/healthcare/our-insights/tackling-healthcares-biggest-burdens-with-generative-ai))
-- But edge case hallucination rates of 8-15% for medical contexts prevent autonomous deployment (Source: [Stanford HAI Medical LLM Study 2024](https://hai.stanford.edu/news/hallucinating-law-legal-mistakes-large-language-models-are-pervasive))
+- US radiology workforce: ~32,000 radiologists (Source: [BLS Occupational Employment Statistics 2024](https://www.bls.gov/oes/current/oes291224.htm)) @ $315K average = ~$10B in radiologist salaries (plus technologist and support staff). Radiology departments also generate significant revenue through interpretation fees; automation wouldn't simply save costs but would restructure the economic model of diagnostic imaging.
+- AI matches specialist performance on specific imaging tasks (Sources: [JAMA, 2016](https://jamanetwork.com/journals/jama/fullarticle/2588763), [Nature, 2017](https://www.nature.com/articles/nature21056))
+- But lack of mechanical verification keeps outputs in full human review (U.S. adoption ~2%) (Source: [JACR, 2024](https://www.jacr.org/article/S1546-1440(23)00854-3/fulltext))
 - Result: Healthcare still pays billions for human radiologist validation despite AI capability
 - **Wasted opportunity: $6B+ annually** (estimated: conservative 50% acceleration potential if verification infrastructure enabled faster review)
 
 Legal research:
 - US paralegal workforce: ~376,200 paralegals (Source: [BLS Occupational Employment Statistics 2024](https://www.bls.gov/oes/current/oes232011.htm)) @ $61,010 median = ~$23B annually on legal research
 - AI excels at e-discovery (mechanically provable document retrieval: deployed)
-- AI fails at legal reasoning with citation hallucination rates of 17-34% (Source: [Stanford HAI Legal AI Report 2024](https://hai.stanford.edu/news/hallucinating-law-legal-mistakes-large-language-models-are-pervasive)): stuck as assistant
-- Result: Attorneys review every AI suggestion from scratch
+- AI fails at legal reasoning with hallucination rates of 69% to 88% on legal queries (Sources: [Stanford HAI / RegLab, 2024](https://hai.stanford.edu/news/hallucinating-law-legal-mistakes-large-language-models-are-pervasive); [arXiv:2401.01301](https://arxiv.org/abs/2401.01301)): stuck as assistant
+- Result: Lawyers review every AI suggestion from scratch
 - **Wasted opportunity: $7B+ annually** (estimated: conservative 30% acceleration potential if verification infrastructure enabled faster review)
 
 Structural engineering:
@@ -1503,7 +1505,7 @@ Compositional verification's economic advantage: verification cost scales with c
 
 The [Linux kernel](https://www.kernel.org/) offers a vivid illustration of why compositional verification matters economically. With over 30 million lines of code ([Wikipedia: Linux kernel](https://en.wikipedia.org/wiki/Linux_kernel)), every kernel patch—no matter how small—must pass through extensive testing: compile-time tests, boot tests, regression tests, performance tests, integration tests.
 
-The testing cost for a 10-line kernel patch can consume hours of machine time and days of human review. This burden stems from the kernel's non-compositional architecture—a system of tightly coupled subsystems where a change to memory allocation can break device drivers, where a scheduler optimization can introduce deadlocks in filesystem locking.
+Critical kernel patches—particularly those affecting memory allocation, scheduling, or filesystem locking—can consume hours of machine time and days of human review due to the kernel's non-compositional architecture: a system of tightly coupled subsystems where a change to memory allocation can break device drivers, where a scheduler optimization can introduce [deadlocks](https://en.wikipedia.org/wiki/Deadlock) in filesystem locking.
 
 The cost scales super-linearly with codebase size. As the kernel grows, the testing burden grows faster.
 
@@ -1515,11 +1517,11 @@ The cost scales super-linearly with codebase size. As the kernel grows, the test
 
 #### seL4: Compositional Verification in Practice
 
-seL4 demonstrates this: 10,000 lines of verified code with mathematical proof of correctness, maintained by a small team. Bugs in verified components: zero in core kernel over 15 years. Cost of changes: local re-verification only, no full system regression testing required.
+seL4 demonstrates this: 10,000 lines of verified code with mathematical proof of correctness, maintained by a small team. Violations of verified properties in core kernel: zero over 15 years. The formal proof guarantees specific safety properties hold—memory safety, type safety, and absence of undefined behavior—though bugs in unverified properties or specification errors remain theoretically possible. Cost of changes: local re-verification only, no full system regression testing required.
 
 #### HealthHub: Healthcare Management with Verified Authentication
 
-[HealthHub](../../demo/healthhub/) (Effectful demo application) implements [HIPAA](https://www.hhs.gov/hipaa/)-compliant healthcare management using compositional verification. The authentication guard protecting patient medical records demonstrates compositional verification principles through algebraic data types (ADTs) that make invalid states unrepresentable.
+[HealthHub](../../demo/healthhub/) (Effectful demo application) demonstrates authentication patterns suitable for [HIPAA](https://www.hhs.gov/hipaa/)-compliant systems using compositional verification. The authentication guard protecting patient medical records demonstrates compositional verification principles through algebraic data types (ADTs) that make invalid states unrepresentable.
 
 Traditional authentication approaches allow illegal states—a session might have a token but no user ID, or claim to be authenticated while missing credentials. These inconsistent states create security vulnerabilities discovered only at runtime.
 
@@ -1605,13 +1607,13 @@ Formal specifications of fairness properties enable LLMs to reason about bias be
 
 **Formal fairness specifications**: Define invariants → prove satisfaction → deploy only if proof checker validates. Creates filtered corpus of algorithms that CANNOT violate specified fairness properties (same mechanism as type checkers creating filtered corpus of programs that cannot have type errors).
 
-**Example**: Hiring algorithm with gender-neutral invariant formally verified. Every hiring decision in the training data provably cannot discriminate by gender (proof-checked, like type-checked code). LLMs trained on such corpora learn from implementations that mathematically cannot violate the invariant.
+**Example**: Hiring algorithms could be designed with formally verified gender-neutrality invariants that prove: for any two candidates with identical qualifications, the algorithm produces identical scores regardless of gender. This verifies the algorithm's behavior, though it cannot retroactively verify that historical training data was unbiased. Organizations would need to verify the algorithm against the invariant, not verify the training data itself. LLMs trained on repositories of such verified algorithms learn from implementations that mathematically cannot violate the invariant.
 
 **Training data filtration effect**: Just as compilers filtered type-incorrect code from repositories, fairness proofs can filter discrimination-violating algorithms from training data. Organizations adopting formal fairness specifications gain dual benefits: ethical compliance AND superior AI assistance (higher reliability in verified fairness domains, exactly like higher reliability in type-verified code domains).
 
 The economic incentive alignment: organizations that formalize fairness properties get both regulatory compliance and competitive AI advantage. This creates proactive incentive for transparency independent of legal pressure—precisely the pattern inversion we saw with verification economics.
 
-We've seen what formal proof can do—CompCert's fifteen years without bugs, AWS finding critical failures, the Quebec Bridge disaster forcing formalization. We've seen the evidence—72% versus 45%, Olympiad problems solved, decades of filtered training data. We understand the mechanism—decidability, mechanical proof, accountability structures.
+We've seen what formal proof can do—CompCert's fifteen years without bugs, AWS finding critical failures, the Quebec Bridge disaster forcing formalization. We've seen the evidence—HumanEval and Codeforces gains with verification-in-the-loop, SQL execution accuracy at 85.3%, Olympiad problems solved with proof checking, decades of filtered training data. We understand the mechanism—decidability, mechanical proof, accountability structures (Sources: [Chen et al., 2021](https://arxiv.org/abs/2107.03374), [Li et al., 2022](https://arxiv.org/abs/2203.07814), [Pourreza & Rafiei, 2023](https://arxiv.org/abs/2304.11015), [DeepMind, 2024](https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/)).
 
 But understanding a boundary means knowing both sides. What can formal proof solve? What lies forever beyond its reach? And most importantly: where should we draw the line?
 
@@ -1626,7 +1628,7 @@ Formal verification's primary modern advantage: transformer-based LLMs demonstra
 **1. Preventing entire categories of bugs**
 
 Once proven, certain bugs become structurally impossible to write:
-- **Type errors** (caught at compile time): Google's adoption of [Rust](https://www.rust-lang.org/) in Android reduced memory safety vulnerabilities below 20% of total vulnerabilities for the first time—a **1000x reduction** in memory safety vulnerability density compared to [C](https://en.wikipedia.org/wiki/C_(programming_language))/[C++](https://en.wikipedia.org/wiki/C%2B%2B). Across the industry, Rust adoption consistently achieves roughly **70% reduction** in memory safety vulnerabilities. Rust changes also show **4x lower rollback rates** and spend **25% less time** in code review ([The Hacker News, 2025](https://thehackernews.com/2025/11/rust-adoption-drives-android-memory.html)), demonstrating that the safer path is also more efficient.
+- **Type errors** (caught at compile time): Google's adoption of [Rust](https://www.rust-lang.org/) in Android reduced memory safety vulnerabilities to below 20% of total vulnerabilities for the first time—down from approximately 70% in [C](https://en.wikipedia.org/wiki/C_(programming_language))/[C++](https://en.wikipedia.org/wiki/C%2B%2B) code. Additionally, Rust code shows approximately **1000x lower memory safety vulnerability density** (bugs per line of code) compared to C/C++. Across the industry, Rust adoption consistently achieves roughly **70% reduction** in memory safety vulnerabilities. Rust changes also show **4x lower rollback rates** and spend **25% less time** in code review ([The Hacker News, 2025](https://thehackernews.com/2025/11/rust-adoption-drives-android-memory.html)), demonstrating that the safer path is also more efficient.
 - Null pointer dereferences (prevented by [ADT](../engineering/code_quality.md#2-adts-over-optional-types) design)
 - Race conditions in verified concurrent code (proven absent)
 - State machine invariant violations (verified by [TLC](../dsl/intro.md#81-compiler-pipeline))
@@ -1670,10 +1672,10 @@ Societal decision-making requires human deliberation, not just mechanical checki
 "Is this building beautiful?" "Is this medical treatment worth the risk?" "Should we prioritize affordable housing over neighborhood character?" These require human judgment, not mechanical proof.
 
 **Critical Distinction**: Some domains lack mechanical verifiers but could develop them through formal specification of decision criteria:
-- **Healthcare diagnostics**: Clinical decision rules could be formalized (symptom patterns → differential diagnoses), but medical consensus on diagnostic criteria across edge cases remains incomplete
-- **Structural engineering**: Building code compliance is partially mechanized (load calculations, safety factors), but architectural judgment and inspector approval remain subjective
+- **Healthcare diagnostics**: Clinical decision rules could be formalized in principle, but face deeper oracle problems than structural engineering. Disease presentation varies biologically, symptoms are subjectively reported, and identical test results can indicate different conditions depending on patient history and presentation. Formalization of diagnostic criteria remains incomplete not only due to lack of consensus, but due to inherent biological variability and input ambiguity.
+- **Structural engineering**: Building code compliance is partially mechanized (FEM calculations, LRFD methodology), but soil variability, material uncertainty, and unusual loading scenarios still require engineering judgment. Even with complete calculation verification, assumption validation remains challenging.
 
-These domains represent **new frontiers for mechanical proof**, not permanent boundaries. In contrast, pure aesthetic judgment ("is this building beautiful?") and fundamental ethical trade-offs ("should we prioritize affordable housing over neighborhood character?") inherently resist algorithmic validation—no mechanical verifier can prove a specification is "just" or "serves community needs."
+These domains represent **challenging frontiers for mechanical proof**, not necessarily permanent boundaries, but progress will be gradual and incomplete due to fundamental uncertainties in inputs and physical systems. In contrast, pure aesthetic judgment ("is this building beautiful?") and fundamental ethical trade-offs ("should we prioritize affordable housing over neighborhood character?") inherently resist algorithmic validation—no mechanical verifier can prove a specification is "just" or "serves community needs."
 
 ### Section 3.2.5: Alternative Explanations
 
@@ -1707,10 +1709,10 @@ If feedback density during human development were the primary mechanism, the adv
 **Steel-man**: Formal domains have objectively verifiable correctness (program compiles or doesn't, proof checker validates or doesn't), while informal domains have subjective quality judgments. Perhaps LLMs excel in domains with objective correctness criteria, not specifically domains with mechanical verifiers.
 
 **Response**: Objective clarity and mechanical verifiability are deeply connected, but not identical. Counterexamples demonstrate the distinction:
-- **Chess**: Objectively verifiable correctness (legal move or not), but LLM chess performance lags behind LLM performance in type-checked code generation or SQL queries
-- **Go**: Objective rules, but pre-transformer LLMs showed no Go advantages despite objective correctness criteria existing
+- **Chess**: Has objective rules, but human game records span all skill levels—blunders and brilliancies alike enter the training corpus with no mechanical filter. LLM chess performance lags behind performance in type-checked code generation or SQL queries.
+- **Go**: Has objective rules, but pre-transformer LLMs showed no Go advantages despite objective correctness criteria existing. Game records include the full distribution of human play quality.
 
-The distinguishing factor is mechanical verifiability in the *training corpus*. Chess and Go have objective rules, but human game records include both brilliant and blundering moves with no mechanical filter—training data contains the full distribution of human play. In contrast, SQL repositories contain only syntactically valid queries (parser rejects invalid SQL before commit), and proof assistant repositories contain only valid proofs.
+The distinguishing factor is whether the *training corpus itself* was filtered by mechanical verification. Chess and Go have objective rules, but training data contains all quality levels. In contrast, SQL repositories contain only parser-validated queries (invalid SQL never enters version control). Proof assistant repositories contain only valid proofs. Code repositories contain only compilable programs. The training corpus for these domains was pre-filtered by mechanical verification before LLMs ever encountered it.
 
 Objective clarity enables mechanical proof, but the filtration of training data is the active mechanism driving LLM performance.
 
@@ -1772,13 +1774,13 @@ The relationship between AI capability and mechanical proof has several implicat
 
 #### 1. Formal Verification Tools Are Increasingly Valuable Because AI Capability Depends on Them
 
-**The economics shifted.** Pre-AI era: trade-off between upfront verification cost versus fewer bugs. Post-AI era: dual ROI—bugs prevented PLUS AI assistance that's 72% reliable instead of 45%.
+**The economics shifted.** Pre-AI era: trade-off between upfront verification cost versus fewer bugs. Post-AI era: dual ROI—bugs prevented PLUS measurably better AI assistance on tasks with mechanical verification (HumanEval, Codeforces, Spider) (Sources: [Chen et al., 2021](https://arxiv.org/abs/2107.03374), [Li et al., 2022](https://arxiv.org/abs/2203.07814), [Pourreza & Rafiei, 2023](https://arxiv.org/abs/2304.11015)).
 
 **Concrete example**: Two teams building distributed systems, same AI coding assistant.
 
-**Team A** (no verification): Manual null checks, race condition reviews, careful edge case analysis. AI suggestions: 45% correct. Review process: read every line, mentally type-check, test manually, still miss edge cases. Review time exceeds writing time for complex functions. Team abandons AI for critical paths.
+**Team A** (no verification): Manual null checks, race condition reviews, careful edge case analysis. AI suggestions less reliable. Review process: read every line, mentally type-check, test manually, still miss edge cases. Review time exceeds writing time for complex functions. Team abandons AI for critical paths.
 
-**Team B** (verification): TLA+ specifications, refinement types, mechanical proof checking. AI suggestions: 72% correct on typed code. Review process: compiler validates in 200ms, if it compiles review logic (30 seconds), if not compiler shows exact error (10 seconds). Team accepts AI 5× faster than Team A.
+**Team B** (verification): TLA+ specifications, refinement types, mechanical proof checking. AI suggestions measurably more reliable on typed code. Review process: compiler validates in 200ms, if it compiles review logic (30 seconds), if not compiler shows exact error (10 seconds). Team accepts AI 5× faster than Team A.
 
 **Common pitfall**: "We'll add verification later." Later never comes. Retrofitting formal methods into existing codebases costs 10× more than building with verification from the start.
 
@@ -1807,7 +1809,7 @@ The verification infrastructure paid for itself through traditional bug preventi
 - Developers revert to manual coding, abandon AI assistance
 - "AI doesn't work for us" conclusion, missing root cause: verification absence
 
-**Common pitfall**: "Verification is expensive." Actually: without verification, you can't afford AI assistance. The 72% vs 45% gap means AI either saves time (verified codebases) or wastes time (unverified codebases).
+**Common pitfall**: "Verification is expensive." Actually: without verification, you can't afford AI assistance. The performance differences on verifiable benchmarks (HumanEval, Codeforces, Spider) versus high hallucination rates in unverified domains (legal queries) mean AI either saves time (verified domains) or wastes time (unverified domains) (Sources: [Chen et al., 2021](https://arxiv.org/abs/2107.03374), [Li et al., 2022](https://arxiv.org/abs/2203.07814), [Pourreza & Rafiei, 2023](https://arxiv.org/abs/2304.11015), [Stanford HAI / RegLab, 2024](https://hai.stanford.edu/news/hallucinating-law-legal-mistakes-large-language-models-are-pervasive)).
 
 **Actionable guidance**: Measure AI acceptance rates across your codebase. Plot: verification level (none/types/refinement types/formal) vs acceptance rate vs review time. High acceptance in verified modules proves ROI. Use data to justify verification investment.
 
@@ -1819,19 +1821,19 @@ The verification infrastructure paid for itself through traditional bug preventi
 - Catch: 60-70% of errors
 - Barrier: Low (weeks to adopt)
 - ROI: Immediate (months)
-- AI benefit: 58% → 68% correctness (TypeScript vs JavaScript)
+- AI benefit: large accuracy gains when verification is in the loop (HumanEval pass@1 → pass@100, test-based filtering on Codeforces, 85.3% SQL execution accuracy on Spider) (Sources: [Chen et al., 2021](https://arxiv.org/abs/2107.03374), [Li et al., 2022](https://arxiv.org/abs/2203.07814), [Pourreza & Rafiei, 2023](https://arxiv.org/abs/2304.11015))
 
 **Level 2: Refinement types** (F*, Liquid Haskell)
 - Catch: 80-90% of errors
 - Barrier: Medium (months to learn)
 - ROI: 3-6 months
-- AI benefit: 68% → 78% correctness (empirical from F* usage)
+- AI benefit: measurable gains when verification is in the loop (proof assistants, unit tests, or formal checks)
 
 **Level 3: Proof assistants** (Lean, Coq, TLA+)
 - Catch: Near 100% of specifiable errors
 - Barrier: High (years to master)
 - ROI: 6-12 months (for critical systems)
-- AI benefit: 45% → 72% on formally specified properties
+- AI benefit: Dramatically higher reliability on formally specified properties
 
 **Architectural pattern: Verified core, unverified shell**
 
@@ -1966,7 +1968,7 @@ Make the boundary explicit. Invest verification infrastructure in category 1. Pr
 
 We began with a puzzle.
 
-Summer 2024 revealed this: AI systems solved the International Mathematical Olympiad's hardest problem—Problem 6, which defeated 604 out of 609 human competitors (Source: [Google DeepMind 2024](https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/)). Yet America's bridges still require Professional Engineers to stamp approval on every structural design. Healthcare has over 1,300 FDA-approved AI-enabled medical devices (Source: [FDA AI/ML Device Database 2024](https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-and-machine-learning-aiml-enabled-medical-devices)), yet US clinical adoption remains approximately 2% (Source: [Cleveland Clinic Study, JACR 2024](https://www.jacr.org/article/S1546-1440(23)00854-3/fulltext)). Legal AI tools exist, yet all market themselves explicitly as "research assistants." The economic pressure to deploy is enormous—$430 billion in infrastructure spending (Source: [White House Infrastructure Implementation 2024](https://www.whitehouse.gov/build/)), $4.9 trillion in annual US healthcare spending (Source: [CMS National Health Expenditure Data 2023](https://www.cms.gov/data-research/statistics-trends-and-reports/national-health-expenditure-data/nhe-fact-sheet)), hundreds of billions in legal services.
+Summer 2024 revealed this: AI systems solved the International Mathematical Olympiad's hardest problem—Problem 6, which defeated 604 out of 609 human competitors (Source: [Google DeepMind 2024](https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/)). Yet America's bridges still require Professional Engineers to stamp approval on every structural design. Healthcare has over 1,300 FDA-approved AI-enabled medical devices (Source: [FDA AI/ML Device Database 2024](https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-and-machine-learning-aiml-enabled-medical-devices)), yet autonomous AI deployment (without radiologist review) remains approximately 2%, while AI-assisted reading (where AI flags findings for radiologist review) shows substantially higher adoption rates in screening programs (Source: [Cleveland Clinic Study, JACR 2024](https://www.jacr.org/article/S1546-1440(23)00854-3/fulltext)). Legal AI tools exist, yet all market themselves explicitly as "research assistants." The economic pressure to deploy is enormous—$430 billion in infrastructure spending (Source: [White House Infrastructure Implementation 2024](https://www.whitehouse.gov/build/)), $4.9 trillion in annual US healthcare spending (Source: [CMS National Health Expenditure Data 2023](https://www.cms.gov/data-research/statistics-trends-and-reports/national-health-expenditure-data/nhe-fact-sheet)), hundreds of billions in legal services.
 
 Why do industries deploy AI autonomously in mathematics (Lean verification enables it), but keep AI as chatbot assistants in healthcare, legal, and engineering—despite AI matching human performance in all four domains?
 
@@ -1976,11 +1978,11 @@ The answer reveals why AI under-utilization, not dangerous deployment, is the ac
 
 **Bridge engineering has partial formal proof.** Modern structural engineering relies on Finite Element Method (FEM) software that mechanically verifies core structural properties: Does maximum stress exceed yield strength? Does deflection violate safety limits? Will the structure buckle under load? FEM analysis answers these questions deterministically. Decades of FEM-verified designs dominate engineering repositories—training data filtered by mechanical proof. AI demonstrates impressive capability on problems FEM can verify: generate beam dimensions, optimize truss configurations, satisfy structural constraints.
 
-But formalization is incomplete. Soil mechanics remains probabilistic. Material specifications don't capture real-world variability—steel batches differ, concrete cures inconsistently, welds introduce unpredictable stresses. Loading scenarios between standard cases require judgment. The Quebec Bridge collapsed in 1907 because chief engineer Theodore Cooper approved design changes without mechanically re-verifying calculations—professional judgment failed catastrophically where mechanical proof was incomplete. Modern practice mandates FEM analysis, but gaps persist.
+But formalization is incomplete. Soil properties vary spatially and site characterization relies on limited sampling—engineers use probabilistic methods to manage uncertainty about parameters (soil strength, compressibility, spatial variation), not because soil behavior is inherently random but because comprehensive measurement is impractical. Material specifications don't capture real-world variability—steel batches differ, concrete cures inconsistently, welds introduce local stresses. Loading scenarios between standard cases require judgment. The Quebec Bridge collapsed in 1907 when chief engineer Theodore Cooper underestimated dead loads—the calculations were performed but critical assumptions about member weights were wrong. Modern practice mandates FEM analysis, but gaps persist: FEM calculates consequences of assumptions; it doesn't verify assumptions reflect reality.
 
 A Professional Engineer reviews the FEM output, then applies judgment to gaps the mechanical verifier cannot address. This achieves benefit one: AI generates designs with good performance on mechanically provable problems, trained on filtered data. But benefit two remains unrealized: FEM (mechanical prover) cannot replace Professional Engineers whose licenses and legal accountability address formalization's gaps. Civil engineering cannot replace expensive expert human decision makers despite AI capability on mechanically provable aspects. America still pays billions for Professional Engineers making structural approval decisions because formalization is incomplete.
 
-**Medical diagnosis faces similar incompleteness.** AI systems match radiologist performance detecting breast cancers and identifying diabetic retinopathy. Yet healthcare cannot replace expensive radiologists and pathologists. Diagnostic standards remain informal. Radiologists disagree on ambiguous mammogram findings. Pathologists interpret tissue slides with subjective judgment. Expert consensus exists for clear cases, but edge cases—early-stage cancers, borderline abnormalities, rare conditions—lack deterministic validation criteria. Like bridge engineering, AI achieves one benefit (generates diagnoses with good average performance), but no mechanical provers exist to provide safety guarantees needed to replace expensive expert human decision makers. Healthcare pays billions for radiologists and pathologists making subjective diagnostic decisions because formalization is incomplete.
+**Medical diagnosis faces similar incompleteness.** AI systems match radiologist performance detecting breast cancers and identifying diabetic retinopathy. Yet healthcare cannot replace expensive radiologists and [pathologists](https://en.wikipedia.org/wiki/Pathology). Diagnostic standards, while formalized through frameworks like BI-RADS (breast imaging) and [Lung-RADS](https://en.wikipedia.org/wiki/Lung-RADS) (lung nodules), leave room for principled disagreement on borderline cases. Radiologists apply standardized reporting systems but disagree on whether ambiguous findings qualify as BI-RADS 4A (low suspicion) or 4B (moderate suspicion). Pathologists follow [WHO](https://en.wikipedia.org/wiki/World_Health_Organization) classification systems but face principled disagreement on tumor grade boundaries. These aren't arbitrary subjective judgments but reflect genuine ambiguity in cases that fall between established categories. Like bridge engineering, AI achieves one benefit (generates diagnoses with good average performance), but no mechanical provers exist to provide safety guarantees needed to replace expensive expert human decision makers. Healthcare pays billions for radiologists and pathologists to make these principled diagnostic judgments because complete formalization remains elusive.
 
 **The Cultural and Organizational Challenge**
 
@@ -1998,13 +2000,13 @@ The timeline for this transition will vary by domain. Mathematics spent centurie
 
 **The Dual Benefits Are Clear**
 
-Formal verification provides two distinct advantages. First, mechanical verifiers filter training data for decades. FEM software (1960s-present) verified structural designs. SQL parsers (1970s) eliminated invalid queries. Type checkers (1970s) rejected malformed code. Proof assistants (1986-1989) blocked invalid mathematical reasoning. Transformer-based LLMs emerged in 2017-2020, inheriting thirty to sixty years of filtered training data. This improves AI performance on average.
+Formal verification provides two distinct advantages. First, mechanical verifiers filter training data for decades. FEM software (1960s-present) automated structural calculations—stress analysis, deflection calculations, buckling checks. SQL parsers (1970s) eliminated invalid queries. Type checkers (1970s) rejected malformed code. Proof assistants (1986-1989) blocked invalid mathematical reasoning. Transformer-based LLMs emerged in 2017-2020, inheriting thirty to sixty years of filtered training data. This improves AI performance on average.
 
 But good average performance alone is insufficient for industries seeking to accelerate expensive expert human review. The second benefit matters more: deterministic correctness guarantees that enable mechanical provers to catch cheap errors, freeing experts to focus on high-value judgment. Mathematics achieves both benefits—AI infers well AND mechanical provers (Lean) catch cheap errors before mathematician review. Bridge engineering achieves partial benefits—AI generates designs that mechanical provers (FEM) verify for structural aspects before Professional Engineer review. Medical diagnosis achieves only the first benefit—AI infers well but no mechanical provers exist to accelerate expensive radiologist review of ambiguous cases.
 
-The evidence is quantitative:
+The performance tiers separate cleanly:
 - Formal theorem proving: 70% single-attempt success on PutnamBench, 95-99% with iterative refinement—enabling mechanical provers (Lean) to catch cheap errors before mathematician review
-- Type-safe code: 72% correctness with verification vs 45% without—enabling mechanical provers (type checkers) to catch syntax/type errors before developer review
+- Type-safe code: measurable gains when mechanical provers (tests, parsers, compilers) filter outputs before review (Sources: [Chen et al., 2021](https://arxiv.org/abs/2107.03374), [Li et al., 2022](https://arxiv.org/abs/2203.07814), [Pourreza & Rafiei, 2023](https://arxiv.org/abs/2304.11015))
 - Bridge engineering: AI generates structurally sound designs on FEM-verifiable aspects—but Professional Engineers still review all aspects formalization doesn't cover
 - Medical diagnosis: AI matches radiologist sensitivity/specificity on clear cases—but radiologists still review all cases from scratch (no mechanical provers to accelerate review)
 
@@ -2012,11 +2014,11 @@ Domains with complete formal proof → mechanical provers accelerate expert revi
 
 **The Economic Implication for Infrastructure and Healthcare**
 
-The United States spends over $430 billion annually on infrastructure. Tens of thousands of Professional Engineers earn six-figure salaries approving bridge designs, building plans, and structural certifications. The economic pressure to automate is enormous. AI already generates designs that pass FEM verification—beam dimensions, truss configurations, structural constraints. Yet civil engineering cannot eliminate Professional Engineer positions. Why? Because formalization is incomplete. Soil mechanics, material variability, unusual loading scenarios—these require professional judgment. Without deterministic validation criteria for every aspect of structural safety, infrastructure projects must continue paying for expensive Professional Engineer certification, even as AI demonstrates strong capability on mechanically provable aspects.
+The United States spends over $430 billion annually on infrastructure. Professional Engineers perform design synthesis—selecting structural systems, analyzing loads, making site-specific decisions, ensuring constructability—with final approval representing a small portion of their work. The economic pressure to automate is enormous. AI already generates designs that pass FEM verification—beam dimensions, truss configurations, structural constraints. Yet civil engineering cannot eliminate Professional Engineer positions. Why? Because formalization is incomplete. Even with complete FEM verification of calculations, the judgment-intensive design synthesis work would remain valuable. Soil mechanics, material variability, unusual loading scenarios, constructability decisions—these require professional judgment throughout the design process. Without deterministic validation criteria for every aspect of structural safety and design optimization, infrastructure projects must continue paying for Professional Engineer expertise, even as AI demonstrates strong capability on mechanically provable aspects.
 
 The U.S. healthcare system faces parallel dynamics at even larger scale—$4.5 trillion annually. Radiology and pathology departments represent billions in labor costs. AI matches radiologist performance on average. Yet healthcare cannot accelerate expert review without first building mechanical provers to catch cheap errors. Average performance is insufficient—industries need mechanical provers to accelerate expensive expert review by offloading cheap error detection. Radiologists disagree on ambiguous findings, pathologists interpret borderline cases subjectively. Like civil engineering, formalization is incomplete. Without mechanical provers to catch obvious errors, radiologists must review every AI suggestion from scratch—slow, expensive review that limits AI productivity gains.
 
-Some decisions fundamentally resist formalization—not as technical limitations but as features preserving human values. Medical treatment decisions depend on individual patient preferences: aggressive intervention versus palliative care, survival maximization versus quality-of-life preservation. These reflect legitimate variation in patient values, not correctness criteria awaiting formalization. Formalizing treatment decisions would violate patient autonomy. Similarly, certain architectural decisions involve aesthetic judgment and community values that resist and should resist algorithmic determination.
+Some decisions fundamentally resist formalization—not as technical limitations but as features preserving human values. Some medical treatment decisions depend on individual patient preferences: aggressive intervention versus palliative care, survival maximization versus quality-of-life preservation. These reflect legitimate variation in patient values, not correctness criteria awaiting formalization. However, many treatment decisions have clear evidence-based best practices (sepsis protocols, stroke treatment windows, cardiac arrest management) where formalization supports rather than violates patient care through clinical decision support systems. The challenge is distinguishing evidence-based protocols from values-based choices. Similarly, certain architectural decisions involve aesthetic judgment and community values that resist and should resist algorithmic determination.
 
 **The Challenge of Building Verification Infrastructure**
 
@@ -2099,7 +2101,7 @@ Legal: ~$23B in paralegal labor costs annually (Source: [BLS 2024](https://www.b
 Engineering: Substantial PE certification costs annually across ~494,542 licensed Professional Engineers (Source: [NCEES 2024](https://ncees.org/licensure/)). Building codes mandate Professional Engineer stamps. PEs won't certify designs they can't verify. AI role: assistant.
 
 **This isn't temporary. It's the equilibrium for opaque systems**:
-- Better models (GPT-5, GPT-6) won't change this—still opaque, still stochastic
+- Better models (GPT-5, GPT-6) won't change this—still opaque, still [stochastic](https://en.wikipedia.org/wiki/Stochastic)
 - Better infrastructure (more APIs, better MCP) won't change this—problem isn't technical integration
 - Economic pressure alone won't change this—managers won't assume responsibility without transparency
 
@@ -2182,9 +2184,11 @@ ______________________________________________________________________
 
 **ADT (Algebraic Data Type)**: Type constructed by composing other types using sum (OR) and product (AND) operations. Used to make invalid states unrepresentable.
 
-**CompCert**: A formally verified [C](https://www.iso.org/standard/74528.html) compiler proven correct using [Coq](https://coq.inria.fr/) proof assistant. Zero miscompilation bugs in 15 years of production use.
+**CompCert**: A formally verified [C](https://www.iso.org/standard/74528.html) compiler proven correct using [Coq](https://coq.inria.fr/) proof assistant. Zero miscompilation bugs in verified compilation passes over 15 years of production use. Bugs have occurred in unverified components (preprocessor, assembler) and in the formal specification itself, but the core verified translation has maintained its correctness guarantee.
 
 **[Decidability](https://en.wikipedia.org/wiki/Decidability_(logic))**: Property of a formal system where an algorithm exists that determines, in finite time, whether any well-formed statement is true or false. Not all properties are decidable (see: halting problem).
+
+**DIN-SQL**: Decomposed In-Context Learning of Text-to-SQL with Self-Correction (Pourreza & Rafiei, NeurIPS 2023, [arXiv:2304.11015](https://arxiv.org/abs/2304.11015)). State-of-the-art approach achieving 85.3% execution accuracy on Spider benchmark for AI-generated SQL queries.
 
 **Effect**: Declarative description of a side effect (I/O, database write, HTTP request) as data, separating WHAT to do from HOW to execute it.
 
@@ -2204,7 +2208,7 @@ ______________________________________________________________________
 
 **Totality**: Property of functions that produce defined output for every possible input. No partial functions, no undefined behavior, no exceptions.
 
-**Type Safety**: Guarantee that well-typed programs cannot have certain classes of runtime errors (type mismatches, null dereferences). Enforced at compile time.
+**Type Safety**: Guarantee that well-typed programs cannot have type mismatches at runtime—operations are only performed on values of appropriate types. Some type systems additionally provide null safety (preventing null pointer dereferences through option types or non-nullable references). Enforced at compile time.
 
 ______________________________________________________________________
 
@@ -2217,3 +2221,12 @@ ______________________________________________________________________
 ## References
 
 *The Economist*, "OpenAI's cash burn will be one of the big bubble questions of 2026," December 30, 2025.
+Chen et al., "Evaluating Large Language Models Trained on Code," arXiv:2107.03374 (2021).
+GitHub, "Research: Quantifying GitHub Copilot's impact on developer productivity and happiness" (2022).
+Li et al., "Competition-Level Code Generation with AlphaCode," arXiv:2203.07814 (2022).
+Pourreza & Rafiei, "DIN-SQL: Decomposed In-Context Learning of Text-to-SQL with Self-Correction," arXiv:2304.11015 (2023).
+Google DeepMind, "AI achieves silver-medal standard solving International Mathematical Olympiad problems" (2024).
+Stanford HAI / RegLab, "Hallucinating Law: Legal Mistakes with Large Language Models are Pervasive" (2024); arXiv:2401.01301.
+Gulshan et al., "Development and Validation of a Deep Learning Algorithm for Detection of Diabetic Retinopathy in Retinal Fundus Photographs," *JAMA* (2016).
+Esteva et al., "Dermatologist-level classification of skin cancer with deep neural networks," *Nature* (2017).
+Ranschaert et al., "Adoption of AI in clinical radiology in the United States," *JACR* (2024).
