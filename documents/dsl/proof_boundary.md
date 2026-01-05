@@ -1,8 +1,8 @@
-# The [proof boundary](#glossary-proof-boundary): Why Humans Will Under-Utilize AI
+# The [Proof Boundary](#glossary-proof-boundary): Why humans will under-utilize AI models 
 
 Picture three rooms.
 
-In the first, a lawyer reads a contract drafted by a model, pen in hand, looking for hallucinated citations and fatal ambiguities. [1](#ref-1)
+In the first, a lawyer reads a contract drafted by a large language model, pen in hand, looking for hallucinated citations and fatal ambiguities. [1](#ref-1)
 
 In the second, a clinician reviews a diabetic retinopathy scan that a model has flagged with high confidence, then signs the report anyway. [2](#ref-2)
 
@@ -701,35 +701,35 @@ This is why debates about AI are really debates about control. The future will b
 
 1. <a id="ref-1"></a> [1] Stanford HAI / RegLab report (2024) and arXiv:2401.01301. https://hai.stanford.edu/news/hallucinating-law-legal-mistakes-large-language-models-are-pervasive; https://arxiv.org/abs/2401.01301.
 2. <a id="ref-2"></a> [2] Gulshan et al., "Development and Validation of a Deep Learning Algorithm for Detection of Diabetic Retinopathy," JAMA (2016). https://pubmed.ncbi.nlm.nih.gov/27898976/.
-3. <a id="ref-3"></a> [3] Trading curbs and circuit breakers. https://en.wikipedia.org/wiki/Trading_curb.
-4. <a id="ref-4"></a> [4] Quebec Bridge. https://en.wikipedia.org/wiki/Quebec_Bridge.
+3. <a id="ref-3"></a> [3] SEC market-wide circuit breakers. https://www.sec.gov/marketstructure/market-wide-circuit-breakers.
+4. <a id="ref-4"></a> [4] Report of the Royal Commission on the Quebec Bridge collapse (Government of Canada). https://publications.gc.ca/site/eng/9.827964/publication.html.
 5. <a id="ref-5"></a> [5] Ariane 5 Flight 501 Failure Report. https://www.ima.umn.edu/~arnold/disasters/ariane5rep.html.
-6. <a id="ref-6"></a> [6] Therac-25 overview. https://en.wikipedia.org/wiki/Therac-25.
-7. <a id="ref-7"></a> [7] Pentium FDIV bug overview. https://en.wikipedia.org/wiki/Pentium_FDIV_bug.
+6. <a id="ref-6"></a> [6] Leveson & Turner, "An Investigation of the Therac-25 Accidents," *IEEE Computer* (1993). https://ieeexplore.ieee.org/document/274940.
+7. <a id="ref-7"></a> [7] Edelman, "The Pentium(R) floating point division bug" (1995). https://www-math.mit.edu/~edelman/homepage/papers/pentiumbug.pdf.
 8. <a id="ref-8"></a> [8] NHTSA/NASA report on Toyota ETC; MISRA C. https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/811361; https://www.misra.org.uk/.
-9. <a id="ref-9"></a> [9] Fortran history; COBOL history. https://en.wikipedia.org/wiki/Fortran; https://cobol.org/about/what-is-cobol/.
+9. <a id="ref-9"></a> [9] Backus et al., "The FORTRAN Automatic Coding System" (1957); CODASYL COBOL Report (Apr 1960). https://softwarepreservation.computerhistory.org/FORTRAN/paper/BackusEtAl-FortranAutomaticCodingSystem-1957.pdf; https://archive.org/download/bitsavers_codasylCOB_6843924/COBOL_Report_Apr60_text.pdf.
 10. <a id="ref-10"></a> [10] Lamport, Shostak, Pease, "The Byzantine Generals Problem" (1982). https://lamport.azurewebsites.net/pubs/byz.pdf.
-11. <a id="ref-11"></a> [11] TLA+ overview; AWS DynamoDB; AWS S3. https://lamport.azurewebsites.net/tla/tla.html; https://aws.amazon.com/dynamodb/; https://aws.amazon.com/s3/.
+11. <a id="ref-11"></a> [11] TLA+ overview; Dynamo: Amazon's Highly Available Key-value Store; Amazon S3 user guide. https://lamport.azurewebsites.net/tla/tla.html; https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf; https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html.
 12. <a id="ref-12"></a> [12] CompCert project; seL4 SOSP 2009. https://compcert.inria.fr/; https://sel4.systems/publications/sel4-sosp09.pdf.
-13. <a id="ref-13"></a> [13] AWS history and milestones. https://aws.amazon.com/about-aws/.
+13. <a id="ref-13"></a> [13] Stone, *The Everything Store* (Little, Brown, 2013). https://www.hachettebookgroup.com/titles/brad-stone/the-everything-store/9780316219266/.
 14. <a id="ref-14"></a> [14] Stanford Encyclopedia of Philosophy, "Russell's Paradox." https://plato.stanford.edu/entries/russell-paradox/.
 15. <a id="ref-15"></a> [15] Godel (1931), *Monatshefte fuer Mathematik*. https://link.springer.com/article/10.1007/BF01700692.
 16. <a id="ref-16"></a> [16] Turing (1936), "On Computable Numbers." https://www.cs.virginia.edu/~robins/Turing_Paper_1936.pdf.
-17. <a id="ref-17"></a> [17] NVIDIA corporate timeline. https://www.nvidia.com/en-us/about-nvidia/corporate-timeline/.
-18. <a id="ref-18"></a> [18] NVIDIA CUDA Zone. https://developer.nvidia.com/cuda-zone.
+17. <a id="ref-17"></a> [17] NVIDIA Corporation, Form S-1 (1999). https://www.sec.gov/Archives/edgar/data/1045810/0001045810-99-000001.txt.
+18. <a id="ref-18"></a> [18] Nickolls et al., "Scalable Parallel Programming with CUDA," *ACM Queue* (2008). https://doi.org/10.1145/1365490.1365500.
 19. <a id="ref-19"></a> [19] HumanEval; AlphaCode; DIN-SQL. https://arxiv.org/abs/2107.03374; https://arxiv.org/abs/2203.07814; https://arxiv.org/abs/2304.11015.
 20. <a id="ref-20"></a> [20] Vaswani et al., "Attention Is All You Need" (2017). https://arxiv.org/abs/1706.03762.
 21. <a id="ref-21"></a> [21] Silver et al., "Mastering the game of Go with deep neural networks and tree search," *Nature* (2016). https://www.nature.com/articles/nature16961.
-22. <a id="ref-22"></a> [22] AlphaZero blog (2017); *Nature* (2018). https://deepmind.google/discover/blog/alphazero-shedding-new-light-on-chess-shogi-and-go/; https://www.nature.com/articles/s41586-018-0107-1.
-23. <a id="ref-23"></a> [23] AlphaProof blog (2024); Lean project. https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/; https://leanprover.github.io/.
+22. <a id="ref-22"></a> [22] AlphaZero arXiv preprint (2017); *Nature* (2018). https://arxiv.org/abs/1712.01815; https://www.nature.com/articles/s41586-018-0107-1.
+23. <a id="ref-23"></a> [23] AlphaProof announcement; AlphaGeometry2 technical report; Lean project. https://deepmind.google/blog/ai-solves-imo-problems-at-silver-medal-level/; https://arxiv.org/abs/2502.03544; https://leanprover.github.io/.
 24. <a id="ref-24"></a> [24] Esteva et al., "Dermatologist-level classification of skin cancer," *Nature* (2017). https://www.nature.com/articles/nature21056.
-25. <a id="ref-25"></a> [25] McLuhan, *Understanding Media* (1964). https://openlibrary.org/works/OL55378W/Understanding_Media.
-26. <a id="ref-26"></a> [26] Clarke, *Profiles of the Future* (1962). https://openlibrary.org/works/OL82563W/Profiles_of_the_Future.
+25. <a id="ref-25"></a> [25] McLuhan, *Understanding Media* (MIT Press, 1994), ISBN 9780262631594. https://mitpress.mit.edu/9780262631594/understanding-media/.
+26. <a id="ref-26"></a> [26] Clarke, *Profiles of the Future* (Hachette UK / Orion, 2000), ISBN 9780575121829. https://books.google.com/books?vid=ISBN9780575121829.
 27. <a id="ref-27"></a> [27] Australia under-16 social media law (2024). https://www.legislation.gov.au/Details/C2024A00114.
-28. <a id="ref-28"></a> [28] Harari, *Sapiens* (2011/2014). https://openlibrary.org/works/OL15169346W/Sapiens.
-29. <a id="ref-29"></a> [29] Hofstadter, *Godel, Escher, Bach* (1979). https://openlibrary.org/works/OL82561W/Goedel_Escher_Bach.
-30. <a id="ref-30"></a> [30] GitHub Copilot launch and research posts. https://github.blog/2021-06-29-introducing-github-copilot-ai-pair-programmer/; https://github.blog/2022-09-07-research-quantifying-github-copilots-impact-on-developer-productivity-and-happiness/.
-31. <a id="ref-31"></a> [31] Anthropic Model Context Protocol announcement. https://www.anthropic.com/news/model-context-protocol.
+28. <a id="ref-28"></a> [28] Harari, *Sapiens* (Harper, 2015), ISBN 9780062316097. https://books.google.com/books?vid=ISBN9780062316097.
+29. <a id="ref-29"></a> [29] Hofstadter, *Godel, Escher, Bach* (Basic Books, 1999), ISBN 9780465026562. https://www.hachettebookgroup.com/titles/douglas-r-hofstadter/godel-escher-bach/9780465026562/.
+30. <a id="ref-30"></a> [30] "The Impact of AI on Developer Productivity: Evidence from GitHub Copilot" (2023). https://arxiv.org/abs/2302.06590.
+31. <a id="ref-31"></a> [31] Model Context Protocol specification repository. https://github.com/modelcontextprotocol/modelcontextprotocol.
 32. <a id="ref-32"></a> [32] HILBERT / PutnamBench results. https://arxiv.org/abs/2509.22819.
 33. <a id="ref-33"></a> [33] FDA AI/ML device database and adoption study. https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-and-machine-learning-aiml-enabled-medical-devices; https://pubmed.ncbi.nlm.nih.gov/41483727/.
 34. <a id="ref-34"></a> [34] Verification infrastructure before LLMs (SQL, Haskell, Coq, Rust, TLA+). https://www.iso.org/standard/63555.html; https://www.haskell.org/; https://coq.inria.fr/; https://www.rust-lang.org/; https://lamport.azurewebsites.net/tla/tla.html.
