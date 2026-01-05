@@ -407,6 +407,7 @@ To keep diagrams portable and scriptable:
   - `flowchart TB`
   - `flowchart LR`
   - `stateDiagram-v2` (for canonical state machines)
+  - `timeline` (non-canonical only; allowed for narrative timelines)
 - Allowed arrows:
   - `-->` only
 - Labels:
