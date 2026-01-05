@@ -75,3 +75,28 @@ This file records the factual, citable narrative beats for each example used in 
    - https://openlibrary.org/works/OL15169346W/Sapiens
 29. Hofstadter, *Godel, Escher, Bach* (1979).
    - https://openlibrary.org/works/OL82561W/Goedel_Escher_Bach
+30. GitHub Copilot launch and research posts.
+   - https://github.blog/2021-06-29-introducing-github-copilot-ai-pair-programmer/
+   - https://github.blog/2022-09-07-research-quantifying-github-copilots-impact-on-developer-productivity-and-happiness/
+31. Anthropic Model Context Protocol announcement.
+   - https://www.anthropic.com/news/model-context-protocol
+32. HILBERT / PutnamBench results.
+   - https://arxiv.org/abs/2509.22819
+33. FDA AI/ML device database and adoption study.
+   - https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-and-machine-learning-aiml-enabled-medical-devices
+   - https://pubmed.ncbi.nlm.nih.gov/41483727/
+34. Verification infrastructure before LLMs (SQL, Haskell, Coq, Rust, TLA+).
+   - https://www.iso.org/standard/63555.html
+   - https://www.haskell.org/
+   - https://coq.inria.fr/
+   - https://www.rust-lang.org/
+   - https://lamport.azurewebsites.net/tla/tla.html
+35. Rust vs C++ corpus scale (project histories and standards).
+   - https://www.rust-lang.org/
+   - https://isocpp.org/std/the-standard
+36. ROSS Intelligence v. Thomson Reuters Enterprise Centre GmbH (D. Del.), GovInfo docket.
+   - https://www.govinfo.gov/app/details/USCOURTS-ded-1_20-cv-00613
+37. Mata v. Avianca, Inc. (S.D.N.Y.), GovInfo docket.
+   - https://www.govinfo.gov/app/details/USCOURTS-nysd-1_22-cv-01461
+38. Stripe engineering blog.
+   - https://stripe.com/blog/engineering
