@@ -2,11 +2,11 @@
 
 Picture three rooms.
 
-In the first, a lawyer reads a contract drafted by a large language model, pen in hand, looking for hallucinated citations and fatal ambiguities. [1](#ref-1)
+In the first, a lawyer skims a contract the model drafted to save a late night. They slow at the indemnity, termination, and governing-law clauses, knowing one loose sentence can turn into a costly dispute. [1](#ref-1)
 
-In the second, a clinician reviews a diabetic retinopathy scan that a model has flagged with high confidence, then signs the report anyway. [2](#ref-2)
+In the second, a clinician reviews a routine diabetic retinopathy scan the model flagged with high confidence. They still linger on a borderline lesion, because a single missed bleed can mean preventable blindness. [2](#ref-2)
 
-In the third, a trading floor goes silent as [circuit breakers](#glossary-circuit-breaker) pause a market that has moved too fast for even its algorithms. [3](#ref-3)
+In the third, a civil engineer scans an AI-flagged crack map from a bridge inspection, grateful for the triage. They double-check midspan fractures and bearing regions before signing off on load ratings. [3](#ref-3)
 
 Now step into the developer's room. The model writes a function, the tests run, the build goes green, and the code ships. No regulator signs the diff. The program either passes or it doesn't. In software, the judge is already wired in.
 
@@ -16,7 +16,7 @@ Why does one domain delegate while others supervise? In the first two rooms, the
 
 ## Part 0: Hook and Question
 
-This document is written in a formal format, yet no formal checker tells us when it is complete. Markdown can be validated. Links can be clicked. But the reasoning still waits for a human verdict. The loop never fully closes: a checklist depends on a checker, a proof depends on a prover, and the chain of certainty ends in a person.
+This document is written in a formal format, yet no formal checker tells us when it is complete. [Markdown](#glossary-markdown) can be validated. Links can be clicked. But the reasoning still waits for a human verdict. The loop never fully closes: a checklist depends on a checker, a proof depends on a prover, and the chain of certainty ends in a person.
 
 Call this line the [proof boundary](#glossary-proof-boundary): where our rules fully describe the world, and where they fall short. On one side: [mechanical verification](#glossary-mechanical-verification), reproducible and absolute. On the other: human judgment, negotiated and fallible. That boundary explains where AI can be trusted to act and where it must remain an assistant. It is not a defect; it is the foundation of everything that follows.
 
@@ -32,31 +32,31 @@ This [proof boundary](#glossary-proof-boundary) did not appear in a conference p
 
 ### Quebec Bridge
 
-The Quebec Bridge was to be the longest cantilever bridge on Earth. It collapsed during construction, killing 75 workers. The official inquiries found a familiar pattern: not a lack of equations, but a failure of assumptions. [4](#ref-4)
+The Quebec Bridge was to be the longest cantilever bridge on Earth. It collapsed during construction in [1907](#timeline-1907), killing 75 workers. The official inquiries found a familiar pattern: not a lack of equations, but a failure of assumptions. [4](#ref-4)
 
 Engineers underestimated the dead load; deformations were observed; warnings were sent; work continued. Calculation was necessary, but not sufficient. The collapse pushed licensing, codes, standards, and formal review into place. Some elements became mechanically checkable; others remained human. The bridge did not just fail; it rewrote the rules for how confidence must be earned.
 
 ### Ariane 5
 
-Thirty-seven seconds after liftoff, Ariane 5 disintegrated. [5](#ref-5)
+Thirty-seven seconds after liftoff in [1996](#timeline-1996), Ariane 5 disintegrated. [5](#ref-5)
 
 A 64-bit velocity value was converted to a 16-bit signed integer. The value overflowed, the exception handler crashed, and the backup failed because it ran identical code. The software had worked for Ariane 4; Ariane 5 flew a faster trajectory. The assumption "this value will never exceed that range" failed. A proof is not a property of code alone; it is a property of code within a specification. Redundancy without diversity is replication, not resilience.
 
 ### Therac-25
 
-The Therac-25 was a radiation therapy machine. To reduce cost and complexity, engineers removed hardware interlocks and relied on software alone. [6](#ref-6)
+The Therac-25 was a radiation therapy machine. To reduce cost and complexity, engineers removed hardware interlocks and relied on software alone in [1985-1987](#timeline-1985-1987). [6](#ref-6)
 
 Under specific timing, a race condition bypassed safety checks and fired the electron beam at full power. Patients died. The bug was in every machine. Concurrency is the nightmare here: two actions interleave in a way the human mind does not anticipate. A proof checker can enumerate those interleavings; a human cannot. The safety case moved from physical interlocks to logical guarantees, and the burden shifted with it.
 
 ### Pentium FDIV
 
-A math professor computed reciprocals of twin primes. The Pentium gave slightly wrong answers. Five missing entries in a lookup table were enough to force a $475 million replacement program. [7](#ref-7)
+A math professor computed reciprocals of twin primes in [1994](#timeline-1994). The Pentium gave slightly wrong answers. Five missing entries in a lookup table were enough to force a $475 million replacement program. [7](#ref-7)
 
 [Intel](#glossary-intel) ran millions of test vectors. A simple proof would have checked every entry in minutes. The FDIV bug is a microcosm of the [proof boundary](#glossary-proof-boundary): the property was finite and decidable, yet human review missed it. Proof would have been cheaper than reputation repair. When the public heard "rare," they still heard "wrong."
 
 ### [Toyota](#glossary-toyota) Unintended Acceleration
 
-A Lexus surged to over 120 mph and crashed, triggering investigations. [NASA](#glossary-nasa)'s analysis found [MISRA C](#glossary-misra-c) violations in the electronic throttle control system. [8](#ref-8)
+A Lexus surged to over 120 mph and crashed in [2009-2011](#timeline-2009-2011), triggering investigations. [NASA](#glossary-nasa)'s analysis found [MISRA C](#glossary-misra-c) violations in the electronic throttle control system. [8](#ref-8)
 
 The system was complex. The code was large. The testing was extensive. Yet the failures happened. As systems scale, human judgment becomes the most fragile component. Once failure is public, the standard of proof rises, and the boundary moves. Complexity does not produce randomness; it produces behavior no one intended, executed with precision.
 
@@ -74,37 +74,45 @@ Software history reads like a slow migration across that proof boundary. Each er
 
 ### Assembly Era: Humans as Validators
 
-Early programmers hand-checked every instruction. One wrong register could crash the program. Debugging meant reading memory dumps by hand. A thousand lines was already a mountain; a hundred thousand was a continent. The desire for automation, for [compilers](#glossary-compiler), for tests, for [static analysis](#glossary-static-analysis) all emerged from the same insight: human attention is finite.
+Early programmers hand-checked every instruction in the [1940s-1950s](#timeline-1940s-1950s). One wrong register could crash the program. Debugging meant reading memory dumps by hand, often with punchcards and deck order as the only paper trail. Human validation was painfully slow and error-prone, because every change required manual inspection. A thousand lines was already a mountain; a hundred thousand was a continent. The desire for automation, for [compilers](#glossary-compiler), for tests, for [static analysis](#glossary-static-analysis) all emerged from the same insight: human attention is finite.
 
 ### [Compiler](#glossary-compiler) Revolution
 
-[FORTRAN](#glossary-fortran) and [COBOL](#glossary-cobol) mechanized syntax. [9](#ref-9) Variables must be declared. Parentheses must match. Jumps must land on real labels. The [compiler](#glossary-compiler) was the first proof checker most programmers ever met: a judge that rejects without persuasion. It taught a generation to treat correctness as something a machine could pronounce.
+[FORTRAN](#glossary-fortran) and [COBOL](#glossary-cobol) mechanized syntax in [1957-1959](#timeline-1957-1959). [9](#ref-9) Variables must be declared. Parentheses must match. Jumps must land on real labels. The [compiler](#glossary-compiler) was the first proof checker most programmers ever met: a judge that rejects without persuasion. It taught a generation to treat correctness as something a machine could pronounce.
 
 ### Type Systems
 
-[Type systems](#glossary-type-system) mechanized whole categories of reasoning. A program either type-checks or it does not. Cheap errors moved from human review into [compiler](#glossary-compiler) rules. By making some errors unrepresentable, type systems shift the proof boundary into the language itself. They turn informal contracts into enforceable structure.
+[Type systems](#glossary-type-system) mechanized whole categories of reasoning in the [1970s](#timeline-1970s). A program either type-checks or it does not. Cheap errors moved from human review into [compiler](#glossary-compiler) rules. By making some errors unrepresentable, type systems shift the proof boundary into the language itself. They turn informal contracts into enforceable structure.
 
 ### Functional Programming
 
-Functional languages offered referential transparency and mathematical clarity. They were proof-friendly but economically resisted: tooling, talent, and network effects favored imperative languages. People optimize for comprehension, hiring, and speed, not proof. Formal methods are organizational commitments as much as technical ones. The market rarely rewards purity when it conflicts with momentum.
+Functional languages offered referential transparency and mathematical clarity in the [1980s-1990s](#timeline-1980s-1990s). They were proof-friendly but economically resisted: tooling, talent, and network effects favored imperative languages. People optimize for comprehension, hiring, and speed, not proof. Formal methods are organizational commitments as much as technical ones. The market rarely rewards purity when it conflicts with momentum.
 
 ### Distributed Systems
 
-The internet made every program a distributed system. The Byzantine Generals problem formalized a brutal truth: unreliable networks explode the state space. Testing cannot cover it. Formal methods returned not as elegance but as survival. [10](#ref-10) Every message ordering is a different world, and the world you tested is rarely the world you get.
+The internet made every program a distributed system. That sounds like scale, but it is really a trust problem. The Byzantine Generals problem in [1982](#timeline-1982) turned the fear into a formal statement: if some nodes can lie or fail, agreement becomes fragile in ways humans do not naturally anticipate. [10](#ref-10)
+
+The difficulty is not just that networks drop packets; it is that every message can arrive late, arrive twice, or arrive out of order. Each ordering is a different universe. A design that works in the lab can fail in production because the one ordering you never tested is the one the world chooses. This is why distributed systems feel haunted: the failure comes from a path you did not imagine, not from a line you forgot to write.
 
 ### [Amazon](#glossary-amazon) and [TLA+](#glossary-tla)
 
-[Amazon](#glossary-amazon) adopted [TLA+](#glossary-tla) and found deep design flaws in systems already in production. [Model checking](#glossary-model-checker) found bugs no test could. Formal methods became a competitive advantage. [11](#ref-11) The model checker is a ruthless reader: it does not care that the diagram looks plausible.
+[TLA+](#glossary-tla) (Temporal Logic of Actions) arrived in [1999](#timeline-1999) as Leslie Lamport's way of writing system behavior with mathematical precision. It is not code; it is a logic for describing what must always be true and what can never be true. A [model checker](#glossary-model-checker) then explores every possible interleaving to see if reality can violate the spec.
+
+[Amazon](#glossary-amazon) adopted [TLA+](#glossary-tla) in [2011](#timeline-2011) and found deep design flaws in systems already in production. [Model checking](#glossary-model-checker) found bugs no test could. Formal methods became a competitive advantage. [11](#ref-11) The [model checker](#glossary-model-checker) is a ruthless reader: it does not care that the diagram looks plausible.
+
+This was not academic theater. [AWS](#glossary-aws) S3 launched in [2006](#timeline-2006) and Dynamo was published in [2007](#timeline-2007-dynamo) because distributed storage is a practical version of the Byzantine fear: nodes disagree, networks lie, and data must still converge. [TLA+](#glossary-tla) helped teams rehearse those worst-case orderings, the hard versions of Byzantine failure that only show up at scale, and make the guarantees explicit before customers found the cracks.
 
 Formal specification shifts design debate toward explicit [invariants](#glossary-invariant).
 
 ### [CompCert](#glossary-compcert) and [seL4](#glossary-sel4)
 
-[CompCert](#glossary-compcert) proves a [C](#glossary-c) [compiler](#glossary-compiler) correct. [seL4](#glossary-sel4) proves a microkernel correct, with the proof mechanized in [Isabelle/HOL](#glossary-isabelle-hol). These rare achievements show the power of compositional proof at scale. [12](#ref-12) [39](#ref-39) Prove the foundation, and the rest of the stack breathes easier.
+[CompCert](#glossary-compcert) proves a [C](#glossary-c) [compiler](#glossary-compiler) correct, first released in [2006](#timeline-2006-compcert). [seL4](#glossary-sel4) proves a microkernel correct, with the proof mechanized in [Isabelle/HOL](#glossary-isabelle-hol) in [2009](#timeline-2009-sel4). These rare achievements show the power of compositional proof at scale. [12](#ref-12) [39](#ref-39) Prove the foundation, and the rest of the stack breathes easier.
 
 ### Bezos' [API](#glossary-api) Mandate
 
-At [Amazon](#glossary-amazon), Bezos required every team to expose functionality through [APIs](#glossary-api). Infrastructure became software. Software became product. The world learned to trust [APIs](#glossary-api) because they were deterministic and testable. The proof boundary moved again, decades before [LLMs](#glossary-llm) arrived. [13](#ref-13) An API is a treaty: a promise that can be invoked, checked, and enforced.
+At [Amazon](#glossary-amazon), Bezos required every team to expose functionality through [APIs](#glossary-api) in [2002](#timeline-2002). The mandate was audacious: no shortcuts, no backdoors, no informal dependencies. If you wanted data from another team, you had to call them like a customer. [13](#ref-13)
+
+It was prescient because it forced the company to behave like a network of services long before "microservices" was a slogan. Infrastructure became software. Software became product. The world learned to trust [APIs](#glossary-api) because they were deterministic and testable. The proof boundary moved again, decades before [LLMs](#glossary-llm) arrived. An API is a treaty: a promise that can be invoked, checked, and enforced.
 
 ### Interlude: The Proof Culture
 
@@ -118,59 +126,55 @@ The AI story is a story of models and judges. A model without a verifier is a ru
 
 ### The [GPU](#glossary-gpu) Pivot and the Medium as the Message
 
-[NVIDIA](#glossary-nvidia) was founded to build high-end [GPUs](#glossary-gpu) for PC gamers. [17](#ref-17)
+[NVIDIA](#glossary-nvidia) was founded in [1993](#timeline-1993) to build high-end [GPUs](#glossary-gpu) for PC gamers. [17](#ref-17)
 
-Academics discovered that [GPUs](#glossary-gpu) were good at linear algebra. [CUDA](#glossary-cuda) turned graphics cards into programmable devices. Consumer hardware became a scientific instrument. [18](#ref-18)
+Academics discovered that [GPUs](#glossary-gpu) were good at linear algebra. [CUDA](#glossary-cuda) in [2006](#timeline-2006) turned graphics cards into programmable devices. Consumer hardware became a scientific instrument. [18](#ref-18)
 
-When the [transformer](#glossary-transformer) era arrived, it arrived on the back of this pivot. Scale unlocked capability, but reliability appears where verification exists. The medium shaped the message. [20](#ref-20)
+When AlexNet showed the deep learning advantage in [2012](#timeline-2012-alexnet) and the [transformer](#glossary-transformer) era arrived in [2017](#timeline-2017-transformer), it rode on the back of that pivot. Scale unlocked capability, but reliability appears where verification exists. The medium shaped the message. [20](#ref-20)
+
+Jensen Huang did not set out to build AI hardware. He set out to win gamers. The bet in [2006](#timeline-2006) looked like a graphics optimization story: make the chip programmable, make shaders flexible, make games sing. When AlexNet landed in [2012](#timeline-2012-alexnet), that same design turned out to be perfect for matrix math. The surprise was structural, not tactical: a company built for pixels became the most important supplier for intelligence.
+
+It is hard to overstate how unexpected that was in [1993](#timeline-1993). [NVIDIA](#glossary-nvidia) was a gaming brand, not a supercomputing vendor. Yet the pivot compounded. Programmability enabled research; research demanded scale; scale demanded more GPUs. By the time the [transformer](#glossary-transformer) era arrived in [2017](#timeline-2017-transformer), the world's largest provider of AI hardware had been assembled almost by accident.
 
 ### [Benchmarks](#glossary-benchmark) as Mechanical Judges
 
-[HumanEval](#glossary-humaneval), [AlphaCode](#glossary-alphacode), and [DIN-SQL](#glossary-din-sql) share a key property: outputs are mechanically checkable. AI looks good where the judge is a machine. It looks unreliable where the judge is human. [19](#ref-19) Cheap verification makes brute-force iteration possible, and iteration changes the game.
+[HumanEval](#glossary-humaneval) in [2021](#timeline-2021-humaneval), [AlphaCode](#glossary-alphacode) in [2022](#timeline-2022-alphacode), and [DIN-SQL](#glossary-din-sql) in [2023](#timeline-2023-din-sql) share a key property: outputs are mechanically checkable. AI looks good where the judge is a machine. It looks unreliable where the judge is human. [19](#ref-19) Cheap verification makes brute-force iteration possible, and iteration changes the game.
 
 In human domains, iteration is expensive. A lawyer cannot file a thousand briefs and ask a judge to grade them. A doctor cannot attempt a thousand diagnoses on one patient. The proof boundary is therefore about iteration as much as verification.
 
-### Code Assistants and the Test Harness
-
-A model writes a function, a test suite runs, and the result is either accepted or rejected. This is why code assistants feel powerful: they exist in an environment with a clear judge. Where the judge is absent, the model can suggest, but the human must decide.
-
-That divide shows up in design work. Code can be tested; architecture often cannot. The model is strong where the harness is strong.
-
-### [Copilot](#glossary-copilot) and the Empirical Coding Surge
-
-[GitHub](#glossary-github) [Copilot](#glossary-copilot) made the feedback loop visible to a broad audience. Studies report that developers accept large portions of model-generated code when the surrounding toolchain can verify it. [30](#ref-30) The harness is not a detail; it is the reason the tool feels reliable.
-
 ### Formal Theorem Proving [benchmarks](#glossary-benchmark)
 
-Formal math [benchmarks](#glossary-benchmark) show strong gains when proofs are checked by a [formal system](#glossary-formal-system), not by human intuition. [32](#ref-32) The improvement is not mysterious; it is the effect of fast, unforgiving feedback.
+Formal math [benchmarks](#glossary-benchmark) show strong gains when proofs are checked by a [formal system](#glossary-formal-system), not by human intuition. Results like [HILBERT](#glossary-hilbert) on [PutnamBench](#glossary-putnambench) in [2024](#timeline-2024-hilbert) make the pattern explicit. [32](#ref-32) The improvement is not mysterious; it is the effect of fast, unforgiving feedback.
 
 The pattern is the same across these examples: a formal judge turns exploration into iteration, and iteration turns capability into reliability.
 
 ### [MCP](#glossary-mcp) and the Connection Layer
 
-The Model Context Protocol ([MCP](#glossary-mcp)) standardizes how models call tools. It lowers integration friction and makes verification loops easier to wire into production systems. It accelerates adoption without changing the proof boundary. [31](#ref-31) It is plumbing, but plumbing changes what is easy to build.
+The Model Context Protocol ([MCP](#glossary-mcp)) standardizes how models call tools in [2024](#timeline-2024-mcp). It lowers integration friction and makes verification loops easier to wire into production systems. It accelerates adoption without changing the proof boundary. [31](#ref-31) It is plumbing, but plumbing changes what is easy to build.
 
 MCP does not create trust; it makes it cheaper to connect to whatever creates trust. That is a subtle but powerful shift.
 
+The deeper implication is automation at scale. We already have [APIs](#glossary-api) for almost anything a company can do. MCP makes it possible for any [LLM](#glossary-llm) to issue those instructions through a standard interface. In principle, that means the model can automate anything the API can reach. In practice, most humans do not feel safe giving a model that level of agency, because the verification loop is still social, not mechanical. MCP widens the gap between what is possible and what feels accountable.
+
 ### [AlphaGo](#glossary-alphago), [AlphaZero](#glossary-alphazero), and the External Judge
 
-[AlphaGo](#glossary-alphago) surpassed human champions in Go by learning in a formal environment. A [legal-moves checker](#glossary-legal-moves-checker) tells the system what is allowed. [21](#ref-21)
+[AlphaGo](#glossary-alphago) surpassed human champions in Go in [2016](#timeline-2016-alphago) by learning in a formal environment. A [legal-moves checker](#glossary-legal-moves-checker) tells the system what is allowed. [21](#ref-21)
 
-[AlphaZero](#glossary-alphazero) learned from self-play. It needed an external verifier that could tell it which moves were legal and who won. The [self-play](#glossary-self-play) loop is only possible because the environment is formal. [22](#ref-22)
+[AlphaZero](#glossary-alphazero) learned from self-play in [2017](#timeline-2017-alphazero). It needed an external verifier that could tell it which moves were legal and who won. The [self-play](#glossary-self-play) loop is only possible because the environment is formal. [22](#ref-22)
 
 [reinforcement learning](#glossary-rl) requires an external judge. Without a formal environment, RL cannot scale beyond imitation. The judge is the proof checker of the game.
 
 This is why RL flourishes in games and lags in open-ended domains. The world is not a board with legal moves.
 
-### AlphaProof and Formal Math
+### [AlphaProof](#glossary-alphaproof) and Formal Math
 
-[AlphaProof](#glossary-alphaproof) reached the silver level on IMO problems with [Lean](#glossary-lean) verifying the proofs. The model proposes, the verifier judges, and the system iterates until it wins. [23](#ref-23)
+[AlphaProof](#glossary-alphaproof) reached the silver level on IMO problems in [2024](#timeline-2024-alphaproof) with [Lean](#glossary-lean) verifying the proofs. The model proposes, the verifier judges, and the system iterates until it wins. [23](#ref-23)
 
 Formal mathematics is a near-perfect laboratory: a proof is either correct or it is not. That is why models improve fastest where the rules are explicit. The result is not just better scores; it is a cleaner separation between invention and validation.
 
 ### Medical Imaging: The Assistant Ceiling
 
-Medical imaging offers a different proof boundary. Models can detect patterns and match specialists on specific tasks, but the outputs are not formally verifiable. A diagnosis is not a theorem; it is a judgment. [2](#ref-2) [24](#ref-24)
+Medical imaging offers a different proof boundary. Models can detect patterns and match specialists on specific tasks, but the outputs are not formally verifiable. A diagnosis is not a theorem; it is a judgment. Retinopathy results in [2016](#timeline-2016-retinopathy) and dermatology results in [2017](#timeline-2017-dermatology) show the ceiling. [2](#ref-2) [24](#ref-24)
 
 These systems are used as assistants; a physician signs off. The signature is not just legal cover; it is where responsibility lives. When the case is ambiguous, the model cannot carry the moral weight. Partial automation exists, but the final responsibility still sits with a person.
 
@@ -178,7 +182,11 @@ These systems are used as assistants; a physician signs off. The signature is no
 
 In law, verification is not mechanical. A brief can be grammatically correct and logically plausible yet still be wrong. When a model hallucinates a citation, the error is not caught by syntax. It is caught by a human who knows the domain.
 
-The Stanford HAI / RegLab analysis documents high hallucination rates. The field cannot delegate until there is a verifier that can mechanically check citations, arguments, and precedent. That verifier does not yet exist. [1](#ref-1)
+The deeper problem is that hallucinations are not an edge case; they are a structural risk in [LLMs](#glossary-llm). The model is trained to predict plausible continuations, not to guarantee truth. If the prompt looks like it should have a case, the model can invent one that matches the pattern. Without external grounding, the system confuses fluency for evidence, and legal writing is precisely the domain where fluency can hide error.
+
+Avoiding this is hard because the model has no built-in notion of "I don't know." It can be instructed to abstain, but the training signal rewards confident completion. Retrieval systems help, yet they introduce their own failure modes: missing sources, mismatched citations, or partial context. The result is a seductive failure: the output looks more authoritative the more incorrect it becomes.
+
+The Stanford HAI / RegLab analysis in [2024](#timeline-2024-hai-reglab) documents high hallucination rates. The field cannot delegate until there is a verifier that can mechanically check citations, arguments, and precedent. That verifier does not yet exist. [1](#ref-1)
 
 The practical result is an assistant ceiling. A model cannot be sanctioned, disbarred, or held in contempt. Institutions cannot delegate without accountability, so adoption remains cautious until verification frameworks and liability regimes mature. The ceiling is institutional, not just technical.
 
@@ -200,51 +208,31 @@ When a property is decidable, it can be mechanically verified. When it is not, v
 
 Every gain in expressiveness is a loss in provability. The proof boundary is where we decide how much freedom to trade for certainty.
 
-This is why high-assurance domains adopt restricted subsets and strict coding standards. The language itself becomes part of the proof; MISRA C is as much a boundary as a rulebook.
-
-### [Verified Cores](#glossary-verified-core) and [Unverified Shells](#glossary-unverified-shell)
-
-A pragmatic architecture emerges: a [verified core](#glossary-verified-core) with an [unverified shell](#glossary-unverified-shell). The core is formal and constrained. The shell is flexible and human-governed. We demand proof for the parts that can kill us. We tolerate ambiguity where the cost of error is inconvenience.
-
-In AI, this pattern suggests a path forward. We should not attempt to prove the entire model. We should prove the evaluation environment, the data pipeline, the reward models, the tools and checkers that shape model behavior. These are the cores of trust. The model itself is the shell.
-
-Airplanes, banks, and kernels already follow this pattern. The core is audited; the shell can change quickly. It is a design for trust under time pressure.
-
-### A Note on Incentives
-
-Formal methods are expensive, and incentives are uneven. Companies pay for proof when the cost of failure is existential: rockets, bridges, chips, kernels. They do not pay for proof when failure is a mild inconvenience. The story of the proof boundary is therefore a story about what we are willing to pay for trust.
-
----
-
-### [Decidability](#glossary-decidability) Boundary: Theoretical Ceiling
-
-This section turns to the mathematical limits that haunt every verification effort.
+This is why high-assurance domains adopt restricted subsets and strict coding standards. The language itself becomes part of the proof; [MISRA C](#glossary-misra-c) is as much a boundary as a rulebook.
+ 
+The theoretical ceiling sits beneath the engineering practice. Logic itself pushes back. The paradox is that the more we formalize, the more we discover what formalization cannot contain.
 
 ### Russell and the Trap of Self-Reference
 
-Bertrand Russell discovered [Russell's paradox](#glossary-russells-paradox) in naive set theory. Consider the set of all sets that do not contain themselves. Does that set contain itself? If it does, it should not. If it does not, it should. The system collapses. [14](#ref-14)
+Bertrand Russell discovered [Russell's paradox](#glossary-russells-paradox) in [1901](#timeline-1901). Consider the set of all sets that do not contain themselves. Does that set contain itself? If it does, it should not. If it does not, it should. The system collapses. [14](#ref-14)
 
-[Russell's paradox](#glossary-russells-paradox) is a warning about what happens when a system tries to talk about itself without care. [formal systems](#glossary-formal-system) place rules on themselves to avoid contradiction. The proof boundary is a set of fences built to avoid paradox. For AI, this matters because models routinely generate statements about their own reasoning. The boundary is the line that keeps those statements from becoming circular authority.
+[Russell's paradox](#glossary-russells-paradox) is a warning about what happens when a system tries to talk about itself without care. The result is startling: a few innocent-looking words detonate the logic underneath them. [formal systems](#glossary-formal-system) place rules on themselves to avoid contradiction. The proof boundary is a set of fences built to avoid paradox. For AI, this matters because models routinely generate statements about their own reasoning. The boundary is the line that keeps those statements from becoming circular authority.
 
 ### Godel and the Sentence That Escapes
 
-Kurt Godel showed that any sufficiently powerful [formal system](#glossary-formal-system) contains statements that are true but unprovable within that system. This is the core of [incompleteness](#glossary-incompleteness). [15](#ref-15)
+Kurt Godel showed in [1931](#timeline-1931) that any sufficiently powerful [formal system](#glossary-formal-system) contains statements that are true but unprovable within that system. This is the core of [incompleteness](#glossary-incompleteness). [15](#ref-15)
 
-Godel's theorem shows that no [formal system](#glossary-formal-system) can be both complete and consistent when it is rich enough to express arithmetic. There will always be truths it cannot prove. Completeness is not a realistic expectation. The proof boundary is a concession to this limitation.
+Godel's theorem is counter-intuitive because it turns a dream of perfect rigor into a limit of rigor. No [formal system](#glossary-formal-system) can be both complete and consistent when it is rich enough to express arithmetic. There will always be truths it cannot prove. Completeness is not a realistic expectation. The proof boundary is a concession to this limitation.
+
+Douglas Hofstadter argued in *Godel, Escher, Bach* in [1979](#timeline-1979-geb) that formal rules make the world smaller: every rule is a filter, and every filter excludes nuance. Formal systems gain power by shrinking the universe they can talk about. That is why they are reliable, and why they feel austere. [29](#ref-29)
 
 ### Turing and the [halting problem](#glossary-halting-problem)
 
-Alan Turing showed that there is no general algorithm that can decide whether an arbitrary program will halt. The [halting problem](#glossary-halting-problem) is the computational version of Russell and Godel. [16](#ref-16)
+Alan Turing showed in [1936](#timeline-1936) that there is no general algorithm that can decide whether an arbitrary program will halt. The [halting problem](#glossary-halting-problem) is the computational version of Russell and Godel. [16](#ref-16)
 
-There is no universal verifier. We can only decide termination for programs that belong to restricted classes. That restriction is the hidden cost of proof. When a system is formally verified, it is because the system has been tamed.
+There is no universal verifier. The surprise is that even with a complete description of a program, the question "will it stop?" is unanswerable in general. We can only decide termination for programs that belong to restricted classes. That restriction is the hidden cost of proof. When a system is formally verified, it is because the system has been tamed.
 
-### The Price of [Decidability](#glossary-decidability)
-
-[Decidability](#glossary-decidability) is the currency of proof. To make a system decidable, we often simplify it. We remove features, forbid behaviors, restrict inputs. These sacrifices change how people build and think.
-
-The benefits are also real. [decidability](#glossary-decidability) gives us leverage. It allows tools to reason about our systems. It allows errors to be found before they matter. When the cost of failure is high, these benefits outweigh the loss of flexibility. This is the practical reason formal systems feel austere: they must be.
-
-### The Hidden Moral
+The critical truth is about the relationship between humans and formal systems. We build formal logic to escape ambiguity, then discover the escape hatch still ends in a human choice: what to formalize, what to exclude, and when the model is "close enough." [Decidability](#glossary-decidability) is the currency of proof, but it comes from narrowing the world. Those narrowed worlds are reliable, and also smaller than the lives we live.
 
 Russell, Godel, and Turing tell us that [formal verification](#glossary-formal-verification) is not a universal solvent. It works when we design systems that accept its constraints. The proof boundary is a trade-off we negotiate over and over. At some point the story ends with a human saying, "This is good enough." That is not a failure of logic; it is the cost of being human. In practice, every verifier still needs an external context and a human decision to trust it.
 
@@ -254,105 +242,23 @@ Russell, Godel, and Turing tell us that [formal verification](#glossary-formal-v
 
 [Reinforcement learning](#glossary-rl) is often described as a model learning through trial and error. Without an environment that can tell it what counts as a valid trial, there is no learning loop. Feedback is the oxygen.
 
-### The Legal Moves Checker
+In Go, the rules define what is legal. The environment enforces those rules. Without that checker, [AlphaZero](#glossary-alphazero) in [2017](#timeline-2017-alphazero) would be lost. It would not learn; it would hallucinate. The checker is the simplest possible proof boundary.
 
-In Go, the rules define what is legal. The environment enforces those rules. Without that checker, [AlphaZero](#glossary-alphazero) would be lost. It would not learn; it would hallucinate. The checker is the simplest possible proof boundary.
+That is the suspense in [AlphaGo](#glossary-alphago)'s story in [2016](#timeline-2016-alphago) and [AlphaZero](#glossary-alphazero)'s in [2017](#timeline-2017-alphazero): the genius is not just the model, it is the judge. The external environment makes self-play possible, and it makes errors visible. The same structure appears in [proof assistants](#glossary-proof-assistant), where a model can propose steps but the checker accepts or rejects them, without negotiation. [21](#ref-21) [22](#ref-22)
 
-The same structure appears in proof assistants. A model can propose steps, but the checker accepts or rejects them.
+This is why pure language models fall short in games. They can describe Go, but they cannot play it at [AlphaZero](#glossary-alphazero) levels because they do not have a [legal-moves checker](#glossary-legal-moves-checker) embedded in their training loop. Stories can teach style; they cannot enforce legality.
 
-### [Self-Play](#glossary-self-play) Beyond Training Data
-
-[AlphaGo](#glossary-alphago) learned from human games. [AlphaZero](#glossary-alphazero) learned from itself. The external environment made that possible. [21](#ref-21) [22](#ref-22)
-
-### Why Pure Language Models Fall Short in Games
-
-Pure language models are trained to predict text. They can describe Go, but they cannot play it at [AlphaZero](#glossary-alphazero) levels because they do not have a [legal-moves checker](#glossary-legal-moves-checker) embedded in their training loop. They are trained on narrative descriptions, not formal feedback. Stories can teach style; they cannot enforce legality.
-
-### The Broader Lesson
-
-If we want AI to surpass its training data safely, we need formal environments. Proof checkers, [model checkers](#glossary-model-checker), simulators, typed languages, constraints: these are the scaffolding for self-improvement. External verifiers will be as important as model architecture, and the stable pattern is hybrid: a model proposes, a verifier filters, and a human sets the boundaries. This is where capability and safety can grow together.
-
-### Temporal Precedence: Verifiers First
-
-Verification infrastructure predated modern [LLMs](#glossary-llm) by decades. [SQL](#glossary-sql) standards, functional languages like [Haskell](#glossary-haskell), [proof assistants](#glossary-proof-assistant) like [Coq](#glossary-coq), [Rust](#glossary-rust)'s [type system](#glossary-type-system), and [TLA+](#glossary-tla) all existed long before transformers. [SMT solvers](#glossary-smt-solver) such as [Z3](#glossary-z3) brought automated reasoning into everyday verification pipelines. The proof boundary did not arrive after AI; it enabled AI. [34](#ref-34) [40](#ref-40) [41](#ref-41) The data from these systems is cleaner because it is already judged.
-
-### Volume vs Quality: [Rust](#glossary-rust) vs [C++](#glossary-cpp)
-
-Clean data alone is not sufficient. [Rust](#glossary-rust) has higher-quality signals but a smaller corpus than [C++](#glossary-cpp). The interaction between volume and quality matters. The proof boundary helps, but only once a domain has enough verified examples to feed the loop. [35](#ref-35)
-
----
-
-## Part VI: Evidence and Adoption Velocity
-
-Code can be shipped after minutes of tests; a clinical report waits for a signature. Adoption follows that difference. The bottleneck is not the model's output but the judge who must verify it. The cheap judge is the engine of velocity.
-
-In software, [Copilot](#glossary-copilot) illustrates the ceiling's height. The model can generate large blocks of code, but teams still require tests, reviews, and human sign-off. The acceleration comes from iteration inside a harness, not from autonomous deployment. [30](#ref-30)
-
-In medicine, approvals outpace adoption. [FDA](#glossary-fda)-cleared AI tools in radiology have grown quickly, yet real-world clinical usage remains modest. The gap reflects workflow integration, liability, and the lack of a mechanical verifier for many diagnostic judgments. [33](#ref-33)
-
-In law, the adoption ceiling is even lower. High hallucination rates in legal research and drafting keep AI in an assistant role. Without a verifier for citations and precedent, delegation is not acceptable. [1](#ref-1)
-
-Recent legal incidents underscore the adoption limits: litigation over training data in [ROSS Intelligence](#glossary-ross) v. [Thomson Reuters](#glossary-thomson-reuters) and federal sanctions over fabricated citations in Mata v. Avianca. [36](#ref-36) [37](#ref-37)
-
-Verified domains move fast; unverified domains move slowly. That gap is the underutilization thesis in practice.
-
-The largest markets sit in the least verifiable domains: law, medicine, education. That is why the thesis is as much economic as it is ethical.
-
-### Adoption Velocity and the Assistant Equilibrium
-
-The speed of adoption is often described as a function of capability. The proof boundary suggests a different model: adoption is a function of verification. Capabilities can grow rapidly, but without verification infrastructure, adoption remains cautious.
-
-The assistant equilibrium is a compromise born of governance. It allows institutions to harvest value while preserving accountability. The practical strategy is to invest in the verification layer: formalize interfaces, define [invariants](#glossary-invariant), and build evaluation harnesses. A model improves every few months. A verification framework improves every model that follows.
-
-This is why underutilization is not simply caution; it is a rational response to expensive evaluation.
-
-## Part VII: [compositional verification](#glossary-compositional-verification) in Software
-
-[Compositional verification](#glossary-compositional-verification) scales because it limits what must be proven at once. If a core component can be proved correct, other components can build on it with confidence. Local proofs create global leverage.
-
-The contrast is visible in the Linux kernel. It is powerful and widely trusted, but its scale makes full [formal verification](#glossary-formal-verification) impractical. [seL4](#glossary-sel4), by design, is small enough to be proved. That is the compositional bet: a [verified core](#glossary-verified-core) that can host an [unverified shell](#glossary-unverified-shell). [12](#ref-12)
-
-This compositional path also makes bias explicit. When rules are formalized, their assumptions are visible. That is an advantage, but it is not the same as justice. A formally verified system can still encode unfair rules. Proof guarantees consistency, not fairness.
-
-For AI-assisted development, compositionality is the pragmatic strategy. Verify the kernel, the [compiler](#glossary-compiler), the protocol, or the safety-critical interface. Leave the rest to human judgment and rapid iteration.
-
-## Part VIII: Boundaries and Implications
-
-This section is the hinge between concept and practice: what verification buys, what it cannot buy, and what follows from that boundary.
-
-### What [formal verification](#glossary-formal-verification) Solves
-
-[Formal verification](#glossary-formal-verification) shrinks error classes by making assumptions explicit. It replaces "we tested it" with "this property is proven under these constraints." It also enables compositional reasoning: a [verified core](#glossary-verified-core) can support a fast-moving, less-formal shell.
-
-### What It Cannot Solve
-
-Verification does not solve values, legitimacy, or aesthetics. It does not decide what should be built, only whether a specific claim holds under a specific formalization. It cannot resolve the [oracle problem](#glossary-oracle-problem) in domains where ground truth is ambiguous or contested.
-
-### Alternative Explanations, and Why Verification Wins
-
-You can describe the adoption gap as a function of structural clarity, feedback density, objective clarity, or compositional structure. Those explanations converge on the same thing: verifiability. When the rules are explicit and feedback is cheap, models can iterate. When the rules are implicit and feedback is expensive, models must defer to humans.
-
-### The [mechanical verification](#glossary-mechanical-verification) Spectrum
-
-There is a spectrum, not a switch: unit tests and linters, type checkers, [model checkers](#glossary-model-checker), [proof assistants](#glossary-proof-assistant). The stronger the checker, the smaller the ambiguity, and the higher the cost. The proof boundary is where an organization chooses its place on that spectrum. That choice is strategic, not purely technical.
-
-### Implications for Software Engineering
-
-Invest in verification where it compounds. Teams that formalize interfaces, [invariants](#glossary-invariant), and boundaries gain leverage from AI assistance because the model can be checked. Teams that skip that work inherit brittle workflows and slower adoption.
-
-Some organizations publish their engineering practices to show how this looks in the wild. Stripe, for example, maintains a public engineering blog that highlights rigorous design and testing practices as part of its reliability culture. These signals are not proofs, but they reveal the posture that makes proof viable. [38](#ref-38)
-
-A verified-core/unverified-shell architecture is the recurring pattern: prove the kernel, test the interfaces, and let the outer layers move quickly. When natural-language specs can be translated into formal models, the proof boundary becomes explicit and auditable. That is the path for scaling AI assistance without surrendering control. [11](#ref-11)
+The deeper lesson is temporal: verifiers came first. Verification infrastructure predated modern [LLMs](#glossary-llm) by decades. [SQL](#glossary-sql) standards in [1986](#timeline-1986-sql), [proof assistants](#glossary-proof-assistant) like [Coq](#glossary-coq) in [1989](#timeline-1989-coq), functional languages like [Haskell](#glossary-haskell) in [1990](#timeline-1990-haskell), [TLA+](#glossary-tla) in [1999](#timeline-1999), and [SMT solvers](#glossary-smt-solver) like [Z3](#glossary-z3) in [2007](#timeline-2007) all existed long before transformers. [34](#ref-34) [40](#ref-40) [41](#ref-41) The proof boundary did not arrive after AI; it enabled AI. The data from these systems is cleaner because it is already judged.
 
 ## Conclusion
 
 ### The Medium, the Message, and the Human Governor
 
-Marshall McLuhan wrote, "The medium is the message." The telegraph compressed time. The telephone collapsed distance. Television changed how politics felt. AI is now doing the same. It compresses knowledge work, changes who gets to decide, and alters the pace of institutional response. [25](#ref-25)
+Marshall McLuhan wrote in [1994](#timeline-1994-mcluhan), "The medium is the message." The telegraph compressed time. The telephone collapsed distance. Television changed how politics felt. AI is now doing the same. It compresses knowledge work, changes who gets to decide, and alters the pace of institutional response. [25](#ref-25)
 
-Arthur C. Clarke wrote, "Any sufficiently advanced technology is indistinguishable from magic." [26](#ref-26) But magic is not governance. Awe can dull judgment. The proof boundary is the antidote to awe.
+Arthur Charles Clarke wrote in [2000](#timeline-2000-clarke), "Any sufficiently advanced technology is indistinguishable from magic." [26](#ref-26) But magic is not governance. Awe can dull judgment. The proof boundary is the antidote to awe.
 
-The internet taught us that new media can reshape human health. Social media amplified connection and loneliness, knowledge and misinformation. Australia's under-16 social media law is a reminder that society will eventually regulate what it cannot absorb. [27](#ref-27)
+The internet taught us that new media can reshape human health. Social media amplified connection and loneliness, knowledge and misinformation. Australia's under-16 social media law in [2024](#timeline-2024-australia-law) is a reminder that society will eventually regulate what it cannot absorb. [27](#ref-27)
 
 The lesson is that technology is powerful enough to require governance. The more powerful the medium, the more carefully we demand a judge. The pace of adoption will therefore be set by institutions, not just by models.
 
@@ -362,13 +268,13 @@ The central insight stands: we will under-utilize AI inefficiently rather than o
 
 ### A Gentle Godelian Smile
 
-This document is written in a formal format. It has headings, references, and links. It can be parsed. It can be linted. But no proof checker can tell you when it is finished.
+This document is written in a formal format. It has headings, references, and links. It can be parsed. It can be linted. [Markdown](#glossary-markdown) can be checked. But no proof checker can tell you when it is finished.
 
-Godel showed there is no way to know if a process following formal logic will end. If logic itself cannot certify its own finish line, a document about logic cannot either.
+Godel showed in [1931](#timeline-1931) that there is no way to know if a process following formal logic will end. If logic itself cannot certify its own finish line, a document about logic cannot either.
 
 There is a quiet humor here. The document is about proof, yet its completeness is unprovable. The document is about boundaries, yet its own limit is a human decision.
 
-A talented human writer who has read this should feel at ease: language models are not likely to win literary awards anytime soon. If the ideas here resonate, read two masterpieces: Yuval Noah Harari's *Sapiens* and Douglas Hofstadter's *Godel, Escher, Bach*. [28](#ref-28) [29](#ref-29)
+A talented human writer who has read this should feel at ease: language models are not likely to win literary awards anytime soon. If the ideas here resonate, read two masterpieces: Yuval Noah Harari's *Sapiens* from [2015](#timeline-2015-sapiens) and Douglas Hofstadter's *Godel, Escher, Bach* from [1979](#timeline-1979-geb). [28](#ref-28) [29](#ref-29)
 
 The human author thanks the [LLMs](#glossary-llm) for their attempt at writing like these two masters. The modest parting shot is this document's core thesis: we will naturally end up under-utilizing AI inefficiently rather than over-utilizing it unsafely.
 
@@ -381,63 +287,72 @@ The human author thanks the [LLMs](#glossary-llm) for their attempt at writing l
 It helps to see the proof boundary as a story across time, not just a concept on paper. The boundary has moved before. It will move again. Its motion follows a recognizable pattern: expansion through necessity, consolidation through standards, and constraint through the limits of logic.
 
 Timeline (single sequence):
-- 1901: [Russell's paradox](#glossary-russells-paradox) exposes contradictions in naive set theory.
-- 1907: Quebec Bridge collapse.
-- 1931: Godel proves [incompleteness](#glossary-incompleteness) limits in [formal systems](#glossary-formal-system).
-- 1936: Turing proves the [halting problem](#glossary-halting-problem) is undecidable.
-- 1940s-1950s: Assembly era manual validation.
-- 1957-1959: [Compiler](#glossary-compiler) revolution ([FORTRAN](#glossary-fortran), [COBOL](#glossary-cobol)).
-- 1970s: [type systems](#glossary-type-system) take hold ([Pascal](#glossary-pascal), [C](#glossary-c), [ML](#glossary-ml)).
-- 1982: Byzantine Generals problem formalizes distributed agreement limits.
-- 1986: [Isabelle/HOL](#glossary-isabelle-hol) [proof assistant](#glossary-proof-assistant) introduced.
-- 1985-1987: Therac-25 overdoses and patient deaths.
-- 1980s-1990s: Functional programming emerges (Miranda, [Haskell](#glossary-haskell)).
-- 1993: [NVIDIA](#glossary-nvidia) founded for PC gaming [GPUs](#glossary-gpu).
-- 1994: Pentium FDIV bug and recall.
-- 1996: Ariane 5 explosion at 37 seconds.
-- 1999: [TLA+](#glossary-tla) formal methods mature for distributed systems.
-- 2002: Bezos [API](#glossary-api) mandate and internal service externalization.
-- 2006: [AWS](#glossary-aws) launches S3 and EC2; [CUDA](#glossary-cuda) enables general [GPU](#glossary-gpu) computing.
-- 2007: [Z3](#glossary-z3) [SMT solver](#glossary-smt-solver) released.
-- 2009-2011: [Toyota](#glossary-toyota) unintended acceleration crisis.
-- 2011: [Amazon](#glossary-amazon) uses [TLA+](#glossary-tla) to find deep distributed-system bugs.
-- 2012: AlexNet proves [GPU](#glossary-gpu) advantage for deep learning.
-- 2016: [AlphaGo](#glossary-alphago) defeats top human players in Go.
-- 2017: [Transformer](#glossary-transformer) architecture enables scalable [LLMs](#glossary-llm).
-- 2017+: Deep learning medical imaging breakthroughs (retinopathy, dermatology).
-- 2018+: [formal verification](#glossary-formal-verification) case studies mature ([CompCert](#glossary-compcert), [seL4](#glossary-sel4)).
-- 2020: [ROSS Intelligence](#glossary-ross) shuts down amid litigation.
-- 2021: [GitHub](#glossary-github) [Copilot](#glossary-copilot) launches.
-- 2022: [OpenAI](#glossary-openai) launches [ChatGPT](#glossary-chatgpt); [LLMs](#glossary-llm) go mainstream.
-- 2022-2024: [FDA](#glossary-fda) approvals for AI devices rise; clinical adoption remains low.
-- 2023: Mata v Avianca sanctions over fake citations.
-- 2024: [MCP](#glossary-mcp) standardizes tool access for [LLMs](#glossary-llm).
-- 2024: [AlphaProof](#glossary-alphaproof) solves IMO problems at silver level; [Lean](#glossary-lean) verifies proofs.
-- 2024: [HILBERT](#glossary-hilbert) reaches ~70% on [PutnamBench](#glossary-putnambench) formal proofs.
+- <a id="timeline-1901"></a>1901: [Russell's paradox](#glossary-russells-paradox) exposes contradictions in naive set theory.
+- <a id="timeline-1907"></a>1907: Quebec Bridge collapse.
+- <a id="timeline-1931"></a>1931: Godel proves [incompleteness](#glossary-incompleteness) limits in [formal systems](#glossary-formal-system).
+- <a id="timeline-1936"></a>1936: Turing proves the [halting problem](#glossary-halting-problem) is undecidable.
+- <a id="timeline-1940s-1950s"></a>1940s-1950s: Assembly era manual validation.
+- <a id="timeline-1957-1959"></a>1957-1959: [Compiler](#glossary-compiler) revolution ([FORTRAN](#glossary-fortran), [COBOL](#glossary-cobol)).
+- <a id="timeline-1970s"></a>1970s: [type systems](#glossary-type-system) take hold ([Pascal](#glossary-pascal), [C](#glossary-c), [ML](#glossary-ml)).
+- <a id="timeline-1979-geb"></a>1979: Hofstadter publishes *Godel, Escher, Bach*.
+- <a id="timeline-1982"></a>1982: Byzantine Generals problem formalizes distributed agreement limits.
+- <a id="timeline-1985-cpp"></a>1985: [C++](#glossary-cpp) emerges as a systems language.
+- <a id="timeline-1986-isabelle-hol"></a>1986: [Isabelle/HOL](#glossary-isabelle-hol) [proof assistant](#glossary-proof-assistant) introduced.
+- <a id="timeline-1986-sql"></a>1986: [SQL](#glossary-sql) standardizes core semantics.
+- <a id="timeline-1985-1987"></a>1985-1987: Therac-25 overdoses and patient deaths.
+- <a id="timeline-1980s-1990s"></a>1980s-1990s: Functional programming emerges (Miranda, [Haskell](#glossary-haskell)).
+- <a id="timeline-1989-coq"></a>1989: [Coq](#glossary-coq) [proof assistant](#glossary-proof-assistant) introduced.
+- <a id="timeline-1990-haskell"></a>1990: [Haskell](#glossary-haskell) launches.
+- <a id="timeline-1993"></a>1993: [NVIDIA](#glossary-nvidia) founded for PC gaming [GPUs](#glossary-gpu).
+- <a id="timeline-1994"></a>1994: Pentium FDIV bug and recall.
+- <a id="timeline-1994-mcluhan"></a>1994: MIT Press reissues McLuhan's *Understanding Media*.
+- <a id="timeline-1996"></a>1996: Ariane 5 explosion at 37 seconds.
+- <a id="timeline-1999"></a>1999: [TLA+](#glossary-tla) formal methods mature for distributed systems.
+- <a id="timeline-2000-clarke"></a>2000: Clarke's *Profiles of the Future* reissued.
+- <a id="timeline-2002"></a>2002: Bezos [API](#glossary-api) mandate and internal service externalization.
+- <a id="timeline-2006"></a>2006: [AWS](#glossary-aws) launches S3 and EC2; [CUDA](#glossary-cuda) enables general [GPU](#glossary-gpu) computing.
+- <a id="timeline-2006-compcert"></a>2006: [CompCert](#glossary-compcert) project releases.
+- <a id="timeline-2007-dynamo"></a>2007: [Amazon](#glossary-amazon) publishes the Dynamo key-value store design.
+- <a id="timeline-2007"></a>2007: [Z3](#glossary-z3) [SMT solver](#glossary-smt-solver) released.
+- <a id="timeline-2009-sel4"></a>2009: [seL4](#glossary-sel4) proof published.
+- <a id="timeline-2009-2011"></a>2009-2011: [Toyota](#glossary-toyota) unintended acceleration crisis.
+- <a id="timeline-2010-rust"></a>2010: [Rust](#glossary-rust) project begins.
+- <a id="timeline-2011"></a>2011: [Amazon](#glossary-amazon) uses [TLA+](#glossary-tla) to find deep distributed-system bugs.
+- <a id="timeline-2012-alexnet"></a>2012: AlexNet proves [GPU](#glossary-gpu) advantage for deep learning.
+- <a id="timeline-2015-sapiens"></a>2015: Harari publishes *Sapiens*.
+- <a id="timeline-2016-alphago"></a>2016: [AlphaGo](#glossary-alphago) defeats top human players in Go.
+- <a id="timeline-2016-retinopathy"></a>2016: Retinopathy model validation published.
+- <a id="timeline-2017-transformer"></a>2017: [Transformer](#glossary-transformer) architecture enables scalable [LLMs](#glossary-llm).
+- <a id="timeline-2017-bridge-ai"></a>2017: Deep learning crack detection appears in civil infrastructure inspection.
+- <a id="timeline-2017-alphazero"></a>2017: [AlphaZero](#glossary-alphazero) demonstrates self-play learning.
+- <a id="timeline-2017-dermatology"></a>2017: Dermatology classifier reaches specialist-level accuracy.
+- <a id="timeline-2017-plus"></a>2017+: Deep learning medical imaging breakthroughs broaden.
+- <a id="timeline-2018-plus"></a>2018+: [formal verification](#glossary-formal-verification) case studies mature ([CompCert](#glossary-compcert), [seL4](#glossary-sel4)).
+- <a id="timeline-2020-ross"></a>2020: [ROSS Intelligence](#glossary-ross) shuts down amid litigation.
+- <a id="timeline-2021-copilot"></a>2021: [GitHub](#glossary-github) [Copilot](#glossary-copilot) launches.
+- <a id="timeline-2021-humaneval"></a>2021: [HumanEval](#glossary-humaneval) benchmark released.
+- <a id="timeline-2022-chatgpt"></a>2022: [OpenAI](#glossary-openai) launches [ChatGPT](#glossary-chatgpt); [LLMs](#glossary-llm) go mainstream.
+- <a id="timeline-2022-alphacode"></a>2022: [AlphaCode](#glossary-alphacode) results published.
+- <a id="timeline-2022-2024"></a>2022-2024: [FDA](#glossary-fda) approvals for AI devices rise; clinical adoption remains low.
+- <a id="timeline-2023-mata"></a>2023: Mata v Avianca sanctions over fake citations.
+- <a id="timeline-2023-din-sql"></a>2023: [DIN-SQL](#glossary-din-sql) benchmark released.
+- <a id="timeline-2024-mcp"></a>2024: [MCP](#glossary-mcp) standardizes tool access for [LLMs](#glossary-llm).
+- <a id="timeline-2024-hai-reglab"></a>2024: Stanford HAI / RegLab hallucination analysis published.
+- <a id="timeline-2024-alphaproof"></a>2024: [AlphaProof](#glossary-alphaproof) solves IMO problems at silver level; [Lean](#glossary-lean) verifies proofs.
+- <a id="timeline-2024-hilbert"></a>2024: [HILBERT](#glossary-hilbert) reaches ~70% on [PutnamBench](#glossary-putnambench) formal proofs.
+- <a id="timeline-2024-australia-law"></a>2024: Australia enacts under-16 social media law.
 
-In the early mechanical era, proof lived in materials. The Quebec Bridge collapse forced assumptions into formal review and standards.
+In the early mechanical era, proof lived in materials. The Quebec Bridge collapse in [1907](#timeline-1907) forced assumptions into formal review and standards.
 
-In the mid-twentieth century, proof moved into logic. Russell showed paradox, Godel showed [incompleteness](#glossary-incompleteness), Turing showed that some problems are undecidable. [14](#ref-14) [15](#ref-15) [16](#ref-16)
+In the mid-twentieth century, proof moved into logic. Russell showed paradox in [1901](#timeline-1901), Godel showed [incompleteness](#glossary-incompleteness) in [1931](#timeline-1931), Turing showed that some problems are undecidable in [1936](#timeline-1936). [14](#ref-14) [15](#ref-15) [16](#ref-16)
 
-In the late twentieth century, proof moved into software. [compilers](#glossary-compiler) and [type systems](#glossary-type-system) became everyday judges. Distributed systems then forced a tighter boundary: state space exploded, informal reasoning failed, and formal specification became survival. [11](#ref-11)
+In the late twentieth century, proof moved into software. [compilers](#glossary-compiler) in [1957-1959](#timeline-1957-1959) and [type systems](#glossary-type-system) in the [1970s](#timeline-1970s) became everyday judges. Distributed systems then forced a tighter boundary after [1982](#timeline-1982): state space exploded, informal reasoning failed, and formal specification became survival. [11](#ref-11)
 
 The 2010s introduced another shift. Deep learning models grew in capability, but reliability grew only where verification existed. The [GPU](#glossary-gpu) pivot is part of this thread.
 
 Today, [proof assistants](#glossary-proof-assistant) and external evaluators are becoming the backbone of AI progress. [self-play](#glossary-self-play) works because a verifier exists. Code assistants thrive because the environment is formal enough to judge.
 
-### Appendix B: The Underutilization Thesis in Practice
-
-In code, models sit inside test harnesses and ship. In medicine and law, they sit beside humans and wait for signatures. Where outputs are mechanically verifiable, adoption is fast. Where outputs must be judged by humans, adoption is slow. The brake will remain until verification is cheap.
-
-### Appendix C: The Formal Environment as the Future of Trust
-
-Reliable deployments follow a pattern: proof checkers, [model checkers](#glossary-model-checker), simulators, [conformance tests](#glossary-conformance-test), and institutional standards. These are the external judges that let models improve beyond imitation. Without them, AI remains a storyteller. With them, AI becomes a reliable collaborator.
-
-### Appendix D: The Narrative of Responsibility
-
-Every technological era has had a central question. The industrial era asked what machines could do. The information era asked what data could reveal. The AI era asks what can be trusted. Trust is built by standards, audit trails, verification, and accountability. The proof boundary is the visible edge of that web.
-
-### Appendix E: Glossary
+### Appendix B: Glossary
 
 - <a id="glossary-proof-boundary"></a>**Proof boundary**: The line between what can be verified mechanically and what must be judged by humans.
 - <a id="glossary-formal-verification"></a>**Formal verification**: Mathematical proof that a system satisfies a specification under explicit assumptions.
@@ -481,13 +396,10 @@ Every technological era has had a central question. The industrial era asked wha
 - <a id="glossary-sql"></a>**SQL**: A query language with formal, executable semantics.
 - <a id="glossary-rust"></a>**Rust**: A language emphasizing memory safety and strict compile-time checks.
 - <a id="glossary-misra-c"></a>**MISRA C**: A safety-oriented C coding standard.
-- <a id="glossary-circuit-breaker"></a>**circuit breaker**: A market mechanism that halts trading during extreme volatility.
 - <a id="glossary-halting-problem"></a>**Halting problem**: The undecidable question of whether a program terminates.
 - <a id="glossary-incompleteness"></a>**Incompleteness**: The limit that some truths cannot be proven within a system.
 - <a id="glossary-russells-paradox"></a>**Russell's paradox**: A self-reference paradox in naive set theory.
 - <a id="glossary-oracle-problem"></a>**oracle problem**: The difficulty of defining ground truth for evaluation in messy domains.
-- <a id="glossary-verified-core"></a>**Verified core**: A formally proven subsystem that anchors trust.
-- <a id="glossary-unverified-shell"></a>**Unverified shell**: The flexible layer built on top of a verified core.
 - <a id="glossary-compositional-verification"></a>**Compositional verification**: Proof by composing verified components.
 - <a id="glossary-conformance-test"></a>**conformance test**: A test that checks behavior against a specification.
 - <a id="glossary-benchmark"></a>**Benchmark**: A standardized task for evaluation with defined scoring.
@@ -497,6 +409,7 @@ Every technological era has had a central question. The industrial era asked wha
 - <a id="glossary-pascal"></a>**Pascal**: A language designed to encourage structured programming.
 - <a id="glossary-c"></a>**C**: A low-level systems programming language with manual memory control.
 - <a id="glossary-ml"></a>**ML**: A family of functional languages with strong static typing.
+- <a id="glossary-markdown"></a>**Markdown**: A lightweight markup language for structured text and links.
 - <a id="glossary-haskell"></a>**Haskell**: A purely functional programming language with strong type systems.
 - <a id="glossary-cpp"></a>**C++**: A systems language extending C with object-oriented and generic features.
 - <a id="glossary-nvidia"></a>**NVIDIA**: A company known for GPUs and CUDA.
@@ -511,7 +424,6 @@ Every technological era has had a central question. The industrial era asked wha
 - <a id="glossary-intel"></a>**Intel**: A semiconductor company behind the Pentium processors.
 - <a id="glossary-toyota"></a>**Toyota**: An automaker involved in unintended-acceleration investigations.
 - <a id="glossary-nasa"></a>**NASA**: The U.S. space agency involved in automotive software analysis reports.
-- <a id="glossary-sec"></a>**SEC**: The U.S. Securities and Exchange Commission, which oversees marketwide circuit breakers.
 - <a id="glossary-fda"></a>**FDA**: The U.S. Food and Drug Administration, which clears medical AI devices.
 - <a id="glossary-ross"></a>**ROSS Intelligence**: A legal AI company involved in litigation over training data.
 - <a id="glossary-thomson-reuters"></a>**Thomson Reuters**: A publisher and information services company involved in ROSS litigation.
@@ -521,7 +433,7 @@ Every technological era has had a central question. The industrial era asked wha
 
 1. <a id="ref-1"></a> [1] Stanford HAI / RegLab report (2024) and arXiv:2401.01301. https://hai.stanford.edu/news/hallucinating-law-legal-mistakes-large-language-models-are-pervasive; https://arxiv.org/abs/2401.01301.
 2. <a id="ref-2"></a> [2] Gulshan et al., "Development and Validation of a Deep Learning Algorithm for Detection of Diabetic Retinopathy," JAMA (2016). https://pubmed.ncbi.nlm.nih.gov/27898976/.
-3. <a id="ref-3"></a> [3] SEC market-wide circuit breakers. https://www.sec.gov/marketstructure/market-wide-circuit-breakers.
+3. <a id="ref-3"></a> [3] Cha et al., "Deep Learning-Based Crack Damage Detection Using Convolutional Neural Networks" (2017). https://doi.org/10.1111/mice.12263.
 4. <a id="ref-4"></a> [4] Report of the Royal Commission on the Quebec Bridge collapse (Government of Canada). https://publications.gc.ca/site/eng/9.827964/publication.html.
 5. <a id="ref-5"></a> [5] Ariane 5 Flight 501 Failure Report. https://www.ima.umn.edu/~arnold/disasters/ariane5rep.html.
 6. <a id="ref-6"></a> [6] Leveson & Turner, "An Investigation of the Therac-25 Accidents," *IEEE Computer* (1993). https://ieeexplore.ieee.org/document/274940.
