@@ -20,7 +20,7 @@ This document is written in a formal format, yet no formal checker tells us when
 
 Call this line the [proof boundary](#glossary-proof-boundary): where our rules fully describe the world, and where they fall short. On one side: [mechanical verification](#glossary-mechanical-verification), reproducible and absolute. On the other: human judgment, negotiated and fallible. That boundary explains where AI can be trusted to act and where it must remain an assistant. It is not a defect; it is the foundation of everything that follows.
 
-An argument persuades. A proof compels. You can persuade someone that a bridge is safe. You can also prove that a particular load will not exceed a particular tolerance. The boundary is where those two modes trade places. So the question of AI adoption is: where do we demand a judge that cannot be persuaded, and where do we accept a human signature instead?
+An argument persuades. A proof compels. You can persuade someone that a bridge is safe. You can also prove that a particular load will not exceed a particular tolerance. The boundary is where those two modes trade places. The judge is the hinge of adoption: where the judge is mechanical, delegation is possible. So the question of AI adoption is: where do we demand a judge that cannot be persuaded, and where do we accept a human signature instead?
 
 This document maps that proof boundary and asks how far we can push it without losing accountability. The boundary moves with evidence, incentives, and institutions, not just with models.
 
@@ -70,7 +70,7 @@ We build complex systems, complexity defeats us, so we build [formal systems](#g
 
 ## Part II: The Software Evolution Toward Proof
 
-Software history reads like a slow migration across that proof boundary. Each era hands a little more verification to machines because humans cannot scale. The pattern repeats: new tools turn "review" into "rejection," and the market slowly learns to accept the judge.
+Software history reads like a slow migration across that proof boundary. Each era hands a little more verification to machines because humans cannot scale. The pattern repeats: new tools turn "review" into "rejection," and the market learns to accept the judge.
 
 ### Assembly Era: Humans as Validators
 
@@ -144,6 +144,8 @@ That divide shows up in design work. Code can be tested; architecture often cann
 
 Formal math [benchmarks](#glossary-benchmark) show strong gains when proofs are checked by a [formal system](#glossary-formal-system), not by human intuition. [32](#ref-32) The improvement is not mysterious; it is the effect of fast, unforgiving feedback.
 
+The pattern is the same across these examples: a formal judge turns exploration into iteration, and iteration turns capability into reliability.
+
 ### [MCP](#glossary-mcp) and the Connection Layer
 
 The Model Context Protocol ([MCP](#glossary-mcp)) standardizes how models call tools. It lowers integration friction and makes verification loops easier to wire into production systems. It accelerates adoption without changing the proof boundary. [31](#ref-31) It is plumbing, but plumbing changes what is easy to build.
@@ -164,15 +166,13 @@ This is why RL flourishes in games and lags in open-ended domains. The world is 
 
 [AlphaProof](#glossary-alphaproof) reached the silver level on IMO problems with [Lean](#glossary-lean) verifying the proofs. The model proposes, the verifier judges, and the system iterates until it wins. [23](#ref-23)
 
-Formal mathematics is a near-perfect laboratory: a proof is either correct or it is not. That is why models improve fastest where the rules are explicit.
-
-The result is not just better scores; it is a clearer separation between invention and validation. The checker enforces that separation.
+Formal mathematics is a near-perfect laboratory: a proof is either correct or it is not. That is why models improve fastest where the rules are explicit. The result is not just better scores; it is a cleaner separation between invention and validation.
 
 ### Medical Imaging: The Assistant Ceiling
 
 Medical imaging offers a different proof boundary. Models can detect patterns and match specialists on specific tasks, but the outputs are not formally verifiable. A diagnosis is not a theorem; it is a judgment. [2](#ref-2) [24](#ref-24)
 
-These systems are used as assistants; a physician signs off. The signature is not just legal cover; it is where responsibility lives. When the case is ambiguous, the model cannot carry the moral weight.
+These systems are used as assistants; a physician signs off. The signature is not just legal cover; it is where responsibility lives. When the case is ambiguous, the model cannot carry the moral weight. Partial automation exists, but the final responsibility still sits with a person.
 
 ### Legal Drafting and the Hallucination Trap
 
@@ -200,7 +200,7 @@ When a property is decidable, it can be mechanically verified. When it is not, v
 
 Every gain in expressiveness is a loss in provability. The proof boundary is where we decide how much freedom to trade for certainty.
 
-This is why high-assurance domains adopt restricted subsets and strict coding standards. The language itself becomes part of the proof.
+This is why high-assurance domains adopt restricted subsets and strict coding standards. The language itself becomes part of the proof; MISRA C is as much a boundary as a rulebook.
 
 ### [Verified Cores](#glossary-verified-core) and [Unverified Shells](#glossary-unverified-shell)
 
@@ -224,9 +224,7 @@ This section turns to the mathematical limits that haunt every verification effo
 
 Bertrand Russell discovered [Russell's paradox](#glossary-russells-paradox) in naive set theory. Consider the set of all sets that do not contain themselves. Does that set contain itself? If it does, it should not. If it does not, it should. The system collapses. [14](#ref-14)
 
-[Russell's paradox](#glossary-russells-paradox) is a warning about what happens when a system tries to talk about itself without care. [formal systems](#glossary-formal-system) place rules on themselves to avoid contradiction. The proof boundary is a set of fences built to avoid paradox.
-
-For AI, this matters because models routinely generate statements about their own reasoning. The boundary is the line that keeps those statements from becoming circular authority.
+[Russell's paradox](#glossary-russells-paradox) is a warning about what happens when a system tries to talk about itself without care. [formal systems](#glossary-formal-system) place rules on themselves to avoid contradiction. The proof boundary is a set of fences built to avoid paradox. For AI, this matters because models routinely generate statements about their own reasoning. The boundary is the line that keeps those statements from becoming circular authority.
 
 ### Godel and the Sentence That Escapes
 
@@ -244,15 +242,11 @@ There is no universal verifier. We can only decide termination for programs that
 
 [Decidability](#glossary-decidability) is the currency of proof. To make a system decidable, we often simplify it. We remove features, forbid behaviors, restrict inputs. These sacrifices change how people build and think.
 
-The benefits are also real. [decidability](#glossary-decidability) gives us leverage. It allows tools to reason about our systems. It allows errors to be found before they matter. When the cost of failure is high, these benefits outweigh the loss of flexibility.
-
-This is the practical reason formal systems feel austere: they must be.
+The benefits are also real. [decidability](#glossary-decidability) gives us leverage. It allows tools to reason about our systems. It allows errors to be found before they matter. When the cost of failure is high, these benefits outweigh the loss of flexibility. This is the practical reason formal systems feel austere: they must be.
 
 ### The Hidden Moral
 
-Russell, Godel, and Turing tell us that [formal verification](#glossary-formal-verification) is not a universal solvent. It works when we design systems that accept its constraints. The proof boundary is a trade-off we negotiate over and over. At some point the story ends with a human saying, "This is good enough." That is not a failure of logic; it is the cost of being human.
-
-In practice, every verifier still needs an external context and a human decision to trust it.
+Russell, Godel, and Turing tell us that [formal verification](#glossary-formal-verification) is not a universal solvent. It works when we design systems that accept its constraints. The proof boundary is a trade-off we negotiate over and over. At some point the story ends with a human saying, "This is good enough." That is not a failure of logic; it is the cost of being human. In practice, every verifier still needs an external context and a human decision to trust it.
 
 ---
 
@@ -348,9 +342,9 @@ Invest in verification where it compounds. Teams that formalize interfaces, [inv
 
 Some organizations publish their engineering practices to show how this looks in the wild. Stripe, for example, maintains a public engineering blog that highlights rigorous design and testing practices as part of its reliability culture. These signals are not proofs, but they reveal the posture that makes proof viable. [38](#ref-38)
 
-A verified-core/unverified-shell architecture is the recurring pattern: prove the kernel, test the interfaces, and let the outer layers move quickly. When natural-language specs can be translated into formal models, the proof boundary becomes explicit and auditable. [11](#ref-11)
+A verified-core/unverified-shell architecture is the recurring pattern: prove the kernel, test the interfaces, and let the outer layers move quickly. When natural-language specs can be translated into formal models, the proof boundary becomes explicit and auditable. That is the path for scaling AI assistance without surrendering control. [11](#ref-11)
 
-## Conclusion: Grand Finale
+## Conclusion
 
 ### The Medium, the Message, and the Human Governor
 
@@ -362,9 +356,7 @@ The internet taught us that new media can reshape human health. Social media amp
 
 The lesson is that technology is powerful enough to require governance. The more powerful the medium, the more carefully we demand a judge. The pace of adoption will therefore be set by institutions, not just by models.
 
-The central insight stands: we will under-utilize AI inefficiently rather than over-utilize it unsafely. That friction is not a tragedy. It is a feature of human governance.
-
-In that sense, the proof boundary is not an obstacle to progress; it is how progress becomes legitimate.
+The central insight stands: we will under-utilize AI inefficiently rather than over-utilize it unsafely. That friction is not a tragedy. It is a feature of human governance. In that sense, the proof boundary is not an obstacle to progress; it is how progress becomes legitimate.
 
 ---
 
