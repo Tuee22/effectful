@@ -32,7 +32,7 @@ But useful to whom?
 
 ## Russell, Gödel, Turing: Western rationalism folds in on itself
 
-Bertrand Russell discovered [Russell's paradox](#glossary-russells-paradox) in [1901](#timeline-1901). Consider the set of all sets that do not contain themselves. Does that set contain itself? If it does, it should not. If it does not, it should. [4](#ref-4)
+1Bertrand Russell discovered [Russell's paradox](#glossary-russells-paradox) in [1901](#timeline-1901). Consider the set of all sets that do not contain themselves. Does that set contain itself? If it does, it should not. If it does not, it should. [4](#ref-4)
 
 [Russell's paradox](#glossary-russells-paradox) shows what happens when a system tries to talk about itself without care. A few words upend the logic underneath them. [Formal systems](#glossary-formal-system) place rules on themselves to avoid contradiction. This is the first formal proof that language cannot escape its own self-reference.
 
@@ -147,35 +147,35 @@ Verification infrastructure predated modern [LLMs](#glossary-llm) by decades. [S
 
 ### The [GPU](#glossary-gpu) Pivot: the [Medium is the Message](#glossary-medium-is-the-message)
 
-[NVIDIA](#glossary-nvidia) was founded by Jensen Huang and cofounders in [1993](#timeline-1993) to build high-end [GPUs](#glossary-gpu) for PC gamers. [25](#ref-25) In [2006](#timeline-2006) [CUDA](#glossary-cuda) was released to turn [NVIDIA](#glossary-nvidia) graphics cards into general programmable devices for general non-graphical compute. [GPUs](#glossary-gpu) could perform arithmetic and linear algebra orders of magnitude faster than [CPUs](#glossary-cpu) could. Accidentally, affordable consumer hardware became a cutting edge scientific instrument. [18](#ref-18)
+[NVIDIA](#glossary-nvidia) was founded by Jensen Huang and cofounders in [1993](#timeline-1993) to build high-end [GPUs](#glossary-gpu) for PC gamers. [25](#ref-25) Geoffrey Hinton's work on [deep learning](#glossary-deep-learning) laid the groundwork for the modern wave. [26](#ref-26) In [2006](#timeline-2006) [CUDA](#glossary-cuda) was released to turn [NVIDIA](#glossary-nvidia) graphics cards into general programmable devices for general non-graphical compute. [GPUs](#glossary-gpu) could perform arithmetic and linear algebra orders of magnitude faster than [CPUs](#glossary-cpu) could. Accidentally, affordable consumer hardware became a cutting edge scientific instrument. [27](#ref-27)
 
-Geoffrey Hinton’s work on [deep learning](#glossary-deep-learning) laid the groundwork for the modern wave. [26](#ref-26) When AlexNet showed the [deep learning](#glossary-deep-learning) advantage in [2012](#timeline-2012-alexnet) and the [transformer](#glossary-transformer) era arrived with *Attention Is All You Need* in [2017](#timeline-2017-transformer), it rode on the back of the pivot. There would be no [LLMs](#glossary-llm) without [GPUs](#glossary-gpu). The medium shaped the message. [27](#ref-27)
+When AlexNet showed the [deep learning](#glossary-deep-learning) advantage in [2012](#timeline-2012-alexnet) and the [transformer](#glossary-transformer) era arrived with *Attention Is All You Need* in [2017](#timeline-2017-transformer), it rode on the back of the pivot. There would be no [LLMs](#glossary-llm) without [GPUs](#glossary-gpu). The medium shaped the message. [28](#ref-28)
 
 [LLMs](#glossary-llm) could now ingest a different kind of dataset: massive sets of formally proven artifacts, accumulated over decades. [Proof assistants](#glossary-proof-assistant), [model checkers](#glossary-model-checker), and formal specifications finally had a machine-native substrate that could learn from them at any scale.
 
 ### [Reinforcement learning](#glossary-rl) and External Judges
 
-[Reinforcement learning](#glossary-rl), in Sutton and Barto's framing, depends on an objective signal from outside the agent. Without that environment, it cannot learn. [28](#ref-28) This is different from how LLMs learn. Sutton is blunt about language models: they "are trying to get by without having a goal or a sense of better or worse." [29](#ref-29) Here, the missing goal is the missing judge.
+[Reinforcement learning](#glossary-rl), in Sutton and Barto's framing, depends on an objective signal from outside the agent. Without that environment, it cannot learn. [29](#ref-29) This is different from how LLMs learn. Sutton is blunt about language models: they "are trying to get by without having a goal or a sense of better or worse." [30](#ref-30) Here, the missing goal is the missing judge.
 
 In the ancient Chinese game [Go](#glossary-go), organized competitive play relies on human judges to enforce the rules and resolve disputes. In [self-play](#glossary-self-play), the judge is not a person but a simulated environment that encodes the rules exactly. Without that judge, [AlphaZero](#glossary-alphazero) in [2017](#timeline-2017-alphazero) would be lost. It would not learn; it would [hallucinate](#glossary-hallucinations).
 
-In [AlphaGo](#glossary-alphago)'s story in [2016](#timeline-2016-alphago) and [AlphaZero](#glossary-alphazero)'s in [2017](#timeline-2017-alphazero), that judge makes learning via [self-play](#glossary-self-play) possible. The same structure appears in [proof assistants](#glossary-proof-assistant), where a model can propose steps but the checker accepts or rejects them, without negotiation. [30](#ref-30) [31](#ref-31)
+In [AlphaGo](#glossary-alphago)'s story in [2016](#timeline-2016-alphago) and [AlphaZero](#glossary-alphazero)'s in [2017](#timeline-2017-alphazero), that judge makes learning via [self-play](#glossary-self-play) possible. The same structure appears in [proof assistants](#glossary-proof-assistant), where a model can propose steps but the checker accepts or rejects them, without negotiation. [31](#ref-31) [32](#ref-32)
 
-Pure language models fall short in games. They can describe [Go](#glossary-go). They can accumulate the knowledge of every [Go](#glossary-go) book written. They can provide a human with expert level coaching. But they do not play it at [AlphaZero](#glossary-alphazero) levels because they do not have a cheap [legal-moves checker](#glossary-legal-moves-checker) acting as judge. Stories can teach style; they do not enforce legality or uncover novel strategies. In this light, Sutton's line about models "trying to get by without having a goal or a sense of better or worse" reads less like a provocation and more like a definition of what the judge supplies. [29](#ref-29)
+Pure language models fall short in games. They can describe [Go](#glossary-go). They can accumulate the knowledge of every [Go](#glossary-go) book written. They can provide a human with expert level coaching. But they do not play it at [AlphaZero](#glossary-alphazero) levels because they do not have a cheap [legal-moves checker](#glossary-legal-moves-checker) acting as judge. Stories can teach style; they do not enforce legality or uncover novel strategies. In this light, Sutton's line about models "trying to get by without having a goal or a sense of better or worse" reads less like a provocation and more like a definition of what the judge supplies. [30](#ref-30)
 
 ### [Benchmarks](#glossary-benchmark) as Mechanical Judges
 
-[HumanEval](#glossary-humaneval) in [2021](#timeline-2021-humaneval), [AlphaCode](#glossary-alphacode) in [2022](#timeline-2022-alphacode), and [DIN-SQL](#glossary-din-sql) in [2023](#timeline-2023-din-sql) share a key property: outputs are mechanically checkable. [32](#ref-32) A model can generate a hundred candidates and let tests or execution reject the wrong ones. Those benchmarks work because the [oracle](#glossary-oracle-problem) is unambiguous and cheap to invoke; most real-world domains lack that kind of ground truth. That loop turns a model output into an action. Without it, the same output stays a suggestion.
+[HumanEval](#glossary-humaneval) in [2021](#timeline-2021-humaneval), [AlphaCode](#glossary-alphacode) in [2022](#timeline-2022-alphacode), and [DIN-SQL](#glossary-din-sql) in [2023](#timeline-2023-din-sql) share a key property: outputs are mechanically checkable. [33](#ref-33) A model can generate a hundred candidates and let tests or execution reject the wrong ones. Those benchmarks work because the [oracle](#glossary-oracle-problem) is unambiguous and cheap to invoke; most real-world domains lack that kind of ground truth. That loop turns a model output into an action. Without it, the same output stays a suggestion.
 
 In human domains, iteration is expensive. A lawyer does not file a thousand briefs and ask a judge to grade them. A doctor does not attempt a thousand diagnoses on one patient. However, these are precisely the sorts of world explorations an AI needs in order to learn.
 
 ### Formal Theorem Proving [benchmarks](#glossary-benchmark)
 
-Results like [HILBERT](#glossary-hilbert) on [PutnamBench](#glossary-putnambench) in [2024](#timeline-2024-hilbert) show the jump when proofs are checked by a [formal system](#glossary-formal-system). [32](#ref-32)
+Results like [HILBERT](#glossary-hilbert) on [PutnamBench](#glossary-putnambench) in [2025](#timeline-2025-hilbert) show the jump when proofs are checked by a [formal system](#glossary-formal-system). [34](#ref-34)
 
 ### [MCP](#glossary-mcp) and the Connection Layer
 
-The Model Context Protocol ([MCP](#glossary-mcp)) standardizes how models call tools ([2024](#timeline-2024-mcp)). It lowers integration friction and makes verification loops easier to wire into production systems. [33](#ref-33)
+The Model Context Protocol ([MCP](#glossary-mcp)) standardizes how models call tools ([2024](#timeline-2024-mcp)). It lowers integration friction and makes verification loops easier to wire into production systems. [35](#ref-35)
 
 We already have [APIs](#glossary-api) for almost all knowledge work performed by humans. [MCP](#glossary-mcp) makes it possible for any [LLM](#glossary-llm) to issue those instructions through a standard interface. The model can automate anything the [API](#glossary-api) can reach.
 
@@ -183,13 +183,13 @@ The missing judge is one that can say which actions were actually required. That
 
 ### [AlphaProof](#glossary-alphaproof) and Formal Math
 
-[AlphaProof](#glossary-alphaproof) was reported to reach the silver level on IMO problems in [2024](#timeline-2024-alphaproof), with [Lean](#glossary-lean) verifying the proofs. The model proposes, the verifier judges, and the system iterates until it wins. [29](#ref-29)
+[AlphaProof](#glossary-alphaproof) was reported to reach the silver level on IMO problems in [2024](#timeline-2024-alphaproof), with [Lean](#glossary-lean) verifying the proofs. The model proposes, the verifier judges, and the system iterates until it wins. [36](#ref-36)
 
 Formal mathematics is a convenient laboratory: [Lean](#glossary-lean) accepts the proof or it does not.
 
 ### Medical Imaging: The Assistant Boundary
 
-Models can detect patterns and approach specialist-level performance on specific tasks, but the outputs are not formally verifiable. Two clinicians can disagree on a borderline scan. Retinopathy results in [2016](#timeline-2016-retinopathy) and dermatology results in [2017](#timeline-2017-dermatology) show the boundary. [2](#ref-2) [30](#ref-30)
+Models can detect patterns and approach specialist-level performance on specific tasks, but the outputs are not formally verifiable. Two clinicians can disagree on a borderline scan. Retinopathy results in [2016](#timeline-2016-retinopathy) and dermatology results in [2017](#timeline-2017-dermatology) show the boundary. [2](#ref-2) [37](#ref-37)
 
 These systems are used as assistants; a physician still signs off. The signature is legal cover and a place where accountability and lived consequences concentrate. When the case is ambiguous, the model does not absorb the contested meaning of the decision. Partial automation exists, but the final decision remains human because the rule is not only accuracy but acceptable risk distribution.
 
@@ -197,9 +197,9 @@ These systems are used as assistants; a physician still signs off. The signature
 
 In law, verification is not mechanical. A brief can be grammatically well-formed and logically plausible yet still be unsupported. Citation and case-law checks can be automated, but the hard part is professional judgment: how a court might weigh competing facts, equities, and precedent in a specific case. The [proof boundary](#glossary-proof-boundary) sits in that discretionary weighing, not in syntax.
 
-[Hallucinations](#glossary-hallucinations) are a structural risk in [LLMs](#glossary-llm). The model is trained to predict plausible continuations, not to guarantee grounding. If the prompt looks like it should have a case, the model can invent one that matches the pattern. Without external grounding, the system confuses fluency for evidence. [34](#ref-34)
+[Hallucinations](#glossary-hallucinations) are a structural risk in [LLMs](#glossary-llm). The model is trained to predict plausible continuations, not to guarantee grounding. If the prompt looks like it should have a case, the model can invent one that matches the pattern. Without external grounding, the system confuses fluency for evidence. [38](#ref-38)
 
-The model has no built-in notion of "I don't know." It can be instructed to abstain, but the training signal rewards confident completion. Retrieval systems help reduce [hallucinations](#glossary-hallucinations), yet they introduce their own failure modes: missing sources, mismatched citations, or partial context. The output looks more authoritative the more unsupported it becomes. [34](#ref-34)
+The model has no built-in notion of "I don't know." It can be instructed to abstain, but the training signal rewards confident completion. Retrieval systems help reduce [hallucinations](#glossary-hallucinations), yet they introduce their own failure modes: missing sources, mismatched citations, or partial context. The output looks more authoritative the more unsupported it becomes. [38](#ref-38)
 
 The Stanford HAI / RegLab analysis in [2024](#timeline-2024-hai-reglab) reports hallucination rates in legal tasks. A judge still checks citations, arguments, and precedent by hand. [1](#ref-1)
 
@@ -221,9 +221,9 @@ In domains where the work is a reversible commit, delegation is cheap. In domain
 
 ### [Decidability](#glossary-decidability) and the Cost of Predictability
 
-When a property is decidable, it can be mechanically verified. When it is not, verification becomes a human judgment. Many properties are decidable in principle but too expensive to check at scale. The more general the system, the less we can establish about it. The more we want proof, the more we must restrict the system. Safety-critical code lives in smaller languages for a reason. Model checking tools note that verification assumes finite data structures and often bounded executions. [35](#ref-35)
+When a property is decidable, it can be mechanically verified. When it is not, verification becomes a human judgment. Many properties are decidable in principle but too expensive to check at scale. The more general the system, the less we can establish about it. The more we want proof, the more we must restrict the system. Safety-critical code lives in smaller languages for a reason. Model checking tools note that verification assumes finite data structures and often bounded executions. [39](#ref-39)
 
-High-assurance domains adopt restricted subsets and strict coding standards. [MISRA C](#glossary-misra-c) bans features before they ever reach a checker. [15](#ref-15) SPARK subsets Ada to enable formal analysis. [36](#ref-36)
+High-assurance domains adopt restricted subsets and strict coding standards. [MISRA C](#glossary-misra-c) bans features before they ever reach a checker. [15](#ref-15) SPARK subsets Ada to enable formal analysis. [40](#ref-40)
 
 ---
 
@@ -235,59 +235,59 @@ Statutes, procedures, and enforcement regimes formalize values. Proof systems st
 
 ### Resistance and Human Rights ([1900](#timeline-1900-pan-african)-[1950](#timeline-1950-echr))
 
-Early 20th-century resistance movements made legality and legitimacy visibly diverge. The Pan-African Conference in [1900](#timeline-1900-pan-african) argued that colonial rule was a moral and political problem, not just a question of legality. [37](#ref-37) South Africa's [1913](#timeline-1913-land-act) Natives Land Act formalized dispossession, while resistance had to argue against a regime that claimed legal authority. [38](#ref-38) In [1919](#timeline-1919-amritsar) the Amritsar massacre in India and the May Fourth Movement in China illustrated how state power and social legitimacy could split in different national contexts, and how protest could become a competing source of authority. [39](#ref-39) [40](#ref-40)
+Early 20th-century resistance movements made legality and legitimacy visibly diverge. The Pan-African Conference in [1900](#timeline-1900-pan-african) argued that colonial rule was a moral and political problem, not just a question of legality. [41](#ref-41) South Africa's [1913](#timeline-1913-land-act) Natives Land Act formalized dispossession, while resistance had to argue against a regime that claimed legal authority. [42](#ref-42) In [1919](#timeline-1919-amritsar) the Amritsar massacre in India and the May Fourth Movement in China illustrated how state power and social legitimacy could split in different national contexts, and how protest could become a competing source of authority. [43](#ref-43) [44](#ref-44)
 
-Mass civil resistance in India tested the moral limits of colonial legality: the [1920](#timeline-1920-noncooperation) Non-Cooperation Movement, the [1930](#timeline-1930-salt-march) Salt March, and the [1942](#timeline-1942-quit-india) Quit India Movement argued that legality could be unjust when it enforced domination. [41](#ref-41) [42](#ref-42) [43](#ref-43) In Europe, the [1935](#timeline-1935-nuremberg-laws) Nuremberg Laws showed how precise legal codification can be an instrument of oppression, while [1939](#timeline-1939-resistance) wartime resistance and the Warsaw Ghetto Uprising left records of the cost of contesting a regime that claimed legal legitimacy. [44](#ref-44) [45](#ref-45)
+Mass civil resistance in India tested the moral limits of colonial legality: the [1920](#timeline-1920-noncooperation) Non-Cooperation Movement, the [1930](#timeline-1930-salt-march) Salt March, and the [1942](#timeline-1942-quit-india) Quit India Movement argued that legality could be unjust when it enforced domination. [45](#ref-45) [46](#ref-46) [47](#ref-47) In Europe, the [1935](#timeline-1935-nuremberg-laws) Nuremberg Laws showed how precise legal codification can be an instrument of oppression, while [1939](#timeline-1939-resistance) wartime resistance and the Warsaw Ghetto Uprising left records of the cost of contesting a regime that claimed legal legitimacy. [48](#ref-48) [49](#ref-49)
 
-Postwar human-rights infrastructure formalized a competing moral order. The [1941](#timeline-1941-atlantic-charter) Atlantic Charter announced self-determination as a principle; the [1945](#timeline-1945-un-charter) UN Charter, [1945-1946](#timeline-1945-1946-nuremberg-trials) Nuremberg Trials, and the [1948](#timeline-1948-udhr) Universal Declaration of Human Rights turned that principle into legal architecture; the [1948](#timeline-1948-genocide) Genocide Convention and the [1949](#timeline-1949-geneva) Geneva Conventions tried to make mass atrocity and civilian harm illegal. [46](#ref-46) [47](#ref-47) [48](#ref-48) [49](#ref-49) [50](#ref-50) [51](#ref-51) These legal instruments did not end violence and oppression, but they made the legitimacy contest explicit: a regime could be lawful and still be condemned by a higher, newly formalized moral rule.
+Postwar human-rights infrastructure formalized a competing moral order. The [1941](#timeline-1941-atlantic-charter) Atlantic Charter announced self-determination as a principle; the [1945](#timeline-1945-un-charter) UN Charter, [1945-1946](#timeline-1945-1946-nuremberg-trials) Nuremberg Trials, and the [1948](#timeline-1948-udhr) Universal Declaration of Human Rights turned that principle into legal architecture; the [1948](#timeline-1948-genocide) Genocide Convention and the [1949](#timeline-1949-geneva) Geneva Conventions tried to make mass atrocity and civilian harm illegal. [50](#ref-50) [51](#ref-51) [52](#ref-52) [53](#ref-53) [54](#ref-54) [55](#ref-55) These legal instruments did not end violence and oppression, but they made the legitimacy contest explicit: a regime could be lawful and still be condemned by a higher, newly formalized moral rule.
 
 ### Independence and Decolonization
 
-The Indian Independence Act of [1947](#timeline-1947-independence) is a formal document that ended British rule in law. [49](#ref-49) That legal shift did not resolve state violence, nor the mass displacement and intercommunal violence around partition shaped by imperial policy and boundary-making, nor the long afterlives of imperial administration and coercive institutions. [52](#ref-52) [53](#ref-53) Imperial legitimacy had been codified long before; the transition was a change in legal structure, not an automatic moral reconciliation. The UN declaration on granting independence to countries and peoples codified international support for decolonization and independence claims. [1960](#timeline-1960-un-decolonization) [37](#ref-37) These formal shifts mattered, but they did not retroactively cleanse the violence of imperial systems or the ongoing harms that outlasted independence in land, language, and political power. They simply exposed what was already being contested in streets, courts, and daily survival.
+The Indian Independence Act of [1947](#timeline-1947-independence) is a formal document that ended British rule in law. [56](#ref-56) That legal shift did not resolve state violence, nor the mass displacement and intercommunal violence around partition shaped by imperial policy and boundary-making, nor the long afterlives of imperial administration and coercive institutions. [57](#ref-57) [58](#ref-58) Imperial legitimacy had been codified long before; the transition was a change in legal structure, not an automatic moral reconciliation. The UN declaration on granting independence to countries and peoples codified international support for decolonization and independence claims. [1960](#timeline-1960-un-decolonization) [59](#ref-59) These formal shifts mattered, but they did not retroactively cleanse the violence of imperial systems or the ongoing harms that outlasted independence in land, language, and political power. They simply exposed what was already being contested in streets, courts, and daily survival.
 
 ### Women’s Suffrage
 
-The [1848](#timeline-1848-seneca-falls) Seneca Falls Declaration of Sentiments declared the exclusion of women from political life as a moral harm. It was drafted by Elizabeth Cady Stanton, organized with Lucretia Mott, and adopted by the convention attendees. [45](#ref-45) It was not until [1920](#timeline-1920-nineteenth) that the Nineteenth Amendment formalized political inclusion. [46](#ref-46) Yet access to the ballot was not uniform. State barriers, poll taxes, literacy tests, and intimidation continued to block many women, especially women of colour, until later federal protections such as the [1965](#timeline-1965-voting-rights) Voting Rights Act reshaped enforcement. [44](#ref-44) [54](#ref-54) Census voting and registration data continue to show gaps by gender. [55](#ref-55)
+The [1848](#timeline-1848-seneca-falls) Seneca Falls Declaration of Sentiments declared the exclusion of women from political life as a moral harm. It was drafted by Elizabeth Cady Stanton, organized with Lucretia Mott, and adopted by the convention attendees. [60](#ref-60) It was not until [1920](#timeline-1920-nineteenth) that the Nineteenth Amendment formalized political inclusion. [61](#ref-61) Yet access to the ballot was not uniform. State barriers, poll taxes, literacy tests, and intimidation continued to block many women, especially women of colour, until later federal protections such as the [1965](#timeline-1965-voting-rights) Voting Rights Act reshaped enforcement. [62](#ref-62) [63](#ref-63) Census voting and registration data continue to show gaps by gender. [64](#ref-64)
 
 ### Residential Schools in Canada
 
-Canada’s residential school system was a legal programme that removed Indigenous children from their families and communities, placing them under state- and church-run schooling designed to sever language, culture, and kinship. Churches that administered schools included the Roman Catholic, Anglican, United, and Presbyterian churches. [56](#ref-56) The federal system took form in [1883](#timeline-1883-residential-schools) under Prime Minister John A. Macdonald’s government, which authorized state-run residential and industrial schools as policy. [56](#ref-56) Under Prime Minister Pierre Elliot Trudeau, with Jean Chrétien (later Prime Minister) as Minister of Indian Affairs, the [1969](#timeline-1969-white-paper) White Paper pushed a new assimilationist direction, proposing to end legal Indian status and transfer federal responsibilities to the provinces, reframing obligations as a path to formal integration without ending the school system itself. [56](#ref-56) [57](#ref-57) Indigenous children continued to be displaced by the govenment until the last federally run residential school closed in [1996](#timeline-1996-residential-schools-closure), under Prime Minister Jean Chrétien, who finally ended the education system he had decades ago "reformed". [56](#ref-56) [58](#ref-58) The system’s authority was bureaucratic and lawful; its harm was lived and cumulative. In [2021](#timeline-2021-residential-schools), under Prime Minister Justin Trudeau, Pierre Trudeau’s son, reports of unmarked graves at former school sites made that harm visible in a new way, and forced a public reckoning with how legality can mask coercion and loss. [59](#ref-59)
+Canada’s residential school system was a legal programme that removed Indigenous children from their families and communities, placing them under state- and church-run schooling designed to sever language, culture, and kinship. Churches that administered schools included the Roman Catholic, Anglican, United, and Presbyterian churches. [65](#ref-65) The federal system took form in [1883](#timeline-1883-residential-schools) under Prime Minister John A. Macdonald’s government, which authorized state-run residential and industrial schools as policy. [65](#ref-65) Under Prime Minister Pierre Elliot Trudeau, with Jean Chrétien (later Prime Minister) as Minister of Indian Affairs, the [1969](#timeline-1969-white-paper) White Paper pushed a new assimilationist direction, proposing to end legal Indian status and transfer federal responsibilities to the provinces, reframing obligations as a path to formal integration without ending the school system itself. [66](#ref-66) Indigenous children continued to be displaced by the govenment until the last federally run residential school closed in [1996](#timeline-1996-residential-schools-closure), under Prime Minister Jean Chrétien, who finally ended the education system he had decades ago "reformed". [67](#ref-67) The system’s authority was bureaucratic and lawful; its harm was lived and cumulative. In [2021](#timeline-2021-residential-schools), under Prime Minister Justin Trudeau, Pierre Trudeau’s son, reports of unmarked graves at former school sites made that harm visible in a new way, and forced a public reckoning with how legality can mask coercion and loss. [68](#ref-68)
 
 ### U.S. Civil Rights Movement
 
-The civil rights struggle made the machinery of legitimacy visible. Martin Luther King Jr. argued from a jail cell that legality is not the same as moral legitimacy, and that obedience to laws that degrade people fails the movement’s moral frame. [41](#ref-41) The U.S. Supreme Court’s [1954](#timeline-1954-brown) decision in *Brown v. Board of Education* formally rejected “separate but equal,” but the decision did not end segregationist resistance or erase entrenched power. [42](#ref-42) The Civil Rights Act of [1964](#timeline-1964-civil-rights) and the Voting Rights Act of [1965](#timeline-1965-voting-rights) codified equality and political inclusion into law. [43](#ref-43) [44](#ref-44) Those changes were necessary, but they did not end all disenfranchisement or the backlash that followed. [60](#ref-60) [54](#ref-54) King was assassinated in [1968](#timeline-1968-mlk-death) while he was in Memphis at the Lorraine Motel. [61](#ref-61) [62](#ref-62) Even after his death, the movement faced continued resistance to desegregation and voting access. [60](#ref-60) [54](#ref-54) To this day, census voting and registration data still show racial gaps. [55](#ref-55)
+The civil rights struggle made the machinery of legitimacy visible. Martin Luther King Jr. argued from a jail cell that legality is not the same as moral legitimacy, and that obedience to laws that degrade people fails the movement’s moral frame. [69](#ref-69) The U.S. Supreme Court’s [1954](#timeline-1954-brown) decision in *Brown v. Board of Education* formally rejected “separate but equal,” but the decision did not end segregationist resistance or erase entrenched power. [70](#ref-70) The Civil Rights Act of [1964](#timeline-1964-civil-rights) and the Voting Rights Act of [1965](#timeline-1965-voting-rights) codified equality and political inclusion into law. [71](#ref-71) [62](#ref-62) Those changes were necessary, but they did not end all disenfranchisement or the backlash that followed. [72](#ref-72) [63](#ref-63) King was assassinated in [1968](#timeline-1968-mlk-death) while he was in Memphis at the Lorraine Motel. [73](#ref-73) [74](#ref-74) Even after his death, the movement faced continued resistance to desegregation and voting access. [72](#ref-72) [63](#ref-63) To this day, census voting and registration data still show racial gaps. [64](#ref-64)
 
 ### Holodomor
 
-The Holodomor in Ukraine in [1932-1933](#timeline-1932-holodomor) was a policy-driven famine. Ukraine was a key grain-producing area in the Soviet Union. [63](#ref-63) Under Stalin, quotas arrived as state directives and were enforced as legal orders. [63](#ref-63) Search teams executed those directives; decrees restricted movement, and the [January 22, 1933](#timeline-1932-holodomor) order stopped starving peasants from escaping. [63](#ref-63) Demographers estimate close to four million residents of Ukraine died from starvation. [63](#ref-63) Against the 1926 census population of 29.0 million in the Ukrainian SSR, that is roughly 14% of the population. [64](#ref-64) Ukraine’s [2006](#timeline-2006-holodomor-law) law defines the Holodomor of 1932–1933 as genocide. [65](#ref-65)
+The Holodomor in Ukraine in [1932-1933](#timeline-1932-holodomor) was a policy-driven famine. Ukraine was a key grain-producing area in the Soviet Union. [75](#ref-75) Under Stalin, quotas arrived as state directives and were enforced as legal orders. [75](#ref-75) Search teams executed those directives; decrees restricted movement, and the [January 22, 1933](#timeline-1932-holodomor) order stopped starving peasants from escaping. [75](#ref-75) Demographers estimate close to four million residents of Ukraine died from starvation. [75](#ref-75) Against the 1926 census population of 29.0 million in the Ukrainian SSR, that is roughly 14% of the population. [76](#ref-76) Ukraine’s [2006](#timeline-2006-holodomor-law) law defines the Holodomor of 1932–1933 as genocide. [77](#ref-77)
 
 ### Anti-Apartheid Movement
 
-In South Africa, the [1955](#timeline-1955-freedom-charter) Freedom Charter, drafted by anti-apartheid organisers and adopted at the Congress of the People, set out the civic order the movement demanded: a non-racial democracy that directly contested apartheid’s legal claims. [66](#ref-66) In [1964](#timeline-1964-statement-from-dock), Nelson Mandela’s “Statement from the Dock,” delivered during the Rivonia Trial, made that moral case against a legal regime that had already formalized racial domination. The Rivonia Trial was the prosecution of ANC leaders for sabotage and related charges, with the state seeking to break the anti-apartheid movement. Mandela received a life sentence. [47](#ref-47) [67](#ref-67) The legal system’s precision was not its redemption; it was the method by which oppression was enforced. The movement brought that architecture into the open, but it did not confer moral legitimacy on the regime. After 27 years in prison, Mandela was released in [1990](#timeline-1990-mandela-release). He was elected President in [1994](#timeline-1994-mandela-election). [67](#ref-67)
+In South Africa, the [1955](#timeline-1955-freedom-charter) Freedom Charter, drafted by anti-apartheid organisers and adopted at the Congress of the People, set out the civic order the movement demanded: a non-racial democracy that directly contested apartheid’s legal claims. [78](#ref-78) In [1964](#timeline-1964-statement-from-dock), Nelson Mandela’s “Statement from the Dock,” delivered during the Rivonia Trial, made that moral case against a legal regime that had already formalized racial domination. The Rivonia Trial was the prosecution of ANC leaders for sabotage and related charges, with the state seeking to break the anti-apartheid movement. Mandela received a life sentence. [79](#ref-79) [80](#ref-80) The legal system’s precision was not its redemption; it was the method by which oppression was enforced. The movement brought that architecture into the open, but it did not confer moral legitimacy on the regime. After 27 years in prison, Mandela was released in [1990](#timeline-1990-mandela-release). He was elected President in [1994](#timeline-1994-mandela-election). [80](#ref-80)
 
 ### Indigenous Rights
 
-The UN Declaration on the Rights of Indigenous Peoples formalizes recognition of rights that long predated the document. [2007](#timeline-2007-undrip) [51](#ref-51)
+The UN Declaration on the Rights of Indigenous Peoples formalizes recognition of rights that long predated the document. [2007](#timeline-2007-undrip) [81](#ref-81)
 
 ### Disability Rights
 
-The Americans with Disabilities Act formalized access and anti-discrimination in law. [1990](#timeline-1990-ada) [68](#ref-68) The law made exclusions explicit and enforceable, but it also revealed how institutions define “reasonable accommodation.”
+The Americans with Disabilities Act formalized access and anti-discrimination in law. [1990](#timeline-1990-ada) [82](#ref-82) The law made exclusions explicit and enforceable, but it also revealed how institutions define “reasonable accommodation.”
 
 ### LGBTQ+ Rights
 
-Obergefell v. Hodges formalized marriage equality in the United States, turning a moral debate into enforceable legal recognition. [2015](#timeline-2015-obergefell) [69](#ref-69) This was a formal recognition of inclusion claims, but it did not end discrimination or the ongoing harms faced by trans and gender-nonconforming people.
+Obergefell v. Hodges formalized marriage equality in the United States, turning a moral debate into enforceable legal recognition. [2015](#timeline-2015-obergefell) [83](#ref-83) This was a formal recognition of inclusion claims, but it did not end discrimination or the ongoing harms faced by trans and gender-nonconforming people.
 
 ## Conclusion: The Never-Ending Human Narrative
 
-The telegraph turned days into minutes. The telephone collapsed distance. Television made politics a performance people could watch from the couch. The internet and social media collapsed publishing into an endless scroll, and AI now compresses knowledge work into a prompt. Institutions respond after the fact: the rules arrive after the habits do, and the gaps are visible in the years between adoption and regulation. Australia's under-16 social media law in [2024](#timeline-2024-australia-law) is one recent marker of that lag. [70](#ref-70)
+The telegraph turned days into minutes. The telephone collapsed distance. Television made politics a performance people could watch from the couch. The internet and social media collapsed publishing into an endless scroll, and AI now compresses knowledge work into a prompt. Institutions respond after the fact: the rules arrive after the habits do, and the gaps are visible in the years between adoption and regulation. Australia's under-16 social media law in [2024](#timeline-2024-australia-law) is one recent marker of that lag. [84](#ref-84)
 
-Marshall McLuhan summarized the dynamic as "[the medium is the message](#glossary-medium-is-the-message)." [71](#ref-71) In 1945, Arthur C. Clarke sketched a world-spanning relay network—essentially the internet—and argued that a "true broadcast service, giving constant field strength at all times over the whole globe would be invaluable, not to say indispensable, in a world society." [22](#ref-22) Put together, the point is that new tools reshape how we act before we agree on why we should trust them. The [proof boundary](#glossary-proof-boundary) is the line where that trust is assigned through power consensus, not earned by capability.
+Marshall McLuhan summarized the dynamic as "[the medium is the message](#glossary-medium-is-the-message)." [85](#ref-85) In 1945, Arthur C. Clarke sketched a world-spanning relay network—essentially the internet—and argued that a "true broadcast service, giving constant field strength at all times over the whole globe would be invaluable, not to say indispensable, in a world society." [86](#ref-86) Put together, the point is that new tools reshape how we act before we agree on why we should trust them. The [proof boundary](#glossary-proof-boundary) is the line where that trust is assigned through power consensus, not earned by capability.
 
 AI taking responsibility for real decisions is less about raw model capability and more about the [proof boundary](#glossary-proof-boundary). We already expose much of our knowledge work to automation through [APIs](#glossary-api), and [MCP](#glossary-mcp) makes those systems directly callable by [LLMs](#glossary-llm). The missing piece is not another model upgrade. It is a checker that can show, step by step, that the agent read what mattered, responded to what was required, and recorded what it owes. For now, the handoff still ends with a human deciding whether the record is convincing enough to let the work ship. That does not change with a better model, it changes with humans deciding it is worth it to pay the cost of formalization.
 
 This tension turns out to be the same self-reference problem Gödel made unavoidable. A checker that claims "every required action was handled" must spell out what counts as required, what counts as evidence, and which [oracle](#glossary-oracle-problem) gets the last word. It is a system trying to justify its own completeness. The rules need a judge outside the rules, and once you introduce that judge, you are back to the boundary again. This is not an AI shortcoming awaiting an update; this is an immutable property of [formal systems](#glossary-formal-system) themselves. Proofs do not abolish discretion. They only relocate it, explicitly, to formal rules. Gödel proved that incompleteness is a property of logic itself. If you want formal proofs for anything, you must accept this message. No new medium will ever replace this.
 
-The twist is that the [proof boundary](#glossary-proof-boundary) makes adoption predictable. Economic pressure and political incentive push it outward. Formal work checkers are the only way to make human labour obsolete, because it's the only kind of authority an AI can understand and learn from. [Sutton](#ref-23)'s complaint that [LLMs](#glossary-llm) don't have a plan is the same missing judge in another form: without a proof-backed objective, the system cannot choose a path with confidence. Economics and politics can only happen along lines that can be formalized. Before AI can take over the mundane and tedious parts of life, those domains need formal proof checkers. Because of the [oracle problem](#glossary-oracle-problem), only humans can provide them. Or decide not to. Whatever is not provable stays in the realm of judgment, negotiation, and signature. Capitalism wants us to see the proof boundary as an ever expanding horizon of human wonder and opportunity. The reality is that the proof boundary can be moved in either direction. Formal rules can, and should be, removed whenever the illusion of legitimacy stops the humans responsible for the rules from being held accountable.
+The twist is that the [proof boundary](#glossary-proof-boundary) makes adoption predictable. Economic pressure and political incentive push it outward. Formal work checkers are the only way to make human labour obsolete, because it's the only kind of authority an AI can understand and learn from. [Sutton](#ref-30)'s complaint that [LLMs](#glossary-llm) don't have a plan is the same missing judge in another form: without a proof-backed objective, the system cannot choose a path with confidence. Economics and politics can only happen along lines that can be formalized. Before AI can take over the mundane and tedious parts of life, those domains need formal proof checkers. Because of the [oracle problem](#glossary-oracle-problem), only humans can provide them. Or decide not to. Whatever is not provable stays in the realm of judgment, negotiation, and signature. Capitalism wants us to see the proof boundary as an ever expanding horizon of human wonder and opportunity. The reality is that the proof boundary can be moved in either direction. Formal rules can, and should be, removed whenever the illusion of legitimacy stops the humans responsible for the rules from being held accountable.
 
 Comfort with [formal systems](#glossary-formal-system) varies widely across individuals and cultures, so the push to expand the [proof boundary](#glossary-proof-boundary) does not land evenly. Economic pressure to extract value from automation rewards early adopters of newly formalized systems, who are often those with the best access and opportunity. The drive to expand the boundary often widens existing gaps. That makes the boundary a social justice issue as well as a technical one.
 
@@ -303,19 +303,19 @@ Gödel also forces a final symmetry: authority can only justify itself by refere
 
 Explores self-reference, [formal systems](#glossary-formal-system), and proof mechanics, with a sustained focus on how rule-bound systems generate their own paradoxes. The book gives the intellectual machinery for understanding why any attempt to certify that every stated requirement in a system has been satisfied must encode its own assumptions about what counts as proof and who can validate its completion. It shows why limits in formal reasoning are structural, not just a tooling gap.
 
-*The Whale and the Reactor* ([1986](#timeline-1986-whale-reactor))—Langdon Winner [73](#ref-73)
+*The Whale and the Reactor* ([1986](#timeline-1986-whale-reactor))—Langdon Winner [87](#ref-87)
 
 Argues that technologies reorganize authority as surely as they deliver power, and insists that design choices are political decisions even when presented as neutral engineering. The essays are concise but relentless about how infrastructure determines who has agency, who must comply, and who is made visible or invisible to the system. It is a clear map of how technical structures allocate control.
 
-*Sapiens* ([2015](#timeline-2015-sapiens))—Yuval Noah Harari [74](#ref-74)
+*Sapiens* ([2015](#timeline-2015-sapiens))—Yuval Noah Harari [88](#ref-88)
 
 Frames myth as the shared fiction that makes large-scale human coordination possible, emphasizing how institutions, law, and money scale trust through agreed narratives. This framing is useful for seeing how [formal verification](#glossary-formal-verification) becomes its own coordination story, promising certainty in exchange for compliance with its rules. The book also shows how these stories exclude as much as they include, which mirrors the way formal rules can grant legitimacy while narrowing who is recognized by the system.
 
-*Automating Inequality* ([2018](#timeline-2018-automating-inequality))—Virginia Eubanks [75](#ref-75)
+*Automating Inequality* ([2018](#timeline-2018-automating-inequality))—Virginia Eubanks [89](#ref-89)
 
 Follows welfare systems as they become digital gatekeepers, showing how automation redraws the boundary between acceptable and unacceptable claims in practice, not in theory. The case studies are grounded in the lived mechanics of eligibility, appeal, and documentation, which exposes how formal rules can compress complex realities into brittle checks. It makes visible how those checks govern access, constrain discretion, and shift responsibility onto those least equipped to contest the logic.
 
-*Race After Technology* ([2019](#timeline-2019-race-after-technology))—Ruha Benjamin [76](#ref-76)
+*Race After Technology* ([2019](#timeline-2019-race-after-technology))—Ruha Benjamin [90](#ref-90)
 
 Traces how ostensibly neutral technical systems encode hierarchy in data, design, and deployment, and shows how those hierarchies survive even when decisions are framed as objective. The book makes the stakes of verification legible by following how classification, scoring, and automation decide who is allowed to proceed and who is turned away. It draws a clear line between technical formality and the human consequences of who gets counted.
 
@@ -326,77 +326,78 @@ Traces how ostensibly neutral technical systems encode hierarchy in data, design
 ### Appendix A: Chronological Narrative of Proof and Power
 
 Timeline:
-- <a id="timeline-1848-seneca-falls"></a>1848: Seneca Falls Declaration of Sentiments frames women's political exclusion as a moral harm. [28](#ref-28)
-- <a id="timeline-1883-residential-schools"></a>1883: Canadian federal policy formalizes the residential school system. [56](#ref-56)
-- <a id="timeline-1900-pan-african"></a>1900: Pan-African Conference in London frames anti-colonial and rights claims. [37](#ref-37)
+- <a id="timeline-1848-seneca-falls"></a>1848: Seneca Falls Declaration of Sentiments frames women's political exclusion as a moral harm. [60](#ref-60)
+- <a id="timeline-1883-residential-schools"></a>1883: Canadian federal policy formalizes the residential school system. [65](#ref-65)
+- <a id="timeline-1900-pan-african"></a>1900: Pan-African Conference in London frames anti-colonial and rights claims. [41](#ref-41)
 - <a id="timeline-1901"></a>1901: [Russell's paradox](#glossary-russells-paradox) exposes contradictions in naive set theory. [4](#ref-4)
 - <a id="timeline-1907"></a>1907: Quebec Bridge collapse. [8](#ref-8)
-- <a id="timeline-1913-land-act"></a>1913: South Africa's Natives Land Act formalizes land dispossession. [38](#ref-38)
-- <a id="timeline-1919-amritsar"></a><a id="timeline-1919-may-fourth"></a>1919: Amritsar massacre intensifies anti-colonial resistance in India; May Fourth Movement in China challenges imperial influence and legitimacy. [39](#ref-39) [40](#ref-40)
-- <a id="timeline-1920-noncooperation"></a><a id="timeline-1920-nineteenth"></a>1920: Indian Non-Cooperation Movement begins (1920-1922); U.S. Nineteenth Amendment formalises women's suffrage. [41](#ref-41) [29](#ref-29)
-- <a id="timeline-1930-salt-march"></a>1930: Salt March from Sabarmati Ashram to Dandi, India. [42](#ref-42)
+- <a id="timeline-1913-land-act"></a>1913: South Africa's Natives Land Act formalizes land dispossession. [42](#ref-42)
+- <a id="timeline-1919-amritsar"></a><a id="timeline-1919-may-fourth"></a>1919: Amritsar massacre intensifies anti-colonial resistance in India; May Fourth Movement in China challenges imperial influence and legitimacy. [43](#ref-43) [44](#ref-44)
+- <a id="timeline-1920-noncooperation"></a><a id="timeline-1920-nineteenth"></a>1920: Indian Non-Cooperation Movement begins (1920-1922); U.S. Nineteenth Amendment formalises women's suffrage. [45](#ref-45) [61](#ref-61)
+- <a id="timeline-1930-salt-march"></a>1930: Salt March from Sabarmati Ashram to Dandi, India. [46](#ref-46)
 - <a id="timeline-1931"></a>1931: Gödel demonstrates [incompleteness](#glossary-incompleteness) constraints in [formal systems](#glossary-formal-system). [5](#ref-5)
-- <a id="timeline-1932-holodomor"></a>1932-1933: Holodomor in Ukraine. [65](#ref-65)
-- <a id="timeline-1935-nuremberg-laws"></a>1935: Nuremberg Laws formalize racial hierarchy in Germany. [44](#ref-44)
+- <a id="timeline-1932-holodomor"></a>1932-1933: Holodomor in Ukraine. [75](#ref-75)
+- <a id="timeline-1935-nuremberg-laws"></a>1935: Nuremberg Laws formalize racial hierarchy in Germany. [48](#ref-48)
 - <a id="timeline-1936"></a>1936: Turing demonstrates the [halting problem](#glossary-halting-problem) is undecidable. [7](#ref-7)
-- <a id="timeline-1939-resistance"></a>1939: WWII resistance movements intensify through 1945, including the Warsaw Ghetto Uprising. [45](#ref-45)
-- <a id="timeline-1940-assembly"></a>1940: Assembly era manual validation dominates through the 1950s. [77](#ref-77)
-- <a id="timeline-1941-atlantic-charter"></a><a id="timeline-1941-turing"></a>1941: Atlantic Charter outlines self-determination principles; Turing's codebreaking work at Bletchley Park accelerates Allied intelligence. [46](#ref-46) [78](#ref-78)
-- <a id="timeline-1942-quit-india"></a>1942: Quit India Movement calls for immediate British withdrawal and mass civil disobedience. [43](#ref-43)
-- <a id="timeline-1945-clarke"></a><a id="timeline-1945-un-charter"></a><a id="timeline-1945-1946-nuremberg-trials"></a>1945: Arthur C. Clarke publishes "Extra-Terrestrial Relays" in *Wireless World*, effectively predicting the Internet. [79](#ref-79); UN Charter establishes a postwar human-rights framework. [47](#ref-47); Nuremberg Trials formalise accountability for war crimes (1945-1946). [48](#ref-48)
-- <a id="timeline-1947-independence"></a>1947: Indian Independence Act ends British rule in law. [49](#ref-49)
-- <a id="timeline-1948-udhr"></a><a id="timeline-1948-genocide"></a>1948: Universal Declaration of Human Rights adopted; Genocide Convention adopted. [49](#ref-49) [50](#ref-50)
-- <a id="timeline-1949-geneva"></a>1949: Geneva Conventions updated to codify protections in war. [51](#ref-51)
-- <a id="timeline-1950-echr"></a>1950: European Convention on Human Rights signed. [80](#ref-80)
-- <a id="timeline-1954-brown"></a>1954: *Brown v. Board of Education* formally rejects “separate but equal.” [42](#ref-42)
-- <a id="timeline-1955-freedom-charter"></a>1955: Freedom Charter articulates a competing moral order in South Africa. [66](#ref-66)
+- <a id="timeline-1939-resistance"></a>1939: WWII resistance movements intensify through 1945, including the Warsaw Ghetto Uprising. [49](#ref-49)
+- <a id="timeline-1940-assembly"></a>1940: Assembly era manual validation dominates through the 1950s. [91](#ref-91)
+- <a id="timeline-1941-atlantic-charter"></a><a id="timeline-1941-turing"></a>1941: Atlantic Charter outlines self-determination principles; Turing's codebreaking work at Bletchley Park accelerates Allied intelligence. [50](#ref-50) [7](#ref-7)
+- <a id="timeline-1942-quit-india"></a>1942: Quit India Movement calls for immediate British withdrawal and mass civil disobedience. [47](#ref-47)
+- <a id="timeline-1945-clarke"></a><a id="timeline-1945-un-charter"></a><a id="timeline-1945-1946-nuremberg-trials"></a>1945: Arthur C. Clarke publishes "Extra-Terrestrial Relays" in *Wireless World*, effectively predicting the Internet. [86](#ref-86); UN Charter establishes a postwar human-rights framework. [51](#ref-51); Nuremberg Trials formalise accountability for war crimes (1945-1946). [52](#ref-52)
+- <a id="timeline-1947-independence"></a>1947: Indian Independence Act ends British rule in law. [56](#ref-56)
+- <a id="timeline-1948-udhr"></a><a id="timeline-1948-genocide"></a>1948: Universal Declaration of Human Rights adopted; Genocide Convention adopted. [53](#ref-53) [54](#ref-54)
+- <a id="timeline-1949-geneva"></a>1949: Geneva Conventions updated to codify protections in war. [55](#ref-55)
+- <a id="timeline-1950-echr"></a>1950: European Convention on Human Rights signed. [92](#ref-92)
+- <a id="timeline-1954-brown"></a>1954: *Brown v. Board of Education* formally rejects “separate but equal.” [70](#ref-70)
+- <a id="timeline-1955-freedom-charter"></a>1955: Freedom Charter articulates a competing moral order in South Africa. [78](#ref-78)
 - <a id="timeline-1957-compilers"></a>1957: [Compiler](#glossary-compiler) revolution accelerates (1957-1959; [FORTRAN](#glossary-fortran), [COBOL](#glossary-cobol)). [16](#ref-16)
-- <a id="timeline-1960-un-decolonization"></a>1960: UN General Assembly Resolution 1514 affirms decolonization and self-determination. [37](#ref-37)
-- <a id="timeline-1962-mandela-imprisonment"></a>1962: Nelson Mandela is arrested and imprisoned, receiving a five-year sentence. [67](#ref-67)
-- <a id="timeline-1963-mlk-jail"></a><a id="timeline-1963-mlk-release"></a><a id="timeline-1963-i-have-a-dream"></a>1963: Martin Luther King Jr. is jailed in Birmingham and released three days later; delivers the "I Have a Dream" speech. [81](#ref-81) [82](#ref-82)
-- <a id="timeline-1964-mcluhan"></a><a id="timeline-1964-civil-rights"></a><a id="timeline-1964-statement-from-dock"></a>1964: McLuhan publishes *Understanding Media*, its opening line: "[the medium is the message](#glossary-medium-is-the-message)"; Civil Rights Act codifies equality and inclusion; Mandela delivers “Statement from the Dock” during the Rivonia trial, gets sentenced to life in prison. [71](#ref-71) [43](#ref-43) [47](#ref-47) [67](#ref-67)
-- <a id="timeline-1965-voting-rights"></a>1965: Voting Rights Act codifies political inclusion. [44](#ref-44)
-- <a id="timeline-1968-mlk-death"></a>1968: Martin Luther King Jr. is assassinated. [61](#ref-61)
-- <a id="timeline-1969-white-paper"></a>1969: Canada issues the White Paper on Indian policy. Residential schools keep operating. [57](#ref-57)
-- <a id="timeline-1970s"></a>1970s: [type systems](#glossary-type-system) take hold ([Pascal](#glossary-pascal), [C](#glossary-c), [ML](#glossary-ml)). [83](#ref-83) [84](#ref-84) [85](#ref-85)
+- <a id="timeline-1960-un-decolonization"></a>1960: UN General Assembly Resolution 1514 affirms decolonization and self-determination. [59](#ref-59)
+- <a id="timeline-1962-mandela-imprisonment"></a>1962: Nelson Mandela is arrested and imprisoned, receiving a five-year sentence. [80](#ref-80)
+- <a id="timeline-1963-mlk-jail"></a><a id="timeline-1963-mlk-release"></a><a id="timeline-1963-i-have-a-dream"></a>1963: Martin Luther King Jr. is jailed in Birmingham and released three days later; delivers the "I Have a Dream" speech. [69](#ref-69) [74](#ref-74)
+- <a id="timeline-1964-mcluhan"></a><a id="timeline-1964-civil-rights"></a><a id="timeline-1964-statement-from-dock"></a>1964: McLuhan publishes *Understanding Media*, its opening line: "[the medium is the message](#glossary-medium-is-the-message)"; Civil Rights Act codifies equality and inclusion; Mandela delivers “Statement from the Dock” during the Rivonia trial, gets sentenced to life in prison. [85](#ref-85) [71](#ref-71) [79](#ref-79) [80](#ref-80)
+- <a id="timeline-1965-voting-rights"></a>1965: Voting Rights Act codifies political inclusion. [62](#ref-62)
+- <a id="timeline-1968-mlk-death"></a>1968: Martin Luther King Jr. is assassinated. [73](#ref-73)
+- <a id="timeline-1969-white-paper"></a>1969: Canada issues the White Paper on Indian policy. Residential schools keep operating. [66](#ref-66)
+- <a id="timeline-1970s"></a>1970s: [type systems](#glossary-type-system) take hold ([Pascal](#glossary-pascal), [C](#glossary-c), [ML](#glossary-ml)). [93](#ref-93) [94](#ref-94) [95](#ref-95)
 - <a id="timeline-1979-geb"></a>1979: Hofstadter publishes *Gödel, Escher, Bach*. [6](#ref-6)
-- <a id="timeline-1980-fp"></a>1980: Functional programming emerges through the 1980s-1990s ([Miranda](#glossary-miranda), [Haskell](#glossary-haskell)). [86](#ref-86) [22](#ref-22)
+- <a id="timeline-1980-fp"></a>1980: Functional programming emerges through the 1980s-1990s ([Miranda](#glossary-miranda), [Haskell](#glossary-haskell)). [96](#ref-96) [22](#ref-22)
 - <a id="timeline-1982"></a>1982: [Byzantine Generals problem](#glossary-byzantine-generals) formalises distributed agreement constraints. [17](#ref-17)
-- <a id="timeline-1985-cpp"></a>1985: [C++](#glossary-cpp) emerges as a systems language. [87](#ref-87)
+- <a id="timeline-1985-cpp"></a>1985: [C++](#glossary-cpp) emerges as a systems language. [97](#ref-97)
 - <a id="timeline-1985-therac"></a>1985: Therac-25 overdoses and patient deaths (1985-1987). [9](#ref-9) [10](#ref-10)
-- <a id="timeline-1986-whale-reactor"></a><a id="timeline-1986-isabelle-hol"></a><a id="timeline-1986-sql"></a>1986: Winner publishes *The Whale and the Reactor*; [Isabelle/HOL](#glossary-isabelle-hol) [proof assistant](#glossary-proof-assistant) introduced; [SQL](#glossary-sql) standardises core semantics. [73](#ref-73) [20](#ref-20) [22](#ref-22)
+- <a id="timeline-1986-whale-reactor"></a><a id="timeline-1986-isabelle-hol"></a><a id="timeline-1986-sql"></a>1986: Winner publishes *The Whale and the Reactor*; [Isabelle/HOL](#glossary-isabelle-hol) [proof assistant](#glossary-proof-assistant) introduced; [SQL](#glossary-sql) standardises core semantics. [87](#ref-87) [20](#ref-20) [22](#ref-22)
 - <a id="timeline-1989-coq"></a>1989: [Coq](#glossary-coq) [proof assistant](#glossary-proof-assistant) introduced. [22](#ref-22)
-- <a id="timeline-1990-haskell"></a><a id="timeline-1990-mandela-release"></a><a id="timeline-1990-ada"></a>1990: [Haskell](#glossary-haskell) launches; Mandela is released from prison; Americans with Disabilities Act is enacted. [22](#ref-22) [67](#ref-67) [68](#ref-68)
+- <a id="timeline-1990-haskell"></a><a id="timeline-1990-mandela-release"></a><a id="timeline-1990-ada"></a>1990: [Haskell](#glossary-haskell) launches; Mandela is released from prison; Americans with Disabilities Act is enacted. [22](#ref-22) [80](#ref-80) [82](#ref-82)
 - <a id="timeline-1993"></a>1993: [NVIDIA](#glossary-nvidia) founded for PC gaming [GPUs](#glossary-gpu). [25](#ref-25)
-- <a id="timeline-1994"></a><a id="timeline-1994-mandela-election"></a>1994: Pentium FDIV bug and recall; Nelson Mandela is elected President of South Africa. [11](#ref-11) [67](#ref-67)
-- <a id="timeline-1996"></a><a id="timeline-1996-residential-schools-closure"></a>1996: Ariane 5 failure at 37 seconds; last federally run residential school closes in Canada. [12](#ref-12) [13](#ref-13) [56](#ref-56)
+- <a id="timeline-1994"></a><a id="timeline-1994-mandela-election"></a>1994: Pentium FDIV bug and recall; Nelson Mandela is elected President of South Africa. [11](#ref-11) [80](#ref-80)
+- <a id="timeline-1996"></a><a id="timeline-1996-residential-schools-closure"></a>1996: Ariane 5 failure at 37 seconds; last federally run residential school closes in Canada. [12](#ref-12) [13](#ref-13) [67](#ref-67)
 - <a id="timeline-1999"></a>1999: [TLA+](#glossary-tla) formal methods mature for [distributed systems](#glossary-distributed-systems). [18](#ref-18)
 - <a id="timeline-2002"></a>2002: Bezos [API](#glossary-api) mandate and internal service externalisation. [21](#ref-21)
-- <a id="timeline-2006"></a><a id="timeline-2006-compcert"></a><a id="timeline-2006-holodomor-law"></a>2006: [AWS](#glossary-aws) launches S3 and EC2; [CUDA](#glossary-cuda) enables general [GPU](#glossary-gpu) computing; [CompCert](#glossary-compcert) project releases; Ukraine passes the Holodomor law recognizing the famine as genocide. [18](#ref-18) [18](#ref-18) [19](#ref-19) [65](#ref-65)
-- <a id="timeline-2007-dynamo"></a><a id="timeline-2007"></a><a id="timeline-2007-undrip"></a>2007: [Amazon](#glossary-amazon) publishes the Dynamo key-value store design; [Z3](#glossary-z3) [SMT solver](#glossary-smt-solver) released; UN Declaration on the Rights of Indigenous Peoples adopted. [18](#ref-18) [23](#ref-23) [51](#ref-51)
+- <a id="timeline-2006"></a><a id="timeline-2006-compcert"></a><a id="timeline-2006-holodomor-law"></a>2006: [AWS](#glossary-aws) launches S3 and EC2; [CUDA](#glossary-cuda) enables general [GPU](#glossary-gpu) computing; [CompCert](#glossary-compcert) project releases; Ukraine passes the Holodomor law recognizing the famine as genocide. [18](#ref-18) [27](#ref-27) [33](#ref-33) [77](#ref-77)
+- <a id="timeline-2007-dynamo"></a><a id="timeline-2007"></a><a id="timeline-2007-undrip"></a>2007: [Amazon](#glossary-amazon) publishes the Dynamo key-value store design; [Z3](#glossary-z3) [SMT solver](#glossary-smt-solver) released; UN Declaration on the Rights of Indigenous Peoples adopted. [18](#ref-18) [23](#ref-23) [81](#ref-81)
 - <a id="timeline-2009-sel4"></a>2009: [seL4](#glossary-sel4) proof published. [19](#ref-19)
 - <a id="timeline-2009-toyota"></a>2009: [Toyota](#glossary-toyota) unintended acceleration crisis (2009-2011). [14](#ref-14)
 - <a id="timeline-2010-rust"></a>2010: [Rust](#glossary-rust) project begins. [22](#ref-22)
 - <a id="timeline-2011"></a>2011: [Amazon](#glossary-amazon) uses [TLA+](#glossary-tla) to find deep distributed-system bugs. [18](#ref-18)
-- <a id="timeline-2012-alexnet"></a>2012: AlexNet shows [GPU](#glossary-gpu) advantage for [deep learning](#glossary-deep-learning). [88](#ref-88)
-- <a id="timeline-2013-mandela-death"></a>2013: Nelson Mandela dies at 95. [67](#ref-67)
-- <a id="timeline-2015-sapiens"></a><a id="timeline-2015-obergefell"></a>2015: Harari publishes *Sapiens*; *Obergefell v. Hodges* recognises marriage equality in the United States. [74](#ref-74) [69](#ref-69)
-- <a id="timeline-2016-alphago"></a><a id="timeline-2016-retinopathy"></a>2016: [AlphaGo](#glossary-alphago) defeats top human players in [Go](#glossary-go); retinopathy model validation published. [30](#ref-30) [2](#ref-2)
-- <a id="timeline-2017-transformer"></a><a id="timeline-2017-alphazero"></a><a id="timeline-2017-dermatology"></a>2017: *Attention Is All You Need* introduces the [transformer](#glossary-transformer), unlocking scalable [LLMs](#glossary-llm); [AlphaZero](#glossary-alphazero) demonstrates self-play learning; dermatology classifier reaches specialist-level accuracy; [deep learning](#glossary-deep-learning) medical imaging breakthroughs broaden in subsequent years. [27](#ref-27) [31](#ref-31) [30](#ref-30)
-- <a id="timeline-2018-bridge-ai"></a><a id="timeline-2018-automating-inequality"></a>2018: Deep learning crack detection appears in civil infrastructure inspection; [formal verification](#glossary-formal-verification) case studies mature in subsequent years ([CompCert](#glossary-compcert), [seL4](#glossary-sel4)); Eubanks publishes *Automating Inequality*. [3](#ref-3) [19](#ref-19) [20](#ref-20) [75](#ref-75)
-- <a id="timeline-2019-race-after-technology"></a>2019: Benjamin publishes *Race After Technology*. [76](#ref-76)
-- <a id="timeline-2020-ross"></a>2020: Thomson Reuters v. [ROSS Intelligence](#glossary-ross) litigation begins. [89](#ref-89)
-- <a id="timeline-2021-copilot"></a><a id="timeline-2021-humaneval"></a><a id="timeline-2021-residential-schools"></a>2021: [GitHub](#glossary-github) [Copilot](#glossary-copilot) launches; [HumanEval](#glossary-humaneval) benchmark released; unmarked graves are reported at former residential schools in Canada. [90](#ref-90) [32](#ref-32) [59](#ref-59)
-- <a id="timeline-2022-chatgpt"></a><a id="timeline-2022-alphacode"></a>2022: [OpenAI](#glossary-openai) launches [ChatGPT](#glossary-chatgpt); [LLMs](#glossary-llm) go mainstream; [AlphaCode](#glossary-alphacode) results published; [FDA](#glossary-fda) approvals for AI devices rise through 2024 while clinical adoption remains low. [91](#ref-91) [32](#ref-32) [86](#ref-86)
-- <a id="timeline-2023-mata"></a><a id="timeline-2023-din-sql"></a>2023: Mata v Avianca sanctions over fake citations; [DIN-SQL](#glossary-din-sql) benchmark released. [92](#ref-92) [32](#ref-32)
-- <a id="timeline-2024-mcp"></a><a id="timeline-2024-hai-reglab"></a><a id="timeline-2024-alphaproof"></a><a id="timeline-2024-hilbert"></a><a id="timeline-2024-australia-law"></a>2024: [MCP](#glossary-mcp) standardises tool access for [LLMs](#glossary-llm); Stanford HAI / RegLab hallucination analysis published; [AlphaProof](#glossary-alphaproof) solves IMO problems at silver level; [Lean](#glossary-lean) verifies proofs; [HILBERT](#glossary-hilbert) reaches ~70% on [PutnamBench](#glossary-putnambench) formal proofs; Australia enacts under-16 social media law. [33](#ref-33) [1](#ref-1) [29](#ref-29) [32](#ref-32) [70](#ref-70)
+- <a id="timeline-2012-alexnet"></a>2012: AlexNet shows [GPU](#glossary-gpu) advantage for [deep learning](#glossary-deep-learning). [99](#ref-99)
+- <a id="timeline-2013-mandela-death"></a>2013: Nelson Mandela dies at 95. [80](#ref-80)
+- <a id="timeline-2015-sapiens"></a><a id="timeline-2015-obergefell"></a>2015: Harari publishes *Sapiens*; *Obergefell v. Hodges* recognises marriage equality in the United States. [88](#ref-88) [83](#ref-83)
+- <a id="timeline-2016-alphago"></a><a id="timeline-2016-retinopathy"></a>2016: [AlphaGo](#glossary-alphago) defeats top human players in [Go](#glossary-go); retinopathy model validation published. [31](#ref-31) [2](#ref-2)
+- <a id="timeline-2017-transformer"></a><a id="timeline-2017-alphazero"></a><a id="timeline-2017-dermatology"></a>2017: *Attention Is All You Need* introduces the [transformer](#glossary-transformer), unlocking scalable [LLMs](#glossary-llm); [AlphaZero](#glossary-alphazero) demonstrates self-play learning; dermatology classifier reaches specialist-level accuracy; [deep learning](#glossary-deep-learning) medical imaging breakthroughs broaden in subsequent years. [28](#ref-28) [32](#ref-32) [37](#ref-37)
+- <a id="timeline-2018-bridge-ai"></a><a id="timeline-2018-automating-inequality"></a>2018: Deep learning crack detection appears in civil infrastructure inspection; [formal verification](#glossary-formal-verification) case studies mature in subsequent years ([CompCert](#glossary-compcert), [seL4](#glossary-sel4)); Eubanks publishes *Automating Inequality*. [3](#ref-3) [19](#ref-19) [20](#ref-20) [89](#ref-89)
+- <a id="timeline-2019-race-after-technology"></a>2019: Benjamin publishes *Race After Technology*. [90](#ref-90)
+- <a id="timeline-2020-ross"></a>2020: Thomson Reuters v. [ROSS Intelligence](#glossary-ross) litigation begins. [100](#ref-100)
+- <a id="timeline-2021-copilot"></a><a id="timeline-2021-humaneval"></a><a id="timeline-2021-residential-schools"></a>2021: [GitHub](#glossary-github) [Copilot](#glossary-copilot) launches; [HumanEval](#glossary-humaneval) benchmark released; unmarked graves are reported at former residential schools in Canada. [101](#ref-101) [33](#ref-33) [68](#ref-68)
+- <a id="timeline-2022-chatgpt"></a><a id="timeline-2022-alphacode"></a>2022: [OpenAI](#glossary-openai) launches [ChatGPT](#glossary-chatgpt); [LLMs](#glossary-llm) go mainstream; [AlphaCode](#glossary-alphacode) results published; [FDA](#glossary-fda) approvals for AI devices rise through 2024 while clinical adoption remains low. [105](#ref-105) [33](#ref-33) [98](#ref-98)
+- <a id="timeline-2023-mata"></a><a id="timeline-2023-din-sql"></a>2023: Mata v Avianca sanctions over fake citations; [DIN-SQL](#glossary-din-sql) benchmark released. [109](#ref-109) [33](#ref-33)
+- <a id="timeline-2024-mcp"></a><a id="timeline-2024-hai-reglab"></a><a id="timeline-2024-alphaproof"></a><a id="timeline-2024-australia-law"></a>2024: [MCP](#glossary-mcp) standardises tool access for [LLMs](#glossary-llm); Stanford HAI / RegLab hallucination analysis published; [AlphaProof](#glossary-alphaproof) solves IMO problems at silver level; [Lean](#glossary-lean) verifies proofs; Australia enacts under-16 social media law. [35](#ref-35) [1](#ref-1) [36](#ref-36) [84](#ref-84)
+- <a id="timeline-2025-hilbert"></a>2025: [HILBERT](#glossary-hilbert) reaches ~70% on [PutnamBench](#glossary-putnambench) formal proofs. [34](#ref-34)
 
 
 
 ### Appendix B: Glossary
 
 - <a id="glossary-proof-boundary"></a>**[Proof boundary](#glossary-proof-boundary)**: The line between what can be verified mechanically and what must be judged by humans.
-- <a id="glossary-llm"></a>**[LLM](#glossary-llm) (Large Language Model)**: A model trained to predict text at scale, using [transformers](#glossary-transformer) to absorb large, human-curated corpora. [27](#ref-27)
+- <a id="glossary-llm"></a>**[LLM](#glossary-llm) (Large Language Model)**: A model trained to predict text at scale, using [transformers](#glossary-transformer) to absorb large, human-curated corpora. [28](#ref-28)
 - <a id="glossary-trolley-problem"></a>**[Trolley problem](#glossary-trolley-problem)**: A moral thought experiment that illustrates that there is no universally accepted moral rule for choosing between harmful alternatives.
 - <a id="glossary-formal-language"></a>**[Formal language](#glossary-formal-language)**: A language with explicit syntax rules that can be mechanically checked by a [compiler](#glossary-compiler) or parser.
 - <a id="glossary-markdown"></a>**[Markdown](#glossary-markdown)**: A lightweight markup language for structured text and links. The formal language in which this document is written.
@@ -408,8 +409,8 @@ Timeline:
 - <a id="glossary-halting-problem"></a>**[Halting problem](#glossary-halting-problem)**: The undecidable question of whether a program terminates. [7](#ref-7)
 - <a id="glossary-formal-verification"></a>**[Formal verification](#glossary-formal-verification)**: Mathematical proof, checked by automated tools such as [proof assistants](#glossary-proof-assistant) and [model checkers](#glossary-model-checker), that a system satisfies a specification under explicit assumptions.
 - <a id="glossary-race-condition"></a>**[Race condition](#glossary-race-condition)**: A bug that occurs when timing or ordering of concurrent operations changes the outcome.
-- <a id="glossary-intel"></a>**[Intel](#glossary-intel)**: A semiconductor company behind the Pentium processors. [93](#ref-93)
-- <a id="glossary-esa"></a>**[ESA (European Space Agency)](#glossary-esa)**: A multinational space agency responsible for scientific and exploration missions, including Cluster. [94](#ref-94)
+- <a id="glossary-intel"></a>**[Intel](#glossary-intel)**: A semiconductor company behind the Pentium processors. [107](#ref-107)
+- <a id="glossary-esa"></a>**[ESA (European Space Agency)](#glossary-esa)**: A multinational space agency responsible for scientific and exploration missions, including Cluster. [108](#ref-108)
 - <a id="glossary-toyota"></a>**[Toyota](#glossary-toyota)**: An automaker involved in unintended-acceleration investigations. [14](#ref-14)
 - <a id="glossary-nasa"></a>**[NASA](#glossary-nasa)**: The U.S. space agency involved in automotive software analysis reports. [15](#ref-15)
 - <a id="glossary-misra-c"></a>**[MISRA C](#glossary-misra-c)**: A safety-oriented [C](#glossary-c) coding standard. [15](#ref-15)
@@ -428,7 +429,7 @@ Timeline:
 - <a id="glossary-aws"></a>**[AWS (Amazon Web Services)](#glossary-aws)**: [Amazon](#glossary-amazon)'s cloud platform. [18](#ref-18)
 - <a id="glossary-compcert"></a>**[CompCert](#glossary-compcert)**: A formally verified [C](#glossary-c) compiler with machine-checked compliance to its spec in [Coq](#glossary-coq). [19](#ref-19)
 - <a id="glossary-sel4"></a>**[seL4](#glossary-sel4)**: a formally verified microkernel with machine-checked compliance to its spec. [19](#ref-19)
-- <a id="glossary-c"></a>**[C](#glossary-c)**: A low-level systems programming language with manual memory control. [84](#ref-84)
+- <a id="glossary-c"></a>**[C](#glossary-c)**: A low-level systems programming language with manual memory control. [94](#ref-94)
 - <a id="glossary-isabelle-hol"></a>**[Isabelle/HOL](#glossary-isabelle-hol)**: A [proof assistant](#glossary-proof-assistant) and higher-order logic environment with large, machine-checked libraries. [20](#ref-20)
 - <a id="glossary-api"></a>**[API (Application Programming Interface)](#glossary-api)**: A formal interface that defines how software components interact.
 - <a id="glossary-sql"></a>**[SQL](#glossary-sql)**: A query language with formal, executable semantics. [22](#ref-22)
@@ -436,52 +437,52 @@ Timeline:
 - <a id="glossary-haskell"></a>**[Haskell](#glossary-haskell)**: A purely [functional language](#glossary-functional-languages) with strong type systems. [22](#ref-22)
 - <a id="glossary-smt-solver"></a>**[SMT (satisfiability modulo theories) solver](#glossary-smt-solver)**: Automated solver for logical formulas in satisfiability modulo theories. [24](#ref-24)
 - <a id="glossary-z3"></a>**[Z3](#glossary-z3)**: A widely used [SMT solver](#glossary-smt-solver) developed by Microsoft Research. [23](#ref-23)
-- <a id="glossary-transformer"></a>**[Transformer](#glossary-transformer)**: An [ANN](#glossary-ann) architecture built around self-attention, enabling parallel processing of sequences and flexible long-range dependencies; this makes scaling to large language models practical. [27](#ref-27)
-- <a id="glossary-gpu"></a>**[GPU](#glossary-gpu)**: A processor optimized for parallel arithmetic computation, offering far higher throughput for many workloads than [CPUs](#glossary-cpu). [18](#ref-18)
-- <a id="glossary-medium-is-the-message"></a>**[The medium is the message](#glossary-medium-is-the-message)**: McLuhan's claim that the characteristics of a medium shape social effects more than its content. [71](#ref-71)
+- <a id="glossary-transformer"></a>**[Transformer](#glossary-transformer)**: An [ANN](#glossary-ann) architecture built around self-attention, enabling parallel processing of sequences and flexible long-range dependencies; this makes scaling to large language models practical. [28](#ref-28)
+- <a id="glossary-gpu"></a>**[GPU](#glossary-gpu)**: A processor optimized for parallel arithmetic computation, offering far higher throughput for many workloads than [CPUs](#glossary-cpu). [27](#ref-27)
+- <a id="glossary-medium-is-the-message"></a>**[The medium is the message](#glossary-medium-is-the-message)**: McLuhan's claim that the characteristics of a medium shape social effects more than its content. [85](#ref-85)
 - <a id="glossary-nvidia"></a>**[NVIDIA](#glossary-nvidia)**: A company founded by Jensen Huang, known for GPUs and [CUDA](#glossary-cuda). [25](#ref-25)
-- <a id="glossary-cuda"></a>**[CUDA](#glossary-cuda)**: [NVIDIA](#glossary-nvidia)'s platform for general-purpose [GPU](#glossary-gpu) computing. [18](#ref-18)
+- <a id="glossary-cuda"></a>**[CUDA](#glossary-cuda)**: [NVIDIA](#glossary-nvidia)'s platform for general-purpose [GPU](#glossary-gpu) computing. [27](#ref-27)
 - <a id="glossary-cpu"></a>**[CPU](#glossary-cpu)**: A general-purpose processor optimized for low-latency, sequential execution and broad instruction support.
 - <a id="glossary-deep-learning"></a>**[Deep learning](#glossary-deep-learning)**: A machine learning approach that trains multilayer [ANNs](#glossary-ann) to learn representations from large datasets.
-- <a id="glossary-rl"></a>**[Reinforcement learning](#glossary-rl)**: Learning by interaction with an environment using rewards, often paired with [self-play](#glossary-self-play) in games. [28](#ref-28)
+- <a id="glossary-rl"></a>**[Reinforcement learning](#glossary-rl)**: Learning by interaction with an environment using rewards, often paired with [self-play](#glossary-self-play) in games. [29](#ref-29)
 - <a id="glossary-go"></a>**[Go](#glossary-go)**: A board game of territory and influence played on a grid of intersections, where players place stones to control space.
-- <a id="glossary-self-play"></a>**[Self-play](#glossary-self-play)**: Training by playing against copies of oneself in a formal environment with a [legal-moves checker](#glossary-legal-moves-checker). [31](#ref-31)
-- <a id="glossary-alphazero"></a>**[AlphaZero](#glossary-alphazero)**: A general [self-play](#glossary-self-play) system for [Go](#glossary-go), chess, and shogi. [31](#ref-31)
-- <a id="glossary-hallucinations"></a>**[Hallucinations](#glossary-hallucinations)**: Model outputs that appear fluent and plausible but are unsupported or fabricated relative to the source context. [34](#ref-34)
-- <a id="glossary-alphago"></a>**[AlphaGo](#glossary-alphago)**: A [Go](#glossary-go) system that learned via [self-play](#glossary-self-play) and a [legal-moves checker](#glossary-legal-moves-checker). [30](#ref-30)
+- <a id="glossary-self-play"></a>**[Self-play](#glossary-self-play)**: Training by playing against copies of oneself in a formal environment with a [legal-moves checker](#glossary-legal-moves-checker). [32](#ref-32)
+- <a id="glossary-alphazero"></a>**[AlphaZero](#glossary-alphazero)**: A general [self-play](#glossary-self-play) system for [Go](#glossary-go), chess, and shogi. [32](#ref-32)
+- <a id="glossary-hallucinations"></a>**[Hallucinations](#glossary-hallucinations)**: Model outputs that appear fluent and plausible but are unsupported or fabricated relative to the source context. [38](#ref-38)
+- <a id="glossary-alphago"></a>**[AlphaGo](#glossary-alphago)**: A [Go](#glossary-go) system that learned via [self-play](#glossary-self-play) and a [legal-moves checker](#glossary-legal-moves-checker). [31](#ref-31)
 - <a id="glossary-legal-moves-checker"></a>**[Legal-moves checker](#glossary-legal-moves-checker)**: An external rule engine that rejects invalid actions.
 - <a id="glossary-benchmark"></a>**[Benchmark](#glossary-benchmark)**: A standardized task for evaluation with defined scoring.
-- <a id="glossary-humaneval"></a>**[HumanEval](#glossary-humaneval)**: A code benchmark with mechanically checkable tests. [32](#ref-32)
-- <a id="glossary-alphacode"></a>**[AlphaCode](#glossary-alphacode)**: A code-generation system evaluated on competitive programming tasks. [32](#ref-32)
-- <a id="glossary-din-sql"></a>**[DIN-SQL](#glossary-din-sql)**: A benchmark for text-to-[SQL](#glossary-sql) with executable verification. [32](#ref-32)
+- <a id="glossary-humaneval"></a>**[HumanEval](#glossary-humaneval)**: A code benchmark with mechanically checkable tests. [33](#ref-33)
+- <a id="glossary-alphacode"></a>**[AlphaCode](#glossary-alphacode)**: A code-generation system evaluated on competitive programming tasks. [33](#ref-33)
+- <a id="glossary-din-sql"></a>**[DIN-SQL](#glossary-din-sql)**: A benchmark for text-to-[SQL](#glossary-sql) with executable verification. [33](#ref-33)
 - <a id="glossary-oracle-problem"></a>**[Oracle problem](#glossary-oracle-problem)**: The difficulty of defining a trustworthy ground‑truth judge for a task, including who sets the criteria, which evidence counts, and how disputes are resolved.
-- <a id="glossary-hilbert"></a>**[HILBERT](#glossary-hilbert)**: A system reporting results on [PutnamBench](#glossary-putnambench). [32](#ref-32)
-- <a id="glossary-putnambench"></a>**[PutnamBench](#glossary-putnambench)**: A formal mathematics benchmark. [32](#ref-32)
-- <a id="glossary-mcp"></a>**[MCP (Model Context Protocol)](#glossary-mcp)**: An open protocol that defines how models describe, call, and exchange data with external tools and services. [33](#ref-33)
-- <a id="glossary-alphaproof"></a>**[AlphaProof](#glossary-alphaproof)**: A system that generates proofs verified by [Lean](#glossary-lean). [29](#ref-29)
-- <a id="glossary-lean"></a>**[Lean](#glossary-lean)**: A [proof assistant](#glossary-proof-assistant) used for formal mathematics and program verification. [29](#ref-29)
+- <a id="glossary-hilbert"></a>**[HILBERT](#glossary-hilbert)**: A system reporting results on [PutnamBench](#glossary-putnambench). [34](#ref-34)
+- <a id="glossary-putnambench"></a>**[PutnamBench](#glossary-putnambench)**: A formal mathematics benchmark. [34](#ref-34)
+- <a id="glossary-mcp"></a>**[MCP (Model Context Protocol)](#glossary-mcp)**: An open protocol that defines how models describe, call, and exchange data with external tools and services. [35](#ref-35)
+- <a id="glossary-alphaproof"></a>**[AlphaProof](#glossary-alphaproof)**: A system that generates proofs verified by [Lean](#glossary-lean). [36](#ref-36)
+- <a id="glossary-lean"></a>**[Lean](#glossary-lean)**: A [proof assistant](#glossary-proof-assistant) used for formal mathematics and program verification. [36](#ref-36)
 - <a id="glossary-decidability"></a>**[Decidability](#glossary-decidability)**: Whether a property can be determined by a terminating algorithm.
-- <a id="glossary-pascal"></a>**[Pascal](#glossary-pascal)**: A language designed to encourage structured programming. [83](#ref-83)
-- <a id="glossary-ml"></a>**[ML](#glossary-ml)**: A family of functional languages with strong static typing. [85](#ref-85)
-- <a id="glossary-miranda"></a>**[Miranda](#glossary-miranda)**: A non-strict [functional language](#glossary-functional-languages) that influenced [Haskell](#glossary-haskell). [86](#ref-86)
-- <a id="glossary-cpp"></a>**[C++](#glossary-cpp)**: A systems language extending [C](#glossary-c) with object-oriented and generic features. [87](#ref-87)
+- <a id="glossary-pascal"></a>**[Pascal](#glossary-pascal)**: A language designed to encourage structured programming. [93](#ref-93)
+- <a id="glossary-ml"></a>**[ML](#glossary-ml)**: A family of functional languages with strong static typing. [95](#ref-95)
+- <a id="glossary-miranda"></a>**[Miranda](#glossary-miranda)**: A non-strict [functional language](#glossary-functional-languages) that influenced [Haskell](#glossary-haskell). [96](#ref-96)
+- <a id="glossary-cpp"></a>**[C++](#glossary-cpp)**: A systems language extending [C](#glossary-c) with object-oriented and generic features. [97](#ref-97)
 - <a id="glossary-rust"></a>**[Rust](#glossary-rust)**: A language emphasizing memory safety and strict compile-time checks. [22](#ref-22)
-- <a id="glossary-ross"></a>**[ROSS Intelligence](#glossary-ross)**: A legal AI company involved in litigation over training data. [89](#ref-89)
-- <a id="glossary-github"></a>**[GitHub](#glossary-github)**: A platform for hosting and collaborating on code. [89](#ref-89)
-- <a id="glossary-copilot"></a>**[GitHub Copilot](#glossary-copilot)**: A code assistant product powered by [LLMs](#glossary-llm). [90](#ref-90)
-- <a id="glossary-openai"></a>**[OpenAI](#glossary-openai)**: An AI research and product company. [95](#ref-95)
-- <a id="glossary-chatgpt"></a>**[ChatGPT](#glossary-chatgpt)**: A conversational [LLM](#glossary-llm) product by [OpenAI](#glossary-openai). [91](#ref-91)
-- <a id="glossary-fda"></a>**[FDA](#glossary-fda)**: The U.S. Food and Drug Administration, which clears medical AI devices. [86](#ref-86)
+- <a id="glossary-ross"></a>**[ROSS Intelligence](#glossary-ross)**: A legal AI company involved in litigation over training data. [100](#ref-100)
+- <a id="glossary-github"></a>**[GitHub](#glossary-github)**: A platform for hosting and collaborating on code. [103](#ref-103)
+- <a id="glossary-copilot"></a>**[GitHub Copilot](#glossary-copilot)**: A code assistant product powered by [LLMs](#glossary-llm). [101](#ref-101)
+- <a id="glossary-openai"></a>**[OpenAI](#glossary-openai)**: An AI research and product company. [104](#ref-104)
+- <a id="glossary-chatgpt"></a>**[ChatGPT](#glossary-chatgpt)**: A conversational [LLM](#glossary-llm) product by [OpenAI](#glossary-openai). [105](#ref-105)
+- <a id="glossary-fda"></a>**[FDA](#glossary-fda)**: The U.S. Food and Drug Administration, which clears medical AI devices. [98](#ref-98)
 - <a id="glossary-adt"></a>**[ADT](#glossary-adt) (Algebraic Data Type)**: Types built from sums and products in a [type system](#glossary-type-system) to make invalid states unrepresentable.
 - <a id="glossary-ann"></a>**[ANNs](#glossary-ann) (Artificial neural networks)**: Layered statistical models that learn patterns by adjusting weights through training data.
-- <a id="glossary-anthropic"></a>**[Anthropic](#glossary-anthropic)**: An AI company behind the Model Context Protocol. [96](#ref-96)
+- <a id="glossary-anthropic"></a>**[Anthropic](#glossary-anthropic)**: An AI company behind the Model Context Protocol. [106](#ref-106)
 - <a id="glossary-compositional-verification"></a>**[Compositional verification](#glossary-compositional-verification)**: Proof by composing verified components.
 - <a id="glossary-conformance-test"></a>**[Conformance test](#glossary-conformance-test)**: A test that checks behaviour against a specification.
-- <a id="glossary-deepmind"></a>**[DeepMind](#glossary-deepmind)**: An AI research lab known for [AlphaGo](#glossary-alphago) and [AlphaZero](#glossary-alphazero). [97](#ref-97)
+- <a id="glossary-deepmind"></a>**[DeepMind](#glossary-deepmind)**: An AI research lab known for [AlphaGo](#glossary-alphago) and [AlphaZero](#glossary-alphazero). [102](#ref-102)
 - <a id="glossary-invariant"></a>**[Invariant](#glossary-invariant)**: A property that must hold for all reachable states of a system, often checked by a [model checker](#glossary-model-checker).
 - <a id="glossary-purity"></a>**[Purity](#glossary-purity)**: A function's output depends only on its inputs, with no side effects, often emphasized in [functional languages](#glossary-functional-languages).
-- <a id="glossary-thomson-reuters"></a>**[Thomson Reuters](#glossary-thomson-reuters)**: A publisher and information services company involved in ROSS litigation. [89](#ref-89)
-- <a id="glossary-tlc"></a>**[TLC](#glossary-tlc)**: The [TLA+](#glossary-tla) [model checker](#glossary-model-checker) that explores state spaces and checks invariants. [18](#ref-18)
+- <a id="glossary-thomson-reuters"></a>**[Thomson Reuters](#glossary-thomson-reuters)**: A publisher and information services company involved in ROSS litigation. [100](#ref-100)
+- <a id="glossary-tlc"></a>**[TLC](#glossary-tlc)**: The [TLA+](#glossary-tla) [model checker](#glossary-model-checker) that explores state spaces and checks invariants. [39](#ref-39)
 - <a id="glossary-totality"></a>**[Totality](#glossary-totality)**: A function produces an output for every possible input.
 
 
@@ -489,1320 +490,218 @@ Timeline:
 
 1. <a id="ref-1"></a> [1] Stanford HAI / RegLab report (2024) and arXiv:2401.01301. https://hai.stanford.edu/news/hallucinating-law-legal-mistakes-large-language-models-are-pervasive; https://arxiv.org/abs/2401.01301.
 
-
-
-
-
-
-
-
-
-
-
-
-
-2. <a id="ref-2"></a> [2] Gulshan et al., "Development and Validation of a Deep Learning Algorithm for Detection of Diabetic Retinopathy," JAMA (2016). https://pubmed.ncbi.nlm.nih.gov/27898976/.
-
-
-
-
-
-
-
-
-
-
-
-
+2. <a id="ref-2"></a> [2] Gulshan et al., "Development and Validation of a Deep Learning Algorithm for Detection of Diabetic Retinopathy," JAMA (2016). https://doi.org/10.1001/jama.2016.17216.
 
 3. <a id="ref-3"></a> [3] Yang et al., "DeepCrack: A Deep Hierarchical Feature Learning Architecture for Crack Segmentation" (2019). https://doi.org/10.1016/j.neucom.2019.01.036.
 
+4. <a id="ref-4"></a> [4] Russell, *The Principles of Mathematics* (1903). https://archive.org/details/principlesofmath0000russ.
 
+5. <a id="ref-5"></a> [5] Gödel (1931), *Monatshefte fuer Mathematik*. https://doi.org/10.1007/BF01700692.
 
+6. <a id="ref-6"></a> [6] Hofstadter, *Gödel, Escher, Bach* (Basic Books, 1979). https://archive.org/details/gdelescherbach00hofs.
 
+7. <a id="ref-7"></a> [7] Turing (1936), "On Computable Numbers." https://www.cs.virginia.edu/~robins/Turing_Paper_1936.pdf.
 
+8. <a id="ref-8"></a> [8] Report of the Royal Commission on the Quebec Bridge collapse (Government of Canada). https://publications.gc.ca/site/eng/9.827964/publication.html.
 
+9. <a id="ref-9"></a> [9] Leveson & Turner, "An Investigation of the Therac-25 Accidents," *IEEE Computer* (1993). https://doi.org/10.1109/MC.1993.274940.
 
+10. <a id="ref-10"></a> [10] Leveson, "Therac-25 Accidents: An Updated Version of the Original Accident Investigation Paper" (from *Safeware*). http://sunnyday.mit.edu/papers/therac.pdf.
 
+11. <a id="ref-11"></a> [11] Edelman, "The Pentium(R) floating point division bug" (1995). http://www-math.mit.edu/~edelman/homepage/papers/pentiumbug.pdf.
 
+12. <a id="ref-12"></a> [12] Ariane 5 Flight 501 Failure Report. https://www.ima.umn.edu/~arnold/disasters/ariane5rep.html.
 
+13. <a id="ref-13"></a> [13] Gleick, "A Bug and a Crash" (NYT Magazine, archived), noting ESA's decade-long €7B Ariane 5 program and four uninsured scientific satellites. https://web.archive.org/web/20120420204657/http://www.around.com/ariane.html.
 
+14. <a id="ref-14"></a> [14] NHTSA/NASA report on Toyota ETC (2011). https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/811361.
 
+15. <a id="ref-15"></a> [15] NHTSA/NASA report on Toyota ETC; MISRA C. https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/811361; https://www.misra.org.uk/.
 
-4. <a id="ref-4"></a> [4] Report of the Royal Commission on the Quebec Bridge collapse (Government of Canada). https://publications.gc.ca/site/eng/9.827964/publication.html.
+16. <a id="ref-16"></a> [16] Backus et al., "The FORTRAN Automatic Coding System" (1957); CODASYL COBOL Report (Apr 1960). https://softwarepreservation.computerhistory.org/FORTRAN/paper/BackusEtAl-FortranAutomaticCodingSystem-1957.pdf; https://archive.org/download/bitsavers_codasylCOB_6843924/COBOL_Report_Apr60_text.pdf.
 
+17. <a id="ref-17"></a> [17] Lamport, Shostak, Pease, "The Byzantine Generals Problem" (1982). https://doi.org/10.1145/357172.357176.
 
+18. <a id="ref-18"></a> [18] TLA+ overview; Dynamo: Amazon's Highly Available Key-value Store; Amazon S3 user guide. https://lamport.azurewebsites.net/tla/tla.html; https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf; https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html.
 
+19. <a id="ref-19"></a> [19] CompCert project; seL4 SOSP 2009. https://compcert.inria.fr/; https://sel4.systems/publications/sel4-sosp09.pdf.
 
+20. <a id="ref-20"></a> [20] Isabelle/HOL overview and documentation. https://www.cl.cam.ac.uk/research/hvg/Isabelle/.
 
+21. <a id="ref-21"></a> [21] Stone, *The Everything Store* (Little, Brown, 2013). https://books.google.com/books?vid=ISBN9780316219266.
 
+22. <a id="ref-22"></a> [22] Verification infrastructure before [LLMs](#glossary-llm) (SQL, Haskell, Coq, Rust, TLA+). https://www.iso.org/standard/63555.html; https://www.haskell.org/; https://coq.inria.fr/; https://www.rust-lang.org/; https://lamport.azurewebsites.net/tla/tla.html.
 
+23. <a id="ref-23"></a> [23] Z3 Theorem Prover. https://z3prover.github.io/.
 
+24. <a id="ref-24"></a> [24] SMT-LIB standard and resources. https://smt-lib.org/.
 
-
-
-
-
-5. <a id="ref-5"></a> [5] Ariane 5 Flight 501 Failure Report. https://www.ima.umn.edu/~arnold/disasters/ariane5rep.html.
-
-
-
-
-
-
-
-
-
-
-
-
-
-6. <a id="ref-6"></a> [6] Leveson & Turner, "An Investigation of the Therac-25 Accidents," *IEEE Computer* (1993). http://sunnyday.mit.edu/papers/therac.pdf.
-
-
-
-
-
-
-
-
-
-
-
-
-
-7. <a id="ref-7"></a> [7] Edelman, "The Pentium(R) floating point division bug" (1995). http://www-math.mit.edu/~edelman/homepage/papers/pentiumbug.pdf.
-
-
-
-
-
-
-
-
-
-
-
-
-
-8. <a id="ref-8"></a> [8] NHTSA/NASA report on Toyota ETC; MISRA C. https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/811361; https://www.misra.org.uk/.
-
-
-
-
-
-
-
-
-
-
-
-
-
-9. <a id="ref-9"></a> [9] Backus et al., "The FORTRAN Automatic Coding System" (1957); CODASYL COBOL Report (Apr 1960). https://softwarepreservation.computerhistory.org/FORTRAN/paper/BackusEtAl-FortranAutomaticCodingSystem-1957.pdf; https://archive.org/download/bitsavers_codasylCOB_6843924/COBOL_Report_Apr60_text.pdf.
-
-
-
-
-
-
-
-
-
-
-
-
-
-10. <a id="ref-10"></a> [10] Lamport, Shostak, Pease, "The Byzantine Generals Problem" (1982). https://lamport.azurewebsites.net/pubs/byz.pdf.
-
-
-
-
-
-
-
-
-
-
-
-
-
-11. <a id="ref-11"></a> [11] TLA+ overview; Dynamo: Amazon's Highly Available Key-value Store; Amazon S3 user guide. https://lamport.azurewebsites.net/tla/tla.html; https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf; https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html.
-
-
-
-
-
-
-
-
-
-
-
-
-
-12. <a id="ref-12"></a> [12] CompCert project; seL4 SOSP 2009. https://compcert.inria.fr/; https://sel4.systems/publications/sel4-sosp09.pdf.
-
-
-
-
-
-
-
-
-
-
-
-
-
-13. <a id="ref-13"></a> [13] Stone, *The Everything Store* (Little, Brown, 2013). https://books.google.com/books?vid=ISBN9780316219266.
-
-
-
-
-
-
-
-
-
-
-
-
-
-14. <a id="ref-14"></a> [14] Russell, *The Principles of Mathematics* (1903). https://archive.org/details/principlesofmath0000russ.
-
-
-
-
-
-
-
-
-
-
-
-
-
-15. <a id="ref-15"></a> [15] Gödel (1931), *Monatshefte fuer Mathematik*. https://link.springer.com/article/10.1007/BF01700692.
-
-
-
-
-
-
-
-
-
-
-
-
-
-16. <a id="ref-16"></a> [16] Turing (1936), "On Computable Numbers." https://www.cs.virginia.edu/~robins/Turing_Paper_1936.pdf.
-
-
-
-
-
-
-
-
-
-
-
-
-
-17. <a id="ref-17"></a> [17] NVIDIA company overview. https://www.nvidia.com/en-us/about-nvidia/.
-
-
-
-
-
-
-
-
-
-
-
-
-
-18. <a id="ref-18"></a> [18] CUDA Toolkit archive (release history). https://developer.nvidia.com/cuda-toolkit-archive.
-
-
-
-
-
-
-
-
-
-
-
-
-
-19. <a id="ref-19"></a> [19] HumanEval; AlphaCode; DIN-SQL. https://arxiv.org/abs/2107.03374; https://arxiv.org/abs/2203.07814; https://arxiv.org/abs/2304.11015.
-
-
-
-
-
-
-
-
-
-
-
-
-
-20. <a id="ref-20"></a> [20] Vaswani et al., "Attention Is All You Need" (2017). https://arxiv.org/abs/1706.03762.
-
-
-
-
-
-
-
-
-
-
-
-
-
-21. <a id="ref-21"></a> [21] Silver et al., "Mastering the game of Go with deep neural networks and tree search," *Nature* (2016). https://www.nature.com/articles/nature16961.
-
-
-
-
-
-
-
-
-
-
-
-
-
-22. <a id="ref-22"></a> [22] Clarke, "Extra-Terrestrial Relays: Can Rocket Stations Give World-Wide Radio Coverage?" *Wireless World* (Oct 1945). https://www.rfcafe.com/references/magazine-articles/extra-terrestrial-relays-arthur-c-clarke-oct-1945-wireless-world.htm.
-
-
-
-
-
-
-
-
-
-
-
-
-
-23. <a id="ref-23"></a> [23] Australia under-16 social media law (2024). https://www.legislation.gov.au/Details/C2024A00114.
-
-
-
-
-
-
-
-
-
-
-
-
-
-24. <a id="ref-24"></a> [24] Harari, *Sapiens* (Harper, 2015), ISBN 9780062316097. https://www.ynharari.com/book/sapiens/.
-
-
-
-
-
-
-
-
-
-
-
-
-
-25. <a id="ref-25"></a> [25] Hofstadter, *Gödel, Escher, Bach* (Basic Books, 1979). https://archive.org/details/gdelescherbach00hofs.
-
-
-
-
-
-
-
-
-
-
-
-
+25. <a id="ref-25"></a> [25] NVIDIA company overview. https://www.nvidia.com/en-us/about-nvidia/.
 
 26. <a id="ref-26"></a> [26] Hinton and Salakhutdinov, "Reducing the Dimensionality of Data with Neural Networks," *Science* (2006). https://doi.org/10.1126/science.1127647.
 
+27. <a id="ref-27"></a> [27] CUDA Toolkit archive (release history). https://developer.nvidia.com/cuda-toolkit-archive.
 
+28. <a id="ref-28"></a> [28] Vaswani et al., "Attention Is All You Need" (2017). https://doi.org/10.48550/arXiv.1706.03762.
 
+29. <a id="ref-29"></a> [29] Sutton & Barto, *Reinforcement Learning: An Introduction* (MIT Press, 2nd ed. 2018). https://mitpress.mit.edu/9780262039246/reinforcement-learning/.
 
+30. <a id="ref-30"></a> [30] Dwarkesh Patel interview with Richard Sutton (transcript), "Richard Sutton – Father of RL thinks [LLMs](#glossary-llm) are a dead end" (2024). https://www.dwarkesh.com/p/richard-sutton.
 
+31. <a id="ref-31"></a> [31] Silver et al., "Mastering the game of Go with deep neural networks and tree search," *Nature* (2016). https://doi.org/10.1038/nature16961.
 
+32. <a id="ref-32"></a> [32] AlphaZero arXiv preprint (2017); *Science* (2018). https://arxiv.org/abs/1712.01815; https://doi.org/10.1126/science.aar6404.
 
+33. <a id="ref-33"></a> [33] HumanEval; AlphaCode; DIN-SQL. https://doi.org/10.48550/arXiv.2107.03374; https://doi.org/10.48550/arXiv.2203.07814; https://doi.org/10.48550/arXiv.2304.11015.
 
+34. <a id="ref-34"></a> [34] HILBERT / PutnamBench results. https://doi.org/10.48550/arXiv.2509.22819.
 
+35. <a id="ref-35"></a> [35] Model Context Protocol specification repository. https://github.com/modelcontextprotocol/modelcontextprotocol.
 
+36. <a id="ref-36"></a> [36] AlphaProof announcement; AlphaGeometry2 technical report; Lean project. https://deepmind.google/blog/ai-solves-imo-problems-at-silver-medal-level/; https://arxiv.org/abs/2502.03544; https://leanprover.github.io/.
 
+37. <a id="ref-37"></a> [37] Esteva et al., "Dermatologist-level classification of skin cancer," *Nature* (2017). https://doi.org/10.1038/nature21056.
 
+38. <a id="ref-38"></a> [38] Ji et al., "Survey of Hallucination in Natural Language Generation," *ACM Computing Surveys* (2023). https://doi.org/10.1145/3571730.
 
-27. <a id="ref-27"></a> [27] Model Context Protocol specification repository. https://github.com/modelcontextprotocol/modelcontextprotocol.
+39. <a id="ref-39"></a> [39] Lamport, "TLA+ Tools." https://lamport.azurewebsites.net/tla/tools.html.
 
+40. <a id="ref-40"></a> [40] SPARK Reference Manual, Introduction. https://docs.adacore.com/spark2014-docs/html/lrm/introduction.html.
 
+41. <a id="ref-41"></a> [41] Du Bois et al., "To the Nations of the World" (1900). https://doi.org/10.2307/3012500.
 
+42. <a id="ref-42"></a> [42] Natives Land Act of 1913 overview, South African History Online. https://www.sahistory.org.za/article/natives-land-act-1913.
 
+43. <a id="ref-43"></a> [43] Disorders Inquiry Committee, *Report* (1919-1920). https://archive.org/details/disordersinquiry00unse.
 
+44. <a id="ref-44"></a> [44] New York Times, "Chinese Students Riot in Peking" (May 5, 1919). https://timesmachine.nytimes.com/timesmachine/1919/05/05/96303931.html.
 
+45. <a id="ref-45"></a> [45] Gandhi, Non-Cooperation Movement (1920). https://www.sfr-21.org/sources/non-cooperation.html.
 
+46. <a id="ref-46"></a> [46] Gandhi, "Letter to Viceroy Irwin" (1930). https://indianculture.gov.in/digital-district-repository/district-repository/mahatma-gandhis-letters-lord-irwin-1930.
 
+47. <a id="ref-47"></a> [47] Gandhi, "Quit India Speech" (1942). https://www.mkgandhi.org/speeches/qui.php.
 
+48. <a id="ref-48"></a> [48] Nuremberg Laws (1935), German History in Documents and Images. https://ghdi.ghi-dc.org/sub_document.cfm?document_id=1523.
 
+49. <a id="ref-49"></a> [49] USHMM collections item, "Drawing, 'In Memorial of the Warsaw Ghetto Uprising'." https://collections.ushmm.org/search/catalog/irn596952.
 
+50. <a id="ref-50"></a> [50] Atlantic Charter (1941), Avalon Project, Yale Law School. https://avalon.law.yale.edu/wwii/atlantic.asp.
 
+51. <a id="ref-51"></a> [51] Charter of the United Nations (1945), United Nations. https://treaties.un.org/doc/publication/ctc/uncharter.pdf.
 
-28. <a id="ref-28"></a> [28] AlphaZero arXiv preprint (2017); *Nature* (2018). https://arxiv.org/abs/1712.01815; https://www.nature.com/articles/s41586-018-0107-1.
+52. <a id="ref-52"></a> [52] Charter of the International Military Tribunal (1945). https://avalon.law.yale.edu/imt/imtconst.asp.
 
+53. <a id="ref-53"></a> [53] Universal Declaration of Human Rights (1948), United Nations. https://www.ohchr.org/sites/default/files/UDHR/Documents/UDHR_Translations/eng.pdf.
 
+54. <a id="ref-54"></a> [54] Convention on the Prevention and Punishment of the Crime of Genocide (1948), United Nations. https://www.un.org/en/genocideprevention/documents/atrocity-crimes/Doc.1_Convention%20on%20the%20Prevention%20and%20Punishment%20of%20the%20Crime%20of%20Genocide.pdf.
 
+55. <a id="ref-55"></a> [55] Geneva Conventions (1949), International Committee of the Red Cross. https://www.icrc.org/en/law-and-policy/geneva-conventions-and-their-commentaries.
 
+56. <a id="ref-56"></a> [56] Indian Independence Act 1947 (UK Parliament). https://www.legislation.gov.uk/ukpga/Geo6/10-11/30/contents/enacted.
 
+57. <a id="ref-57"></a> [57] The 1947 Partition Archive, oral histories and primary source documentation. https://www.1947partitionarchive.org/.
 
+58. <a id="ref-58"></a> [58] BBC News, "India's partition: The dividing line." https://www.bbc.com/news/world-asia-10954095.
 
+59. <a id="ref-59"></a> [59] UN General Assembly Resolution 1514 (1960), United Nations. https://undocs.org/A/RES/1514(XV).
 
+60. <a id="ref-60"></a> [60] Declaration of Sentiments (1848), Library of Congress. https://www.loc.gov/item/rbcmiller001106/.
 
+61. <a id="ref-61"></a> [61] 19th Amendment (1920), U.S. National Archives. https://www.archives.gov/milestone-documents/19th-amendment.
 
+62. <a id="ref-62"></a> [62] Voting Rights Act of 1965, U.S. National Archives. https://www.archives.gov/milestone-documents/voting-rights-act.
 
+63. <a id="ref-63"></a> [63] U.S. Department of Justice, "History of Federal Voting Rights Laws." https://www.justice.gov/crt/history-federal-voting-rights-laws.
 
+64. <a id="ref-64"></a> [64] U.S. Census Bureau, "Voting and Registration in the Election of November 2022." https://www.census.gov/library/publications/2024/demo/p20-586.html.
 
-29. <a id="ref-29"></a> [29] AlphaProof announcement; AlphaGeometry2 technical report; Lean project. https://deepmind.google/blog/ai-solves-imo-problems-at-silver-medal-level/; https://arxiv.org/abs/2502.03544; https://leanprover.github.io/.
+65. <a id="ref-65"></a> [65] National Centre for Truth and Reconciliation, "Residential Schools." https://nctr.ca/education/teaching-resources/residential-schools/.
 
+66. <a id="ref-66"></a> [66] Government of Canada, "Statement of the Government of Canada on Indian Policy (1969)." https://publications.gc.ca/site/eng/9.700112/publication.html.
 
+67. <a id="ref-67"></a> [67] Government of Canada, "Residential Schools." https://www.rcaanc-cirnac.gc.ca/eng/1100100015576/1522907135142.
 
+68. <a id="ref-68"></a> [68] National Centre for Truth and Reconciliation, "Missing Children and Unmarked Burials." https://nctr.ca/burials/missing-children-and-unmarked-burials/.
 
+69. <a id="ref-69"></a> [69] King, "Letter from Birmingham Jail" (1963). https://www.csuchico.edu/iege/_assets/documents/susi-letter-from-birmingham-jail.pdf.
 
+70. <a id="ref-70"></a> [70] Brown v. Board of Education (1954), U.S. National Archives. https://www.archives.gov/milestone-documents/brown-v-board-of-education.
 
+71. <a id="ref-71"></a> [71] Civil Rights Act of 1964, U.S. National Archives. https://www.archives.gov/milestone-documents/civil-rights-act.
 
+72. <a id="ref-72"></a> [72] Numan V. Bartley, *The Rise of Massive Resistance: Race and Politics in the South During the 1950s* (Louisiana State University Press, 1969).
 
+73. <a id="ref-73"></a> [73] U.S. Department of Justice, "Investigation of Allegations Regarding the Assassination of Dr. Martin Luther King, Jr." (2000). https://www.justice.gov/crt/united-states-department-justice-investigation-allegations-regarding-assassination-dr-martin.
 
+74. <a id="ref-74"></a> [74] The King Center, "Martin Luther King, Jr." https://thekingcenter.org/about-tkc/martin-luther-king-jr/.
 
+75. <a id="ref-75"></a> [75] Holodomor Research and Education Consortium, "Holodomor Basic Facts." https://holodomor.ca/get-started/holodomor-basic-facts/.
 
+76. <a id="ref-76"></a> [76] ЦСУ СССР, *Всесоюзная перепись населения 17 декабря 1926 г.* (All-Union Population Census). https://archive.org/details/perepis_naseleniia_1926.
 
+77. <a id="ref-77"></a> [77] Law of Ukraine, "On the Holodomor of 1932-1933 in Ukraine" (2006). https://zakon.rada.gov.ua/laws/show/376-16?lang=en.
 
-30. <a id="ref-30"></a> [30] Esteva et al., "Dermatologist-level classification of skin cancer," *Nature* (2017). https://www.nature.com/articles/nature21056.
+78. <a id="ref-78"></a> [78] Freedom Charter (1955), African National Congress. https://www.anc1912.org.za/freedom-charter/.
 
+79. <a id="ref-79"></a> [79] Mandela, "Statement from the Dock" (1964). https://www.historyplace.com/speeches/mandela.htm.
 
+80. <a id="ref-80"></a> [80] Nelson Mandela Foundation, "Biography." https://www.nelsonmandela.org/content/page/biography.
 
+81. <a id="ref-81"></a> [81] UN Declaration on the Rights of Indigenous Peoples (2007), United Nations. https://undocs.org/A/RES/61/295.
 
+82. <a id="ref-82"></a> [82] Americans with Disabilities Act (1990), ADA.gov. https://www.ada.gov/law-and-regs/ada/.
 
+83. <a id="ref-83"></a> [83] Obergefell v. Hodges (2015), Legal Information Institute. https://www.law.cornell.edu/supremecourt/text/14-556.
 
+84. <a id="ref-84"></a> [84] Online Safety Amendment (Social Media Minimum Age) Act 2024 (Australia). https://www.legislation.gov.au/C2024A00127/asmade/text.
 
+85. <a id="ref-85"></a> [85] McLuhan, *Understanding Media: The Extensions of Man* (McGraw-Hill, 1964). https://archive.org/details/understandingmed00mclu.
 
+86. <a id="ref-86"></a> [86] Clarke, "Extra-Terrestrial Relays: Can Rocket Stations Give World-Wide Radio Coverage?" *Wireless World* (Oct 1945). https://www.rfcafe.com/references/magazine-articles/extra-terrestrial-relays-arthur-c-clarke-oct-1945-wireless-world.htm.
 
+87. <a id="ref-87"></a> [87] Winner, *The Whale and the Reactor* (University of Chicago Press, 1986), ISBN 9780226902111. https://archive.org/details/whalereactorsear00winn.
 
+88. <a id="ref-88"></a> [88] Harari, *Sapiens* (Harper, 2015), ISBN 9780062316097. https://www.ynharari.com/book/sapiens/.
 
+89. <a id="ref-89"></a> [89] Eubanks, *Automating Inequality* (St. Martin's Press, 2018), ISBN 9781250074317. https://www.c-span.org/video/?444334-1/automating-inequality.
 
+90. <a id="ref-90"></a> [90] Benjamin, *Race After Technology* (Polity, 2019), ISBN 9780745338667. https://www.c-span.org/video/?466564-1/race-technology.
 
-31. <a id="ref-31"></a> [31] McLuhan, *Understanding Media: The Extensions of Man* (McGraw-Hill, 1964). https://archive.org/details/understandingmed00mclu.
+91. <a id="ref-91"></a> [91] Wilkes, Wheeler, Gill, *The Preparation of Programs for an Electronic Digital Computer* (1951). https://archive.org/details/preparationofpro00wilk.
 
+92. <a id="ref-92"></a> [92] European Convention on Human Rights (1950), Council of Europe. https://rm.coe.int/1680063776.
 
+93. <a id="ref-93"></a> [93] Jensen and Wirth, *Pascal User Manual and Report* (1974). https://archive.org/details/pascalusermanual00jens.
 
+94. <a id="ref-94"></a> [94] Ritchie, "C Reference Manual" (1974). https://archive.org/details/crefman.
 
+95. <a id="ref-95"></a> [95] Milner et al., *The Definition of Standard ML* (1997). https://smlfamily.github.io/sml97-defn.pdf.
 
+96. <a id="ref-96"></a> [96] Turner, Miranda language overview. https://www.cs.kent.ac.uk/people/staff/dat/miranda/.
 
+97. <a id="ref-97"></a> [97] Stroustrup, *The C++ Programming Language* (1st ed., 1985). https://www.stroustrup.com/1st.html.
 
+98. <a id="ref-98"></a> [98] FDA, "Artificial Intelligence and Machine Learning (AI/ML)-Enabled Medical Devices." https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-and-machine-learning-aiml-enabled-medical-devices.
 
+99. <a id="ref-99"></a> [99] Krizhevsky, Sutskever, Hinton, "ImageNet Classification with Deep Convolutional Neural Networks," *NeurIPS* (2012). https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.
 
+100. <a id="ref-100"></a> [100] Thomson Reuters Enterprise Centre GmbH v. ROSS Intelligence Inc., D. Del. docket. https://www.courtlistener.com/docket/61382368/thomson-reuters-enterprise-centre-gmbh-v-ross-intelligence-inc/.
 
+101. <a id="ref-101"></a> [101] GitHub Copilot product page. https://github.com/features/copilot.
 
+102. <a id="ref-102"></a> [102] DeepMind, "About DeepMind." https://deepmind.google/about/.
 
+103. <a id="ref-103"></a> [103] GitHub, "About." https://github.com/about.
 
-32. <a id="ref-32"></a> [32] HILBERT / PutnamBench results. https://arxiv.org/abs/2509.22819.
+104. <a id="ref-104"></a> [104] OpenAI, "About." https://openai.com/about.
 
+105. <a id="ref-105"></a> [105] OpenAI, "ChatGPT." https://openai.com/chatgpt.
 
+106. <a id="ref-106"></a> [106] Anthropic, "Anthropic." https://www.anthropic.com/.
 
+107. <a id="ref-107"></a> [107] Intel, "Company Overview." https://www.intel.com/content/www/us/en/company-overview/company-overview.html.
 
+108. <a id="ref-108"></a> [108] European Space Agency, "About ESA." https://www.esa.int/About_Us.
 
-
-
-
-
-
-
-
-
-33. <a id="ref-33"></a> [33] Verification infrastructure before [LLMs](#glossary-llm) (SQL, Haskell, Coq, Rust, TLA+). https://www.iso.org/standard/63555.html; https://www.haskell.org/; https://coq.inria.fr/; https://www.rust-lang.org/; https://lamport.azurewebsites.net/tla/tla.html.
-
-
-
-
-
-
-
-
-
-
-
-
-
-34. <a id="ref-34"></a> [34] Ji et al., "Survey of Hallucination in Natural Language Generation" (2023). https://arxiv.org/abs/2305.14595.
-
-
-
-
-
-
-
-
-
-
-
-
-
-35. <a id="ref-35"></a> [35] Lamport, "TLA+ Tools." https://lamport.azurewebsites.net/tla/tools.html.
-
-
-
-
-
-
-
-
-
-
-
-
-
-36. <a id="ref-36"></a> [36] SPARK Reference Manual, Introduction. https://docs.adacore.com/spark2014-docs/html/lrm/introduction.html.
-
-
-
-
-
-
-
-
-
-
-
-
-
-37. <a id="ref-37"></a> [37] Du Bois et al., "To the Nations of the World" (1900). https://www.jstor.org/stable/3012500.
-
-
-
-
-
-
-
-
-
-
-
-
-
-38. <a id="ref-38"></a> [38] Isabelle/HOL overview and documentation. https://www.cl.cam.ac.uk/research/hvg/Isabelle/.
-
-
-
-
-
-
-
-
-
-
-
-
-
-39. <a id="ref-39"></a> [39] Z3 Theorem Prover. https://z3prover.github.io/.
-
-
-
-
-
-
-
-
-
-
-
-
-
-40. <a id="ref-40"></a> [40] SMT-LIB standard and resources. https://smt-lib.org/.
-
-
-
-
-
-
-
-
-
-
-
-
-
-41. <a id="ref-41"></a> [41] King, "Letter from Birmingham Jail" (1963). https://www.csuchico.edu/iege/_assets/documents/susi-letter-from-birmingham-jail.pdf.
-
-
-
-
-
-
-
-
-
-
-
-
-
-42. <a id="ref-42"></a> [42] Brown v. Board of Education (1954), U.S. National Archives. https://www.archives.gov/milestone-documents/brown-v-board-of-education.
-
-
-
-
-
-
-
-
-
-
-
-
-
-43. <a id="ref-43"></a> [43] Civil Rights Act of 1964, U.S. National Archives. https://www.archives.gov/milestone-documents/civil-rights-act.
-
-
-
-
-
-
-
-
-
-
-
-
-
-44. <a id="ref-44"></a> [44] Voting Rights Act of 1965, U.S. National Archives. https://www.archives.gov/milestone-documents/voting-rights-act.
-
-
-
-
-
-
-
-
-
-
-
-
-
-45. <a id="ref-45"></a> [45] Declaration of Sentiments (1848), Library of Congress. https://www.loc.gov/resource/rbpe.18500500/.
-
-
-
-
-
-
-
-
-
-
-
-
-
-46. <a id="ref-46"></a> [46] 19th Amendment (1920), U.S. National Archives. https://www.archives.gov/milestone-documents/19th-amendment.
-
-
-
-
-
-
-
-
-
-
-
-
-
-47. <a id="ref-47"></a> [47] Mandela, "Statement from the Dock" (1964). https://www.historyplace.com/speeches/mandela.htm.
-
-
-
-
-
-
-
-
-
-
-
-
-
-48. <a id="ref-48"></a> [48] Freedom Charter (1955), African National Congress. https://www.anc1912.org.za/freedom-charter/.
-
-
-
-
-
-
-
-
-
-
-
-
-
-49. <a id="ref-49"></a> [49] Indian Independence Act 1947 (UK Parliament). https://www.legislation.gov.uk/ukpga/Geo6/10-11/30/contents/enacted.
-
-
-
-
-
-
-
-
-
-
-
-
-
-50. <a id="ref-50"></a> [50] UN General Assembly Resolution 1514 (1960), United Nations. https://undocs.org/A/RES/1514(XV).
-
-
-
-
-
-
-
-
-
-
-
-
-
-51. <a id="ref-51"></a> [51] UN Declaration on the Rights of Indigenous Peoples (2007), United Nations. https://undocs.org/A/RES/61/295.
-
-
-
-
-
-
-
-
-
-
-
-
-
-52. <a id="ref-52"></a> [52] Gleick, "A Bug and a Crash" (NYT Magazine, archived), noting ESA's decade-long €7B Ariane 5 program and four uninsured scientific satellites. https://web.archive.org/web/20120420204657/http://www.around.com/ariane.html.
-
-
-
-
-
-
-
-
-
-
-
-
-
-53. <a id="ref-53"></a> [53] Sutton & Barto, *Reinforcement Learning: An Introduction* (MIT Press, 1998). https://mitpress.mit.edu/9780262560993/reinforcement-learning/.
-
-
-
-
-
-
-
-
-
-
-
-
-
-54. <a id="ref-54"></a> [54] U.S. Department of Justice, "History of Federal Voting Rights Laws." https://www.justice.gov/crt/history-federal-voting-rights-laws.
-
-
-
-
-
-
-
-
-
-
-
-
-
-55. <a id="ref-55"></a> [55] U.S. Census Bureau, "Voting and Registration in the Election of November 2022." https://www.census.gov/library/publications/2023/demo/p20-586.html.
-
-
-
-
-
-
-
-
-
-
-
-
-
-56. <a id="ref-56"></a> [56] Leveson, "Therac-25 Accidents: An Updated Version of the Original Accident Investigation Paper" (from *Safeware*). http://sunnyday.mit.edu/papers/therac.pdf.
-
-
-
-
-
-
-
-
-
-
-
-
-
-57. <a id="ref-57"></a> [57] Benjamin, *Race After Technology* (Polity, 2019), ISBN 9780745338667. https://www.c-span.org/video/?466564-1/race-technology.
-
-
-
-
-
-
-
-
-
-
-
-
-
-58. <a id="ref-58"></a> [58] Eubanks, *Automating Inequality* (St. Martin's Press, 2018), ISBN 9781250074317. https://www.c-span.org/video/?444334-1/automating-inequality.
-
-
-
-
-
-
-
-
-
-
-
-
-
-59. <a id="ref-59"></a> [59] Winner, *The Whale and the Reactor* (University of Chicago Press, 1986), ISBN 9780226902111. https://archive.org/details/whalereactorsear00winn.
-
-
-
-
-
-
-
-
-
-
-
-
-
-60. <a id="ref-60"></a> [60] Numan V. Bartley, *The Rise of Massive Resistance: Race and Politics in the South During the 1950s* (Louisiana State University Press, 1969).
-
-
-
-
-
-
-
-
-
-
-
-
-
-61. <a id="ref-61"></a> [61] U.S. Department of Justice, King assassination investigation report announcement (2000). https://www.justice.gov/archive/opa/pr/2000/January/012ag.htm.
-
-
-
-
-
-
-
-
-
-
-
-
-
-62. <a id="ref-62"></a> [62] The King Center, "Martin Luther King, Jr." https://thekingcenter.org/about-tkc/martin-luther-king-jr/.
-
-
-63. <a id="ref-63"></a> [63] Holodomor Research and Education Consortium, "Holodomor Basic Facts." https://holodomor.ca/get-started/holodomor-basic-facts/.
-
-
-
-
-
-
-
-
-
-
-
-
-64. <a id="ref-64"></a> [64] ЦСУ СССР, *Всесоюзная перепись населения 17 декабря 1926 г.* (All-Union Population Census). https://archive.org/details/perepis_naseleniia_1926.
-
-
-
-
-
-
-
-
-
-
-65. <a id="ref-65"></a> [65] Law of Ukraine, "On the Holodomor of 1932-1933 in Ukraine" (2006). https://zakon.rada.gov.ua/laws/show/376-16?lang=en.
-
-
-
-
-
-
-
-
-
-
-
-
-
-66. <a id="ref-66"></a> [66] Dwarkesh Patel interview with Richard Sutton (transcript), "Richard Sutton – Father of RL thinks [LLMs](#glossary-llm) are a dead end" (2024). https://www.dwarkesh.com/p/richard-sutton.
-
-
-
-
-
-
-
-
-
-
-
-
-
-67. <a id="ref-67"></a> [67] Nelson Mandela Foundation, "Biography." https://www.nelsonmandela.org/content/page/biography.
-
-
-
-
-
-
-
-
-
-
-
-
-
-68. <a id="ref-68"></a> [68] NHTSA/NASA report on Toyota ETC (2011). https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/811361.
-
-
-
-
-
-
-
-
-
-
-
-
-
-69. <a id="ref-69"></a> [69] Obergefell v. Hodges (2015), Legal Information Institute. https://www.law.cornell.edu/supremecourt/text/14-556.
-
-
-70. <a id="ref-70"></a> [70] Natives Land Act of 1913 overview, South African History Online. https://www.sahistory.org.za/article/natives-land-act-1913.
-
-
-
-
-
-
-
-
-
-
-
-
-
-71. <a id="ref-71"></a> [71] Disorders Inquiry Committee, *Report* (1919-1920). https://archive.org/details/disordersinquiry00unse.
-
-
-
-
-
-
-
-
-
-
-
-
-
-72. <a id="ref-72"></a> [72] New York Times, "Chinese Students Riot in Peking" (May 5, 1919). https://timesmachine.nytimes.com/timesmachine/1919/05/05/96303931.html.
-
-
-
-
-
-
-
-
-
-
-
-
-
-73. <a id="ref-73"></a> [73] Gandhi, "Non-Cooperation Movement" (1920). https://www.gandhiashramsevagram.org/gandhi-speeches/non-cooperation-movement.php.
-
-
-
-
-
-
-
-
-
-
-
-
-
-74. <a id="ref-74"></a> [74] Gandhi, "Letter to Viceroy Irwin" (1930). https://www.gandhiashramsevagram.org/gandhi-a-bibliography/72-letter-to-viceroy-irwin.php.
-
-
-
-
-
-
-
-
-
-
-
-
-
-75. <a id="ref-75"></a> [75] Nuremberg Laws (1935), German History in Documents and Images. https://ghdi.ghi-dc.org/sub_document.cfm?document_id=1527.
-
-
-
-
-
-
-
-
-
-
-
-
-
-76. <a id="ref-76"></a> [76] Atlantic Charter (1941), Avalon Project, Yale Law School. https://avalon.law.yale.edu/wwii/atlantic.asp.
-
-
-
-
-
-
-
-
-
-
-
-
-
-77. <a id="ref-77"></a> [77] Gandhi, "Quit India Speech" (1942). https://www.gandhiashramsevagram.org/gandhi-speeches/quit-india-speech.php.
-
-
-
-
-
-
-
-
-
-
-
-
-
-78. <a id="ref-78"></a> [78] USHMM collections item, "Drawing, 'In Memorial of the Warsaw Ghetto Uprising'." https://collections.ushmm.org/search/catalog/irn596952.
-
-
-
-
-
-
-
-
-
-
-
-
-
-79. <a id="ref-79"></a> [79] Charter of the United Nations (1945), United Nations. https://treaties.un.org/doc/publication/ctc/uncharter.pdf.
-
-
-
-
-
-
-
-
-
-
-
-
-
-80. <a id="ref-80"></a> [80] Charter of the International Military Tribunal (1945). https://avalon.law.yale.edu/imt/imtconst.asp.
-
-
-
-
-
-
-
-
-
-
-
-
-
-81. <a id="ref-81"></a> [81] Americans with Disabilities Act (1990), ADA.gov. https://www.ada.gov/law-and-regs/ada/.
-
-
-
-
-
-
-
-
-
-
-
-
-
-82. <a id="ref-82"></a> [82] Universal Declaration of Human Rights (1948), United Nations. https://www.ohchr.org/sites/default/files/UDHR/Documents/UDHR_Translations/eng.pdf.
-
-
-
-
-
-
-
-
-
-
-
-
-
-83. <a id="ref-83"></a> [83] Convention on the Prevention and Punishment of the Crime of Genocide (1948), United Nations. https://treaties.un.org/doc/Treaties/1948/12/19481209%2008-02%20PM/Ch_IV_1p.pdf.
-
-
-
-
-
-
-
-
-
-
-
-
-
-84. <a id="ref-84"></a> [84] Geneva Conventions (1949), International Committee of the Red Cross. https://www.icrc.org/en/doc/war-and-law/treaties-customary-law/geneva-conventions/overview-geneva-conventions.htm.
-
-
-
-
-
-
-
-
-
-
-
-
-
-85. <a id="ref-85"></a> [85] Clarke, *Profiles of the Future* (1962). https://archive.org/details/profilesoffuture00clar.
-
-
-
-
-
-
-
-
-
-
-
-
-
-86. <a id="ref-86"></a> [86] European Convention on Human Rights (1950), Council of Europe. https://rm.coe.int/1680063776.
-
-
-
-
-
-
-
-
-
-
-
-
-
-87. <a id="ref-87"></a> [87] Wilkes, Wheeler, Gill, *The Preparation of Programs for an Electronic Digital Computer* (1951). https://archive.org/details/preparationofpro00wilk.
-
-
-
-
-
-
-
-
-
-
-
-
-
-88. <a id="ref-88"></a> [88] Jensen and Wirth, *Pascal User Manual and Report* (1974). https://archive.org/details/pascalusermanual00jens.
-
-
-
-
-
-
-
-
-
-
-
-
-
-89. <a id="ref-89"></a> [89] Ritchie, "C Reference Manual" (1975). https://archive.org/details/crefman.
-
-
-
-
-
-
-
-
-
-
-
-
-
-90. <a id="ref-90"></a> [90] Milner et al., *The Definition of Standard ML* (1997). https://smlfamily.github.io/sml97-defn.pdf.
-
-
-
-
-
-
-
-
-
-
-
-
-
-91. <a id="ref-91"></a> [91] Turner, Miranda language overview. https://www.cs.kent.ac.uk/people/staff/dat/miranda/.
-
-
-
-
-
-
-
-
-
-
-
-
-
-92. <a id="ref-92"></a> [92] Stroustrup, *The C++ Programming Language* (1st ed., 1985). https://www.stroustrup.com/1st.html.
-
-
-
-
-
-
-
-
-
-
-
-
-
-93. <a id="ref-93"></a> [93] FDA, "Artificial Intelligence and Machine Learning (AI/ML)-Enabled Medical Devices." https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-and-machine-learning-aiml-enabled-medical-devices.
-
-
-
-
-
-
-
-
-
-
-
-
-
-94. <a id="ref-94"></a> [94] Krizhevsky, Sutskever, Hinton, "ImageNet Classification with Deep Convolutional Neural Networks" (2012). https://arxiv.org/abs/1207.0580.
-
-
-
-
-
-
-
-
-
-
-
-
-
-95. <a id="ref-95"></a> [95] Thomson Reuters Enterprise Centre GmbH v. ROSS Intelligence Inc., D. Del. docket. https://www.courtlistener.com/docket/61382368/thomson-reuters-enterprise-centre-gmbh-v-ross-intelligence-inc/.
-
-
-
-
-
-
-
-
-
-
-
-
-
-96. <a id="ref-96"></a> [96] GitHub Copilot product page. https://github.com/features/copilot.
-
-
-
-
-
-
-
-
-
-
-
-
-
-97. <a id="ref-97"></a> [97] DeepMind, "About DeepMind." https://deepmind.google/about/.
+109. <a id="ref-109"></a> [109] Mata v. Avianca, Inc., S.D.N.Y. docket (CourtListener). https://www.courtlistener.com/docket/63107798/mata-v-avianca-inc/.
