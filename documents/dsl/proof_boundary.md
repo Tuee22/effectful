@@ -247,7 +247,7 @@ The Indian Independence Act of [1947](#timeline-1947-independence) is a formal d
 
 ### Women’s Suffrage
 
-The [1848](#timeline-1848-seneca-falls) Seneca Falls Declaration of Sentiments declared the exclusion of women from political life as a moral harm. It was drafted by Elizabeth Cady Stanton, organized with Lucretia Mott, and adopted by the convention attendees. [60](#ref-60) It was not until [1920](#timeline-1920-nineteenth) that the Nineteenth Amendment formalized political inclusion. [61](#ref-61) Yet access to the ballot was not uniform. State barriers, poll taxes, literacy tests, and intimidation continued to block many women, especially women of colour, until later federal protections such as the [1965](#timeline-1965-voting-rights) Voting Rights Act reshaped enforcement. [62](#ref-62) [63](#ref-63) Census voting and registration data continue to show gaps by gender. [64](#ref-64)
+The [1848](#timeline-1848-seneca-falls) Seneca Falls Declaration of Sentiments declared the exclusion of women from political life as a moral harm. It was drafted by Elizabeth Cady Stanton, organized with Lucretia Mott, and adopted by the convention attendees. [60](#ref-60) It was not until [1920](#timeline-1920-nineteenth) that the Nineteenth Amendment formalized political inclusion. [61](#ref-61) Yet access to the ballot was not uniform. State barriers, poll taxes, literacy tests, and intimidation continued to block many women, especially women of colour, until later federal protections such as the [1965](#timeline-1965-voting-rights) Voting Rights Act reshaped enforcement. [62](#ref-62) [63](#ref-63) Today census voting and registration data continue to show gaps by gender. [64](#ref-64)
 
 ### Residential Schools in Canada
 
