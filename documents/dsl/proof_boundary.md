@@ -32,7 +32,7 @@ But useful to whom?
 
 ## Russell, Gödel, Turing: Western rationalism folds in on itself
 
-1Bertrand Russell discovered [Russell's paradox](#glossary-russells-paradox) in [1901](#timeline-1901). Consider the set of all sets that do not contain themselves. Does that set contain itself? If it does, it should not. If it does not, it should. [4](#ref-4)
+Bertrand Russell discovered [Russell's paradox](#glossary-russells-paradox) in [1901](#timeline-1901). Consider the set of all sets that do not contain themselves. Does that set contain itself? If it does, it should not. If it does not, it should. [4](#ref-4)
 
 [Russell's paradox](#glossary-russells-paradox) shows what happens when a system tries to talk about itself without care. A few words upend the logic underneath them. [Formal systems](#glossary-formal-system) place rules on themselves to avoid contradiction. This is the first formal proof that language cannot escape its own self-reference.
 
