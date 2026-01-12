@@ -4,7 +4,7 @@
 
 Picture three rooms.
 
-In the first, a lawyer scans a late-night contract draft. They pause on indemnity, termination, and governing-law clauses, a line that could decide a future lawsuit. [1](#ref-1)
+In the first, a lawyer scans a late-night contract draft produced by a model. They pause on indemnity, termination, and governing-law clauses, a line that could decide a future lawsuit. [1](#ref-1)
 
 In the second, a clinician reviews a diabetic retinopathy scan the model flagged with high confidence. A faint bleed near the macula makes the call borderline, with real consequences. [2](#ref-2)
 
