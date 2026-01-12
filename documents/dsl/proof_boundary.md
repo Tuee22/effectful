@@ -378,17 +378,17 @@ Timeline:
 - <a id="timeline-2009-toyota"></a>2009: [Toyota](#glossary-toyota) unintended acceleration crisis (2009-2011). [14](#ref-14)
 - <a id="timeline-2010-rust"></a>2010: [Rust](#glossary-rust) project begins. [22](#ref-22)
 - <a id="timeline-2011"></a>2011: [Amazon](#glossary-amazon) uses [TLA+](#glossary-tla) to find deep distributed-system bugs. [18](#ref-18)
-- <a id="timeline-2012-alexnet"></a>2012: AlexNet shows [GPU](#glossary-gpu) advantage for [deep learning](#glossary-deep-learning). [99](#ref-99)
+- <a id="timeline-2012-alexnet"></a>2012: AlexNet shows [GPU](#glossary-gpu) advantage for [deep learning](#glossary-deep-learning). [98](#ref-98)
 - <a id="timeline-2013-mandela-death"></a>2013: Nelson Mandela dies at 95. [80](#ref-80)
 - <a id="timeline-2015-sapiens"></a><a id="timeline-2015-obergefell"></a>2015: Harari publishes *Sapiens*; *Obergefell v. Hodges* recognises marriage equality in the United States. [88](#ref-88) [83](#ref-83)
 - <a id="timeline-2016-alphago"></a><a id="timeline-2016-retinopathy"></a>2016: [AlphaGo](#glossary-alphago) defeats top human players in [Go](#glossary-go); retinopathy model validation published. [31](#ref-31) [2](#ref-2)
 - <a id="timeline-2017-transformer"></a><a id="timeline-2017-alphazero"></a><a id="timeline-2017-dermatology"></a>2017: *Attention Is All You Need* introduces the [transformer](#glossary-transformer), unlocking scalable [LLMs](#glossary-llm); [AlphaZero](#glossary-alphazero) demonstrates self-play learning; dermatology classifier reaches specialist-level accuracy; [deep learning](#glossary-deep-learning) medical imaging breakthroughs broaden in subsequent years. [28](#ref-28) [32](#ref-32) [37](#ref-37)
 - <a id="timeline-2018-bridge-ai"></a><a id="timeline-2018-automating-inequality"></a>2018: Deep learning crack detection appears in civil infrastructure inspection; [formal verification](#glossary-formal-verification) case studies mature in subsequent years ([CompCert](#glossary-compcert), [seL4](#glossary-sel4)); Eubanks publishes *Automating Inequality*. [3](#ref-3) [19](#ref-19) [20](#ref-20) [89](#ref-89)
 - <a id="timeline-2019-race-after-technology"></a>2019: Benjamin publishes *Race After Technology*. [90](#ref-90)
-- <a id="timeline-2020-ross"></a>2020: Thomson Reuters v. [ROSS Intelligence](#glossary-ross) litigation begins. [100](#ref-100)
-- <a id="timeline-2021-copilot"></a><a id="timeline-2021-humaneval"></a><a id="timeline-2021-residential-schools"></a>2021: [GitHub](#glossary-github) [Copilot](#glossary-copilot) launches; [HumanEval](#glossary-humaneval) benchmark released; unmarked graves are reported at former residential schools in Canada. [101](#ref-101) [33](#ref-33) [68](#ref-68)
-- <a id="timeline-2022-chatgpt"></a><a id="timeline-2022-alphacode"></a>2022: [OpenAI](#glossary-openai) launches [ChatGPT](#glossary-chatgpt); [LLMs](#glossary-llm) go mainstream; [AlphaCode](#glossary-alphacode) results published; [FDA](#glossary-fda) approvals for AI devices rise through 2024 while clinical adoption remains low. [105](#ref-105) [33](#ref-33) [98](#ref-98)
-- <a id="timeline-2023-mata"></a><a id="timeline-2023-din-sql"></a>2023: Mata v Avianca sanctions over fake citations; [DIN-SQL](#glossary-din-sql) benchmark released. [109](#ref-109) [33](#ref-33)
+- <a id="timeline-2020-ross"></a>2020: Thomson Reuters v. [ROSS Intelligence](#glossary-ross) litigation begins. [99](#ref-99)
+- <a id="timeline-2021-copilot"></a><a id="timeline-2021-humaneval"></a><a id="timeline-2021-residential-schools"></a>2021: [GitHub](#glossary-github) [Copilot](#glossary-copilot) launches; [HumanEval](#glossary-humaneval) benchmark released; unmarked graves are reported at former residential schools in Canada. [100](#ref-100) [33](#ref-33) [68](#ref-68)
+- <a id="timeline-2022-chatgpt"></a><a id="timeline-2022-alphacode"></a>2022: [OpenAI](#glossary-openai) launches [ChatGPT](#glossary-chatgpt); [LLMs](#glossary-llm) go mainstream; [AlphaCode](#glossary-alphacode) results published; [FDA](#glossary-fda) approvals for AI devices rise through 2024 while clinical adoption remains low. [101](#ref-101) [33](#ref-33) [102](#ref-102)
+- <a id="timeline-2023-mata"></a><a id="timeline-2023-din-sql"></a>2023: Mata v Avianca sanctions over fake citations; [DIN-SQL](#glossary-din-sql) benchmark released. [103](#ref-103) [33](#ref-33)
 - <a id="timeline-2024-mcp"></a><a id="timeline-2024-hai-reglab"></a><a id="timeline-2024-alphaproof"></a><a id="timeline-2024-australia-law"></a>2024: [MCP](#glossary-mcp) standardises tool access for [LLMs](#glossary-llm); Stanford HAI / RegLab hallucination analysis published; [AlphaProof](#glossary-alphaproof) solves IMO problems at silver level; [Lean](#glossary-lean) verifies proofs; Australia enacts under-16 social media law. [35](#ref-35) [1](#ref-1) [36](#ref-36) [84](#ref-84)
 - <a id="timeline-2025-hilbert"></a>2025: [HILBERT](#glossary-hilbert) reaches ~70% on [PutnamBench](#glossary-putnambench) formal proofs. [34](#ref-34)
 
@@ -409,8 +409,8 @@ Timeline:
 - <a id="glossary-halting-problem"></a>**[Halting problem](#glossary-halting-problem)**: The undecidable question of whether a program terminates. [7](#ref-7)
 - <a id="glossary-formal-verification"></a>**[Formal verification](#glossary-formal-verification)**: Mathematical proof, checked by automated tools such as [proof assistants](#glossary-proof-assistant) and [model checkers](#glossary-model-checker), that a system satisfies a specification under explicit assumptions.
 - <a id="glossary-race-condition"></a>**[Race condition](#glossary-race-condition)**: A bug that occurs when timing or ordering of concurrent operations changes the outcome.
-- <a id="glossary-intel"></a>**[Intel](#glossary-intel)**: A semiconductor company behind the Pentium processors. [107](#ref-107)
-- <a id="glossary-esa"></a>**[ESA (European Space Agency)](#glossary-esa)**: A multinational space agency responsible for scientific and exploration missions, including Cluster. [108](#ref-108)
+- <a id="glossary-intel"></a>**[Intel](#glossary-intel)**: A semiconductor company behind the Pentium processors. [104](#ref-104)
+- <a id="glossary-esa"></a>**[ESA (European Space Agency)](#glossary-esa)**: A multinational space agency responsible for scientific and exploration missions, including Cluster. [105](#ref-105)
 - <a id="glossary-toyota"></a>**[Toyota](#glossary-toyota)**: An automaker involved in unintended-acceleration investigations. [14](#ref-14)
 - <a id="glossary-nasa"></a>**[NASA](#glossary-nasa)**: The U.S. space agency involved in automotive software analysis reports. [15](#ref-15)
 - <a id="glossary-misra-c"></a>**[MISRA C](#glossary-misra-c)**: A safety-oriented [C](#glossary-c) coding standard. [15](#ref-15)
@@ -418,6 +418,7 @@ Timeline:
 - <a id="glossary-fortran"></a>**[FORTRAN](#glossary-fortran)**: One of the earliest high-level programming languages, designed for scientific computing. [16](#ref-16)
 - <a id="glossary-cobol"></a>**[COBOL](#glossary-cobol)**: A business-oriented programming language designed for data processing. [16](#ref-16)
 - <a id="glossary-type-system"></a>**[Type system](#glossary-type-system)**: A formal discipline that classifies program terms and prevents invalid operations, enforced by a [compiler](#glossary-compiler).
+- <a id="glossary-purity"></a>**[Purity](#glossary-purity)**: A function's output depends only on its inputs, with no side effects, often emphasized in [functional languages](#glossary-functional-languages).
 - <a id="glossary-functional-programming"></a>**[Functional programming](#glossary-functional-programming)**: A programming paradigm built around [functional languages](#glossary-functional-languages) and [purity](#glossary-purity).
 - <a id="glossary-functional-languages"></a>**[Functional languages](#glossary-functional-languages)**: Languages that emphasize mathematics, [purity](#glossary-purity), immutability, and referential transparency.
 - <a id="glossary-imperative-languages"></a>**[Imperative languages](#glossary-imperative-languages)**: Languages organized around statements that mutate program state.
@@ -425,6 +426,7 @@ Timeline:
 - <a id="glossary-byzantine-generals"></a>**[Byzantine Generals problem](#glossary-byzantine-generals)**: A distributed-systems problem showing that agreement is hard when some participants may lie or fail. [17](#ref-17)
 - <a id="glossary-amazon"></a>**[Amazon](#glossary-amazon)**: A technology company whose infrastructure work popularized formal methods like [TLA+](#glossary-tla). [18](#ref-18)
 - <a id="glossary-tla"></a>**[TLA+](#glossary-tla)**: A specification language for concurrent and [distributed systems](#glossary-distributed-systems). [18](#ref-18)
+- <a id="glossary-invariant"></a>**[Invariant](#glossary-invariant)**: A property that must hold for all reachable states of a system, often checked by a [model checker](#glossary-model-checker).
 - <a id="glossary-model-checker"></a>**[Model checker](#glossary-model-checker)**: A tool that exhaustively explores state space to find violations of a specification or [invariant](#glossary-invariant).
 - <a id="glossary-aws"></a>**[AWS (Amazon Web Services)](#glossary-aws)**: [Amazon](#glossary-amazon)'s cloud platform. [18](#ref-18)
 - <a id="glossary-compcert"></a>**[CompCert](#glossary-compcert)**: A formally verified [C](#glossary-c) compiler with machine-checked compliance to its spec in [Coq](#glossary-coq). [19](#ref-19)
@@ -437,6 +439,7 @@ Timeline:
 - <a id="glossary-haskell"></a>**[Haskell](#glossary-haskell)**: A purely [functional language](#glossary-functional-languages) with strong type systems. [22](#ref-22)
 - <a id="glossary-smt-solver"></a>**[SMT (satisfiability modulo theories) solver](#glossary-smt-solver)**: Automated solver for logical formulas in satisfiability modulo theories. [24](#ref-24)
 - <a id="glossary-z3"></a>**[Z3](#glossary-z3)**: A widely used [SMT solver](#glossary-smt-solver) developed by Microsoft Research. [23](#ref-23)
+- <a id="glossary-ann"></a>**[ANNs](#glossary-ann) (Artificial neural networks)**: Layered statistical models that learn patterns by adjusting weights through training data.
 - <a id="glossary-transformer"></a>**[Transformer](#glossary-transformer)**: An [ANN](#glossary-ann) architecture built around self-attention, enabling parallel processing of sequences and flexible long-range dependencies; this makes scaling to large language models practical. [28](#ref-28)
 - <a id="glossary-gpu"></a>**[GPU](#glossary-gpu)**: A processor optimized for parallel arithmetic computation, offering far higher throughput for many workloads than [CPUs](#glossary-cpu). [27](#ref-27)
 - <a id="glossary-medium-is-the-message"></a>**[The medium is the message](#glossary-medium-is-the-message)**: McLuhan's claim that the characteristics of a medium shape social effects more than its content. [85](#ref-85)
@@ -467,21 +470,18 @@ Timeline:
 - <a id="glossary-miranda"></a>**[Miranda](#glossary-miranda)**: A non-strict [functional language](#glossary-functional-languages) that influenced [Haskell](#glossary-haskell). [96](#ref-96)
 - <a id="glossary-cpp"></a>**[C++](#glossary-cpp)**: A systems language extending [C](#glossary-c) with object-oriented and generic features. [97](#ref-97)
 - <a id="glossary-rust"></a>**[Rust](#glossary-rust)**: A language emphasizing memory safety and strict compile-time checks. [22](#ref-22)
-- <a id="glossary-ross"></a>**[ROSS Intelligence](#glossary-ross)**: A legal AI company involved in litigation over training data. [100](#ref-100)
-- <a id="glossary-github"></a>**[GitHub](#glossary-github)**: A platform for hosting and collaborating on code. [103](#ref-103)
-- <a id="glossary-copilot"></a>**[GitHub Copilot](#glossary-copilot)**: A code assistant product powered by [LLMs](#glossary-llm). [101](#ref-101)
-- <a id="glossary-openai"></a>**[OpenAI](#glossary-openai)**: An AI research and product company. [104](#ref-104)
-- <a id="glossary-chatgpt"></a>**[ChatGPT](#glossary-chatgpt)**: A conversational [LLM](#glossary-llm) product by [OpenAI](#glossary-openai). [105](#ref-105)
-- <a id="glossary-fda"></a>**[FDA](#glossary-fda)**: The U.S. Food and Drug Administration, which clears medical AI devices. [98](#ref-98)
+- <a id="glossary-ross"></a>**[ROSS Intelligence](#glossary-ross)**: A legal AI company involved in litigation over training data. [99](#ref-99)
+- <a id="glossary-github"></a>**[GitHub](#glossary-github)**: A platform for hosting and collaborating on code. [106](#ref-106)
+- <a id="glossary-copilot"></a>**[GitHub Copilot](#glossary-copilot)**: A code assistant product powered by [LLMs](#glossary-llm). [100](#ref-100)
+- <a id="glossary-openai"></a>**[OpenAI](#glossary-openai)**: An AI research and product company. [107](#ref-107)
+- <a id="glossary-chatgpt"></a>**[ChatGPT](#glossary-chatgpt)**: A conversational [LLM](#glossary-llm) product by [OpenAI](#glossary-openai). [101](#ref-101)
+- <a id="glossary-fda"></a>**[FDA](#glossary-fda)**: The U.S. Food and Drug Administration, which clears medical AI devices. [102](#ref-102)
 - <a id="glossary-adt"></a>**[ADT](#glossary-adt) (Algebraic Data Type)**: Types built from sums and products in a [type system](#glossary-type-system) to make invalid states unrepresentable.
-- <a id="glossary-ann"></a>**[ANNs](#glossary-ann) (Artificial neural networks)**: Layered statistical models that learn patterns by adjusting weights through training data.
-- <a id="glossary-anthropic"></a>**[Anthropic](#glossary-anthropic)**: An AI company behind the Model Context Protocol. [106](#ref-106)
+- <a id="glossary-anthropic"></a>**[Anthropic](#glossary-anthropic)**: An AI company behind the Model Context Protocol. [108](#ref-108)
 - <a id="glossary-compositional-verification"></a>**[Compositional verification](#glossary-compositional-verification)**: Proof by composing verified components.
 - <a id="glossary-conformance-test"></a>**[Conformance test](#glossary-conformance-test)**: A test that checks behaviour against a specification.
-- <a id="glossary-deepmind"></a>**[DeepMind](#glossary-deepmind)**: An AI research lab known for [AlphaGo](#glossary-alphago) and [AlphaZero](#glossary-alphazero). [102](#ref-102)
-- <a id="glossary-invariant"></a>**[Invariant](#glossary-invariant)**: A property that must hold for all reachable states of a system, often checked by a [model checker](#glossary-model-checker).
-- <a id="glossary-purity"></a>**[Purity](#glossary-purity)**: A function's output depends only on its inputs, with no side effects, often emphasized in [functional languages](#glossary-functional-languages).
-- <a id="glossary-thomson-reuters"></a>**[Thomson Reuters](#glossary-thomson-reuters)**: A publisher and information services company involved in ROSS litigation. [100](#ref-100)
+- <a id="glossary-deepmind"></a>**[DeepMind](#glossary-deepmind)**: An AI research lab known for [AlphaGo](#glossary-alphago) and [AlphaZero](#glossary-alphazero). [109](#ref-109)
+- <a id="glossary-thomson-reuters"></a>**[Thomson Reuters](#glossary-thomson-reuters)**: A publisher and information services company involved in ROSS litigation. [99](#ref-99)
 - <a id="glossary-tlc"></a>**[TLC](#glossary-tlc)**: The [TLA+](#glossary-tla) [model checker](#glossary-model-checker) that explores state spaces and checks invariants. [39](#ref-39)
 - <a id="glossary-totality"></a>**[Totality](#glossary-totality)**: A function produces an output for every possible input.
 
@@ -682,26 +682,26 @@ Timeline:
 
 97. <a id="ref-97"></a> [97] Stroustrup, *The C++ Programming Language* (1st ed., 1985). https://www.stroustrup.com/1st.html.
 
-98. <a id="ref-98"></a> [98] FDA, "Artificial Intelligence and Machine Learning (AI/ML)-Enabled Medical Devices." https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-and-machine-learning-aiml-enabled-medical-devices.
+98. <a id="ref-98"></a> [98] Krizhevsky, Sutskever, Hinton, "ImageNet Classification with Deep Convolutional Neural Networks," *NeurIPS* (2012). https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.
 
-99. <a id="ref-99"></a> [99] Krizhevsky, Sutskever, Hinton, "ImageNet Classification with Deep Convolutional Neural Networks," *NeurIPS* (2012). https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.
+99. <a id="ref-99"></a> [99] Thomson Reuters Enterprise Centre GmbH v. ROSS Intelligence Inc., D. Del. docket. https://www.courtlistener.com/docket/61382368/thomson-reuters-enterprise-centre-gmbh-v-ross-intelligence-inc/.
 
-100. <a id="ref-100"></a> [100] Thomson Reuters Enterprise Centre GmbH v. ROSS Intelligence Inc., D. Del. docket. https://www.courtlistener.com/docket/61382368/thomson-reuters-enterprise-centre-gmbh-v-ross-intelligence-inc/.
+100. <a id="ref-100"></a> [100] GitHub Copilot product page. https://github.com/features/copilot.
 
-101. <a id="ref-101"></a> [101] GitHub Copilot product page. https://github.com/features/copilot.
+101. <a id="ref-101"></a> [101] OpenAI, "ChatGPT." https://openai.com/chatgpt.
 
-102. <a id="ref-102"></a> [102] DeepMind, "About DeepMind." https://deepmind.google/about/.
+102. <a id="ref-102"></a> [102] FDA, "Artificial Intelligence and Machine Learning (AI/ML)-Enabled Medical Devices." https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-and-machine-learning-aiml-enabled-medical-devices.
 
-103. <a id="ref-103"></a> [103] GitHub, "About." https://github.com/about.
+103. <a id="ref-103"></a> [103] Mata v. Avianca, Inc., S.D.N.Y. docket (CourtListener). https://www.courtlistener.com/docket/63107798/mata-v-avianca-inc/.
 
-104. <a id="ref-104"></a> [104] OpenAI, "About." https://openai.com/about.
+104. <a id="ref-104"></a> [104] Intel, "Company Overview." https://www.intel.com/content/www/us/en/company-overview/company-overview.html.
 
-105. <a id="ref-105"></a> [105] OpenAI, "ChatGPT." https://openai.com/chatgpt.
+105. <a id="ref-105"></a> [105] European Space Agency, "About ESA." https://www.esa.int/About_Us.
 
-106. <a id="ref-106"></a> [106] Anthropic, "Anthropic." https://www.anthropic.com/.
+106. <a id="ref-106"></a> [106] GitHub, "About." https://github.com/about.
 
-107. <a id="ref-107"></a> [107] Intel, "Company Overview." https://www.intel.com/content/www/us/en/company-overview/company-overview.html.
+107. <a id="ref-107"></a> [107] OpenAI, "About." https://openai.com/about.
 
-108. <a id="ref-108"></a> [108] European Space Agency, "About ESA." https://www.esa.int/About_Us.
+108. <a id="ref-108"></a> [108] Anthropic, "Anthropic." https://www.anthropic.com/.
 
-109. <a id="ref-109"></a> [109] Mata v. Avianca, Inc., S.D.N.Y. docket (CourtListener). https://www.courtlistener.com/docket/63107798/mata-v-avianca-inc/.
+109. <a id="ref-109"></a> [109] DeepMind, "About DeepMind." https://deepmind.google/about/.
