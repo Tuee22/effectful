@@ -82,7 +82,7 @@ Formalization made the failure undeniable. It did not resolve who should bear th
 
 ### [Toyota](#glossary-toyota) Unintended Acceleration
 
-A Lexus surged to over 120 mph and crashed in [2009](#timeline-2009-toyota)-2011, triggering investigations. The 2009 San Diego crash involved off-duty California Highway Patrol officer Mark Saylor, his wife, daughter, and his brother-in-law, Chris Lastrella, with a recorded 911 call describing a stuck accelerator and failing brakes. [14](#ref-14) In the recording, Lastrella says, "We're in a Lexus... our accelerator is stuck... there's no brakes... hold on... hold on and pray... pray." [14](#ref-14) [NASA](#glossary-nasa)'s analysis found [MISRA C](#glossary-misra-c) violations in the electronic throttle control system. [15](#ref-15)
+A Lexus surged to over 120 mph and crashed in [2009](#timeline-2009-toyota), triggering investigations that continued into 2011. The 2009 San Diego crash involved off-duty California Highway Patrol officer Mark Saylor, his wife, daughter, and his brother-in-law, Chris Lastrella, with a recorded 911 call describing a stuck accelerator and failing brakes. [14](#ref-14) All four occupants were killed. In the recording, Lastrella says, "We're in a Lexus... our accelerator is stuck... there's no brakes... hold on... hold on and pray... pray." [14](#ref-14) [NASA](#glossary-nasa)'s analysis found [MISRA C](#glossary-misra-c) violations in the electronic throttle control system. [15](#ref-15)
 
 [Toyota](#glossary-toyota)'s electronic throttle system was complex. The code was large. The testing was extensive. Experts pored over every line. No formal proofs were performed. People died. [Toyota](#glossary-toyota)'s reputation was shattered.
 
