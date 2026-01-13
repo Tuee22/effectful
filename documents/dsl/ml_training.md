@@ -274,6 +274,13 @@ A good contract includes:
    - fixed ring order for all-reduce
    - fixed collective chunking strategy
 
+### 4.1.1 Bit-for-bit reproducibility requirement (explicit)
+
+When required, training **must be bit-for-bit reproducible** under the pinned environment
+described in the reproducibility contract. This means: for the same manifest (hardware, software,
+config, dataset, seeds, topology), the final model parameters and all checkpointed state are
+identical at the byte level across runs.
+
 ### 4.2 Accept the hard truth: reproducibility does not generalize across hardware
 
 Bitwise reproducibility usually requires:
@@ -376,7 +383,25 @@ Model explicitly:
 - error propagation and cleanup mode
 - distributed membership and barriers
 
-### 6.3 Proof envelope artifacts
+### 6.3 Proof boundary selection and validation (explicit steps)
+
+1. **Enumerate components** (runtime, schedulers, storage, network, GPU stack, kernels).
+2. For each component, decide: **model** vs **assume** based on stability of semantics, spec
+   availability, and controllability.
+3. **Place the boundary at the smallest opaque interface** that still preserves the required
+   guarantees.
+4. **Write the assumptions** in the inventory, pin versions, and link to the TLA+ specs that
+   depend on them.
+5. **Define a refinement mapping** from runtime state → TLA+ state and embed runtime assertions
+   for invariants.
+6. **Validate** by:
+   - model checking the protocol invariants and liveness in TLA+,
+   - model-based tests comparing interpreter vs runtime observable outcomes,
+   - asserting invariants in production (fail-fast).
+
+See the §13 “Proof boundary validation” checklist for the operational verification steps.
+
+### 6.4 Proof envelope artifacts
 
 Bundle proofs with a machine-readable environment manifest:
 - spec versions
@@ -384,7 +409,7 @@ Bundle proofs with a machine-readable environment manifest:
 - model-checking parameters and limits
 This makes proofs reproducible and links them to the exact boundary they depend on.
 
-### 6.4 Additional formal methods principles to prioritize
+### 6.5 Additional formal methods principles to prioritize
 
 - **Refinement mapping**: define explicit mappings between spec levels and keep them versioned with code changes.  
 - **Compositional specs**: specify allocator/scheduler/collectives separately, then prove composition preserves invariants.  
@@ -395,24 +420,6 @@ This makes proofs reproducible and links them to the exact boundary they depend 
 - **Fairness precision**: state fairness assumptions explicitly and keep them minimal; note which liveness results depend on them.  
 - **Property coverage**: separate safety, liveness, determinism; ensure each is exercised by dedicated checks.  
 - **Runtime–spec alignment**: add lightweight runtime checks for invariants that are expensive to model or easy to violate in code.
-
----
-
-## References
-
-- [Leslie Lamport, *Specifying Systems: The TLA+ Language and Tools for Hardware and Software Engineers* (Addison-Wesley, 2002)](https://lamport.azurewebsites.net/tla/book.html)
-- [Edmund M. Clarke, Orna Grumberg, Doron A. Peled, *Model Checking* (MIT Press, 1999)](https://mitpress.mit.edu/9780262032704/model-checking/)
-- [Clifford B. Jones, *Systematic Software Development Using VDM* (Prentice Hall, 1990)](https://dl.acm.org/doi/book/10.5555/122981)
-- [Jean-Raymond Abrial, *The B-Book: Assigning Programs to Meanings* (Cambridge University Press, 1996)](https://www.cambridge.org/core/books/bbook/7C16C1657361C6B9A29C0E9A0477C2C8)
-- [Jayadev Misra, K. Mani Chandy, “Proofs of Networks of Processes,” *IEEE Transactions on Software Engineering* (1981)](https://doi.org/10.1109/TSE.1981.231167)
-- [Zohar Manna, Amir Pnueli, *The Temporal Logic of Reactive and Concurrent Systems: Specification* (Springer, 1992)](https://link.springer.com/book/10.1007/978-1-4612-0933-6)
-- [Zohar Manna, Amir Pnueli, *The Temporal Logic of Reactive and Concurrent Systems: Safety* (Springer, 1995)](https://link.springer.com/book/10.1007/978-1-4612-4222-7)
-- [C. A. R. Hoare, *Communicating Sequential Processes* (Prentice Hall, 1985)](https://dl.acm.org/doi/book/10.5555/3921)
-- [Edsger W. Dijkstra, *A Discipline of Programming* (Prentice Hall, 1976)](https://dl.acm.org/doi/book/10.5555/1243380)
-- [J. C. M. Baeten, *Process Algebra: Equational Theories of Communicating Processes* (Cambridge University Press, 2005)](https://www.cambridge.org/core/books/process-algebra/DF38DD1C9D5EBD84A9A0A5D4A59FEE1C)
-- [Nancy G. Leveson, *Engineering a Safer World: Systems Thinking Applied to Safety* (MIT Press, 2011)](https://mitpress.mit.edu/9780262016629/engineering-a-safer-world/)
-- [Tim Kelly, *Arguing Safety: A Systematic Approach to Safety Case Management* (University of York, 1998)](https://www-users.york.ac.uk/~tpk/ArguingSafety.htm)
-- [T. P. Kelly, J. A. McDermid, “A Systematic Approach to Safety Case Management,” *Safety Science* (1998)](https://doi.org/10.1016/S0925-7535(97)00050-1)
 
 ---
 
@@ -681,6 +688,15 @@ A “checkpoint” is only meaningful if it captures:
 - no “lost checkpoint” (all shards written but commit never reachable under assumptions)
 - idempotent retries: re-running prepare/commit does not create ambiguity
 
+### 10.2.1 Reproducibility across arbitrary save/load cycles
+
+The checkpoint protocol must guarantee that **any sequence of save/load cycles**—including
+spurious DAG failures and retries—reconstructs the exact same training state. Concretely: if a run
+resumes from any committed checkpoint, replays any required effects, and continues, the resulting
+model/optimizer/RNG state is **bit-for-bit identical** to a failure-free run at the same logical
+step.
+This requirement is part of the reproducibility contract (§4.1).
+
 ### 10.3 Logging as an effect trace (enables debugging + replay)
 
 Maintain an **append-only effect log**:
@@ -780,15 +796,23 @@ Include runtime assertions mirroring TLA+ invariants.
 - [ ] Membership/epoch semantics are specified
 - [ ] Collective ordering is deterministic
 - [ ] Checkpoint protocol is provably consistent
-- [ ] Restart/replay semantics are deterministic and documented
+- [ ] Restart/replay semantics are deterministic and documented (see §10.2.1)
 - [ ] Idempotency keys exist for retryable effects
 
 ### Reproducibility
 - [ ] Run manifest includes pinned hardware/software/config
+- [ ] Bit-for-bit requirement is declared for the pinned environment (see §4.1.1)
 - [ ] Deterministic seed derivation recorded
 - [ ] Dataset artifact and partitioning are hashed and pinned
 - [ ] Deterministic algorithms enforced (with performance tradeoffs understood)
 - [ ] Full effect trace is recorded for audit/replay
+
+### Proof boundary validation
+- [ ] Proof boundary decision documented with model/assume split (see §6.3)
+- [ ] Assumption inventory pinned and linked to dependent TLA+ specs
+- [ ] Refinement mapping defined and runtime assertions in place
+- [ ] TLA+ model checking rerun after boundary/assumption changes
+- [ ] Model-based tests compare interpreter vs runtime outcomes
 
 ---
 
@@ -815,3 +839,21 @@ You do not eliminate vendor opacity. You **contain it** and prove that everythin
 > **Assumption Store**: Checkpoint object store operations provide read-after-write consistency (or weaker model as specified).
 
 Make these assumptions *explicit* so your proofs mean something.
+
+---
+
+## References
+
+- [Leslie Lamport, *Specifying Systems: The TLA+ Language and Tools for Hardware and Software Engineers* (Addison-Wesley, 2002)](https://lamport.azurewebsites.net/tla/book.html)
+- [Edmund M. Clarke, Orna Grumberg, Doron A. Peled, *Model Checking* (MIT Press, 1999)](https://mitpress.mit.edu/9780262032704/model-checking/)
+- [Clifford B. Jones, *Systematic Software Development Using VDM* (Prentice Hall, 1990)](https://dl.acm.org/doi/book/10.5555/122981)
+- [Jean-Raymond Abrial, *The B-Book: Assigning Programs to Meanings* (Cambridge University Press, 1996)](https://www.cambridge.org/core/books/bbook/7C16C1657361C6B9A29C0E9A0477C2C8)
+- [Jayadev Misra, K. Mani Chandy, “Proofs of Networks of Processes,” *IEEE Transactions on Software Engineering* (1981)](https://doi.org/10.1109/TSE.1981.231167)
+- [Zohar Manna, Amir Pnueli, *The Temporal Logic of Reactive and Concurrent Systems: Specification* (Springer, 1992)](https://link.springer.com/book/10.1007/978-1-4612-0933-6)
+- [Zohar Manna, Amir Pnueli, *The Temporal Logic of Reactive and Concurrent Systems: Safety* (Springer, 1995)](https://link.springer.com/book/10.1007/978-1-4612-4222-7)
+- [C. A. R. Hoare, *Communicating Sequential Processes* (Prentice Hall, 1985)](https://dl.acm.org/doi/book/10.5555/3921)
+- [Edsger W. Dijkstra, *A Discipline of Programming* (Prentice Hall, 1976)](https://dl.acm.org/doi/book/10.5555/1243380)
+- [J. C. M. Baeten, *Process Algebra: Equational Theories of Communicating Processes* (Cambridge University Press, 2005)](https://www.cambridge.org/core/books/process-algebra/DF38DD1C9D5EBD84A9A0A5D4A59FEE1C)
+- [Nancy G. Leveson, *Engineering a Safer World: Systems Thinking Applied to Safety* (MIT Press, 2011)](https://mitpress.mit.edu/9780262016629/engineering-a-safer-world/)
+- [Tim Kelly, *Arguing Safety: A Systematic Approach to Safety Case Management* (University of York, 1998)](https://www-users.york.ac.uk/~tpk/ArguingSafety.htm)
+- [T. P. Kelly, J. A. McDermid, “A Systematic Approach to Safety Case Management,” *Safety Science* (1998)](https://doi.org/10.1016/S0925-7535(97)00050-1)
