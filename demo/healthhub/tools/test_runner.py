@@ -105,7 +105,7 @@ def reseed_database() -> int:
             "-d",
             db_name,
             "-f",
-            "/app/healthhub/backend/scripts/seed_data.sql",
+            "/app/healthhub/src/python/scripts/seed_data.sql",
         ],
         env=env,
         check=False,

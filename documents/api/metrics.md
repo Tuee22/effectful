@@ -6,6 +6,8 @@
 
 > **Purpose**: Reference for metrics effects, ADT return types, and observability primitives in effectful.
 
+> **Note**: This API reference covers the legacy Python effectful library. For the Effectful Language, see [DSL Documentation](../dsl/intro.md).
+
 **effectful** - Complete reference for metrics effects, ADT return types, and observability primitives.
 
 > **Core Doctrine**: For metrics philosophy and architecture, see [observability.md](../engineering/observability.md)
@@ -55,7 +57,7 @@ ______________________________________________________________________
 
 ### ADT Return Types
 
-```python
+````python
 # file: examples/metrics.py
 from effectful.domain.metrics_result import (
     MetricRecorded,         # Success case with timestamp
@@ -67,7 +69,7 @@ from effectful.domain.metrics_result import (
 # Union types for pattern matching
 type MetricResult = MetricRecorded | MetricRecordingFailed
 type MetricQueryResult = QuerySuccess | QueryFailure
-```
+```text
 
 ```mermaid
 flowchart TB
@@ -81,7 +83,7 @@ flowchart TB
 
   MetricResult_MetricRecorded["MetricRecorded(timestamp: datetime)"]
   MetricResult_MetricRecordingFailed["MetricRecordingFailed(reason: str)"]
-```
+```text
 
 ```mermaid
 flowchart TB
@@ -95,7 +97,7 @@ flowchart TB
 
   MetricQueryResult_QuerySuccess["QuerySuccess(results: dict[str, MetricValue])"]
   MetricQueryResult_QueryFailure["QueryFailure(reason: str)"]
-```
+```text
 
 ______________________________________________________________________
 
@@ -118,7 +120,7 @@ class IncrementCounter:
     metric_name: str
     labels: dict[str, str]
     value: float = 1.0
-```
+````
 
 **Parameters**:
 
@@ -162,7 +164,7 @@ def track_appointment_created(
 
 **Common Errors**:
 
-```python
+````python
 # file: examples/metrics.py
 # ❌ Metric not registered
 MetricRecordingFailed(reason="metric_not_registered")
@@ -178,7 +180,7 @@ MetricRecordingFailed(reason="unexpected_label: patient_id")
 
 # ❌ Negative increment value
 MetricRecordingFailed(reason="invalid_value: must be > 0")
-```
+```text
 
 ______________________________________________________________________
 
@@ -196,7 +198,7 @@ class RecordGauge:
     metric_name: str
     labels: dict[str, str]
     value: float
-```
+````
 
 **Parameters**:
 
@@ -300,7 +302,7 @@ def measure_effect_duration(
 
 **Prometheus Output**:
 
-```text
+````text
 # file: examples/metrics_histogram_output.txt
 effect_duration_seconds_bucket{effect_type="GetUserById",le="0.1"} 45
 effect_duration_seconds_bucket{effect_type="GetUserById",le="0.5"} 89
@@ -308,7 +310,7 @@ effect_duration_seconds_bucket{effect_type="GetUserById",le="1.0"} 95
 effect_duration_seconds_bucket{effect_type="GetUserById",le="+Inf"} 100
 effect_duration_seconds_sum{effect_type="GetUserById"} 42.5
 effect_duration_seconds_count{effect_type="GetUserById"} 100
-```
+```text
 
 ______________________________________________________________________
 
@@ -326,7 +328,7 @@ class RecordSummary:
     metric_name: str
     labels: dict[str, str]
     value: float
-```
+````
 
 **Parameters**:
 
@@ -418,7 +420,7 @@ class QuerySuccess:
 
 **Example Response**:
 
-```python
+````python
 # file: examples/metrics.py
 QuerySuccess(
     metrics={
@@ -427,7 +429,7 @@ QuerySuccess(
     },
     timestamp=1706472000.0,
 )
-```
+```text
 
 ______________________________________________________________________
 
@@ -443,7 +445,7 @@ ______________________________________________________________________
 class ResetMetrics:
     """Effect: Reset all metrics (TESTING ONLY)."""
     pass
-```
+````
 
 **Returns**: `MetricRecorded | MetricRecordingFailed`
 
@@ -486,12 +488,12 @@ class MetricRecorded:
 
 **Usage**:
 
-```python
+````python
 # file: examples/metrics.py
 match result:
     case MetricRecorded(timestamp=ts):
         print(f"Recorded at {datetime.fromtimestamp(ts)}")
-```
+```text
 
 ______________________________________________________________________
 
@@ -505,7 +507,7 @@ ______________________________________________________________________
 class MetricRecordingFailed:
     """Metric recording failed."""
     reason: str
-```
+````
 
 **Fields**:
 
@@ -522,7 +524,7 @@ class MetricRecordingFailed:
 
 **Usage**:
 
-```python
+````python
 # file: examples/metrics.py
 match result:
     case MetricRecordingFailed(reason=reason):
@@ -532,7 +534,7 @@ match result:
         elif "collector_error" in reason:
             # Infrastructure issue
             pass
-```
+```text
 
 ______________________________________________________________________
 
@@ -547,7 +549,7 @@ class QuerySuccess:
     """Metric query succeeded."""
     metrics: dict[str, float]
     timestamp: float
-```
+````
 
 **Fields**:
 
@@ -556,7 +558,7 @@ class QuerySuccess:
 
 **Example**:
 
-```python
+````python
 # file: examples/metrics.py
 QuerySuccess(
     metrics={
@@ -565,7 +567,7 @@ QuerySuccess(
     },
     timestamp=1706472000.0,
 )
-```
+```text
 
 ______________________________________________________________________
 
@@ -579,7 +581,7 @@ ______________________________________________________________________
 class QueryFailure:
     """Metric query failed."""
     reason: str
-```
+````
 
 **Fields**:
 
@@ -717,14 +719,14 @@ class GaugeDefinition:
 
 **Example**:
 
-```python
+````python
 # file: examples/metrics.py
 GaugeDefinition(
     name="database_connections_active",
     help_text="Current active database connections",
     label_names=("pool_id",),
 )
-```
+```text
 
 ______________________________________________________________________
 
@@ -741,7 +743,7 @@ class HistogramDefinition:
     help_text: str
     label_names: tuple[str, ...]
     buckets: tuple[float, ...]
-```
+````
 
 **Fields**:
 
@@ -791,7 +793,7 @@ class SummaryDefinition:
 
 **Example**:
 
-```python
+````python
 # file: examples/metrics.py
 SummaryDefinition(
     name="response_size_bytes",
@@ -799,7 +801,7 @@ SummaryDefinition(
     label_names=("endpoint",),
     quantiles=(0.5, 0.9, 0.95, 0.99),
 )
-```
+```typescript
 
 ______________________________________________________________________
 
@@ -862,7 +864,7 @@ class MetricsCollector(Protocol):
     async def reset_metrics(self) -> MetricResult:
         """Reset all metrics (TESTING ONLY)."""
         ...
-```
+````
 
 **Implementations**:
 

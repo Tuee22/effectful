@@ -10,11 +10,58 @@
 
 | Need                      | Link                                                          |
 | ------------------------- | ------------------------------------------------------------- |
+| Boundary model            | [Boundary Model](boundary_model.md)                           |
 | Testing standards         | [Testing](testing.md)                                         |
 | Code quality              | [Code Quality](code_quality.md)                               |
 | Authentication            | [Authentication](authentication.md)                           |
 | Architecture              | [Architecture](architecture.md)                               |
 | ADTs and Results tutorial | [ADTs and Results Tutorial](../tutorials/adts_and_results.md) |
+| Effectful DSL             | [Effectful DSL Hub](../dsl/intro.md)                          |
+
+______________________________________________________________________
+
+## Relationship to Boundary Model
+
+Total Pure Modelling (TPM) applies **within the purity boundary**. It is the discipline that makes the purity boundary meaningful:
+
+```typescript
+// diagram
+┌─────────────────────────────────────────────────────────────────────────┐
+│                       PURITY BOUNDARY                                    │
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │              TOTAL PURE MODELLING                                │    │
+│  │  • Domain as pure mathematical state space                       │    │
+│  │  • Events represent all possible inputs                          │    │
+│  │  • Effects are pure data (not actions)                           │    │
+│  │  • Step function is total (handles all cases)                    │    │
+│  │  • Illegal states are unrepresentable                            │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### TPM as Purity Boundary Foundation
+
+| TPM Principle                  | Boundary Implication                |
+| ------------------------------ | ----------------------------------- |
+| Pure state space               | All business logic is deterministic |
+| Total step function            | No stuck states, no unhandled cases |
+| Effects as data                | Clean handoff to proof boundary     |
+| Illegal states unrepresentable | Type system prevents security bugs  |
+
+### What TPM Enables
+
+Within the purity boundary, TPM makes possible:
+
+- **Formal verification**: TLA+ can check properties of total models
+- **Exhaustive testing**: Property-based testing covers all states
+- **LLM-friendly development**: Clear rules that LLMs can follow
+- **Cross-platform consistency**: Frontend and backend share pure models
+
+See [Boundary Model](boundary_model.md) for how TPM fits in the larger architecture.
+
+______________________________________________________________________
 
 ## Why this exists
 

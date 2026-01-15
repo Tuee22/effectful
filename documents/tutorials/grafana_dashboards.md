@@ -6,6 +6,8 @@
 
 > **Purpose**: Tutorial for building actionable Grafana dashboards for effectful metrics.
 
+> **Note**: This tutorial covers the legacy Python effectful library. For the Effectful Language (Haskell-derived DSL for distributed systems), see [DSL Documentation](../dsl/intro.md).
+
 **Build beautiful, actionable dashboards for effectful metrics.**
 
 > **Tutorial**: For Prometheus setup, see [prometheus_setup.md](./prometheus_setup.md)
@@ -410,7 +412,7 @@ bottomk(10, cache_hit_rate)
 
 ### Pattern 6: Aggregations
 
-```promql
+````promql
 # file: examples/15_grafana_dashboards.promql
 # Sum across all instances
 sum(rate(requests_total[5m]))
@@ -423,7 +425,7 @@ avg by (instance) (cpu_usage_percent)
 
 # Count number of timeseries
 count(up{job="effectful"})
-```
+```python
 
 ______________________________________________________________________
 
@@ -454,7 +456,7 @@ Override dashboard time range for specific panels:
 # file: dashboards/panel_time_overrides.txt
 Panel 1: Last 1 hour (dashboard time)
 Panel 2: Last 1 hour, shifted back 24 hours
-```
+````
 
 ### Auto-Refresh
 
@@ -530,7 +532,7 @@ ______________________________________________________________________
 
 ### Effectful Metrics Dashboard JSON
 
-```json
+````json
 // file: configs/15_grafana_dashboards.json
 {
   "dashboard": {
@@ -599,7 +601,7 @@ ______________________________________________________________________
     }
   }
 }
-```
+```text
 
 ______________________________________________________________________
 
@@ -614,7 +616,7 @@ ______________________________________________________________________
 Green: Good (success, low latency, high cache hit)
 Yellow: Warning (degraded, approaching threshold)
 Red: Critical (errors, high latency, resource exhaustion)
-```
+````
 
 **✅ Add Panel Descriptions**
 
@@ -677,11 +679,11 @@ Row 3: Resources (CPU, memory, connections)
 
 **❌ Hard-Code Label Values**
 
-```text
+````text
 # file: dashboards/label_variable_examples.txt
 # Bad: {namespace="production"}
 # Good: {namespace=~"$namespace"}
-```
+```mermaid
 
 ______________________________________________________________________
 
@@ -751,7 +753,7 @@ ______________________________________________________________________
 ```bash
 # Query Prometheus directly
 curl 'http://localhost:9090/api/v1/query?query=effectful_effects_total'
-```
+````
 
 ### Query Too Slow
 

@@ -12,7 +12,7 @@ ______________________________________________________________________
 
 ## SSoT Link Map
 
-```mermaid
+````mermaid
 flowchart TB
   Observability[Observability SSoT]
   MonAlert[Monitoring & Alerting SSoT]
@@ -28,7 +28,7 @@ flowchart TB
   Observability --> Testing
   MonAlert --> Testing
   CodeQuality --> Architecture
-```
+```typescript
 
 | Need                                     | Link                                                                     |
 | ---------------------------------------- | ------------------------------------------------------------------------ |
@@ -113,7 +113,7 @@ APP_METRICS = MetricsRegistry(
     ),
     summaries=(),
 )
-```
+````
 
 **Type Safety Guarantees:**
 
@@ -124,7 +124,7 @@ APP_METRICS = MetricsRegistry(
 
 ### Compile-Time Validation
 
-```python
+````python
 # file: examples/observability.py
 # ✅ VALID - Metric registered, labels match schema
 yield IncrementCounter(
@@ -147,7 +147,7 @@ yield IncrementCounter(
     labels={"specialty": "cardiology"},  # Wrong label name!
     value=1.0,
 )
-```
+```text
 
 ______________________________________________________________________
 
@@ -186,7 +186,7 @@ class IncrementCounter:
     metric_name: str
     labels: dict[str, str]
     value: float = 1.0
-```
+````
 
 **Example:**
 
@@ -587,7 +587,7 @@ type MetricRecordingResult = MetricRecorded | MetricRecordingFailed
 
 ### Pattern Matching
 
-```python
+````python
 # file: examples/observability.py
 result = yield IncrementCounter(
     metric_name="test_counter",
@@ -605,7 +605,7 @@ match result:
     case MetricRecordingFailed(reason=reason, message=msg):
         # Other domain errors
         logger.warning(f"Metric recording failed: {reason} - {msg}")
-```
+```text
 
 ______________________________________________________________________
 
@@ -629,7 +629,7 @@ yield IncrementCounter(
     labels={"user_tier": user.tier},  # Bounded cardinality (e.g., "free", "premium")
     value=1.0,
 )
-```
+````
 
 ### 2. Fixed Label Names
 

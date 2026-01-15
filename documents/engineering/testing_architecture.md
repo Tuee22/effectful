@@ -8,7 +8,7 @@
 
 ## SSoT Link Map
 
-```mermaid
+````mermaid
 flowchart TB
   TestingArch[Testing Architecture SSoT]
   Testing[Testing SSoT]
@@ -21,7 +21,7 @@ flowchart TB
   TestingArch --> Docker
   TestingArch --> Docs
   Testing --> TestingArch
-```
+```python
 
 | Need                             | Link                                                     |
 | -------------------------------- | -------------------------------------------------------- |
@@ -69,7 +69,7 @@ async def test_get_user_interpreter(mocker: MockerFixture) -> None:
     result = await interpreter.interpret(GetUserById(...))
 
     assert_ok(result)
-```
+````
 
 ### Integration Tests (tests/integration/)
 
@@ -119,7 +119,7 @@ async def test_cache_workflow(clean_redis: Redis) -> None:
 
 **Example**: E2E test with seeded data
 
-```python
+````python
 # file: demo/healthhub/tests/pytest/e2e/test_patient_workflows.py
 @pytest.mark.e2e
 @pytest.mark.asyncio
@@ -131,7 +131,7 @@ async def test_patient_view_prescriptions(
     await page.goto("/prescriptions")
     prescriptions = page.locator('text=Lisinopril')
     assert await prescriptions.count() > 0
-```
+```text
 
 ______________________________________________________________________
 
@@ -165,7 +165,7 @@ tests/
 └── e2e/
     ├── conftest.py      # Suite-specific fixtures (optional)
     └── test_*.py
-```
+````
 
 **Rationale**:
 
@@ -535,7 +535,7 @@ ______________________________________________________________________
 
 ### Test Pyramid
 
-```mermaid
+````mermaid
 flowchart TB
   Philosophy[Minimal API pytest mock only]
   Philosophy --> Pyramid[Test Pyramid]
@@ -552,7 +552,7 @@ flowchart TB
   Unit --> Layer2[Layer 2 Interpreters]
   Integration --> Layer3[Layer 3 Programs]
   Integration --> Layer4[Layer 4 Workflows]
-```
+```python
 
 | Layer       | Count       | Speed        | Infrastructure              |
 | ----------- | ----------- | ------------ | --------------------------- |
@@ -598,7 +598,7 @@ def test_get_user_by_id_structure() -> None:
     # Verify immutability
     with pytest.raises(FrozenInstanceError):
         effect.user_id = uuid4()
-```
+````
 
 **When to use**: Testing effect dataclass definitions.
 
@@ -1696,7 +1696,7 @@ async def test_system_workflow_2():
 
 **Right**: Use fixed UUIDs from base_state.py
 
-```python
+````python
 # file: tests/integration/test_system_workflow.py
 # ✅ CORRECT - Fixed UUIDs
 from tests.fixtures.base_state import ALICE_ID, BOB_ID
@@ -1706,7 +1706,7 @@ async def test_system_workflow_1():
 
 async def test_system_workflow_2():
     await insert_user(BOB_ID, ...)
-```
+```python
 
 ______________________________________________________________________
 
@@ -1745,7 +1745,7 @@ __all__ = [
     "clean_pulsar",
     "base_state",
 ]
-```
+````
 
 ### Fixture Visibility Rules
 

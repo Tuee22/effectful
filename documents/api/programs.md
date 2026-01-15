@@ -6,6 +6,8 @@
 
 > **Purpose**: Reference for program execution helpers and program types.
 
+> **Note**: This API reference covers the legacy Python effectful library. For the Effectful Language, see [DSL Documentation](../dsl/intro.md).
+
 > **Core Doctrine**: For program composition diagrams and execution flow, see [architecture.md](../engineering/architecture.md#program-composition).
 
 ## SSoT Link Map
@@ -55,7 +57,7 @@ async def run_ws_program[T] (
 
 **Usage**:
 
-```python
+````python
 # file: examples/programs.py
 from effectful import run_ws_program, SendText, GetUserById, Ok, Err
 
@@ -80,7 +82,7 @@ match result:
         print(f"Program succeeded: {greeting}")
     case Err(error):
         print(f"Program failed: {error}")
-```
+```text
 
 ______________________________________________________________________
 
@@ -97,7 +99,7 @@ def sequential_program() -> Generator[AllEffects, EffectResult, None]:
     yield SendText(text="Step 2")  # Executes second
     yield SendText(text="Step 3")  # Executes third
     return None
-```
+````
 
 ### Fail-Fast Error Propagation
 
@@ -124,7 +126,7 @@ assert result.is_err()
 
 Generic return types are preserved:
 
-```python
+````python
 # file: examples/programs.py
 def bool_program() -> Generator[AllEffects, EffectResult, bool]:
     user = yield GetUserById(user_id=user_id)
@@ -139,7 +141,7 @@ match result:
         assert isinstance(found, bool)
     case Err(error):
         ...
-```
+```text
 
 ______________________________________________________________________
 
@@ -160,11 +162,11 @@ type AllEffects = (
     | AuthEffect         # GenerateToken, ValidateToken, RefreshToken, RevokeToken, HashPassword, ValidatePassword
     | SystemEffect       # GetCurrentTime, GenerateUUID
 )
-```
+````
 
 **Usage**:
 
-```python
+````python
 # file: examples/programs.py
 from collections.abc import Generator
 from effectful import AllEffects, EffectResult
@@ -174,7 +176,7 @@ def my_program() -> Generator[AllEffects, EffectResult, str]:
     yield SendText(text="Hello")
     yield GetUserById(user_id=user_id)
     return "done"
-```
+```text
 
 ______________________________________________________________________
 
@@ -213,7 +215,7 @@ type EffectResult = (
     | list[str]               # ListObjects
     | list[User]              # ListUsers
 )
-```
+````
 
 **Components**:
 
@@ -244,7 +246,7 @@ def program() -> Generator[AllEffects, EffectResult, str]:
 
 **Pattern Matching**:
 
-```python
+````python
 # file: examples/programs.py
 def program() -> Generator[AllEffects, EffectResult, str]:
     user_result = yield GetUserById(user_id=user_id)
@@ -257,7 +259,7 @@ def program() -> Generator[AllEffects, EffectResult, str]:
         case UserNotFound():
             # Type checker knows this is UserNotFound
             return "Not found"
-```
+```text
 
 ______________________________________________________________________
 
@@ -268,7 +270,7 @@ Type alias for WebSocket programs that return None.
 ```python
 # file: examples/programs.py
 type WSProgram = Generator[AllEffects, EffectResult, None]
-```
+````
 
 **Usage**:
 
@@ -281,12 +283,12 @@ def simple_greeting() -> WSProgram:
 
 Equivalent to:
 
-```python
+````python
 # file: examples/programs.py
 def simple_greeting() -> Generator[AllEffects, EffectResult, None]:
     yield SendText(text="Hello, client!")
     return None
-```
+```text
 
 ______________________________________________________________________
 
@@ -311,7 +313,7 @@ def my_program() -> Generator[AllEffects, EffectResult, str]:
 
     # 2. Return final value
     return "success"
-```
+````
 
 ### Program with Parameters
 
@@ -383,7 +385,7 @@ def batch_program(
 
 ### Error Handling
 
-```python
+````python
 # file: examples/programs.py
 def error_aware_program(
     user_id: UUID,
@@ -401,7 +403,7 @@ def error_aware_program(
             # User not found is not an error - it's a valid outcome
             yield SendText(text="User not found")
             return "not_found"
-```
+```python
 
 ______________________________________________________________________
 
@@ -434,7 +436,7 @@ def main_program(user_id: UUID) -> Generator[AllEffects, EffectResult, None]:
     # Continue with sub-program's result
     yield SendText(text=f"Greeting result: {result}")
     return None
-```
+````
 
 ### Building Reusable Components
 
@@ -477,7 +479,7 @@ def workflow_with_caching(
 
 ### Recursive Programs
 
-```python
+````python
 # file: examples/programs.py
 def retry_with_backoff[T] (
     program_factory: Callable[[], Generator[AllEffects, EffectResult, T]],
@@ -499,7 +501,7 @@ def retry_with_backoff[T] (
 
     # All retries failed
     raise RuntimeError("Max retries exceeded")
-```
+```text
 
 ______________________________________________________________________
 
@@ -532,7 +534,7 @@ def get_with_cache_aside(
                     return profile
                 case UserNotFound():
                     return None
-```
+````
 
 ### Request-Response Pattern
 
@@ -572,7 +574,7 @@ def request_response_program() -> Generator[AllEffects, EffectResult, None]:
 
 ### Multi-Step Workflow
 
-```python
+````python
 # file: examples/programs.py
 def complete_workflow(
     user_id: UUID,
@@ -605,7 +607,7 @@ def complete_workflow(
                 "status": "success",
                 "message_id": str(message.id),
             }
-```
+```text
 
 ______________________________________________________________________
 
@@ -630,13 +632,13 @@ def slow_program(user_ids: list[UUID]) -> Generator[AllEffects, EffectResult, li
 # def fast_program(user_ids: list[UUID]) -> Generator[AllEffects, EffectResult, list[User]]:
 #     users = yield GetUsersByIds(user_ids=user_ids)  # Single batch query
 #     return users
-```
+````
 
 ### Caching Strategy
 
 Use cache to reduce database load:
 
-```python
+````python
 # file: examples/programs.py
 def optimized_program(
     user_id: UUID,
@@ -660,7 +662,7 @@ def optimized_program(
                     return f"Hello {name}"
                 case UserNotFound():
                     return "User not found"
-```
+```text
 
 ______________________________________________________________________
 
@@ -691,7 +693,7 @@ def instrumented_program(
         case UserNotFound():
             logger.warning(f"User not found: {user_id}")
             return "not_found"
-```
+````
 
 ### Tracing with EffectReturn
 

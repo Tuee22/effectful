@@ -6,6 +6,8 @@
 
 > **Purpose**: Reference for authentication effect types used for JWT token management and password operations.
 
+> **Note**: This API reference covers the legacy Python effectful library. For the Effectful Language, see [DSL Documentation](../dsl/intro.md).
+
 ## SSoT Link Map
 
 | Need                   | Link                                                                |
@@ -272,7 +274,7 @@ def hash_new_password(
 
 ADT for token validation outcomes.
 
-```mermaid
+````mermaid
 flowchart TB
   %% kind: ADT
   %% id: effectful.domain.token_result.TokenValidationResult
@@ -286,7 +288,7 @@ flowchart TB
   TokenValidationResult_TokenValid["TokenValid(user_id: UUID, claims: dict[str, str])"]
   TokenValidationResult_TokenExpired["TokenExpired(token: str, expired_at: datetime)"]
   TokenValidationResult_TokenInvalid["TokenInvalid(token: str, reason: str)"]
-```
+```text
 
 ```python
 # file: examples/auth.py
@@ -306,7 +308,7 @@ class TokenExpired:
 class TokenInvalid:
     token: str
     reason: str
-```
+````
 
 **Pattern Matching:**
 
@@ -336,7 +338,7 @@ match result:
 
 ADT for refresh token outcomes.
 
-```mermaid
+````mermaid
 flowchart TB
   %% kind: ADT
   %% id: effectful.domain.token_result.TokenRefreshResult
@@ -348,7 +350,7 @@ flowchart TB
 
   TokenRefreshResult_TokenRefreshed["TokenRefreshed(access_token: str, refresh_token: str)"]
   TokenRefreshResult_TokenRefreshRejected["TokenRefreshRejected(reason: str)"]
-```
+```text
 
 ```python
 # file: examples/auth.py
@@ -362,7 +364,7 @@ class TokenRefreshed:
 @dataclass(frozen=True)
 class TokenRefreshRejected:
     reason: str
-```
+````
 
 ## Error Handling
 

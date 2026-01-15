@@ -15,7 +15,7 @@ ENV PYTHONUNBUFFERED=1 \
     POETRY_NO_INTERACTION=1 \
     POETRY_HOME=/usr/local \
     PATH="/usr/local/bin:${PATH}" \
-    PYTHONPATH="/app/effectful-root:/app/effectful-root/demo/healthhub:/app/effectful-root/demo/healthhub/backend" \
+    PYTHONPATH="/app/effectful-root/src/python:/app/effectful-root:/app/effectful-root/demo/healthhub/src/python:/app/effectful-root/demo/healthhub" \
     PYTHONPYCACHEPREFIX="/opt/healthhub/pycache" \
     XDG_CACHE_HOME="/opt/healthhub/cache" \
     MYPY_CACHE_DIR=/opt/healthhub/mypy_cache \
@@ -109,8 +109,8 @@ COPY CLAUDE.md /app/effectful-root/
 COPY configs/ /app/effectful-root/configs/
 COPY documents/ /app/effectful-root/documents/
 COPY examples/ /app/effectful-root/examples/
-COPY effectful_tools/ /app/effectful-root/effectful_tools/
-COPY effectful/ /app/effectful-root/effectful/
+COPY src/python/effectful_tools/ /app/effectful-root/src/python/effectful_tools/
+COPY src/python/effectful/ /app/effectful-root/src/python/effectful/
 
 # Install effectful
 WORKDIR /app/effectful-root
@@ -127,7 +127,7 @@ WORKDIR /app/effectful-root/demo/healthhub
 COPY demo/healthhub/pyproject.toml /app/effectful-root/demo/healthhub/
 
 # Copy healthhub code
-COPY demo/healthhub/backend/ /app/effectful-root/demo/healthhub/backend/
+COPY demo/healthhub/src/ /app/effectful-root/demo/healthhub/src/
 COPY demo/healthhub/documents/ /app/effectful-root/demo/healthhub/documents/
 COPY demo/healthhub/tools/ /app/effectful-root/demo/healthhub/tools/
 COPY demo/healthhub/tests/ /app/effectful-root/demo/healthhub/tests/
@@ -152,12 +152,12 @@ RUN python -m playwright install --with-deps chromium firefox webkit
 # ============================================
 
 # Copy frontend source
-COPY demo/healthhub/frontend/package.json /opt/healthhub/frontend-build/
-COPY demo/healthhub/frontend/src /opt/healthhub/frontend-build/src
-COPY demo/healthhub/frontend/index.html /opt/healthhub/frontend-build/
-COPY demo/healthhub/frontend/vite.config.ts /opt/healthhub/frontend-build/
-COPY demo/healthhub/frontend/tsconfig.json /opt/healthhub/frontend-build/
-COPY demo/healthhub/frontend/tsconfig.node.json /opt/healthhub/frontend-build/
+COPY demo/healthhub/src/typescript/package.json /opt/healthhub/frontend-build/
+COPY demo/healthhub/src/typescript/src /opt/healthhub/frontend-build/src
+COPY demo/healthhub/src/typescript/index.html /opt/healthhub/frontend-build/
+COPY demo/healthhub/src/typescript/vite.config.ts /opt/healthhub/frontend-build/
+COPY demo/healthhub/src/typescript/tsconfig.json /opt/healthhub/frontend-build/
+COPY demo/healthhub/src/typescript/tsconfig.node.json /opt/healthhub/frontend-build/
 
 # Install frontend dependencies and build
 WORKDIR /opt/healthhub/frontend-build
@@ -185,4 +185,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8851/health || exit 1
 
 # Run application
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8851"]
+CMD ["uvicorn", "src.python.app.main:app", "--host", "0.0.0.0", "--port", "8851"]

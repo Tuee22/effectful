@@ -1,4 +1,4 @@
 [codespell]
 skip = .git,*.lock,dist,build,__pycache__,.mypy_cache,.pytest_cache
-ignore-words-list = Effectful,BBY,SpectralMC,Mermaid,github,GitHub,exat,pxat,stings,Augmentin,augmentin
+ignore-words-list = Effectful,BBY,SpectralMC,Mermaid,github,GitHub,exat,pxat,stings,Augmentin,augmentin,ANC,Mata,Pease,Wirth
 quiet-level = 2

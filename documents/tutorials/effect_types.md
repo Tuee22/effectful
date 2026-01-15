@@ -6,6 +6,8 @@
 
 > **Purpose**: Tutorial covering all available effect types in effectful and how to use them.
 
+> **Note**: This tutorial covers the legacy Python effectful library. For the Effectful Language (Haskell-derived DSL for distributed systems), see [DSL Documentation](../dsl/intro.md).
+
 > **Core Doctrine**: For the complete architecture including effect hierarchy diagrams, see [architecture.md](../engineering/architecture.md).
 
 ## SSoT Link Map

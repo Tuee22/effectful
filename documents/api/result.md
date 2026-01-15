@@ -6,6 +6,8 @@
 
 > **Purpose**: Reference for the `Result[T, E]` type and related utilities.
 
+> **Note**: This API reference covers the legacy Python effectful library. For the Effectful Language, see [DSL Documentation](../dsl/intro.md).
+
 > **Core Doctrine**: For the Result type patterns and error handling diagrams, see [Code Quality](../engineering/code_quality.md#3-result-type-for-error-handling).
 
 ## SSoT Link Map
@@ -165,11 +167,11 @@ assert value == 42  # Returns actual value, not default
 
 Extract the error value (raises ValueError for Ok).
 
-```python
+````python
 # file: examples/result.py
 result = Ok(42)
 # result.unwrap_err()  # Raises ValueError
-```
+```text
 
 ______________________________________________________________________
 
@@ -182,7 +184,7 @@ ______________________________________________________________________
 from effectful import Err
 
 failure: Result[int, str] = Err("not found")
-```
+````
 
 ### Methods
 
@@ -267,12 +269,12 @@ assert value == 0  # Returns default
 
 Extract the error value (safe for Err).
 
-```python
+````python
 # file: examples/result.py
 result = Err("failed")
 error = result.unwrap_err()
 assert error == "failed"
-```
+```text
 
 ______________________________________________________________________
 
@@ -290,7 +292,7 @@ def process(result: Result[int, str]) -> str:
             return f"Success: {value}"
         case Err(error):
             return f"Error: {error}"
-```
+````
 
 ### Type Narrowing
 
@@ -313,7 +315,7 @@ match result:
 
 Pattern matching ensures all cases are handled:
 
-```python
+````python
 # file: examples/result.py
 # MyPy error: Missing case Err
 def incomplete(result: Result[int, str]) -> int:
@@ -321,7 +323,7 @@ def incomplete(result: Result[int, str]) -> int:
         case Ok(value):
             return value
     # Missing Err case - type checker catches this!
-```
+```text
 
 ______________________________________________________________________
 
@@ -337,7 +339,7 @@ Effects return their values wrapped in `EffectReturn[T]` for debugging and telem
 class EffectReturn[T]:
     value: T
     effect_name: str
-```
+````
 
 ### Usage
 
@@ -368,12 +370,12 @@ def program() -> Generator[AllEffects, EffectResult, None]:
 
 Transform the wrapped value while preserving effect_name:
 
-```python
+````python
 # file: examples/result.py
 result = EffectReturn(42, "GetCount")
 doubled = result.map(lambda x: x * 2)
 assert doubled == EffectReturn(84, "GetCount")
-```
+```text
 
 ______________________________________________________________________
 
@@ -396,18 +398,18 @@ def process_value(result: Result[int, str]) -> int:
 
 assert process_value(Ok(21)) == 42
 assert process_value(Err("failed")) == 0
-```
+````
 
 **Type Signature**:
 
-```python
+````python
 # file: examples/result.py
 def fold_result[T, E, R] (
     result: Result[T, E],
     on_ok: Callable[[T], R],
     on_err: Callable[[E], R],
 ) -> R
-```
+```text
 
 ______________________________________________________________________
 
@@ -438,7 +440,7 @@ result = (
     .map(lambda x: f"Result: {x}")
 )
 assert result == Ok("Result: 21.0")
-```
+````
 
 ### Error Transformation
 
@@ -496,7 +498,7 @@ assert safe_divide(10, 0) == Err("division by zero")
 
 Chain operations that stop on first error:
 
-```python
+````python
 # file: examples/result.py
 from effectful import Result, Ok, Err
 
@@ -520,7 +522,7 @@ def create_user(email: str) -> Result[User, str]:
 # Stops at first error:
 assert create_user("bad") == Err("Invalid email: missing @")
 assert create_user("a@b") == Err("Invalid email: too short")
-```
+```typescript
 
 ______________________________________________________________________
 
@@ -560,7 +562,7 @@ def fetch_user(user_id: int, users: dict[int, User]) -> Result[User, DatabaseErr
     if user is None:
         return Err(DatabaseError(f"User {user_id} not found"))
     return Ok(user)
-```
+````
 
 ### Forced Error Handling
 

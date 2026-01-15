@@ -19,6 +19,7 @@
 ## Navigation
 
 - **Engineering Overlays**: [engineering/](engineering/README.md) — HealthHub-specific overrides for architecture, authentication, observability, operations, and feature engineering patterns.
+- **Boundary Model**: [engineering/boundary_map.md](engineering/boundary_map.md) — HealthHub as reference implementation for the Effectful boundary model.
 - **Product Documentation**: [product/roles/](product/roles/README.md) — User-facing operational guides (role guides, workflows).
 - **Domain Documentation**: [domain/](domain/hipaa_compliance.md) — HealthHub-specific domain models: HIPAA compliance, appointment workflows, and medical state machines.
 - **Tutorials**: [tutorials/](tutorials/README.md) — Journey-based progressive learning paths, plus library deltas for base Effectful tutorials.

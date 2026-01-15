@@ -4,7 +4,7 @@ version = "1.0.0"
 description = "HealthHub Medical Center - Healthcare portal demo built on the Effectful effect system library"
 authors = ["HealthHub Team"]
 readme = "README.md"
-packages = [{include = "backend"}]
+packages = [{include = "app", from = "src/python"}]
 
 [tool.poetry.dependencies]
 python = ">=3.12,<4.0"
@@ -123,13 +123,21 @@ disallow_subclassing_any = true
 no_implicit_optional = true
 
 # File coverage
-files = ["backend/", "tests/pytest/", "tools/"]
+files = ["src/python/app/", "tests/pytest/", "tools/"]
 
 # Error reporting
 show_error_context = true
 show_column_numbers = true
 show_error_codes = true
 pretty = true
+
+[[tool.mypy.overrides]]
+# Runtime interpreter is the boundary between pure effect DSL and impure FastAPI.
+# The RegisterHttpRoute.endpoint field is typed as `object` in the pure DSL
+# to accept various endpoint signatures. FastAPI expects `Callable[..., Any]`.
+# This override permits the type mismatch at the interpreter boundary.
+module = "app.interpreters.runtime_interpreter"
+disallow_any_explicit = false
 
 [[tool.mypy.overrides]]
 module = "pulsar.*"
@@ -146,7 +154,7 @@ ignore_missing_imports = true
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-src = ["backend", "tools", "tests"]
+src = ["src/python/app", "tools", "tests"]
 
 [tool.ruff.lint]
 select = [
@@ -197,7 +205,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["backend"]
+source = ["src/python/app"]
 omit = ["*/tests/*", "*/test_*.py"]
 
 [tool.coverage.report]

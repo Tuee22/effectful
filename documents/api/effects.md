@@ -6,6 +6,8 @@
 
 > **Purpose**: Comprehensive reference for all effect types in the effectful package.
 
+> **Note**: This API reference covers the legacy Python effectful library. For the Effectful Language, see [DSL Documentation](../dsl/intro.md).
+
 > **Core Doctrine**: For the effect type hierarchy diagram and architecture patterns, see [architecture.md](../engineering/architecture.md#effect-type-hierarchy).
 
 ## SSoT Link Map
@@ -207,14 +209,14 @@ def greet_user(user_id: UUID) -> Generator[AllEffects, EffectResult, bool]:
 
 **Domain Model**:
 
-```python
+````python
 # file: examples/effects.py
 @dataclass(frozen=True)
 class User:
     id: UUID
     email: str
     name: str
-```
+```text
 
 ______________________________________________________________________
 
@@ -230,7 +232,7 @@ Persist a chat message to the database.
 class SaveChatMessage:
     user_id: UUID
     text: str
-```
+````
 
 **Parameters**:
 
@@ -260,7 +262,7 @@ def save_and_confirm(user_id: UUID, text: str) -> Generator[AllEffects, EffectRe
 
 **Domain Model**:
 
-```python
+````python
 # file: examples/effects.py
 @dataclass(frozen=True)
 class ChatMessage:
@@ -268,7 +270,7 @@ class ChatMessage:
     user_id: UUID
     text: str
     created_at: datetime
-```
+```text
 
 ______________________________________________________________________
 
@@ -284,7 +286,7 @@ List users with pagination support.
 class ListUsers:
     limit: int | None = None
     offset: int | None = None
-```
+````
 
 **Parameters**:
 
@@ -556,13 +558,13 @@ def get_profile_cached(user_id: UUID) -> Generator[AllEffects, EffectResult, str
 
 **Domain Model**:
 
-```python
+````python
 # file: examples/effects.py
 @dataclass(frozen=True)
 class ProfileData:
     id: str  # UUID as string
     name: str
-```
+```text
 
 ______________________________________________________________________
 
@@ -579,7 +581,7 @@ class PutCachedProfile:
     user_id: UUID
     profile_data: ProfileData
     ttl_seconds: int = 300  # 5 minutes default
-```
+````
 
 **Parameters**:
 
@@ -840,7 +842,7 @@ def conditional_workflow(
 
 Programs automatically stop on first error (fail-fast):
 
-```python
+````python
 # file: examples/effects.py
 def error_aware_program(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
     # If GetUserById returns Err(DatabaseError), program stops here
@@ -854,7 +856,7 @@ def error_aware_program(user_id: UUID) -> Generator[AllEffects, EffectResult, st
             return "success"
         case UserNotFound():
             return "not_found"
-```
+```text
 
 ______________________________________________________________________
 
@@ -873,7 +875,7 @@ Get the current UTC timestamp.
 @dataclass(frozen=True)
 class GetCurrentTime:
     pass
-```
+````
 
 **Parameters**: None
 

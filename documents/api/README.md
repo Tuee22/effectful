@@ -212,7 +212,7 @@ def my_program(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 
 ### Running Programs
 
-```python
+````python
 # file: examples/README.py
 from effectful import run_ws_program, create_composite_interpreter
 
@@ -233,7 +233,7 @@ match result:
         print(f"Success: {value}")
     case Err(error):
         print(f"Failed: {error}")
-```
+```typescript
 
 ______________________________________________________________________
 
@@ -266,7 +266,7 @@ def process(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 def process(user_id):  # Missing type hints
     user = yield GetUserById(user_id=user_id)
     return user.name  # Unsafe - could be None!
-```
+````
 
 ______________________________________________________________________
 

@@ -6,6 +6,8 @@
 
 > **Purpose**: Reference for messaging effect types used for pub/sub communication with brokers like Apache Pulsar.
 
+> **Note**: This API reference covers the legacy Python effectful library. For the Effectful Language, see [DSL Documentation](../dsl/intro.md).
+
 ## SSoT Link Map
 
 | Need                      | Link                                                            |
@@ -238,7 +240,7 @@ class MessageEnvelope:
 
 ADT for publish operation outcomes.
 
-```mermaid
+````mermaid
 flowchart TB
   %% kind: ADT
   %% id: effectful.domain.message_envelope.PublishResult
@@ -250,7 +252,7 @@ flowchart TB
 
   PublishResult_PublishSuccess["PublishSuccess(message_id: str)"]
   PublishResult_PublishFailure["PublishFailure(error: str)"]
-```
+```text
 
 ```python
 # file: examples/messaging.py
@@ -263,7 +265,7 @@ class PublishSuccess:
 @dataclass(frozen=True)
 class PublishFailure:
     error: str
-```
+````
 
 **Pattern Matching:**
 
@@ -284,7 +286,7 @@ match result:
 
 ADT for consume operation outcomes.
 
-```mermaid
+````mermaid
 flowchart TB
   %% kind: ADT
   %% id: effectful.domain.message_envelope.ConsumeResult
@@ -298,7 +300,7 @@ flowchart TB
   ConsumeResult_MessageEnvelope["MessageEnvelope(message_id: str, topic: str, payload: bytes, properties: dict[str, str], publish_time: datetime)"]
   ConsumeResult_ConsumeTimeout["ConsumeTimeout()"]
   ConsumeResult_ConsumeFailure["ConsumeFailure(error: str)"]
-```
+```text
 
 ```python
 # file: examples/messaging.py
@@ -311,7 +313,7 @@ class ConsumeTimeout:
 @dataclass(frozen=True)
 class ConsumeFailure:
     error: str
-```
+````
 
 ### AcknowledgeResult
 

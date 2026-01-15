@@ -6,6 +6,8 @@
 
 > **Purpose**: Tutorial on using Algebraic Data Types (ADTs) and the Result type to write type-safe, self-documenting code.
 
+> **Note**: This tutorial covers the legacy Python effectful library. For the Effectful Language (Haskell-derived DSL for distributed systems), see [DSL Documentation](../dsl/intro.md).
+
 ## SSoT Link Map
 
 | Need                       | Link                                                                      |
@@ -51,7 +53,7 @@ async def get_user(user_id: UUID) -> Optional[User]:
 
 ### The Solution: ADTs
 
-```python
+````python
 # file: examples/03_adts_and_results.py
 # ✅ GOOD - ADT makes all cases explicit
 from dataclasses import dataclass
@@ -70,7 +72,7 @@ type UserLookupResult = UserFound | UserNotFound
 
 async def get_user(user_id: UUID) -> UserLookupResult:
     ...
-```
+```text
 
 ```mermaid
 flowchart TB
@@ -84,7 +86,7 @@ flowchart TB
 
   UserLookupResult_UserFound["UserFound(user: User, source: str)"]
   UserLookupResult_UserNotFound["UserNotFound(user_id: UUID, reason: str)"]
-```
+````
 
 **Benefits:**
 
@@ -128,7 +130,7 @@ type Outcome = Success | Failure
 
 ### Real Example: Cache Lookup
 
-```python
+````python
 # file: examples/03_adts_and_results.py
 from dataclasses import dataclass
 from uuid import UUID
@@ -153,7 +155,7 @@ async def get_profile(user_id: UUID) -> CacheLookupResult:
     if profile is not None:
         return CacheHit(value=profile, ttl_remaining=300)
     return CacheMiss(key=str(user_id), reason="not_found")
-```
+```text
 
 ```mermaid
 flowchart TB
@@ -167,7 +169,7 @@ flowchart TB
 
   CacheLookupResult_CacheHit["CacheHit(value: ProfileData, ttl_remaining: int)"]
   CacheLookupResult_CacheMiss["CacheMiss(key: str, reason: str)"]
-```
+````
 
 ## Step 3: Pattern match on ADTs
 
@@ -475,7 +477,7 @@ def program(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
 
 ### Profile Lookup
 
-```python
+````python
 # file: examples/03_adts_and_results.py
 from dataclasses import dataclass
 
@@ -514,7 +516,7 @@ def get_profile_with_fallback(user_id: UUID) -> Generator[AllEffects, EffectResu
                     # Cache for next time
                     yield PutCachedProfile(user_id=user_id, profile_data=profile, ttl_seconds=300)
                     return ProfileFound(profile=profile, source="database")
-```
+```text
 
 ```mermaid
 flowchart TB
@@ -528,7 +530,7 @@ flowchart TB
 
   ProfileLookupResult_ProfileFound["ProfileFound(profile: ProfileData, source: str)"]
   ProfileLookupResult_ProfileNotFound["ProfileNotFound(user_id: UUID, reason: str)"]
-```
+```text
 
 ______________________________________________________________________
 
@@ -560,7 +562,7 @@ class Patient:
     id: UUID
     name: str
     blood_type: OptionalValue[str]  # Simple: present or absent
-```
+````
 
 ### The OptionalValue ADT
 

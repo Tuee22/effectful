@@ -6,6 +6,8 @@
 
 > **Purpose**: Tutorial for writing actionable Prometheus alert rules for effectful applications.
 
+> **Note**: This tutorial covers the legacy Python effectful library. For the Effectful Language (Haskell-derived DSL for distributed systems), see [DSL Documentation](../dsl/intro.md).
+
 **Write actionable Prometheus alert rules for effectful applications.**
 
 > **Core Doctrine**: For alerting philosophy, see [monitoring_and_alerting.md](../engineering/monitoring_and_alerting.md#alerting-policy)
@@ -79,7 +81,7 @@ ______________________________________________________________________
 
 Create `docker/prometheus/alerts.yml`:
 
-```yaml
+````yaml
 # file: configs/14_alert_rules.yaml
 # Prometheus alert rules for effectful
 groups:
@@ -130,7 +132,7 @@ groups:
         annotations:
           summary: "No metrics received from effectful"
           description: "Prometheus has not received any effectful metrics for 2+ minutes"
-```
+```sql
 
 ______________________________________________________________________
 
@@ -157,11 +159,11 @@ alerting:
 
 scrape_configs:
   # ... existing scrape configs
-```
+````
 
 Mount alerts file in `docker-compose.yml`:
 
-```yaml
+````yaml
 # file: configs/14_alert_rules.yaml
 services:
   prometheus:
@@ -170,7 +172,7 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro  # Add this
       - prometheusdata:/prometheus
-```
+```text
 
 ______________________________________________________________________
 
@@ -184,7 +186,7 @@ docker compose -f docker/docker-compose.yml restart prometheus
 docker compose -f docker/docker-compose.yml logs prometheus | grep -i error
 
 # Expected output: (no errors)
-```
+````
 
 **Verify in UI**:
 
@@ -218,14 +220,14 @@ Alerts transition through 3 states:
 
 **Example Timeline**:
 
-```text
+````text
 # file: diagrams/alert_state_timeline.txt
 00:00 - Error rate: 3% → INACTIVE
 00:01 - Error rate: 6% → PENDING (for: 5m)
 00:02 - Error rate: 7% → PENDING (3m remaining)
 00:06 - Error rate: 6% → FIRING (notification sent)
 00:10 - Error rate: 2% → INACTIVE (resolved notification)
-```
+```text
 
 ______________________________________________________________________
 
@@ -247,7 +249,7 @@ ______________________________________________________________________
   annotations:
     summary: "API error rate above 1%"
     description: "{{ $value | humanizePercentage }} of requests failing"
-```
+````
 
 **Key Points**:
 
@@ -380,7 +382,7 @@ groups:
 
 **Routing Configuration** (in Alertmanager):
 
-```yaml
+````yaml
 # file: configs/14_alert_rules.yaml
 # alertmanager.yml
 route:
@@ -395,7 +397,7 @@ route:
     - match:
         severity: info
       receiver: 'email'
-```
+```text
 
 ______________________________________________________________________
 
@@ -412,7 +414,7 @@ expr: rate(errors_total[5m]) > 100
 
 # Test (lower threshold)
 expr: rate(errors_total[5m]) > 0.01
-```
+````
 
 Generate some errors, wait for `for` duration, verify alert fires.
 
@@ -450,7 +452,7 @@ docker compose -f docker/docker-compose.yml exec prometheus \
 
 ### Method 4: Integration Test with Test Data
 
-```yaml
+````yaml
 # file: configs/14_alert_rules.yaml
 # test_alerts.yml - Mock test data
 evaluation_interval: 1m
@@ -472,12 +474,12 @@ tests:
               component: effect_system
             exp_annotations:
               summary: "High effect error rate detected"
-```
+```text
 
 ```bash
 # Run test
 promtool test rules test_alerts.yml
-```
+```text
 
 ______________________________________________________________________
 
@@ -506,7 +508,7 @@ services:
 
 volumes:
   alertmanagerdata:
-```
+````
 
 ### Configure Alertmanager
 
@@ -574,7 +576,7 @@ receivers:
 
 ### Test Alertmanager
 
-```bash
+````bash
 # Start Alertmanager
 docker compose -f docker/docker-compose.yml up -d alertmanager
 
@@ -593,7 +595,7 @@ curl -X POST http://localhost:9093/api/v1/alerts \
       "summary": "This is a test alert"
     }
   }]'
-```
+```text
 
 ______________________________________________________________________
 
@@ -650,11 +652,11 @@ groups:
         annotations:
           summary: "High-severity medication interaction detected"
           description: "{{ $value }} high-severity interactions in last 5 minutes"
-```
+````
 
 ### E-Commerce Application
 
-```yaml
+````yaml
 # file: configs/14_alert_rules.yaml
 groups:
   - name: ecommerce_business_alerts
@@ -682,7 +684,7 @@ groups:
         annotations:
           summary: "Low inventory for {{ $labels.product_id }}"
           description: "Only {{ $value }} items remaining"
-```
+```text
 
 ______________________________________________________________________
 
@@ -699,7 +701,7 @@ annotations:
   summary: "High error rate (>5%) detected"
   description: "Error rate is {{ $value | humanizePercentage }}. Check recent deployments."
   runbook_url: "https://docs.example.com/runbooks/high-error-rate"
-```
+````
 
 **✅ Use `for` Duration**
 
@@ -759,7 +761,7 @@ annotations:
 
 **❌ Too Many Severity Levels**
 
-```yaml
+````yaml
 # file: configs/14_alert_rules.yaml
 # Bad: Too granular
 labels:
@@ -768,7 +770,7 @@ labels:
   severity: p2  # Use: warning
   severity: p3  # Use: info
   severity: p4  # Don't alert
-```
+```mermaid
 
 ______________________________________________________________________
 
@@ -790,7 +792,7 @@ ______________________________________________________________________
 curl http://localhost:9090/api/v1/alerts | jq
 
 # Expected output includes alert with state="pending" or "firing"
-```
+````
 
 ### Alert Fires Too Often
 

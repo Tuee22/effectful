@@ -14,6 +14,8 @@
 
 **Architecture**: Pure Python library (no web framework) with Docker-managed development environment for integration testing against real infrastructure (PostgreSQL, Redis, MinIO S3, Apache Pulsar).
 
+**Code Organization**: All source code follows the `src/<language>/` doctrine. Python packages are in `src/python/effectful/` and `src/python/effectful_tools/`. See [Code Organization](documents/engineering/code_organization.md) for details.
+
 ## Engineering Standards
 
 **All engineering practices documented in [documents/engineering/](documents/engineering/README.md)**.
@@ -32,6 +34,7 @@ Quick links to key standards:
 | [Monitoring & Alerting](documents/engineering/monitoring_and_alerting.md) | Metric standards + alert policy                         |
 | [Development Workflow](documents/engineering/development_workflow.md)     | Daily development loop                                  |
 | [Effect Patterns](documents/engineering/effect_patterns.md)               | Real-world effect program patterns                      |
+| [Code Organization](documents/engineering/code_organization.md)           | src/\<language\>/ directory structure                   |
 
 ## Quick Reference
 
@@ -146,6 +149,7 @@ ______________________________________________________________________
 | Development workflow         | [Development Workflow](documents/engineering/development_workflow.md) |
 | Documentation standards      | [Documentation Standards](documents/documentation_standards.md)       |
 | Contributing guidelines      | [Contributing Guide](documents/contributing.md)                       |
+| Code organization            | [Code Organization](documents/engineering/code_organization.md)       |
 
 ______________________________________________________________________
 

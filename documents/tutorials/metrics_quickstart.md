@@ -6,6 +6,8 @@
 
 > **Purpose**: Tutorial for getting started with type-safe metrics in effectful applications.
 
+> **Note**: This tutorial covers the legacy Python effectful library. For the Effectful Language (Haskell-derived DSL for distributed systems), see [DSL Documentation](../dsl/intro.md).
+
 **Get started with type-safe metrics in 15 minutes.**
 
 > **Core Doctrine**: For complete metrics philosophy, see [observability.md](../engineering/observability.md)
@@ -215,11 +217,11 @@ def check_task_metrics() -> Generator[AllEffects, EffectResult, dict[str, float]
 
 **Output Example**:
 
-```text
+````text
 # example metrics output
 📊 Metrics at 1706472000.0:
   tasks_processed_total{task_type="email",status="success"} = 142.0
-```
+```text
 
 ______________________________________________________________________
 
@@ -257,7 +259,7 @@ def robust_metric_recording(
                 print("⚠️  Prometheus unreachable - check infrastructure")
             else:
                 print(f"⚠️  Unknown error: {reason}")
-```
+````
 
 **Common Errors**:
 
@@ -394,7 +396,7 @@ async def main() -> None:
 
 **Expected Output**:
 
-```text
+````text
 # expected run output
 ✅ All metrics recorded successfully
 Task 0: Ok(True)
@@ -408,7 +410,7 @@ Task 3: Ok(True)
 Task 4: Ok(True)
 📊 Total emails processed: 5
 Stats: Ok(5)
-```
+```text
 
 ______________________________________________________________________
 
@@ -448,7 +450,7 @@ async def test_task_metrics(clean_metrics: None) -> None:
     )
     assert isinstance(query_result, Ok)
     assert query_result.value == 1  # Counter incremented once
-```
+````
 
 **⚠️ WARNING**: NEVER use `ResetMetrics` in production! Only in tests.
 
@@ -513,7 +515,7 @@ user = yield from with_duration_tracking(
 
 ### Pattern 2: Conditional Metrics
 
-```python
+````python
 # snippet
 def process_with_status_metrics(
     task_id: str,
@@ -531,7 +533,7 @@ def process_with_status_metrics(
         labels={"status": status, "error_type": error_type},
         value=1.0,
     )
-```
+```text
 
 ______________________________________________________________________
 
@@ -562,7 +564,7 @@ APP_METRICS = MetricsRegistry(
     ),
     ...
 )
-```
+````
 
 ### "Missing label" Error
 

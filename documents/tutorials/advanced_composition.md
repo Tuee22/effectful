@@ -6,6 +6,8 @@
 
 > **Purpose**: Tutorial on building complex workflows by composing smaller, reusable program components.
 
+> **Note**: This tutorial covers the legacy Python effectful library. For the Effectful Language (Haskell-derived DSL for distributed systems), see [DSL Documentation](../dsl/intro.md).
+
 ## SSoT Link Map
 
 | Need                         | Link                                                               |
@@ -162,7 +164,7 @@ def get_profile_with_fallback(
 
 **Pattern**: Complex branching with multiple paths.
 
-```python
+````python
 # file: examples/06_advanced_composition.py
 def handle_user_request(
     user_id: UUID, request_type: str
@@ -196,7 +198,7 @@ def handle_user_request(
                 case _:
                     yield from notify_user(f"Unknown request: {request_type}")
                     return "error_unknown_request"
-```
+```python
 
 ______________________________________________________________________
 
@@ -249,7 +251,7 @@ async def workflow_with_optional_cache(
             await run_ws_program(notify_program, interpreter)
 
             return "greeted"
-```
+````
 
 ### Retry with Exponential Backoff
 
@@ -332,7 +334,7 @@ async def retry_with_backoff[T] (
 
 **Usage**:
 
-```python
+````python
 # file: examples/06_advanced_composition.py
 # Retry user lookup with exponential backoff
 result = await retry_with_backoff(
@@ -348,7 +350,7 @@ match result:
         print(f"Found user after retries: {user}")
     case Err(error):
         print(f"Failed after retries: {error}")
-```
+```text
 
 ______________________________________________________________________
 
@@ -383,13 +385,13 @@ def process_user_batch(
     )
 
     return stats
-```
+````
 
 ### Parallel Execution Pattern
 
 **Note**: Programs execute effects sequentially by design. For true parallelism, use `asyncio.gather` with separate program runs.
 
-```python
+````python
 # file: examples/06_advanced_composition.py
 async def process_users_parallel(
     user_ids: list[UUID], interpreter: EffectInterpreter
@@ -406,7 +408,7 @@ async def process_users_parallel(
     )
 
     return results
-```
+```text
 
 ______________________________________________________________________
 
@@ -447,7 +449,7 @@ flowchart TB
     SaveMessage --> CacheProfile
     CacheProfile --> NotifySuccess
     NotifySuccess --> Success
-```
+````
 
 **Key Features:**
 
@@ -503,7 +505,7 @@ def validate_and_save_message(
 
 **Pattern**: Track progress through multi-step workflow.
 
-```python
+````python
 # file: examples/06_advanced_composition.py
 from dataclasses import dataclass
 from typing import Literal
@@ -562,7 +564,7 @@ def workflow_with_checkpoints(
             )
 
             return checkpoints
-```
+```text
 
 ______________________________________________________________________
 
@@ -622,7 +624,7 @@ class WorkflowBuilder:
             yield from step()
 
         return "workflow_complete"
-```
+````
 
 **Usage**:
 

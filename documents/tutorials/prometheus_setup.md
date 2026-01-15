@@ -6,6 +6,8 @@
 
 > **Purpose**: Tutorial for setting up Prometheus and Grafana with Docker for effectful applications.
 
+> **Note**: This tutorial covers the legacy Python effectful library. For the Effectful Language (Haskell-derived DSL for distributed systems), see [DSL Documentation](../dsl/intro.md).
+
 **Set up Prometheus and Grafana with Docker for effectful applications.**
 
 > **Core Doctrine**: For Docker services overview, see [docker_workflow.md](../engineering/docker_workflow.md)
@@ -281,7 +283,7 @@ datasources:
 
 Create `docker/grafana/dashboards/dashboard.yml`:
 
-```yaml
+````yaml
 # file: configs/13_prometheus_setup.yaml
 # Grafana dashboard provisioning
 apiVersion: 1
@@ -296,7 +298,7 @@ providers:
     allowUiUpdates: true
     options:
       path: /etc/grafana/provisioning/dashboards
-```
+```text
 
 ______________________________________________________________________
 
@@ -468,11 +470,11 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-```
+````
 
 **Metrics Endpoint Output**:
 
-```text
+````text
 # file: examples/13_prometheus_metrics_output.txt
 # HELP effectful_effects_total Total effects executed
 # TYPE effectful_effects_total counter
@@ -487,7 +489,7 @@ effectful_effect_duration_seconds_bucket{effect_type="GetUserById",le="0.1"} 134
 effectful_effect_duration_seconds_bucket{effect_type="GetUserById",le="+Inf"} 145.0
 effectful_effect_duration_seconds_sum{effect_type="GetUserById"} 12.34
 effectful_effect_duration_seconds_count{effect_type="GetUserById"} 145.0
-```
+```text
 
 ______________________________________________________________________
 
@@ -505,11 +507,11 @@ docker compose -f docker/docker-compose.yml logs prometheus
 
 # Check Grafana logs
 docker compose -f docker/docker-compose.yml logs grafana
-```
+````
 
 **Expected Output**:
 
-```text
+````text
 # example docker compose ps output
 NAME         IMAGE                    STATUS    PORTS
 effectful    effectful:latest         Up        0.0.0.0:8000->8000/tcp
@@ -517,7 +519,7 @@ prometheus   prom/prometheus:latest   Up        0.0.0.0:9090->9090/tcp
 grafana      grafana/grafana:latest   Up        0.0.0.0:3000->3000/tcp
 postgres     postgres:15              Up        5432/tcp
 redis        redis:7                  Up        6379/tcp
-```
+```text
 
 ______________________________________________________________________
 
@@ -542,7 +544,7 @@ State: UP
 Endpoint: http://effectful:8000/metrics
 Last Scrape: 2s ago
 Scrape Duration: 15ms
-```
+````
 
 **Unhealthy Target** (troubleshoot):
 
@@ -562,7 +564,7 @@ Error: Get "http://effectful:8000/metrics": connection refused
 
 **Example Queries**:
 
-```promql
+````promql
 # file: examples/13_prometheus_setup.promql
 # All effects
 effectful_effects_total
@@ -576,7 +578,7 @@ sum(rate(effectful_effects_total[5m]))
 histogram_quantile(0.95,
   sum by (le) (rate(effectful_effect_duration_seconds_bucket[5m]))
 )
-```
+```text
 
 ______________________________________________________________________
 
@@ -639,7 +641,7 @@ alerting:
     - static_configs:
         - targets:
             - alertmanager:9093
-```
+````
 
 ### Scrape Interval Guidelines
 
@@ -680,18 +682,18 @@ ______________________________________________________________________
 
 **Solution**:
 
-```python
+````python
 # Ensure FastAPI listens on 0.0.0.0
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-```
+```text
 
 ```yaml
 # file: configs/13_prometheus_setup.yaml
 # Verify target in prometheus.yml
 - targets: ['effectful:8000']  # Docker service name, not localhost!
-```
+````
 
 ### Issue 2: Metrics Not Appearing
 
@@ -744,7 +746,7 @@ url: http://localhost:9090   # ❌ Wrong (from Grafana container)
 
 **Solution**:
 
-```bash
+````bash
 # Check volume size
 docker volume inspect prometheusdata
 
@@ -755,7 +757,7 @@ command:
 
 # Restart Prometheus
 docker compose -f docker/docker-compose.yml restart prometheus
-```
+```text
 
 ______________________________________________________________________
 
@@ -775,7 +777,7 @@ scrape_configs:
       password: 'secret'
     static_configs:
       - targets: ['effectful:8000']
-```
+````
 
 **Network Isolation**:
 

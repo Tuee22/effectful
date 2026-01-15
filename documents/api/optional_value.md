@@ -6,6 +6,8 @@
 
 > **Purpose**: Core ADT for representing optional values using functional algebraic data types instead of Python's Optional; provides explicit absence reasons and type-safe pattern matching.
 
+> **Note**: This API reference covers the legacy Python effectful library. For the Effectful Language, see [DSL Documentation](../dsl/intro.md).
+
 ## SSoT Link Map
 
 | Need                      | Link                                                          |
@@ -47,7 +49,7 @@ ______________________________________________________________________
 
 ## Canonical ADT
 
-```mermaid
+````mermaid
 flowchart TB
   %% kind: ADT
   %% id: effectful.domain.optional_value.OptionalValue
@@ -59,7 +61,7 @@ flowchart TB
 
   OptionalValue_Provided["Provided(value: T)"]
   OptionalValue_Absent["Absent(reason: str)"]
-```
+```text
 
 ______________________________________________________________________
 
@@ -75,7 +77,7 @@ Represents a value that is present.
 class Provided(Generic[T_co]):
     """Represents a present value."""
     value: T_co
-```
+````
 
 **Type Parameters:**
 
@@ -87,13 +89,13 @@ class Provided(Generic[T_co]):
 
 **Example:**
 
-```python
+````python
 # snippet
 from effectful.domain.optional_value import Provided
 
 blood_type = Provided(value="O+")
 metadata = Provided(value={"content-type": "application/json"})
-```
+```text
 
 ______________________________________________________________________
 
@@ -107,7 +109,7 @@ Represents a value that is intentionally missing with a reason.
 class Absent(Generic[T_co]):
     """Represents an intentionally missing value with a reason."""
     reason: str = "not_provided"
-```
+````
 
 **Type Parameters:**
 
@@ -126,14 +128,14 @@ class Absent(Generic[T_co]):
 
 **Example:**
 
-```python
+````python
 # snippet
 from effectful.domain.optional_value import Absent
 
 blood_type = Absent(reason="not_provided")
 metadata = Absent(reason="not_requested")
 notes = Absent(reason="not_disclosed")
-```
+```text
 
 ______________________________________________________________________
 
@@ -144,7 +146,7 @@ Type alias representing either a present value or an absent value.
 ```python
 # snippet
 type OptionalValue[T_co] = Provided[T_co] | Absent[T_co]
-```
+````
 
 **Type Parameters:**
 
@@ -152,7 +154,7 @@ type OptionalValue[T_co] = Provided[T_co] | Absent[T_co]
 
 **Usage:**
 
-```python
+````python
 # snippet
 from effectful.domain.optional_value import OptionalValue, Provided, Absent
 
@@ -165,7 +167,7 @@ match metadata:
         print(f"Metadata: {data}")
     case Absent(reason=r):
         print(f"No metadata: {r}")
-```
+```text
 
 ______________________________________________________________________
 
@@ -184,7 +186,7 @@ def to_optional_value(
     *,
     reason: str = "not_provided"
 ) -> OptionalValue[T_co]
-```
+````
 
 **Parameters:**
 
@@ -308,7 +310,7 @@ match blood_type:
 
 **Type narrowing with isinstance:**
 
-```python
+````python
 # snippet
 if isinstance(blood_type, Provided):
     # Type narrowed: blood_type.value is accessible
@@ -316,7 +318,7 @@ if isinstance(blood_type, Provided):
 elif isinstance(blood_type, Absent):
     # Type narrowed: blood_type.reason is accessible
     print(f"Blood type unknown: {blood_type.reason}")
-```
+```text
 
 ______________________________________________________________________
 
@@ -355,11 +357,11 @@ match patient.blood_type:
         print("Blood type not provided")
     case Absent(reason="not_disclosed"):
         print("Patient declined to disclose blood type")
-```
+````
 
 **Testing:**
 
-```python
+````python
 # snippet
 def test_patient_with_blood_type() -> None:
     patient = Patient(
@@ -382,7 +384,7 @@ def test_patient_without_blood_type() -> None:
 
     assert isinstance(patient.blood_type, Absent)
     assert patient.blood_type.reason == "not_provided"
-```
+```text
 
 ______________________________________________________________________
 
@@ -395,7 +397,7 @@ ______________________________________________________________________
 yield PutObject(bucket="x", key="y", content=b"z", metadata={"k": "v"})  # dict
 yield PutObject(bucket="x", key="y", content=b"z")  # None (default)
 yield PutObject(bucket="x", key="y", content=b"z", metadata=Absent(reason="redacted"))  # OptionalValue
-```
+````
 
 But effects should store normalized `OptionalValue[T]` internally for type safety and pattern matching.
 
@@ -677,7 +679,7 @@ def test_effect_with_absent_metadata() -> None:
 
 ### Testing Generator Programs
 
-```python
+````python
 # snippet
 from collections.abc import Generator
 from effectful.domain.optional_value import Provided, Absent, OptionalValue
@@ -713,7 +715,7 @@ def test_greet_patient_with_blood_type(fake_interpreter: Interpreter) -> None:
     assert_ok(result)
     value = unwrap_ok(result)
     assert value == "Hello Alice, blood type: O+"
-```
+```python
 
 ______________________________________________________________________
 
@@ -733,7 +735,7 @@ class Patient:
 
 # None - ambiguous
 patient = Patient(blood_type=None)
-```
+````
 
 **Fix:** Use OptionalValue with explicit reason.
 

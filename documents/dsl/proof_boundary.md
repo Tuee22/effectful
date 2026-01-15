@@ -1,4 +1,12 @@
-# The [Proof Boundary](#glossary-proof-boundary): Where verification and judgment meet
+# The Proof Boundary: Where Verification and Judgment Meet
+
+**Status**: Authoritative source
+**Supersedes**: none
+**Referenced by**: intro.md, verification_contract.md
+
+> **Purpose**: Essay exploring the philosophical and practical boundaries between formal verification and human judgment, establishing when automated systems can act autonomously versus when human oversight is required.
+
+______________________________________________________________________
 
 ## Opening: The Trolley Problem as Boundary
 
@@ -62,7 +70,7 @@ As the design evolved, dead load grew faster than estimates, deflections were ob
 
 The Therac-25 was a radiation therapy machine. To reduce cost and complexity, engineers removed hardware interlocks and relied on software alone. [9](#ref-9)
 
-Under specific timing, a [race condition](#glossary-race-condition) bypassed safety checks and fired the electron beam at full power. The bug appeared across deployed machines. In one documented case, a patient received 15,000 to 20,000 rad (150 to 200 Gy), hundreds of times the intended dose. [10](#ref-10) A proof checker can exhaustively inspect all software interleavings to guarantee no [race conditions](#glossary-race-condition). A human verifer, even a technical expert, cannot. The safety case moved from physical interlocks to logical guarantees, and the burden shifted with it. Formal proof should have replaced the removed mechanical guarantees. Because it did not patients died.
+Under specific timing, a [race condition](#glossary-race-condition) bypassed safety checks and fired the electron beam at full power. The bug appeared across deployed machines. In one documented case, a patient received 15,000 to 20,000 rad (150 to 200 Gy), hundreds of times the intended dose. [10](#ref-10) A proof checker can exhaustively inspect all software interleavings to guarantee no [race conditions](#glossary-race-condition). A human verifier, even a technical expert, cannot. The safety case moved from physical interlocks to logical guarantees, and the burden shifted with it. Formal proof should have replaced the removed mechanical guarantees. Because it did not patients died.
 
 In the aftermath industry changed. The interleavings became explicit and liability clearer. The tragedy remained.
 
@@ -90,7 +98,7 @@ A Lexus surged to over 120 mph and crashed in [2009](#timeline-2009-toyota), tri
 
 Expert teams reviewed the systems. Extensive testing was performed. Catastrophic failure still occurred. The lesson: no amount of manual verification by human experts can provide the safety guarantees of mechanical proofs. Industries learned the hard way that [formal verification](#glossary-formal-verification) is worth the effort.
 
----
+______________________________________________________________________
 
 ## The Software Evolution Toward Proof
 
@@ -225,7 +233,7 @@ When a property is decidable, it can be mechanically verified. When it is not, v
 
 High-assurance domains adopt restricted subsets and strict coding standards. [MISRA C](#glossary-misra-c) bans features before they ever reach a checker. [15](#ref-15) SPARK subsets Ada to enable formal analysis. [40](#ref-40)
 
----
+______________________________________________________________________
 
 ## The Moral Frontier: Formalization and Legitimacy
 
@@ -251,7 +259,7 @@ The [1848](#timeline-1848-seneca-falls) Seneca Falls Declaration of Sentiments d
 
 ### Residential Schools in Canada
 
-Canada’s residential school system was a legal programme that removed Indigenous children from their families and communities, placing them under state- and church-run schooling designed to sever language, culture, and kinship. Churches that administered schools included the Roman Catholic, Anglican, United, and Presbyterian churches. [65](#ref-65) The federal system took form in [1883](#timeline-1883-residential-schools) under Prime Minister John A. Macdonald’s government, which authorized state-run residential and industrial schools as policy. [65](#ref-65) Under Prime Minister Pierre Elliot Trudeau, with future Prime Minister Jean Chrétien serving as Minister of Indian Affairs, the [1969](#timeline-1969-white-paper) White Paper pushed a new assimilationist direction, proposing to end legal Indian status and transfer federal responsibilities to the provinces, reframing obligations as a path to formal integration without ending the school system itself. [66](#ref-66) Indigenous children continued to be displaced by the govenment until the last federally run residential school closed in [1996](#timeline-1996-residential-schools-closure), under Prime Minister Jean Chrétien, who finally ended the education system he had decades ago "reformed" with Pierre Trudeau. [67](#ref-67) The system’s authority was bureaucratic and lawful; its harm was lived and cumulative. In [2021](#timeline-2021-residential-schools), under Prime Minister Justin Trudeau, Pierre Trudeau’s son, reports of unmarked graves at former school sites made that harm visible in a new way, and forced a public reckoning with how legality can mask coercion and loss. [68](#ref-68)
+Canada’s residential school system was a legal programme that removed Indigenous children from their families and communities, placing them under state- and church-run schooling designed to sever language, culture, and kinship. Churches that administered schools included the Roman Catholic, Anglican, United, and Presbyterian churches. [65](#ref-65) The federal system took form in [1883](#timeline-1883-residential-schools) under Prime Minister John A. Macdonald’s government, which authorized state-run residential and industrial schools as policy. [65](#ref-65) Under Prime Minister Pierre Elliot Trudeau, with future Prime Minister Jean Chrétien serving as Minister of Indian Affairs, the [1969](#timeline-1969-white-paper) White Paper pushed a new assimilationist direction, proposing to end legal Indian status and transfer federal responsibilities to the provinces, reframing obligations as a path to formal integration without ending the school system itself. [66](#ref-66) Indigenous children continued to be displaced by the government until the last federally run residential school closed in [1996](#timeline-1996-residential-schools-closure), under Prime Minister Jean Chrétien, who finally ended the education system he had decades ago "reformed" with Pierre Trudeau. [67](#ref-67) The system’s authority was bureaucratic and lawful; its harm was lived and cumulative. In [2021](#timeline-2021-residential-schools), under Prime Minister Justin Trudeau, Pierre Trudeau’s son, reports of unmarked graves at former school sites made that harm visible in a new way, and forced a public reckoning with how legality can mask coercion and loss. [68](#ref-68)
 
 ### U.S. Civil Rights Movement
 
@@ -319,13 +327,14 @@ Follows welfare systems as they become digital gatekeepers, showing how automati
 
 Traces how ostensibly neutral technical systems encode hierarchy in data, design, and deployment, and shows how those hierarchies survive even when decisions are framed as objective. The book makes the stakes of verification legible by following how classification, scoring, and automation decide who is allowed to proceed and who is turned away. It draws a clear line between technical formality and the human consequences of who gets counted.
 
----
+______________________________________________________________________
 
 ## Appendices
 
 ### Appendix A: Chronological Narrative of Proof and Power
 
 Timeline:
+
 - <a id="timeline-1848-seneca-falls"></a>1848: Seneca Falls Declaration of Sentiments frames women's political exclusion as a moral harm. [60](#ref-60)
 - <a id="timeline-1883-residential-schools"></a>1883: Canadian federal policy formalizes the residential school system. [65](#ref-65)
 - <a id="timeline-1900-pan-african"></a>1900: Pan-African Conference in London frames anti-colonial and rights claims. [41](#ref-41)
@@ -391,8 +400,6 @@ Timeline:
 - <a id="timeline-2023-mata"></a><a id="timeline-2023-din-sql"></a>2023: Mata v Avianca sanctions over fake citations; [DIN-SQL](#glossary-din-sql) benchmark released. [103](#ref-103) [33](#ref-33)
 - <a id="timeline-2024-mcp"></a><a id="timeline-2024-hai-reglab"></a><a id="timeline-2024-alphaproof"></a><a id="timeline-2024-australia-law"></a>2024: [MCP](#glossary-mcp) standardises tool access for [LLMs](#glossary-llm); Stanford HAI / RegLab hallucination analysis published; [AlphaProof](#glossary-alphaproof) solves IMO problems at silver level; [Lean](#glossary-lean) verifies proofs; Australia enacts under-16 social media law. [35](#ref-35) [1](#ref-1) [36](#ref-36) [84](#ref-84)
 - <a id="timeline-2025-hilbert"></a>2025: [HILBERT](#glossary-hilbert) reaches ~70% on [PutnamBench](#glossary-putnambench) formal proofs. [34](#ref-34)
-
-
 
 ### Appendix B: Glossary
 
@@ -485,223 +492,230 @@ Timeline:
 - <a id="glossary-tlc"></a>**[TLC](#glossary-tlc)**: The [TLA+](#glossary-tla) [model checker](#glossary-model-checker) that explores state spaces and checks invariants. [39](#ref-39)
 - <a id="glossary-totality"></a>**[Totality](#glossary-totality)**: A function produces an output for every possible input.
 
-
 ## References
 
 1. <a id="ref-1"></a> [1] Stanford HAI / RegLab report (2024) and arXiv:2401.01301. https://hai.stanford.edu/news/hallucinating-law-legal-mistakes-large-language-models-are-pervasive; https://arxiv.org/abs/2401.01301.
 
-2. <a id="ref-2"></a> [2] Gulshan et al., "Development and Validation of a Deep Learning Algorithm for Detection of Diabetic Retinopathy," JAMA (2016). https://doi.org/10.1001/jama.2016.17216.
+1. <a id="ref-2"></a> [2] Gulshan et al., "Development and Validation of a Deep Learning Algorithm for Detection of Diabetic Retinopathy," JAMA (2016). https://doi.org/10.1001/jama.2016.17216.
 
-3. <a id="ref-3"></a> [3] Yang et al., "DeepCrack: A Deep Hierarchical Feature Learning Architecture for Crack Segmentation" (2019). https://doi.org/10.1016/j.neucom.2019.01.036.
+1. <a id="ref-3"></a> [3] Yang et al., "DeepCrack: A Deep Hierarchical Feature Learning Architecture for Crack Segmentation" (2019). https://doi.org/10.1016/j.neucom.2019.01.036.
 
-4. <a id="ref-4"></a> [4] Russell, *The Principles of Mathematics* (1903). https://archive.org/details/principlesofmath0000russ.
+1. <a id="ref-4"></a> [4] Russell, *The Principles of Mathematics* (1903). https://archive.org/details/principlesofmath0000russ.
 
-5. <a id="ref-5"></a> [5] Gödel (1931), *Monatshefte fuer Mathematik*. https://doi.org/10.1007/BF01700692.
+1. <a id="ref-5"></a> [5] Gödel (1931), *Monatshefte fuer Mathematik*. https://doi.org/10.1007/BF01700692.
 
-6. <a id="ref-6"></a> [6] Hofstadter, *Gödel, Escher, Bach* (Basic Books, 1979). https://archive.org/details/gdelescherbach00hofs.
+1. <a id="ref-6"></a> [6] Hofstadter, *Gödel, Escher, Bach* (Basic Books, 1979). https://archive.org/details/gdelescherbach00hofs.
 
-7. <a id="ref-7"></a> [7] Turing (1936), "On Computable Numbers." https://www.cs.virginia.edu/~robins/Turing_Paper_1936.pdf.
+1. <a id="ref-7"></a> [7] Turing (1936), "On Computable Numbers." https://www.cs.virginia.edu/~robins/Turing_Paper_1936.pdf.
 
-8. <a id="ref-8"></a> [8] Report of the Royal Commission on the Quebec Bridge collapse (Government of Canada). https://publications.gc.ca/site/eng/9.827964/publication.html.
+1. <a id="ref-8"></a> [8] Report of the Royal Commission on the Quebec Bridge collapse (Government of Canada). https://publications.gc.ca/site/eng/9.827964/publication.html.
 
-9. <a id="ref-9"></a> [9] Leveson & Turner, "An Investigation of the Therac-25 Accidents," *IEEE Computer* (1993). https://doi.org/10.1109/MC.1993.274940.
+1. <a id="ref-9"></a> [9] Leveson & Turner, "An Investigation of the Therac-25 Accidents," *IEEE Computer* (1993). https://doi.org/10.1109/MC.1993.274940.
 
-10. <a id="ref-10"></a> [10] Leveson, "Therac-25 Accidents: An Updated Version of the Original Accident Investigation Paper" (from *Safeware*). http://sunnyday.mit.edu/papers/therac.pdf.
+1. <a id="ref-10"></a> [10] Leveson, "Therac-25 Accidents: An Updated Version of the Original Accident Investigation Paper" (from *Safeware*). http://sunnyday.mit.edu/papers/therac.pdf.
 
-11. <a id="ref-11"></a> [11] Edelman, "The Pentium(R) floating point division bug" (1995). http://www-math.mit.edu/~edelman/homepage/papers/pentiumbug.pdf.
+1. <a id="ref-11"></a> [11] Edelman, "The Pentium(R) floating point division bug" (1995). http://www-math.mit.edu/~edelman/homepage/papers/pentiumbug.pdf.
 
-12. <a id="ref-12"></a> [12] Ariane 5 Flight 501 Failure Report. https://www.ima.umn.edu/~arnold/disasters/ariane5rep.html.
+1. <a id="ref-12"></a> [12] Ariane 5 Flight 501 Failure Report. https://www.ima.umn.edu/~arnold/disasters/ariane5rep.html.
 
-13. <a id="ref-13"></a> [13] Gleick, "A Bug and a Crash" (NYT Magazine, archived), noting ESA's decade-long €7B Ariane 5 program and four uninsured scientific satellites. https://web.archive.org/web/20120420204657/http://www.around.com/ariane.html.
+1. <a id="ref-13"></a> [13] Gleick, "A Bug and a Crash" (NYT Magazine, archived), noting ESA's decade-long €7B Ariane 5 program and four uninsured scientific satellites. https://web.archive.org/web/20120420204657/http://www.around.com/ariane.html.
 
-14. <a id="ref-14"></a> [14] NHTSA/NASA report on Toyota ETC (2011). https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/811361.
+1. <a id="ref-14"></a> [14] NHTSA/NASA report on Toyota ETC (2011). https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/811361.
 
-15. <a id="ref-15"></a> [15] NHTSA/NASA report on Toyota ETC; MISRA C. https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/811361; https://www.misra.org.uk/.
+1. <a id="ref-15"></a> [15] NHTSA/NASA report on Toyota ETC; MISRA C. https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/811361; https://www.misra.org.uk/.
 
-16. <a id="ref-16"></a> [16] Backus et al., "The FORTRAN Automatic Coding System" (1957); CODASYL COBOL Report (Apr 1960). https://softwarepreservation.computerhistory.org/FORTRAN/paper/BackusEtAl-FortranAutomaticCodingSystem-1957.pdf; https://archive.org/download/bitsavers_codasylCOB_6843924/COBOL_Report_Apr60_text.pdf.
+1. <a id="ref-16"></a> [16] Backus et al., "The FORTRAN Automatic Coding System" (1957); CODASYL COBOL Report (Apr 1960). https://softwarepreservation.computerhistory.org/FORTRAN/paper/BackusEtAl-FortranAutomaticCodingSystem-1957.pdf; https://archive.org/download/bitsavers_codasylCOB_6843924/COBOL_Report_Apr60_text.pdf.
 
-17. <a id="ref-17"></a> [17] Lamport, Shostak, Pease, "The Byzantine Generals Problem" (1982). https://doi.org/10.1145/357172.357176.
+1. <a id="ref-17"></a> [17] Lamport, Shostak, Pease, "The Byzantine Generals Problem" (1982). https://doi.org/10.1145/357172.357176.
 
-18. <a id="ref-18"></a> [18] TLA+ overview; Dynamo: Amazon's Highly Available Key-value Store; Amazon S3 user guide. https://lamport.azurewebsites.net/tla/tla.html; https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf; https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html.
+1. <a id="ref-18"></a> [18] TLA+ overview; Dynamo: Amazon's Highly Available Key-value Store; Amazon S3 user guide. https://lamport.azurewebsites.net/tla/tla.html; https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf; https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html.
 
-19. <a id="ref-19"></a> [19] CompCert project; seL4 SOSP 2009. https://compcert.inria.fr/; https://sel4.systems/publications/sel4-sosp09.pdf.
+1. <a id="ref-19"></a> [19] CompCert project; seL4 SOSP 2009. https://compcert.inria.fr/; https://sel4.systems/publications/sel4-sosp09.pdf.
 
-20. <a id="ref-20"></a> [20] Isabelle/HOL overview and documentation. https://www.cl.cam.ac.uk/research/hvg/Isabelle/.
+1. <a id="ref-20"></a> [20] Isabelle/HOL overview and documentation. https://www.cl.cam.ac.uk/research/hvg/Isabelle/.
 
-21. <a id="ref-21"></a> [21] Stone, *The Everything Store* (Little, Brown, 2013). https://books.google.com/books?vid=ISBN9780316219266.
+1. <a id="ref-21"></a> [21] Stone, *The Everything Store* (Little, Brown, 2013). https://books.google.com/books?vid=ISBN9780316219266.
 
-22. <a id="ref-22"></a> [22] Verification infrastructure before [LLMs](#glossary-llm) (SQL, Haskell, Coq, Rust, TLA+). https://www.iso.org/standard/63555.html; https://www.haskell.org/; https://coq.inria.fr/; https://www.rust-lang.org/; https://lamport.azurewebsites.net/tla/tla.html.
+1. <a id="ref-22"></a> [22] Verification infrastructure before [LLMs](#glossary-llm) (SQL, Haskell, Coq, Rust, TLA+). https://www.iso.org/standard/63555.html; https://www.haskell.org/; https://coq.inria.fr/; https://www.rust-lang.org/; https://lamport.azurewebsites.net/tla/tla.html.
 
-23. <a id="ref-23"></a> [23] Z3 Theorem Prover. https://z3prover.github.io/.
+1. <a id="ref-23"></a> [23] Z3 Theorem Prover. https://z3prover.github.io/.
 
-24. <a id="ref-24"></a> [24] SMT-LIB standard and resources. https://smt-lib.org/.
+1. <a id="ref-24"></a> [24] SMT-LIB standard and resources. https://smt-lib.org/.
 
-25. <a id="ref-25"></a> [25] NVIDIA company overview. https://www.nvidia.com/en-us/about-nvidia/.
+1. <a id="ref-25"></a> [25] NVIDIA company overview. https://www.nvidia.com/en-us/about-nvidia/.
 
-26. <a id="ref-26"></a> [26] Hinton and Salakhutdinov, "Reducing the Dimensionality of Data with Neural Networks," *Science* (2006). https://doi.org/10.1126/science.1127647.
+1. <a id="ref-26"></a> [26] Hinton and Salakhutdinov, "Reducing the Dimensionality of Data with Neural Networks," *Science* (2006). https://doi.org/10.1126/science.1127647.
 
-27. <a id="ref-27"></a> [27] CUDA Toolkit archive (release history). https://developer.nvidia.com/cuda-toolkit-archive.
+1. <a id="ref-27"></a> [27] CUDA Toolkit archive (release history). https://developer.nvidia.com/cuda-toolkit-archive.
 
-28. <a id="ref-28"></a> [28] Vaswani et al., "Attention Is All You Need" (2017). https://doi.org/10.48550/arXiv.1706.03762.
+1. <a id="ref-28"></a> [28] Vaswani et al., "Attention Is All You Need" (2017). https://doi.org/10.48550/arXiv.1706.03762.
 
-29. <a id="ref-29"></a> [29] Sutton & Barto, *Reinforcement Learning: An Introduction* (MIT Press, 2nd ed. 2018). https://mitpress.mit.edu/9780262039246/reinforcement-learning/.
+1. <a id="ref-29"></a> [29] Sutton & Barto, *Reinforcement Learning: An Introduction* (MIT Press, 2nd ed. 2018). https://mitpress.mit.edu/9780262039246/reinforcement-learning/.
 
-30. <a id="ref-30"></a> [30] Dwarkesh Patel interview with Richard Sutton (transcript), "Richard Sutton – Father of RL thinks [LLMs](#glossary-llm) are a dead end" (2024). https://www.dwarkesh.com/p/richard-sutton.
+1. <a id="ref-30"></a> [30] Dwarkesh Patel interview with Richard Sutton (transcript), "Richard Sutton – Father of RL thinks [LLMs](#glossary-llm) are a dead end" (2024). https://www.dwarkesh.com/p/richard-sutton.
 
-31. <a id="ref-31"></a> [31] Silver et al., "Mastering the game of Go with deep neural networks and tree search," *Nature* (2016). https://doi.org/10.1038/nature16961.
+1. <a id="ref-31"></a> [31] Silver et al., "Mastering the game of Go with deep neural networks and tree search," *Nature* (2016). https://doi.org/10.1038/nature16961.
 
-32. <a id="ref-32"></a> [32] AlphaZero arXiv preprint (2017); *Science* (2018). https://arxiv.org/abs/1712.01815; https://doi.org/10.1126/science.aar6404.
+1. <a id="ref-32"></a> [32] AlphaZero arXiv preprint (2017); *Science* (2018). https://arxiv.org/abs/1712.01815; https://doi.org/10.1126/science.aar6404.
 
-33. <a id="ref-33"></a> [33] HumanEval; AlphaCode; DIN-SQL. https://doi.org/10.48550/arXiv.2107.03374; https://doi.org/10.48550/arXiv.2203.07814; https://doi.org/10.48550/arXiv.2304.11015.
+1. <a id="ref-33"></a> [33] HumanEval; AlphaCode; DIN-SQL. https://doi.org/10.48550/arXiv.2107.03374; https://doi.org/10.48550/arXiv.2203.07814; https://doi.org/10.48550/arXiv.2304.11015.
 
-34. <a id="ref-34"></a> [34] HILBERT / PutnamBench results. https://doi.org/10.48550/arXiv.2509.22819.
+1. <a id="ref-34"></a> [34] HILBERT / PutnamBench results. https://doi.org/10.48550/arXiv.2509.22819.
 
-35. <a id="ref-35"></a> [35] Model Context Protocol specification repository. https://github.com/modelcontextprotocol/modelcontextprotocol.
+1. <a id="ref-35"></a> [35] Model Context Protocol specification repository. https://github.com/modelcontextprotocol/modelcontextprotocol.
 
-36. <a id="ref-36"></a> [36] AlphaProof announcement; AlphaGeometry2 technical report; Lean project. https://deepmind.google/blog/ai-solves-imo-problems-at-silver-medal-level/; https://arxiv.org/abs/2502.03544; https://leanprover.github.io/.
+1. <a id="ref-36"></a> [36] AlphaProof announcement; AlphaGeometry2 technical report; Lean project. https://deepmind.google/blog/ai-solves-imo-problems-at-silver-medal-level/; https://arxiv.org/abs/2502.03544; https://leanprover.github.io/.
 
-37. <a id="ref-37"></a> [37] Esteva et al., "Dermatologist-level classification of skin cancer," *Nature* (2017). https://doi.org/10.1038/nature21056.
+1. <a id="ref-37"></a> [37] Esteva et al., "Dermatologist-level classification of skin cancer," *Nature* (2017). https://doi.org/10.1038/nature21056.
 
-38. <a id="ref-38"></a> [38] Ji et al., "Survey of Hallucination in Natural Language Generation," *ACM Computing Surveys* (2023). https://doi.org/10.1145/3571730.
+1. <a id="ref-38"></a> [38] Ji et al., "Survey of Hallucination in Natural Language Generation," *ACM Computing Surveys* (2023). https://doi.org/10.1145/3571730.
 
-39. <a id="ref-39"></a> [39] Lamport, "TLA+ Tools." https://lamport.azurewebsites.net/tla/tools.html.
+1. <a id="ref-39"></a> [39] Lamport, "TLA+ Tools." https://lamport.azurewebsites.net/tla/tools.html.
 
-40. <a id="ref-40"></a> [40] SPARK Reference Manual, Introduction. https://docs.adacore.com/spark2014-docs/html/lrm/introduction.html.
+1. <a id="ref-40"></a> [40] SPARK Reference Manual, Introduction. https://docs.adacore.com/spark2014-docs/html/lrm/introduction.html.
 
-41. <a id="ref-41"></a> [41] Du Bois et al., "To the Nations of the World" (1900). https://doi.org/10.2307/3012500.
+1. <a id="ref-41"></a> [41] Du Bois et al., "To the Nations of the World" (1900). https://doi.org/10.2307/3012500.
 
-42. <a id="ref-42"></a> [42] Natives Land Act of 1913 overview, South African History Online. https://www.sahistory.org.za/article/natives-land-act-1913.
+1. <a id="ref-42"></a> [42] Natives Land Act of 1913 overview, South African History Online. https://www.sahistory.org.za/article/natives-land-act-1913.
 
-43. <a id="ref-43"></a> [43] Disorders Inquiry Committee, *Report* (1919-1920). https://archive.org/details/disordersinquiry00unse.
+1. <a id="ref-43"></a> [43] Disorders Inquiry Committee, *Report* (1919-1920). https://archive.org/details/disordersinquiry00unse.
 
-44. <a id="ref-44"></a> [44] New York Times, "Chinese Students Riot in Peking" (May 5, 1919). https://timesmachine.nytimes.com/timesmachine/1919/05/05/96303931.html.
+1. <a id="ref-44"></a> [44] New York Times, "Chinese Students Riot in Peking" (May 5, 1919). https://timesmachine.nytimes.com/timesmachine/1919/05/05/96303931.html.
 
-45. <a id="ref-45"></a> [45] Gandhi, Non-Cooperation Movement (1920). https://www.sfr-21.org/sources/non-cooperation.html.
+1. <a id="ref-45"></a> [45] Gandhi, Non-Cooperation Movement (1920). https://www.sfr-21.org/sources/non-cooperation.html.
 
-46. <a id="ref-46"></a> [46] Gandhi, "Letter to Viceroy Irwin" (1930). https://indianculture.gov.in/digital-district-repository/district-repository/mahatma-gandhis-letters-lord-irwin-1930.
+1. <a id="ref-46"></a> [46] Gandhi, "Letter to Viceroy Irwin" (1930). https://indianculture.gov.in/digital-district-repository/district-repository/mahatma-gandhis-letters-lord-irwin-1930.
 
-47. <a id="ref-47"></a> [47] Gandhi, "Quit India Speech" (1942). https://www.mkgandhi.org/speeches/qui.php.
+1. <a id="ref-47"></a> [47] Gandhi, "Quit India Speech" (1942). https://www.mkgandhi.org/speeches/qui.php.
 
-48. <a id="ref-48"></a> [48] Nuremberg Laws (1935), German History in Documents and Images. https://ghdi.ghi-dc.org/sub_document.cfm?document_id=1523.
+1. <a id="ref-48"></a> [48] Nuremberg Laws (1935), German History in Documents and Images. https://ghdi.ghi-dc.org/sub_document.cfm?document_id=1523.
 
-49. <a id="ref-49"></a> [49] USHMM collections item, "Drawing, 'In Memorial of the Warsaw Ghetto Uprising'." https://collections.ushmm.org/search/catalog/irn596952.
+1. <a id="ref-49"></a> [49] USHMM collections item, "Drawing, 'In Memorial of the Warsaw Ghetto Uprising'." https://collections.ushmm.org/search/catalog/irn596952.
 
-50. <a id="ref-50"></a> [50] Atlantic Charter (1941), Avalon Project, Yale Law School. https://avalon.law.yale.edu/wwii/atlantic.asp.
+1. <a id="ref-50"></a> [50] Atlantic Charter (1941), Avalon Project, Yale Law School. https://avalon.law.yale.edu/wwii/atlantic.asp.
 
-51. <a id="ref-51"></a> [51] Charter of the United Nations (1945), United Nations. https://treaties.un.org/doc/publication/ctc/uncharter.pdf.
+1. <a id="ref-51"></a> [51] Charter of the United Nations (1945), United Nations. https://treaties.un.org/doc/publication/ctc/uncharter.pdf.
 
-52. <a id="ref-52"></a> [52] Charter of the International Military Tribunal (1945). https://avalon.law.yale.edu/imt/imtconst.asp.
+1. <a id="ref-52"></a> [52] Charter of the International Military Tribunal (1945). https://avalon.law.yale.edu/imt/imtconst.asp.
 
-53. <a id="ref-53"></a> [53] Universal Declaration of Human Rights (1948), United Nations. https://www.ohchr.org/sites/default/files/UDHR/Documents/UDHR_Translations/eng.pdf.
+1. <a id="ref-53"></a> [53] Universal Declaration of Human Rights (1948), United Nations. https://www.ohchr.org/sites/default/files/UDHR/Documents/UDHR_Translations/eng.pdf.
 
-54. <a id="ref-54"></a> [54] Convention on the Prevention and Punishment of the Crime of Genocide (1948), United Nations. https://www.un.org/en/genocideprevention/documents/atrocity-crimes/Doc.1_Convention%20on%20the%20Prevention%20and%20Punishment%20of%20the%20Crime%20of%20Genocide.pdf.
+1. <a id="ref-54"></a> [54] Convention on the Prevention and Punishment of the Crime of Genocide (1948), United Nations. https://www.un.org/en/genocideprevention/documents/atrocity-crimes/Doc.1_Convention%20on%20the%20Prevention%20and%20Punishment%20of%20the%20Crime%20of%20Genocide.pdf.
 
-55. <a id="ref-55"></a> [55] Geneva Conventions (1949), International Committee of the Red Cross. https://www.icrc.org/en/law-and-policy/geneva-conventions-and-their-commentaries.
+1. <a id="ref-55"></a> [55] Geneva Conventions (1949), International Committee of the Red Cross. https://www.icrc.org/en/law-and-policy/geneva-conventions-and-their-commentaries.
 
-56. <a id="ref-56"></a> [56] Indian Independence Act 1947 (UK Parliament). https://www.legislation.gov.uk/ukpga/Geo6/10-11/30/contents/enacted.
+1. <a id="ref-56"></a> [56] Indian Independence Act 1947 (UK Parliament). https://www.legislation.gov.uk/ukpga/Geo6/10-11/30/contents/enacted.
 
-57. <a id="ref-57"></a> [57] The 1947 Partition Archive, oral histories and primary source documentation. https://www.1947partitionarchive.org/.
+1. <a id="ref-57"></a> [57] The 1947 Partition Archive, oral histories and primary source documentation. https://www.1947partitionarchive.org/.
 
-58. <a id="ref-58"></a> [58] BBC News, "India's partition: The dividing line." https://www.bbc.com/news/world-asia-10954095.
+1. <a id="ref-58"></a> [58] BBC News, "India's partition: The dividing line." https://www.bbc.com/news/world-asia-10954095.
 
-59. <a id="ref-59"></a> [59] UN General Assembly Resolution 1514 (1960), United Nations. https://undocs.org/A/RES/1514(XV).
+1. <a id="ref-59"></a> [59] UN General Assembly Resolution 1514 (1960), United Nations. https://undocs.org/A/RES/1514(XV).
 
-60. <a id="ref-60"></a> [60] Declaration of Sentiments (1848), Library of Congress. https://www.loc.gov/item/rbcmiller001106/.
+1. <a id="ref-60"></a> [60] Declaration of Sentiments (1848), Library of Congress. https://www.loc.gov/item/rbcmiller001106/.
 
-61. <a id="ref-61"></a> [61] 19th Amendment (1920), U.S. National Archives. https://www.archives.gov/milestone-documents/19th-amendment.
+1. <a id="ref-61"></a> [61] 19th Amendment (1920), U.S. National Archives. https://www.archives.gov/milestone-documents/19th-amendment.
 
-62. <a id="ref-62"></a> [62] Voting Rights Act of 1965, U.S. National Archives. https://www.archives.gov/milestone-documents/voting-rights-act.
+1. <a id="ref-62"></a> [62] Voting Rights Act of 1965, U.S. National Archives. https://www.archives.gov/milestone-documents/voting-rights-act.
 
-63. <a id="ref-63"></a> [63] U.S. Department of Justice, "History of Federal Voting Rights Laws." https://www.justice.gov/crt/history-federal-voting-rights-laws.
+1. <a id="ref-63"></a> [63] U.S. Department of Justice, "History of Federal Voting Rights Laws." https://www.justice.gov/crt/history-federal-voting-rights-laws.
 
-64. <a id="ref-64"></a> [64] U.S. Census Bureau, "Voting and Registration in the Election of November 2022." https://www.census.gov/library/publications/2024/demo/p20-586.html.
+1. <a id="ref-64"></a> [64] U.S. Census Bureau, "Voting and Registration in the Election of November 2022." https://www.census.gov/library/publications/2024/demo/p20-586.html.
 
-65. <a id="ref-65"></a> [65] National Centre for Truth and Reconciliation, "Residential Schools." https://nctr.ca/education/teaching-resources/residential-schools/.
+1. <a id="ref-65"></a> [65] National Centre for Truth and Reconciliation, "Residential Schools." https://nctr.ca/education/teaching-resources/residential-schools/.
 
-66. <a id="ref-66"></a> [66] Government of Canada, "Statement of the Government of Canada on Indian Policy (1969)." https://publications.gc.ca/site/eng/9.700112/publication.html.
+1. <a id="ref-66"></a> [66] Government of Canada, "Statement of the Government of Canada on Indian Policy (1969)." https://publications.gc.ca/site/eng/9.700112/publication.html.
 
-67. <a id="ref-67"></a> [67] Government of Canada, "Residential Schools." https://www.rcaanc-cirnac.gc.ca/eng/1100100015576/1522907135142.
+1. <a id="ref-67"></a> [67] Government of Canada, "Residential Schools." https://www.rcaanc-cirnac.gc.ca/eng/1100100015576/1522907135142.
 
-68. <a id="ref-68"></a> [68] National Centre for Truth and Reconciliation, "Missing Children and Unmarked Burials." https://nctr.ca/burials/missing-children-and-unmarked-burials/.
+1. <a id="ref-68"></a> [68] National Centre for Truth and Reconciliation, "Missing Children and Unmarked Burials." https://nctr.ca/burials/missing-children-and-unmarked-burials/.
 
-69. <a id="ref-69"></a> [69] King, "Letter from Birmingham Jail" (1963). https://www.csuchico.edu/iege/_assets/documents/susi-letter-from-birmingham-jail.pdf.
+1. <a id="ref-69"></a> [69] King, "Letter from Birmingham Jail" (1963). https://www.csuchico.edu/iege/_assets/documents/susi-letter-from-birmingham-jail.pdf.
 
-70. <a id="ref-70"></a> [70] Brown v. Board of Education (1954), U.S. National Archives. https://www.archives.gov/milestone-documents/brown-v-board-of-education.
+1. <a id="ref-70"></a> [70] Brown v. Board of Education (1954), U.S. National Archives. https://www.archives.gov/milestone-documents/brown-v-board-of-education.
 
-71. <a id="ref-71"></a> [71] Civil Rights Act of 1964, U.S. National Archives. https://www.archives.gov/milestone-documents/civil-rights-act.
+1. <a id="ref-71"></a> [71] Civil Rights Act of 1964, U.S. National Archives. https://www.archives.gov/milestone-documents/civil-rights-act.
 
-72. <a id="ref-72"></a> [72] Numan V. Bartley, *The Rise of Massive Resistance: Race and Politics in the South During the 1950s* (Louisiana State University Press, 1969).
+1. <a id="ref-72"></a> [72] Numan V. Bartley, *The Rise of Massive Resistance: Race and Politics in the South During the 1950s* (Louisiana State University Press, 1969).
 
-73. <a id="ref-73"></a> [73] U.S. Department of Justice, "Investigation of Allegations Regarding the Assassination of Dr. Martin Luther King, Jr." (2000). https://www.justice.gov/crt/united-states-department-justice-investigation-allegations-regarding-assassination-dr-martin.
+1. <a id="ref-73"></a> [73] U.S. Department of Justice, "Investigation of Allegations Regarding the Assassination of Dr. Martin Luther King, Jr." (2000). https://www.justice.gov/crt/united-states-department-justice-investigation-allegations-regarding-assassination-dr-martin.
 
-74. <a id="ref-74"></a> [74] The King Center, "Martin Luther King, Jr." https://thekingcenter.org/about-tkc/martin-luther-king-jr/.
+1. <a id="ref-74"></a> [74] The King Center, "Martin Luther King, Jr." https://thekingcenter.org/about-tkc/martin-luther-king-jr/.
 
-75. <a id="ref-75"></a> [75] Holodomor Research and Education Consortium, "Holodomor Basic Facts." https://holodomor.ca/get-started/holodomor-basic-facts/.
+1. <a id="ref-75"></a> [75] Holodomor Research and Education Consortium, "Holodomor Basic Facts." https://holodomor.ca/get-started/holodomor-basic-facts/.
 
-76. <a id="ref-76"></a> [76] ЦСУ СССР, *Всесоюзная перепись населения 17 декабря 1926 г.* (All-Union Population Census). https://archive.org/details/perepis_naseleniia_1926.
+1. <a id="ref-76"></a> [76] ЦСУ СССР, *Всесоюзная перепись населения 17 декабря 1926 г.* (All-Union Population Census). https://archive.org/details/perepis_naseleniia_1926.
 
-77. <a id="ref-77"></a> [77] Law of Ukraine, "On the Holodomor of 1932-1933 in Ukraine" (2006). https://zakon.rada.gov.ua/laws/show/376-16?lang=en.
+1. <a id="ref-77"></a> [77] Law of Ukraine, "On the Holodomor of 1932-1933 in Ukraine" (2006). https://zakon.rada.gov.ua/laws/show/376-16?lang=en.
 
-78. <a id="ref-78"></a> [78] Freedom Charter (1955), African National Congress. https://www.anc1912.org.za/freedom-charter/.
+1. <a id="ref-78"></a> [78] Freedom Charter (1955), African National Congress. https://www.anc1912.org.za/freedom-charter/.
 
-79. <a id="ref-79"></a> [79] Mandela, "Statement from the Dock" (1964). https://www.historyplace.com/speeches/mandela.htm.
+1. <a id="ref-79"></a> [79] Mandela, "Statement from the Dock" (1964). https://www.historyplace.com/speeches/mandela.htm.
 
-80. <a id="ref-80"></a> [80] Nelson Mandela Foundation, "Biography." https://www.nelsonmandela.org/content/page/biography.
+1. <a id="ref-80"></a> [80] Nelson Mandela Foundation, "Biography." https://www.nelsonmandela.org/content/page/biography.
 
-81. <a id="ref-81"></a> [81] UN Declaration on the Rights of Indigenous Peoples (2007), United Nations. https://undocs.org/A/RES/61/295.
+1. <a id="ref-81"></a> [81] UN Declaration on the Rights of Indigenous Peoples (2007), United Nations. https://undocs.org/A/RES/61/295.
 
-82. <a id="ref-82"></a> [82] Americans with Disabilities Act (1990), ADA.gov. https://www.ada.gov/law-and-regs/ada/.
+1. <a id="ref-82"></a> [82] Americans with Disabilities Act (1990), ADA.gov. https://www.ada.gov/law-and-regs/ada/.
 
-83. <a id="ref-83"></a> [83] Obergefell v. Hodges (2015), Legal Information Institute. https://www.law.cornell.edu/supremecourt/text/14-556.
+1. <a id="ref-83"></a> [83] Obergefell v. Hodges (2015), Legal Information Institute. https://www.law.cornell.edu/supremecourt/text/14-556.
 
-84. <a id="ref-84"></a> [84] Online Safety Amendment (Social Media Minimum Age) Act 2024 (Australia). https://www.legislation.gov.au/C2024A00127/asmade/text.
+1. <a id="ref-84"></a> [84] Online Safety Amendment (Social Media Minimum Age) Act 2024 (Australia). https://www.legislation.gov.au/C2024A00127/asmade/text.
 
-85. <a id="ref-85"></a> [85] McLuhan, *Understanding Media: The Extensions of Man* (McGraw-Hill, 1964). https://archive.org/details/understandingmed00mclu.
+1. <a id="ref-85"></a> [85] McLuhan, *Understanding Media: The Extensions of Man* (McGraw-Hill, 1964). https://archive.org/details/understandingmed00mclu.
 
-86. <a id="ref-86"></a> [86] Clarke, "Extra-Terrestrial Relays: Can Rocket Stations Give World-Wide Radio Coverage?" *Wireless World* (Oct 1945). https://www.rfcafe.com/references/magazine-articles/extra-terrestrial-relays-arthur-c-clarke-oct-1945-wireless-world.htm.
+1. <a id="ref-86"></a> [86] Clarke, "Extra-Terrestrial Relays: Can Rocket Stations Give World-Wide Radio Coverage?" *Wireless World* (Oct 1945). https://www.rfcafe.com/references/magazine-articles/extra-terrestrial-relays-arthur-c-clarke-oct-1945-wireless-world.htm.
 
-87. <a id="ref-87"></a> [87] Winner, *The Whale and the Reactor* (University of Chicago Press, 1986), ISBN 9780226902111. https://archive.org/details/whalereactorsear00winn.
+1. <a id="ref-87"></a> [87] Winner, *The Whale and the Reactor* (University of Chicago Press, 1986), ISBN 9780226902111. https://archive.org/details/whalereactorsear00winn.
 
-88. <a id="ref-88"></a> [88] Harari, *Sapiens* (Harper, 2015), ISBN 9780062316097. https://www.ynharari.com/book/sapiens/.
+1. <a id="ref-88"></a> [88] Harari, *Sapiens* (Harper, 2015), ISBN 9780062316097. https://www.ynharari.com/book/sapiens/.
 
-89. <a id="ref-89"></a> [89] Eubanks, *Automating Inequality* (St. Martin's Press, 2018), ISBN 9781250074317. https://www.c-span.org/video/?444334-1/automating-inequality.
+1. <a id="ref-89"></a> [89] Eubanks, *Automating Inequality* (St. Martin's Press, 2018), ISBN 9781250074317. https://www.c-span.org/video/?444334-1/automating-inequality.
 
-90. <a id="ref-90"></a> [90] Benjamin, *Race After Technology* (Polity, 2019), ISBN 9780745338667. https://www.c-span.org/video/?466564-1/race-technology.
+1. <a id="ref-90"></a> [90] Benjamin, *Race After Technology* (Polity, 2019), ISBN 9780745338667. https://www.c-span.org/video/?466564-1/race-technology.
 
-91. <a id="ref-91"></a> [91] Wilkes, Wheeler, Gill, *The Preparation of Programs for an Electronic Digital Computer* (1951). https://archive.org/details/preparationofpro00wilk.
+1. <a id="ref-91"></a> [91] Wilkes, Wheeler, Gill, *The Preparation of Programs for an Electronic Digital Computer* (1951). https://archive.org/details/preparationofpro00wilk.
 
-92. <a id="ref-92"></a> [92] European Convention on Human Rights (1950), Council of Europe. https://rm.coe.int/1680063776.
+1. <a id="ref-92"></a> [92] European Convention on Human Rights (1950), Council of Europe. https://rm.coe.int/1680063776.
 
-93. <a id="ref-93"></a> [93] Jensen and Wirth, *Pascal User Manual and Report* (1974). https://archive.org/details/pascalusermanual00jens.
+1. <a id="ref-93"></a> [93] Jensen and Wirth, *Pascal User Manual and Report* (1974). https://archive.org/details/pascalusermanual00jens.
 
-94. <a id="ref-94"></a> [94] Ritchie, "C Reference Manual" (1974). https://archive.org/details/crefman.
+1. <a id="ref-94"></a> [94] Ritchie, "C Reference Manual" (1974). https://archive.org/details/crefman.
 
-95. <a id="ref-95"></a> [95] Milner et al., *The Definition of Standard ML* (1997). https://smlfamily.github.io/sml97-defn.pdf.
+1. <a id="ref-95"></a> [95] Milner et al., *The Definition of Standard ML* (1997). https://smlfamily.github.io/sml97-defn.pdf.
 
-96. <a id="ref-96"></a> [96] Turner, Miranda language overview. https://www.cs.kent.ac.uk/people/staff/dat/miranda/.
+1. <a id="ref-96"></a> [96] Turner, Miranda language overview. https://www.cs.kent.ac.uk/people/staff/dat/miranda/.
 
-97. <a id="ref-97"></a> [97] Stroustrup, *The C++ Programming Language* (1st ed., 1985). https://www.stroustrup.com/1st.html.
+1. <a id="ref-97"></a> [97] Stroustrup, *The C++ Programming Language* (1st ed., 1985). https://www.stroustrup.com/1st.html.
 
-98. <a id="ref-98"></a> [98] Krizhevsky, Sutskever, Hinton, "ImageNet Classification with Deep Convolutional Neural Networks," *NeurIPS* (2012). https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.
+1. <a id="ref-98"></a> [98] Krizhevsky, Sutskever, Hinton, "ImageNet Classification with Deep Convolutional Neural Networks," *NeurIPS* (2012). https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.
 
-99. <a id="ref-99"></a> [99] Thomson Reuters Enterprise Centre GmbH v. ROSS Intelligence Inc., D. Del. docket. https://www.courtlistener.com/docket/61382368/thomson-reuters-enterprise-centre-gmbh-v-ross-intelligence-inc/.
+1. <a id="ref-99"></a> [99] Thomson Reuters Enterprise Centre GmbH v. ROSS Intelligence Inc., D. Del. docket. https://www.courtlistener.com/docket/61382368/thomson-reuters-enterprise-centre-gmbh-v-ross-intelligence-inc/.
 
-100. <a id="ref-100"></a> [100] GitHub Copilot product page. https://github.com/features/copilot.
+1. <a id="ref-100"></a> [100] GitHub Copilot product page. https://github.com/features/copilot.
 
-101. <a id="ref-101"></a> [101] OpenAI, "ChatGPT." https://openai.com/chatgpt.
+1. <a id="ref-101"></a> [101] OpenAI, "ChatGPT." https://openai.com/chatgpt.
 
-102. <a id="ref-102"></a> [102] FDA, "Artificial Intelligence and Machine Learning (AI/ML)-Enabled Medical Devices." https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-and-machine-learning-aiml-enabled-medical-devices.
+1. <a id="ref-102"></a> [102] FDA, "Artificial Intelligence and Machine Learning (AI/ML)-Enabled Medical Devices." https://www.fda.gov/medical-devices/software-medical-device-samd/artificial-intelligence-and-machine-learning-aiml-enabled-medical-devices.
 
-103. <a id="ref-103"></a> [103] Mata v. Avianca, Inc., S.D.N.Y. docket (CourtListener). https://www.courtlistener.com/docket/63107798/mata-v-avianca-inc/.
+1. <a id="ref-103"></a> [103] Mata v. Avianca, Inc., S.D.N.Y. docket (CourtListener). https://www.courtlistener.com/docket/63107798/mata-v-avianca-inc/.
 
-104. <a id="ref-104"></a> [104] Intel, "Company Overview." https://www.intel.com/content/www/us/en/company-overview/company-overview.html.
+1. <a id="ref-104"></a> [104] Intel, "Company Overview." https://www.intel.com/content/www/us/en/company-overview/company-overview.html.
 
-105. <a id="ref-105"></a> [105] European Space Agency, "About ESA." https://www.esa.int/About_Us.
+1. <a id="ref-105"></a> [105] European Space Agency, "About ESA." https://www.esa.int/About_Us.
 
-106. <a id="ref-106"></a> [106] GitHub, "About." https://github.com/about.
+1. <a id="ref-106"></a> [106] GitHub, "About." https://github.com/about.
 
-107. <a id="ref-107"></a> [107] OpenAI, "About." https://openai.com/about.
+1. <a id="ref-107"></a> [107] OpenAI, "About." https://openai.com/about.
 
-108. <a id="ref-108"></a> [108] Anthropic, "Anthropic." https://www.anthropic.com/.
+1. <a id="ref-108"></a> [108] Anthropic, "Anthropic." https://www.anthropic.com/.
 
-109. <a id="ref-109"></a> [109] DeepMind, "About DeepMind." https://deepmind.google/about/.
+1. <a id="ref-109"></a> [109] DeepMind, "About DeepMind." https://deepmind.google/about/.
+
+______________________________________________________________________
+
+## Cross-References
+
+- [intro.md](intro.md) — Effectful DSL overview
+- [verification_contract.md](../engineering/verification_contract.md) — TLA+ verification workflow
+- [boundary_model.md](../engineering/boundary_model.md) — Boundary definitions

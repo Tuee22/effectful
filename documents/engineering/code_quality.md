@@ -278,6 +278,97 @@ grep -r "from app.config import settings" backend/app/programs/
 - [Testing: Integration Test Patterns](testing.md) - Settings in test fixtures
 - [Docker Workflow](docker_workflow.md) - Environment variable configuration
 
+### Doctrine 9: Runner Error Conversion
+
+- **SSoT**: `runner_pattern.md`
+- **Rule**: Effect runners are the ONLY place where external exceptions become typed `Result` errors.
+
+**Principle**: The runner is the proof boundary edge. It receives pure effect descriptions and returns typed results. All external failures (driver errors, network timeouts, etc.) must be converted to typed error variants.
+
+```rust
+// Good: Convert external error to typed variant
+fn run_db_query(effect: DbQuery) -> Result<DbRows, DbError> {
+    match self.pool.query(&effect.sql, &effect.params) {
+        Ok(rows) => Ok(to_db_rows(rows)),
+        Err(e) => Err(classify_db_error(e)),  // Typed error
+    }
+}
+```
+
+**Anti-patterns**:
+
+- Throwing exceptions from runners (caller can't handle exhaustively)
+- Returning `Option` instead of `Result` (hides error information)
+- Propagating untyped errors (loses semantic meaning)
+
+### Doctrine 10: Deterministic Timeouts
+
+- **SSoT**: `runner_pattern.md`
+- **Rule**: All runners must have bounded execution time with configurable timeouts.
+
+**Principle**: Runners must not hang forever. Every external call has a timeout, and timeout is a typed error variant.
+
+```rust
+// Good: Timeout enforcement
+async fn run(&self, effect: Effect) -> Result<T, Error> {
+    tokio::time::timeout(self.timeout, self.execute(effect))
+        .await
+        .map_err(|_| Error::Timeout)?
+}
+```
+
+**Requirements**:
+
+- Every runner has a `timeout` configuration
+- Timeouts produce typed error variants (e.g., `Error::Timeout`)
+- Default timeouts are documented per effect type
+- Unbounded execution is forbidden
+
+### Doctrine 11: Assumption Documentation
+
+- **SSoT**: `boundary_model.md`, `dsl/jit.md`
+- **Rule**: All unsafe code and external dependencies require explicit assumption documentation.
+
+**Principle**: Code outside the proof boundary requires documented assumptions. Unsafe Rust blocks and driver interactions must document what they assume and what happens if assumptions fail.
+
+```rust
+// Required format for unsafe blocks and driver calls:
+// ASSUMPTION: [What we assume is true]
+// DEPENDS ON: [External dependencies and versions]
+// TLA+ PROPERTY: [Which TLA+ properties depend on this]
+// FAILURE MODE: [What happens if assumption is violated]
+// MITIGATION: [How we detect or recover]
+```
+
+**When required**:
+
+- All `unsafe` Rust blocks
+- All driver/API integrations
+- All cryptographic operations
+- All hardware interactions
+
+**Cross-References**:
+
+- [Boundary Model](boundary_model.md) - Where assumptions fit in architecture
+- [JIT Compilation](../dsl/jit.md) - Unsafe Rust policy for generated code
+- [Verification Contract](verification_contract.md) - Assumption inventories
+
+______________________________________________________________________
+
+## Boundary-Specific Quality Rules
+
+Quality rules apply differently at each boundary:
+
+| Rule               | Purity Boundary           | Proof Boundary         | Outside Boundary       |
+| ------------------ | ------------------------- | ---------------------- | ---------------------- |
+| **Type safety**    | Mandatory (Haskell types) | Mandatory (Rust types) | N/A (external)         |
+| **Immutability**   | Mandatory                 | Preferred              | N/A                    |
+| **Error handling** | ADT variants              | Result types           | Documented assumptions |
+| **Testing**        | Property-based            | Conformance            | Integration            |
+| **Verification**   | Type checker              | TLA+ model check       | Assumption validation  |
+
+See [Boundary Model](boundary_model.md) for complete boundary definitions.
+
 ______________________________________________________________________
 
 ## Generator Program Rules

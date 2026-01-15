@@ -6,6 +6,8 @@
 
 > **Purpose**: Reference for storage effect types used for S3-compatible object storage operations.
 
+> **Note**: This API reference covers the legacy Python effectful library. For the Effectful Language, see [DSL Documentation](../dsl/intro.md).
+
 > **Core Doctrine**: For S3 workflow patterns and error handling, see [Effect Patterns](../engineering/effect_patterns.md)
 
 ## SSoT Link Map
@@ -229,7 +231,7 @@ flowchart TB
 
 ADT for put operation outcomes.
 
-```mermaid
+````mermaid
 flowchart TB
   %% kind: ADT
   %% id: effectful.domain.s3_object.PutResult
@@ -241,7 +243,7 @@ flowchart TB
 
   PutResult_PutSuccess["PutSuccess(etag: str)"]
   PutResult_PutFailure["PutFailure(error: str)"]
-```
+```text
 
 ```python
 # file: examples/storage.py
@@ -254,7 +256,7 @@ class PutSuccess:
 @dataclass(frozen=True)
 class PutFailure:
     error: str
-```
+````
 
 **Pattern Matching:**
 

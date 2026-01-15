@@ -65,7 +65,7 @@ ______________________________________________________________________
 
 ### Guard Decision Template
 
-```python
+````python
 # file: examples/authentication.py
 def compute_guard_decision(
     readiness: AuthReadiness,
@@ -88,7 +88,7 @@ def compute_guard_decision(
                     return Denied(user.id)
                 return Authorized(user.id, roles=user.roles)
     # MyPy enforces exhaustiveness - no assert_never needed
-```
+```text
 
 ______________________________________________________________________
 
@@ -116,7 +116,7 @@ def authenticate_and_authorize(
             if required_roles and not required_roles.issubset(user.roles):
                 return Denied(user.id)
             return Authorized(user.id, roles=user.roles)
-```
+````
 
 ______________________________________________________________________
 

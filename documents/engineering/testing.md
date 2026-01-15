@@ -8,7 +8,7 @@
 
 ## SSoT Link Map
 
-```mermaid
+````mermaid
 flowchart TB
   Testing[Testing SSoT]
   TestingArch[Testing Architecture SSoT]
@@ -23,7 +23,7 @@ flowchart TB
   Testing --> Commands
   Testing --> Docs
   TestingArch --> Testing
-```
+```python
 
 | Need                                                               | Link                                                               |
 | ------------------------------------------------------------------ | ------------------------------------------------------------------ |
@@ -58,7 +58,7 @@ from effectful.testing import (
     assert_ok_value,     # Assert Ok with specific value
     assert_err_message,  # Assert Err with message substring
 )
-```
+````
 
 **These are Result type utilities**, not testing infrastructure. They solve a real DX problem: pattern matching boilerplate for Result types.
 
@@ -2983,7 +2983,7 @@ class TestStorageWorkflowIntegration:
 
 **Fixture Reference** (from `tests/fixtures/storage.py:49-78`):
 
-```python
+````python
 # file: examples/testing.py
 @pytest.fixture
 def clean_minio(s3_bucket: str) -> str:
@@ -2997,7 +2997,7 @@ def clean_minio(s3_bucket: str) -> str:
             s3_client.delete_object(Bucket=s3_bucket, Key=obj["Key"])
 
     return s3_bucket
-```
+```python
 
 ______________________________________________________________________
 
@@ -3084,7 +3084,7 @@ def test_user_lookup() -> None:
         result = e.value
 
     assert result is True
-```
+````
 
 **Why:** Unit tests must be fast, deterministic, and isolated. Real infrastructure belongs in integration tests only.
 

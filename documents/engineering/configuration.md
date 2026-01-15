@@ -10,7 +10,7 @@ Defines environment variables and service wiring for effectful across local deve
 
 ## SSoT Link Map
 
-```mermaid
+````mermaid
 flowchart TB
   Config[Configuration SSoT]
   Docker[Docker Workflow SSoT]
@@ -23,7 +23,7 @@ flowchart TB
   Config --> DevWorkflow
   Config --> Observability
   Docker --> Commands
-```
+```text
 
 | Need                    | Link                                                                |
 | ----------------------- | ------------------------------------------------------------------- |
@@ -50,7 +50,7 @@ flowchart TB
   App --> Redis
   App --> MinIO
   App --> Pulsar
-```
+````
 
 ## Environment Variables
 

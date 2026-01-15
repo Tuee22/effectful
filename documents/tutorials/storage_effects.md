@@ -6,6 +6,8 @@
 
 > **Purpose**: Tutorial covering storage effects for S3-compatible object storage operations in effectful.
 
+> **Note**: This tutorial covers the legacy Python effectful library. For the Effectful Language (Haskell-derived DSL for distributed systems), see [DSL Documentation](../dsl/intro.md).
+
 ## SSoT Link Map
 
 | Need                   | Link                                                                |

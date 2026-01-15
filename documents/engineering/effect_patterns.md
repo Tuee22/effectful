@@ -348,7 +348,7 @@ def save_message(user_id: UUID, text: str) -> Generator[AllEffects, EffectResult
 
 **✅ CORRECT**:
 
-```python
+````python
 # file: examples/effect_patterns.py
 def save_message(user_id: UUID, text: str) -> Generator[AllEffects, EffectResult, bool]:
     result = yield SaveChatMessage(user_id=user_id, text=text)
@@ -357,7 +357,7 @@ def save_message(user_id: UUID, text: str) -> Generator[AllEffects, EffectResult
         return False
 
     return True
-```
+```text
 
 ______________________________________________________________________
 
@@ -372,7 +372,7 @@ Users want ergonomic APIs when constructing effects:
 yield PutObject(bucket="x", key="y", content=b"z", metadata={"k": "v"})
 yield PutObject(bucket="x", key="y", content=b"z")  # metadata absent
 yield PutObject(bucket="x", key="y", content=b"z", metadata=Absent(reason="redacted"))
-```
+````
 
 But effects should store normalized OptionalValue[T] internally for type safety and pattern matching.
 

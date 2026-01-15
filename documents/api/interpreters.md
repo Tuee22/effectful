@@ -6,6 +6,8 @@
 
 > **Purpose**: Reference for effect interpreters and interpreter error types.
 
+> **Note**: This API reference covers the legacy Python effectful library. For the Effectful Language, see [DSL Documentation](../dsl/intro.md).
+
 > **Core Doctrine**: For the 5-layer architecture and data flow diagrams, see [architecture.md](../engineering/architecture.md#5-layer-architecture).
 
 ## SSoT Link Map
@@ -153,7 +155,7 @@ class WebSocketInterpreter:
 
 **Usage**:
 
-```python
+````python
 # file: examples/interpreters.py
 from effectful.interpreters.websocket import WebSocketInterpreter
 from effectful import SendText, Ok
@@ -168,7 +170,7 @@ match result:
         print("Message sent successfully")
     case Err(error):
         print(f"Failed: {error}")
-```
+```text
 
 ______________________________________________________________________
 
@@ -193,7 +195,7 @@ class DatabaseInterpreter:
         self, effect: DatabaseEffect
     ) -> Result[EffectReturn[EffectResult], InterpreterError]:
         return await route_database_effect(effect, self._user_repo, self._message_repo)
-```
+````
 
 **Supported Effects**:
 
@@ -202,7 +204,7 @@ class DatabaseInterpreter:
 
 **Usage**:
 
-```python
+````python
 # file: examples/interpreters.py
 from effectful.interpreters.database import DatabaseInterpreter
 from effectful import GetUserById, Ok
@@ -223,7 +225,7 @@ match result:
         print("User not found")
     case Err(error):
         print(f"Database error: {error}")
-```
+```text
 
 ______________________________________________________________________
 
@@ -243,7 +245,7 @@ class CacheInterpreter:
         self, effect: CacheEffect
     ) -> Result[EffectReturn[EffectResult], InterpreterError]:
         return await self._cache.execute(effect)
-```
+````
 
 **Supported Effects**:
 
@@ -252,7 +254,7 @@ class CacheInterpreter:
 
 **Usage**:
 
-```python
+````python
 # file: examples/interpreters.py
 from effectful.interpreters.cache import CacheInterpreter
 from effectful import GetCachedProfile, Ok
@@ -270,7 +272,7 @@ match result:
         print("Cache miss")
     case Err(error):
         print(f"Cache error: {error}")
-```
+```typescript
 
 ______________________________________________________________________
 
@@ -291,7 +293,7 @@ type InterpreterError = (
     | StorageError
     | AuthError
 )
-```
+```text
 
 ______________________________________________________________________
 
@@ -308,7 +310,7 @@ class DatabaseError:
     effect: DatabaseEffect
     db_error: str
     is_retryable: bool
-```
+````
 
 **Fields**:
 
@@ -325,7 +327,7 @@ class DatabaseError:
 
 **Usage**:
 
-```python
+````python
 # file: examples/interpreters.py
 from effectful import run_ws_program, Err
 from effectful.interpreters.errors import DatabaseError
@@ -341,7 +343,7 @@ match result:
         logger.error(f"Database error: {msg}")
     case Ok(value):
         print(f"Success: {value}")
-```
+```text
 
 ______________________________________________________________________
 
@@ -358,7 +360,7 @@ class WebSocketClosedError:
     effect: WebSocketEffect
     close_code: int
     reason: str
-```
+````
 
 **Fields**:
 
@@ -375,7 +377,7 @@ class WebSocketClosedError:
 
 **Usage**:
 
-```python
+````python
 # file: examples/interpreters.py
 from effectful import run_ws_program, Err
 from effectful.interpreters.errors import WebSocketClosedError
@@ -391,7 +393,7 @@ match result:
         logger.warning("Connection lost unexpectedly")
     case Ok(value):
         print(f"Success: {value}")
-```
+```text
 
 ______________________________________________________________________
 
@@ -408,7 +410,7 @@ class CacheError:
     effect: CacheEffect
     cache_error: str
     is_retryable: bool
-```
+````
 
 **Fields**:
 
@@ -425,7 +427,7 @@ class CacheError:
 
 **Usage**:
 
-```python
+````python
 # file: examples/interpreters.py
 from effectful import run_ws_program, Err
 from effectful.interpreters.errors import CacheError
@@ -443,7 +445,7 @@ match result:
         result = await run_ws_program(fallback_program(), interpreter)
     case Ok(value):
         print(f"Success: {value}")
-```
+```typescript
 
 ______________________________________________________________________
 
@@ -459,7 +461,7 @@ Interpreter received an effect type it doesn't support.
 class UnhandledEffectError:
     effect: Effect
     available_interpreters: list[str]
-```
+````
 
 **Fields**:
 
@@ -469,7 +471,7 @@ class UnhandledEffectError:
 **Usage**:
 This error indicates a programming error (effect sent to wrong interpreter):
 
-```python
+````python
 # file: examples/interpreters.py
 from effectful.interpreters.errors import UnhandledEffectError
 
@@ -478,7 +480,7 @@ match result:
         # This should not happen in production - indicates bug
         logger.error(f"Bug: No interpreter for {eff}, tried: {names}")
         raise RuntimeError(f"Interpreter configuration error")
-```
+```text
 
 ______________________________________________________________________
 
@@ -504,7 +506,7 @@ class WebSocketConnection(Protocol):
 
     async def close(self, code: int = 1000, reason: str = "") -> None:
         """Close connection."""
-```
+````
 
 **Implementations**:
 
@@ -641,7 +643,7 @@ class LoggingInterpreter(EffectInterpreter):
 
 ### Example: Metrics Interpreter
 
-```python
+````python
 # file: examples/interpreters.py
 from effectful.interpreters.base import EffectInterpreter
 import time
@@ -668,7 +670,7 @@ class MetricsInterpreter(EffectInterpreter):
             self.metrics["errors"] += 1
 
         return result
-```
+```text
 
 ______________________________________________________________________
 
@@ -725,7 +727,7 @@ async with db_pool.acquire() as conn:
 
 async with redis_factory.managed() as redis_client:
     ...
-```
+````
 
 ### Error Monitoring
 

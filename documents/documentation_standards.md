@@ -47,10 +47,10 @@ Keep these scopes distinct:
 
 - A single entrypoint must run the full code + docs check suite:
 
-```bash
+````bash
 # run full code + docs checks
 poetry run check-code
-```
+```python
 
 - `check-code` must run, at minimum:
 
@@ -152,7 +152,7 @@ Every Markdown documentation file **must** begin with:
 
 > **Purpose**: 1–2 sentences describing the document’s role.
 > **📖 Authoritative Reference**: Canonical Doc (`path/to/doc.md#section`)  <!-- only if Status = Reference only -->
-```
+````
 
 Rules:
 
@@ -414,15 +414,15 @@ To keep diagrams portable and scriptable:
   - Use simple words; avoid punctuation and hyphens in labels.
   - Within one diagram, don’t mix unlabeled and labeled arrows unless the diagram is non-canonical and simple.
 - Forbidden constructs:
-  - Thick arrows (`==>`), dotted arrows (`-.->`), or other exotic forms.
+  - Thick arrows (`==>`), dotted arrows (`-->`), or other exotic forms.
   - `subgraph`, `Note`, `style`, `classDef`, or CSS-like styling.
   - Mixed arrow styles and mixed labeling approaches within one canonical diagram.
 
 **Enforcement** (custom Python):
 
 - `check_mermaid_metadata.py`:
-  - For every ````  ```mermaid ```` block:
-    - Reject lines with `==>`, `-.->`, `subgraph`, `Note`, `style`, `classDef`.
+  - For every mermaid code block:
+    - Reject lines with `==>`, `-->`, `subgraph`, `Note`, `style`, `classDef`.
 
 ### 10.2 Canonical ADT diagrams
 
@@ -785,7 +785,7 @@ Formatting (indentation, bullet styles, spacing) is normalized by `mdformat` or 
        - ADTs use `flowchart TB`; state machines use `stateDiagram-v2`.
      - Enforces ADT DSL: root node, variant nodes, `|variant|` edges.
      - Enforces state machine DSL: initial `[ * ]` transition, `From --> To: Event`.
-     - Forbids advanced Mermaid features (`subgraph`, `Note`, `style`, `classDef`, `==>`, `-.->`).
+     - Forbids advanced Mermaid features (`subgraph`, `Note`, `style`, `classDef`, `==>`, `-->`).
      - For demo diagrams, enforces `%% base-id:` and verifies that base-id exists in non-demo docs.
 
 1. **Demo overlays**

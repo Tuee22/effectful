@@ -6,6 +6,8 @@
 
 > **Purpose**: Tutorial for deploying effectful programs to production with proper infrastructure configuration.
 
+> **Note**: This tutorial covers the legacy Python effectful library. For the Effectful Language (Haskell-derived DSL for distributed systems), see [DSL Documentation](../dsl/intro.md).
+
 ## SSoT Link Map
 
 | Need                    | Link                                                                                         |
@@ -38,7 +40,7 @@ ______________________________________________________________________
 
 Create a frozen Pydantic settings class and instantiate it **only** inside the FastAPI lifespan. All downstream assembly flows derive from this instance.
 
-```python
+````python
 # config.py
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -61,7 +63,7 @@ class Settings(BaseSettings):
     cors_allow_credentials: bool = True
     cors_allow_methods: list[str] = ["*"]
     cors_allow_headers: list[str] = ["*"]
-```
+```text
 
 ______________________________________________________________________
 
@@ -161,7 +163,7 @@ def startup_program(
 def shutdown_program(startup: StartupAssembly) -> Generator[RuntimeEffect, object, None]:
     yield CloseRedisClientFactory(handle=startup.redis_factory)
     yield CloseDatabasePool(handle=startup.db_pool)
-```
+```text
 
 ______________________________________________________________________
 
@@ -268,7 +270,7 @@ async def lifespan(app: FastAPI):
             raise RuntimeError(f"Shutdown failed: {error}")
 
 app = FastAPI(lifespan=lifespan)
-```
+````
 
 This pattern satisfies the Purity Migration Plan: settings are the only injected input, interpreters own all I/O, and startup/shutdown flows are pure effect programs returning handles. Any demo overlays should link back to `architecture.md#pure-interpreter-assembly-doctrine` and describe deltas only.
 
@@ -332,7 +334,7 @@ def init_sentry(dsn: str, environment: str = "production") -> None:
 
 **Error Reporting**:
 
-```python
+````python
 # file: examples/05_production_deployment.py
 from effectful import run_ws_program, Err
 import sentry_sdk
@@ -346,7 +348,7 @@ match result:
         logger.error(f"Program failed: {error}")
     case Ok(value):
         logger.info(f"Program succeeded: {value}")
-```
+```text
 
 ______________________________________________________________________
 
@@ -382,11 +384,11 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
-```
+````
 
 **Environment File (.env)**:
 
-```bash
+````bash
 # Database
 DATABASE_URL=postgresql://user:password@db:5432/mydb
 DATABASE_POOL_MIN_SIZE=5
@@ -403,7 +405,7 @@ PROGRAM_TIMEOUT_SECONDS=300.0
 
 # Monitoring
 SENTRY_DSN=https://your-sentry-dsn@sentry.io/project
-```
+```text
 
 ______________________________________________________________________
 
@@ -436,7 +438,7 @@ EXPOSE 8000
 
 # Run application
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
-```
+````
 
 ### Docker Compose
 
@@ -484,10 +486,10 @@ volumes:
 
 **Start Services**:
 
-```bash
+````bash
 # snippet
 docker-compose up -d
-```
+```text
 
 ______________________________________________________________________
 
@@ -504,7 +506,7 @@ For web application:
 # 4 CPU cores
 min_size = 5
 max_size = (4 * 2) + 1 = 9
-```
+````
 
 ### Timeout Configuration
 
@@ -522,13 +524,13 @@ REDIS_TIMEOUT = 5.0  # 5 seconds
 
 ### Caching Strategy
 
-```python
+````python
 # file: examples/05_production_deployment.py
 # Cache TTL by data type
 CACHE_TTL_PROFILE = 600     # 10 minutes
 CACHE_TTL_SESSION = 3600    # 1 hour
 CACHE_TTL_STATIC = 86400    # 24 hours
-```
+```text
 
 ______________________________________________________________________
 
@@ -573,7 +575,7 @@ async def health_check() -> JSONResponse:
         },
         status_code=status_code,
     )
-```
+````
 
 ______________________________________________________________________
 

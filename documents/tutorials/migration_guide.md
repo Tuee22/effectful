@@ -6,6 +6,8 @@
 
 > **Purpose**: Tutorial for migrating from imperative WebSocket code to effectful programs.
 
+> **Note**: This tutorial covers the legacy Python effectful library. For the Effectful Language (Haskell-derived DSL for distributed systems), see [DSL Documentation](../dsl/intro.md).
+
 > **Core Doctrine**: For architecture patterns and type safety requirements, see:
 >
 > - [architecture.md](../engineering/architecture.md) - 5-layer architecture
@@ -338,7 +340,7 @@ async def handle_user_message(websocket: WebSocket, db_conn, user_id: str) -> No
 
 **Functional Code**:
 
-```python
+````python
 # file: examples/07_migration_guide.py
 # ✅ Pure business logic - testable without I/O
 def handle_user_message(
@@ -362,7 +364,7 @@ def handle_user_message(
             yield SendText(text="Saved")
 
             return "saved"
-```
+```text
 
 ______________________________________________________________________
 
@@ -402,7 +404,7 @@ async def websocket_endpoint(websocket: WebSocket, use_functional: bool = False)
     else:
         # Old imperative implementation
         await handle_chat_connection(websocket, user_id)
-```
+````
 
 ### Strategy 2: Feature Flags
 
@@ -551,7 +553,7 @@ async def test_chat_handler(implementation: str, mocker: MockerFixture) -> None:
 
 **Pattern**: Test that legacy wrapper behaves like functional implementation.
 
-```python
+````python
 # file: examples/07_migration_guide.py
 @pytest.mark.asyncio()
 async def test_legacy_wrapper_compatibility(mocker: MockerFixture) -> None:
@@ -571,7 +573,7 @@ async def test_legacy_wrapper_compatibility(mocker: MockerFixture) -> None:
 
     assert result.is_ok()
     mock_websocket.send_text.assert_called_once_with("Hello")
-```
+```text
 
 ______________________________________________________________________
 
@@ -598,7 +600,7 @@ async def chat_loop(websocket: WebSocket, db_conn) -> None:
 
         except WebSocketDisconnect:
             break
-```
+````
 
 **Functional Solution**:
 

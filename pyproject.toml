@@ -4,7 +4,10 @@ version = "0.1.0"
 description = "Pure functional effect system for Python with algebraic data types and explicit error handling"
 authors = ["Effectful Team"]
 readme = "README.md"
-packages = [{include = "effectful"}, {include = "effectful_tools"}]
+packages = [
+    {include = "effectful", from = "src/python"},
+    {include = "effectful_tools", from = "src/python"},
+]
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -55,7 +58,7 @@ asyncio_mode = "auto"
 addopts = [
     "--strict-markers",
     "--strict-config",
-    "--cov=effectful",
+    "--cov=src/python/effectful",
     "--cov-report=term-missing:skip-covered",
     "--cov-report=html",
     "--cov-report=xml",
@@ -70,8 +73,10 @@ markers = [
 
 [tool.mypy]
 python_version = "3.12"
-# Custom stubs path for type-safe asyncpg
-mypy_path = "stubs"
+# Package bases and stubs path
+# src/python is the package root for effectful and effectful_tools
+# stubs contains custom type stubs (e.g., asyncpg)
+mypy_path = "src/python:stubs"
 # Maximum type safety configuration
 strict = true
 warn_unused_configs = true
@@ -114,7 +119,7 @@ color_output = true
 error_summary = true
 
 # File coverage
-files = ["effectful/", "tests/", "effectful_tools/"]
+files = ["src/python/effectful/", "src/python/effectful_tools/", "tests/"]
 explicit_package_bases = true
 namespace_packages = true
 
@@ -138,7 +143,7 @@ target-version = ['py312']
 
 [tool.coverage.run]
 branch = true
-source = ["effectful"]
+source = ["src/python/effectful"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -154,7 +159,7 @@ exclude_lines = [
     "\\.\\.\\.",
 ]
 omit = [
-    "effectful/infrastructure/*",
-    "effectful/interpreters/base.py",
-    "effectful/adapters/*",
+    "src/python/effectful/infrastructure/*",
+    "src/python/effectful/interpreters/base.py",
+    "src/python/effectful/adapters/*",
 ]

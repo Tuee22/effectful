@@ -240,7 +240,7 @@ async def clean_healthhub_state(
     import subprocess
     from pathlib import Path
 
-    seed_file = Path(__file__).parent.parent / "backend" / "scripts" / "seed_data.sql"
+    seed_file = Path(__file__).parent.parent / "src" / "python" / "scripts" / "seed_data.sql"
     result = subprocess.run(
         [
             "psql",

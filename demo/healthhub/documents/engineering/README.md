@@ -13,6 +13,10 @@
 | Need                           | Link                                                                           |
 | ------------------------------ | ------------------------------------------------------------------------------ |
 | Base engineering standards     | [Effectful Engineering Standards](../../../../documents/engineering/README.md) |
+| Boundary model mapping         | [Boundary Map](boundary_map.md)                                                |
+| External assumptions           | [External Assumptions](external_assumptions.md)                                |
+| Migration guide                | [Migration Guide](haskell_rust_migration.md)                                   |
+| Verification strategy          | [Verification Strategy](verification_strategy.md)                              |
 | HealthHub Docker configuration | [Docker & Environment Variables](docker.md)                                    |
 | HealthHub build artifacts      | [Build Artifact Management](build_artifact_management.md)                      |
 | HealthHub warnings policy      | [Warnings Policy](warnings_policy.md)                                          |
@@ -26,6 +30,23 @@ ______________________________________________________________________
 - Base SSoT: [Effectful Engineering Standards](../../../../documents/engineering/README.md); use the base doc for all canonical guidance.
 - HealthHub-specific adjustments are limited to service naming (`healthhub`) and compose location (`demo/healthhub/docker/docker-compose.yml`). Add future engineering deltas in the matching overlay file (same filename as the base) instead of copying procedures.
 - Apply **Total Pure Modelling** to request DTOs: Pydantic/FastAPI models are boundaries and must normalize immediately to `OptionalValue`/ADT variants—no `None` gaps carried into domain logic (see [effect_patterns.md#pattern-6-boundary-normalization-for-optionalvalue](../../../../documents/engineering/effect_patterns.md#pattern-6-boundary-normalization-for-optionalvalue)).
+
+## Boundary Model Reference Implementation
+
+HealthHub serves as the canonical reference implementation for the Effectful boundary model. See [Boundary Map](boundary_map.md) for:
+
+- **Component-to-boundary mapping**: Which directories belong to which boundary
+- **Annotation standards**: How to document boundary membership in source files
+- **Validation rules**: Requirements for each boundary
+
+Key documents:
+
+| Document                                          | Purpose                                |
+| ------------------------------------------------- | -------------------------------------- |
+| [Boundary Map](boundary_map.md)                   | Central reference with visual diagrams |
+| [External Assumptions](external_assumptions.md)   | Service assumption inventory           |
+| [Migration Guide](haskell_rust_migration.md)      | Python → Haskell/Rust translation      |
+| [Verification Strategy](verification_strategy.md) | Testing-to-boundary mapping            |
 
 ## HealthHub-Specific Engineering Documentation
 

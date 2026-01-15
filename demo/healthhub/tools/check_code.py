@@ -34,7 +34,7 @@ def main() -> int:
     print("=" * 80)
 
     black_result = subprocess.run(
-        ["black", "--check", "backend", "tests", "tools"],
+        ["black", "--check", "src/python/app", "tests", "tools"],
         check=False,
     )
 
@@ -50,11 +50,10 @@ def main() -> int:
 
     # Get the root directory (where this script is run from)
     root_dir = Path.cwd()
-    backend_dir = root_dir / "backend"
+    src_python_dir = root_dir / "src" / "python"
     stubs_dir = root_dir / "stubs"
 
-    # Run mypy from backend directory to avoid module name conflicts
-    # (app.database vs backend.app.database)
+    # Run mypy from src/python directory to avoid module name conflicts
     # Set MYPYPATH to include stubs directory for asyncpg, redis, pydantic stubs
     env = dict(os.environ)
     env["MYPYPATH"] = str(stubs_dir)
@@ -62,7 +61,7 @@ def main() -> int:
     mypy_result = subprocess.run(
         ["mypy", "app"],
         check=False,
-        cwd=backend_dir,
+        cwd=src_python_dir,
         env=env,
     )
 
@@ -74,9 +73,9 @@ def main() -> int:
     print("\n✅ Backend MyPy passed!")
 
     # Now run mypy on tests and tools from root
-    # Include both stubs and backend in MYPYPATH for test imports
+    # Include both stubs and src/python in MYPYPATH for test imports
     test_env = dict(os.environ)
-    test_env["MYPYPATH"] = f"{stubs_dir}:{backend_dir}"
+    test_env["MYPYPATH"] = f"{stubs_dir}:{src_python_dir}"
 
     mypy_tests_result = subprocess.run(
         ["mypy", "tests/pytest", "tools"],

@@ -12,18 +12,42 @@
 | ------------------------- | ------------------------------------------------------------------------------- |
 | Base effectful patterns   | [Effectful CLAUDE.md](../../CLAUDE.md)                                          |
 | Architecture              | [Architecture SSoT](../../documents/engineering/architecture.md)                |
+| Boundary model            | [Boundary Map](documents/engineering/boundary_map.md)                           |
 | Docker workflow           | [Docker Workflow](../../documents/engineering/docker_workflow.md)               |
 | HealthHub Docker deltas   | [HealthHub Docker](documents/engineering/docker.md)                             |
 | Build artifact management | [Build Artifact Management](documents/engineering/build_artifact_management.md) |
 | Command reference         | [Command Reference](../../documents/engineering/command_reference.md)           |
 | Code quality              | [Code Quality](../../documents/engineering/code_quality.md)                     |
 | Testing standards         | [Testing](../../documents/engineering/testing.md)                               |
+| Code organization         | [Code Organization](../../documents/engineering/code_organization.md)           |
 
 ## Project Overview
 
 **HealthHub** is a comprehensive healthcare management portal demonstrating the **Effectful** pure functional effect system library. It showcases real-world complexity: patient management, appointment scheduling, prescriptions with medication interaction checking, lab results, and HIPAA-compliant audit logging.
 
 **Parent Library**: This application is built on `effectful` (local path dependency at `../../`).
+
+## Boundary Model
+
+HealthHub serves as the **reference implementation** for the Effectful boundary model. When adding new code, consult [Boundary Map](documents/engineering/boundary_map.md) to determine which boundary the code belongs to and add appropriate annotations.
+
+**Quick boundary guide:**
+
+- **Purity boundary** (`domain/`, `effects/`, `programs/*_programs.py`): Pure, deterministic, no side effects
+- **Proof boundary** (`programs/runner.py`, `composite_interpreter.py`): Effect execution, verified logic
+- **Outside boundary** (`api/`, `repositories/`, `interpreters/*_interpreter.py`): External services, assumed correct
+
+**Annotation format** (add to module docstrings):
+
+```python
+"""Module description.
+
+Boundary: PURITY | PROOF | OUTSIDE_PROOF
+Target-Language: Haskell | Rust | N/A
+"""
+```
+
+See: [Boundary Map](documents/engineering/boundary_map.md) | [External Assumptions](documents/engineering/external_assumptions.md)
 
 ## 🏗️ Architecture
 
@@ -44,9 +68,9 @@ HealthHub follows the base effectful 5-layer architecture with healthcare-specif
 - State Machine: Appointment status transitions (Requested → Confirmed → InProgress → Completed)
 - HIPAA Compliance: Audit logging for all PHI access
 
-**Structure**:
+**Structure** (follows `src/<language>/` doctrine):
 
-- `backend/app/`: Main application
+- `src/python/app/`: Main backend application
   - `domain/`: Healthcare domain models (Patient, Doctor, Appointment, Prescription, etc.)
   - `effects/`: Immutable effect descriptions (HealthcareEffect, NotificationEffect)
   - `interpreters/`: Effect handlers (execution layer)
@@ -55,6 +79,7 @@ HealthHub follows the base effectful 5-layer architecture with healthcare-specif
   - `auth/`: JWT authentication, bcrypt hashing
   - `repositories/`: asyncpg data access
   - `infrastructure/`: Database connection management
+- `src/typescript/`: React frontend application
 - `docker/`: Container configuration
 - `tools/`: Build and test utilities
 - `tests/`: Test suite (pytest/ backend and integration)

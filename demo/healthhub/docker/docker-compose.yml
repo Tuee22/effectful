@@ -11,8 +11,8 @@ services:
       POSTGRES_DB: healthhub_db
     volumes:
       - healthhub_pgdata:/var/lib/postgresql/data
-      - ../backend/scripts/init_db.sql:/docker-entrypoint-initdb.d/01-init.sql
-      - ../backend/scripts/seed_data.sql:/docker-entrypoint-initdb.d/02-seed.sql
+      - ../src/python/scripts/init_db.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ../src/python/scripts/seed_data.sql:/docker-entrypoint-initdb.d/02-seed.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U healthhub -d healthhub_db"]
       interval: 5s
@@ -127,11 +127,11 @@ services:
       # Mount effectful library + tools/doc suite read-only for hot reload
       - ../../..:/app/effectful-root:ro
       # Mount healthhub backend for hot reload
-      - ../backend/app:/app/healthhub/backend/app
-      - ../backend/scripts:/app/healthhub/backend/scripts
+      - ../src/python/app:/app/healthhub/src/python/app
+      - ../src/python/scripts:/app/healthhub/src/python/scripts
       - ../tools:/app/healthhub/tools
       - ../tests:/app/healthhub/tests
-    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8851 --reload
+    command: uvicorn src.python.app.main:app --host 0.0.0.0 --port 8851 --reload
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8851/health"]
       interval: 10s

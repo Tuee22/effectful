@@ -6,6 +6,8 @@
 
 > **Purpose**: Guide for choosing the right Prometheus metric type for effectful applications.
 
+> **Note**: This tutorial covers the legacy Python effectful library. For the Effectful Language (Haskell-derived DSL for distributed systems), see [DSL Documentation](../dsl/intro.md).
+
 **Choose the right metric type for your use case.**
 
 > **Core Doctrine**: For complete metrics philosophy, see [observability.md](../engineering/observability.md)
@@ -53,7 +55,7 @@ ______________________________________________________________________
 
 ## Step 2: Decision tree
 
-```text
+````text
 # file: diagrams/metric_type_decision_tree.txt
 ┌─ Measuring something that increases over time?
 │  └─ YES → Counter (requests_total, errors_total)
@@ -66,7 +68,7 @@ ______________________________________________________________________
 │  └─ Need exact client-side quantiles? → Summary (rare, use histogram instead)
 │
 └─ Not sure? → Start with Counter or Gauge
-```
+```text
 
 ______________________________________________________________________
 
@@ -138,7 +140,7 @@ def handle_request(
         },
         value=1.0,
     )
-```
+````
 
 ### PromQL Queries
 
@@ -592,7 +594,7 @@ HEALTHHUB_METRICS = MetricsRegistry(
 
 ### Example 2: E-commerce System
 
-```python
+````python
 # snippet
 ECOMMERCE_METRICS = MetricsRegistry(
     counters=(
@@ -647,7 +649,7 @@ ECOMMERCE_METRICS = MetricsRegistry(
     ),
     summaries=(),
 )
-```
+```text
 
 ______________________________________________________________________
 
@@ -685,7 +687,7 @@ def handle_api_request(
         labels={"endpoint": endpoint},
         value=duration,
     )
-```
+````
 
 ### Pattern 2: Gauge Updates (Resource Tracking)
 
@@ -740,12 +742,12 @@ def track_operation_result(
 
 **PromQL for error rate**:
 
-```promql
+````promql
 # file: examples/12_metric_types_guide.promql
 sum(rate(operations_total{status="error"}[5m]))
 /
 sum(rate(operations_total[5m]))
-```
+```text
 
 ______________________________________________________________________
 
@@ -763,7 +765,7 @@ yield IncrementCounter(metric_name="events_total", labels={...}, value=1.0)
 # Query
 rate(events_total[5m])
 increase(events_total[1h])
-```
+````
 
 ### Gauge
 

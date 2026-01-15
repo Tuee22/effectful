@@ -2,17 +2,19 @@
 
 **Status**: Authoritative source
 **Supersedes**: none
-**Referenced by**: documents/readme.md, engineering/README.md, dsl/proof_boundary.md
+**Referenced by**: documents/readme.md, engineering/README.md, dsl/intro.md, dsl/proof_boundary.md
 
-> **Purpose**: Single Source of Truth for the Effectful architecture, including layers, effect hierarchy, and data flow patterns.
+> **Purpose**: Single Source of Truth for the Effectful architecture, including the boundary model, layers, effect hierarchy, and data flow patterns.
 
-**effectful** - A pure functional effect system for Python with algebraic data types and explicit error handling.
+**effectful** - A pure functional effect system with algebraic data types and explicit error handling. The Python library is transitional; the target is the Effectful Language (Haskell DSL + Rust runners).
 
 ## SSoT Link Map
 
-```mermaid
+````mermaid
 flowchart TB
   Arch[Architecture SSoT]
+  Boundary[Boundary Model SSoT]
+  Language[Language Architecture SSoT]
   TypeSafety[Type Safety SSoT]
   Purity[Purity SSoT]
   Testing[Testing SSoT]
@@ -20,24 +22,78 @@ flowchart TB
   Docker[Docker Workflow SSoT]
   Effects[Effect Patterns]
 
+  Arch --> Boundary
+  Arch --> Language
   Arch --> TypeSafety
   Arch --> Purity
   Arch --> Testing
   Arch --> Observability
   Arch --> Docker
   Arch --> Effects
+  Boundary --> Language
   Testing --> Docker
   Purity --> Effects
-```
+```text
 
 | Need                        | Link                                                         |
 | --------------------------- | ------------------------------------------------------------ |
+| Boundary model              | [Boundary Model](boundary_model.md)                          |
+| Language topology           | [Language Architecture](language_architecture.md)            |
+| Verification workflow       | [Verification Contract](verification_contract.md)            |
+| Runner contract             | [Runner Pattern](runner_pattern.md)                          |
 | Doctrine for types + purity | [Code Quality](code_quality.md)                              |
 | Purity boundaries           | [Code Quality](code_quality.md#purity-doctrines)             |
 | Test shape by layer         | [Testing](testing.md#part-4-four-layer-testing-architecture) |
 | Observability guidance      | [Observability](observability.md)                            |
 | Container contract          | [Docker Workflow](docker_workflow.md)                        |
 | Effect composition examples | [Effect Patterns](effect_patterns.md)                        |
+| Effectful Language overview | [DSL Hub](../dsl/intro.md)                                   |
+
+---
+
+## Boundary Model Overview
+
+The Effectful architecture is organized around a **nested boundary model** that replaces traditional layer-based thinking:
+
+````
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ OUTSIDE PROOF BOUNDARY │
+│ Drivers, APIs, hardware — documented assumptions │
+└─────────────────────────────────────────────────────────────────────────┘
+│
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PROOF BOUNDARY │
+│ TLA+ verified, Rust runners — imperative but verified │
+└─────────────────────────────────────────────────────────────────────────┘
+│
+┌─────────────────────────────────────────────────────────────────────────┐
+│ PURITY BOUNDARY │
+│ Haskell DSL / Python business logic — pure and deterministic │
+└─────────────────────────────────────────────────────────────────────────┘
+
+````
+
+**Key principles**:
+- **Purity boundary**: All business logic is pure and deterministic
+- **Proof boundary**: Protocols are formally specified and verified against TLA+
+- **Outside boundary**: External systems require documented assumptions
+
+See [Boundary Model](boundary_model.md) for complete details.
+
+### Mapping Legacy Python to Boundaries
+
+The existing Python codebase maps to boundaries:
+
+| Python Layer | Boundary | Notes |
+|--------------|----------|-------|
+| Layer 1 Application | Purity | Pure effect programs |
+| Layer 2 Runner | Proof | Effect execution |
+| Layer 3 Composite | Proof | Effect routing |
+| Layer 4 Interpreters | Proof/Outside | Driver communication |
+| Layer 5 Infrastructure | Outside | External services |
+
+---
 
 ## Design Philosophy
 
@@ -68,7 +124,7 @@ flowchart TB
     Runner --> Composite
     Composite --> Specialized
     Specialized --> Infra
-```
+````
 
 **Layer Responsibilities:**
 
@@ -349,7 +405,7 @@ flowchart TB
 - **Delegation**: `result = yield from sub_program()`
 - **Conditional**: `match result: case Ok(...): yield effect`
 
-```python
+````python
 # file: examples/architecture.py
 def main_workflow(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
     # Delegate to sub-program
@@ -360,7 +416,7 @@ def main_workflow(user_id: UUID) -> Generator[AllEffects, EffectResult, str]:
     message = yield SaveChatMessage(user_id=user_id, text="Logged in")
 
     return "success"
-```
+```text
 
 ______________________________________________________________________
 
@@ -386,7 +442,7 @@ flowchart TB
     Interpreters --> Pulsar
     Interpreters --> Prometheus
     Prometheus --> Grafana
-```
+````
 
 **Infrastructure Services:**
 
