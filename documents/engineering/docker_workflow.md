@@ -242,7 +242,7 @@ The effectful Docker Compose stack includes multiple services that work together
 
 **Key Features**:
 
-- Python 3.12 with Poetry for dependency management
+- Ubuntu 24.04 system Python (`python3`) with Poetry for dependency management
 - Two entrypoints: main (library development) and mock-client (integration testing)
 - Bind-mounted source code (`./effectful:/app/effectful`, `./tests:/app/tests`)
 - Connects to all infrastructure services

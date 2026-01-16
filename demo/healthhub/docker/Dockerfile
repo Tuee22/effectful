@@ -1,7 +1,7 @@
 # HealthHub Backend Dockerfile
-# Ubuntu 22.04 LTS + Python 3.12 + Poetry + Node.js 20 + Playwright
+# Ubuntu 24.04 LTS + system Python + Poetry + Node.js 20 + Playwright
 
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -12,6 +12,8 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_BREAK_SYSTEM_PACKAGES=1 \
+    PIP_IGNORE_INSTALLED=1 \
+    PIP_ROOT_USER_ACTION=ignore \
     POETRY_NO_INTERACTION=1 \
     POETRY_HOME=/usr/local \
     PATH="/usr/local/bin:${PATH}" \
@@ -39,14 +41,12 @@ RUN mkdir -p \
     /opt/healthhub/backend-build \
     /opt/healthhub/frontend-build
 
-# Install system dependencies including Python 3.12 and Node.js
+# Install system dependencies including Python and Node.js
 RUN apt-get update && apt-get install -y \
-    software-properties-common \
-    && add-apt-repository -y ppa:deadsnakes/ppa \
-    && apt-get update && apt-get install -y \
-    python3.12 \
-    python3.12-dev \
+    python3 \
+    python3-dev \
     python3-pip \
+    python-is-python3 \
     build-essential \
     libpq-dev \
     curl \
@@ -67,7 +67,7 @@ RUN apt-get update && apt-get install -y \
     libxfixes3 \
     libxrandr2 \
     libgbm1 \
-    libasound2 \
+    libasound2t64 \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
     libcairo2 \
@@ -75,18 +75,11 @@ RUN apt-get update && apt-get install -y \
     libgtk-3-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Set Python 3.12 as default python3 and create python symlink
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1 \
-    && update-alternatives --set python3 /usr/bin/python3.12 \
-    && ln -sf /usr/bin/python3.12 /usr/bin/python \
-    && ln -sf /usr/bin/python3.12 /bin/python
-
-# Install pip for Python 3.12 using get-pip.py
-RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.12
+# Poetry expects /bin/python; ensure it resolves to system Python.
+RUN ln -sf /usr/bin/python3 /usr/bin/python && ln -sf /usr/bin/python3 /bin/python
 
 # Install Poetry via pip
-RUN python3.12 -m pip install --upgrade pip setuptools wheel \
-    && python3.12 -m pip install poetry==1.7.1 \
+RUN python3 -m pip install --upgrade pip setuptools wheel poetry \
     && poetry --version
 
 # Install Node.js 20 LTS for Playwright
@@ -136,7 +129,7 @@ COPY demo/healthhub/stubs/ /app/effectful-root/demo/healthhub/stubs/
 # Install healthhub dependencies with lock guard and fallback
 RUN poetry lock --no-update 2>/dev/null || true && \
     poetry install --with dev --no-root --no-interaction --no-ansi 2>/dev/null || \
-    pip install \
+    python3 -m pip install \
     fastapi "uvicorn[standard]" "pydantic[email]" pydantic-settings \
     asyncpg redis pulsar-client bcrypt pyjwt python-multipart \
     "python-jose[cryptography]" "passlib[bcrypt]" boto3 prometheus-client \
@@ -145,7 +138,7 @@ RUN poetry lock --no-update 2>/dev/null || true && \
     pymarkdownlnt codespell playwright pytest-playwright
 
 # Install Playwright browsers
-RUN python -m playwright install --with-deps chromium firefox webkit
+RUN python3 -m playwright install --with-deps chromium firefox webkit
 
 # ============================================
 # Step 3: Build Frontend

@@ -250,7 +250,7 @@ ______________________________________________________________________
 
 ```text
 ASSUMPTION: asyncio correctly schedules coroutines
-DEPENDS ON: Python 3.12+
+DEPENDS ON: Python 3 (Ubuntu 24.04 system Python via apt)
 TLA+ PROPERTY: ConcurrencyModel
 FAILURE MODE: Deadlocks, race conditions, starvation
 MITIGATION: Avoid blocking calls in async code; use async primitives
@@ -260,7 +260,7 @@ MITIGATION: Avoid blocking calls in async code; use async primitives
 
 ```text
 ASSUMPTION: Python generators correctly implement send/yield/return
-DEPENDS ON: Python 3.12+
+DEPENDS ON: Python 3 (Ubuntu 24.04 system Python via apt)
 TLA+ PROPERTY: EffectExecution
 FAILURE MODE: Lost values, incorrect sequencing
 MITIGATION: Core to effect system; extensively tested
@@ -270,7 +270,7 @@ MITIGATION: Core to effect system; extensively tested
 
 ```text
 ASSUMPTION: frozen=True dataclasses are truly immutable
-DEPENDS ON: Python 3.12+
+DEPENDS ON: Python 3 (Ubuntu 24.04 system Python via apt)
 TLA+ PROPERTY: Immutability
 FAILURE MODE: Mutation of "immutable" objects
 MITIGATION: Use __slots__ where needed; avoid object.__setattr__ escapes

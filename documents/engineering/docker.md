@@ -26,6 +26,29 @@
 - All containers run as root for simplicity and cross-platform compatibility (macOS/Linux/Windows)
 - See [docker_workflow.md](docker_workflow.md) for daily development patterns and command reference
 
+## Container Base Image and Python Toolchain
+
+The effectful container uses a standard Ubuntu base image with system Python installed via apt.
+
+**Base image**: Ubuntu 24.04 LTS
+
+**Python installation policy**:
+
+- Do not use deadsnakes or other PPAs.
+- Install Python from Ubuntu apt repositories only.
+- Install packages: `python3`, `python3-pip`, `python3-dev`.
+
+**Poetry installation**:
+
+- Install Poetry system-wide via pip (no virtualenvs).
+- Command: `python3 -m pip install --upgrade pip setuptools wheel poetry`.
+- Poetry must be on `PATH` and available to all users.
+
+**System-wide package installs**:
+
+- `PIP_BREAK_SYSTEM_PACKAGES=1` is required to allow pip installs in the system Python.
+- Poetry is configured to not create virtualenvs (`poetry.toml` + `poetry config virtualenvs.create false`).
+
 ## Environment Variables
 
 All environment variables are defined in `docker/Dockerfile`. This section documents each variable's purpose and rationale.
@@ -287,15 +310,15 @@ This should only be used for debugging the enforcement mechanism itself.
 
 Effectful development requires real infrastructure for integration testing:
 
-| Service    | Image                      | Port | Purpose                          |
-| ---------- | -------------------------- | ---- | -------------------------------- |
-| effectful  | Ubuntu 22.04 + Python 3.12 | N/A  | Library development              |
-| postgres   | postgres:15-alpine         | 5432 | PostgreSQL integration tests     |
-| redis      | redis:7-alpine             | 6379 | Redis integration tests          |
-| pulsar     | apachepulsar/pulsar:3.0.0  | 6650 | Pulsar messaging tests           |
-| minio      | minio/minio:latest         | 9000 | S3-compatible storage tests      |
-| prometheus | prom/prometheus:latest     | 9090 | Metrics collection (optional)    |
-| grafana    | grafana/grafana:latest     | 3000 | Metrics visualization (optional) |
+| Service    | Image                        | Port | Purpose                          |
+| ---------- | ---------------------------- | ---- | -------------------------------- |
+| effectful  | Ubuntu 24.04 + system Python | N/A  | Library development              |
+| postgres   | postgres:15-alpine           | 5432 | PostgreSQL integration tests     |
+| redis      | redis:7-alpine               | 6379 | Redis integration tests          |
+| pulsar     | apachepulsar/pulsar:3.0.0    | 6650 | Pulsar messaging tests           |
+| minio      | minio/minio:latest           | 9000 | S3-compatible storage tests      |
+| prometheus | prom/prometheus:latest       | 9090 | Metrics collection (optional)    |
+| grafana    | grafana/grafana:latest       | 3000 | Metrics visualization (optional) |
 
 **Named Volumes** (required for macOS):
 
@@ -320,7 +343,7 @@ Effectful development requires real infrastructure for integration testing:
 - **Non-root users**: Containers run as root for development simplicity (no production deployment)
 - **Secrets management**: Never commit credentials to Dockerfile - use docker-compose.yaml
 - **Named volumes**: Prefer named volumes over bind mounts for data persistence
-- **Minimal base images**: Ubuntu 22.04 LTS provides security updates and stability
+- **Minimal base images**: Ubuntu 24.04 LTS provides security updates and stability
 
 ## Cross-References
 

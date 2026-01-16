@@ -114,7 +114,7 @@ PULSAR_URL=pulsar://pulsar:6650
 
 **Services defined**:
 
-- `effectful` - Python 3.12 + Poetry container
+- `effectful` - Ubuntu 24.04 system Python + Poetry container
 - `postgres` - PostgreSQL 15+
 - `redis` - Redis 7+
 - `minio` - MinIO S3-compatible storage

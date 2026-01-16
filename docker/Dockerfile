@@ -1,7 +1,7 @@
 # Dockerfile for Effectful Python library development
-# Ubuntu 22.04 LTS + Python 3.12 + Poetry
+# Ubuntu 24.04 LTS + system Python + Poetry
 
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -12,6 +12,8 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_BREAK_SYSTEM_PACKAGES=1 \
+    PIP_IGNORE_INSTALLED=1 \
+    PIP_ROOT_USER_ACTION=ignore \
     POETRY_NO_INTERACTION=1 \
     POETRY_HOME=/usr/local \
     PATH="/usr/local/bin:${PATH}" \
@@ -37,31 +39,22 @@ RUN mkdir -p \
 
 WORKDIR /app
 
-# Install system dependencies and Python 3.12
+# Install system dependencies and Python
 RUN apt-get update && apt-get install -y \
-    software-properties-common \
-    && add-apt-repository -y ppa:deadsnakes/ppa \
-    && apt-get update && apt-get install -y \
-    python3.12 \
-    python3.12-dev \
+    python3 \
+    python3-dev \
     python3-pip \
+    python-is-python3 \
     build-essential \
     libpq-dev \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Set Python 3.12 as default python3 and create python symlink
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 1 \
-    && update-alternatives --set python3 /usr/bin/python3.12 \
-    && ln -sf /usr/bin/python3.12 /usr/bin/python \
-    && ln -sf /usr/bin/python3.12 /bin/python
-
-# Install pip for Python 3.12 using get-pip.py
-RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.12
+# Poetry expects /bin/python; ensure it resolves to system Python.
+RUN ln -sf /usr/bin/python3 /usr/bin/python && ln -sf /usr/bin/python3 /bin/python
 
 # Install Poetry via pip
-RUN python3.12 -m pip install --upgrade pip setuptools wheel \
-    && python3.12 -m pip install poetry==1.7.1 \
+RUN python3 -m pip install --upgrade pip setuptools wheel poetry \
     && poetry --version
 
 # Copy dependency files

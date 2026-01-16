@@ -255,6 +255,16 @@ We rely on a Markdown formatter plus a linting ruleset for consistent style:
   - Prose: ~120 chars
   - Code: ~100 chars (where feasible)
 
+### 6.2 Formal terminology and JIT equivalence
+
+- Prefer formal monadic language when describing "frameworks" or "wrappers"; define them in terms
+  of `unit`/`bind` (and functor/monad) over effects or effectful DAGs.
+- When describing JIT behavior, state the equivalence explicitly:
+  - Building a particular JIT effect is equivalent to Haskell performing effectful compute graph
+    optimization at the level of abstract Effectful distributed systems.
+  - This is equivalent to on-the-fly creation of Rust effect implementations (imperative code
+    custom-optimized via Haskell's compute graph optimization).
+
 **Enforcement** (existing tools):
 
 - markdownlint rules:
