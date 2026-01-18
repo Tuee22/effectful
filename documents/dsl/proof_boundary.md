@@ -6,6 +6,20 @@
 
 > **Purpose**: Essay exploring the philosophical and practical boundaries between formal verification and human judgment, establishing when automated systems can act autonomously versus when human oversight is required.
 
+## Executive Summary
+
+The **proof boundary** is the line that separates what can be verified mechanically from what must be judged by humans. On one side, formal systems can check properties exhaustively and without subjectivity: a compiler rejects invalid syntax, a type checker enforces constraints, a model checker explores every state. On the other side lies everything that cannot be reduced to a decidable rule: moral weight, professional judgment, contested meaning. The boundary is not a temporary limitation awaiting better tools, but a structural feature of formal systems themselves.
+
+The foundations of this limit were established in the early twentieth century. Russell's paradox showed that self-reference in naive set theory leads to contradiction. Gödel's incompleteness theorems proved that any sufficiently expressive formal system contains true statements it cannot derive. Turing's halting problem demonstrated that no general algorithm can decide whether an arbitrary program terminates. These results are not bugs in particular formalisms; they are properties of logic itself. A proof assistant can validate consistency within its own language, but it cannot certify its own completeness without stepping outside itself.
+
+Where formal verification is possible, it offers guarantees that human review cannot match. A checker exhaustively inspects all interleavings; a person cannot. But verification demands a price: the system must be restricted to a language where properties are decidable. The more general the system, the less can be established about it. Safety-critical code lives in smaller, more constrained languages precisely because those constraints enable proof.
+
+Artificial intelligence extends automation, but it does not dissolve the proof boundary. Large language models can propose code, drafts, and diagnoses, yet without an external checker the outputs remain suggestions. Reinforcement learning systems like AlphaZero achieve superhuman performance because they have access to a cheap, unambiguous judge: the rules of the game. In domains without such a judge, AI cannot learn with the same confidence. The oracle problem—who defines correctness, which evidence counts, how disputes are resolved—remains human.
+
+Economic pressure and political incentive push the boundary outward. Wherever a domain can be formalized, automation follows, and those who formalize first extract value. But the boundary does not move evenly. Communities already forced to defend their standing before authority will feel formal checkers as amplifiers: the system can now say "the rule was followed" with machine certainty while the people affected contest the rule itself. The proof boundary is therefore a social justice issue as much as a technical one.
+
+Proofs do not abolish discretion. They relocate it, explicitly, to the formal rules that define what counts as valid. The oracle becomes the legislature. Where proof can sign, automation becomes normal; where it cannot, responsibility stays human.
+
 ______________________________________________________________________
 
 ## Opening: The Trolley Problem as Boundary
