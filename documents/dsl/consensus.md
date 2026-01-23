@@ -21,6 +21,17 @@ This document applies Effectful's boundary model to distributed consensus:
 
 The key insight is that consensus protocols are ideal candidates for formal verification—their safety and liveness properties can be precisely specified and model-checked. See [intro.md](intro.md) for the full boundary model.
 
+### Proof Engine Integration
+
+The proof engine is responsible for verifying these consensus properties. The formal verification workflow is:
+
+1. Express consensus protocol in the Protocol layer
+2. The Extract phase generates TLA+ specifications
+3. The Check phase verifies safety/liveness properties
+4. The Verify phase gates deployment on proof success
+
+See [proof_engine.md](proof_engine.md) for the complete verification architecture.
+
 ______________________________________________________________________
 
 *Audience:* engineers who want **spec-first correctness** (e.g., **TLA+ / PlusCal**, model checking, and—when necessary—machine-checked proofs) and who care about **minimizing the trusted computing base (TCB)**.
@@ -544,6 +555,7 @@ ______________________________________________________________________
 ## Cross-References
 
 - [intro.md](intro.md) — Effectful language overview and consolidated references
+- [proof_engine.md](proof_engine.md) — Effectful Proof Engine architecture
 - [jit.md](jit.md) — JIT compilation from Haskell to Rust
 - [proof_boundary.md](proof_boundary.md) — Philosophical foundation for verification limits
 - [ml_training.md](ml_training.md) — Formal methods for distributed ML

@@ -12,6 +12,7 @@ ______________________________________________________________________
 
 | Need                       | Link                                                             |
 | -------------------------- | ---------------------------------------------------------------- |
+| Proof engine               | [Proof Engine](proof_engine.md)                                  |
 | Proof boundary philosophy  | [Proof Boundary](proof_boundary.md)                              |
 | JIT compilation standards  | [JIT Compilation](jit.md)                                        |
 | Infrastructure deployment  | [Infrastructure Deployment](infrastructure_deployment.md)        |
@@ -28,6 +29,7 @@ ______________________________________________________________________
 | Document                                                     | Status        | Purpose                                                              |
 | ------------------------------------------------------------ | ------------- | -------------------------------------------------------------------- |
 | [intro.md](intro.md)                                         | Hub           | Effectful language overview, boundary model, consolidated references |
+| [proof_engine.md](proof_engine.md)                           | Authoritative | Effectful Proof Engine—verifies distributed system correctness       |
 | [jit.md](jit.md)                                             | Authoritative | JIT compilation from Haskell compute graphs to Rust                  |
 | [infrastructure_deployment.md](infrastructure_deployment.md) | Reference     | Unified node model, infrastructure as effects                        |
 | [ml_training.md](ml_training.md)                             | Reference     | Formal methods for distributed ML workflows                          |
@@ -66,7 +68,7 @@ This is why the world needs another high-level programming language: **none have
    - **Byzantine messaging system**: Expressive threat modelling replaces traditional firewalls *within the purity boundary*
    - (This complements—not replaces—industry-standard firewalls, ingress controls, certificates, and web protocols)
 
-1. **Compiler as Proof**: If the compiler succeeds (itself written in Haskell), you've followed the language's rules. This gives LLMs the signal needed to write **provably correct distributed system code** for specific applications.
+1. **Compiler as Proof**: If the Effectful compiler succeeds, you've followed the language's rules. **The proof engine then verifies your distributed system topology is correct**—consensus-critical applications cannot deploy without passing verification. This gives LLMs the signal needed to write **provably correct distributed system code** for specific applications.
 
 1. **Impossible to Represent Unsafe States**: Effectful must make it impossible to represent states that are unsafe according to the pure threat model and which TLA+ cannot prove.
 
@@ -193,16 +195,20 @@ Within the purity boundary, Effectful uses a Byzantine threat model:
 
 This is inspired by Leslie Lamport's Byzantine Generals problem. Rather than relying on network firewalls (which live outside the proof boundary), Effectful bakes security into the type system.
 
-### 3.4 Compiler as Proof
+### 3.4 Compiler and Proof Engine
 
-The Effectful compiler (written in Haskell) serves as a proof checker:
+The Effectful compiler (written in Haskell) validates:
 
-1. **Type checking**: Ensures all effects are properly handled
-1. **Permission checking**: Ensures security constraints are satisfied
-1. **Consistency checking**: Ensures distributed operations maintain invariants
-1. **TLA+ conformance**: Generated code matches formal specifications
+1. **Type checking**: All effects are properly handled
+1. **Permission checking**: Security constraints are satisfied
+1. **Consistency checking**: Distributed operations maintain invariants
 
-If the compiler succeeds, your program is correct within the proof boundary.
+**The proof engine verifies distributed system correctness.** After the compiler succeeds, the proof engine extracts formal specifications from your Effectful program and model-checks them against TLA+ properties.
+
+- Compiler passes → Program is well-formed Effectful
+- Proof engine passes → Distributed system topology is provably correct
+
+Both gates must pass for deployment of consensus-critical applications. See [proof_engine.md](proof_engine.md) for complete proof engine architecture.
 
 ______________________________________________________________________
 
@@ -314,7 +320,52 @@ See [engineering/verification_contract.md](../engineering/verification_contract.
 
 ______________________________________________________________________
 
-## 7. References
+## 7. The Proof Engine
+
+The Effectful Proof Engine verifies distributed systems expressed in Effectful's topology. While Effectful provides the language for representing distributed systems (pure effects, nodes, Paxos messages, Byzantine security model), the proof engine verifies that these representations are correct.
+
+### 7.1 How the Proof Engine Works
+
+| Effectful (Application Language)                | Proof Engine                                        |
+| ----------------------------------------------- | --------------------------------------------------- |
+| Provides topology for distributed systems       | Verifies systems expressed in that topology         |
+| Pure effects, nodes, Paxos messages             | Extracts TLA+ specs from Effectful programs         |
+| Byzantine security model as types               | Model-checks safety and liveness properties         |
+| Compute graphs for optimization                 | Gates deployment on verification success            |
+
+The proof engine exploits Effectful's semantic constraints (purity, explicit effects, typed security) to make verification tractable.
+
+### 7.2 What the Proof Engine Verifies
+
+When you write an Effectful program representing a distributed system, the proof engine:
+
+1. **Projects to a finitary model** — Maps Effectful types to bounded, model-checkable domains
+2. **Extracts TLA+ specifications** — Generates formal specs from your consensus-critical code
+3. **Model-checks properties** — Verifies safety and liveness using TLC/Apalache/SMT backends
+4. **Gates deployment** — Only programs passing verification can deploy
+
+```haskell
+-- Effectful.ProofEngine.Verify deployment gate
+-- Only App 'Verified can reach production
+verify :: Backend
+       -> App 'Unverified a
+       -> IO (Either Report (App 'Verified a))
+```
+
+### 7.3 What the Proof Engine Does NOT Verify
+
+The proof engine verifies the distributed system *specification*, not:
+
+- Local computation correctness (that's the Haskell type system)
+- JIT code generation (that's semantic preservation proofs)
+- GPU kernel internals (outside the proof boundary)
+- Driver/hardware behavior (documented assumptions)
+
+See [proof_engine.md](proof_engine.md) for complete proof engine architecture.
+
+______________________________________________________________________
+
+## 8. References
 
 ### 7.1 Foundational Formal Methods
 
@@ -365,10 +416,12 @@ ______________________________________________________________________
 
 ## Cross-References
 
+- [proof_engine.md](proof_engine.md) — Effectful Proof Engine architecture
 - [proof_boundary.md](proof_boundary.md) — Philosophical foundation for verification limits
 - [jit.md](jit.md) — JIT compilation from Haskell to Rust
 - [ml_training.md](ml_training.md) — Formal methods for distributed ML
 - [consensus.md](consensus.md) — Formal methods for consensus protocols
+- [infrastructure_deployment.md](infrastructure_deployment.md) — Nodes, messages, and pure effects
 - [engineering/architecture.md](../engineering/architecture.md) — System architecture
 - [engineering/boundary_model.md](../engineering/boundary_model.md) — Detailed boundary model
 - [engineering/verification_contract.md](../engineering/verification_contract.md) — TLA+ verification workflow

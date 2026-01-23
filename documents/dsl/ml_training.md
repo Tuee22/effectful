@@ -615,6 +615,17 @@ TLA+ does **not** prove your Rust is correct directly. What you do:
 
 This is the pragmatic, standard route in systems verification.
 
+### 6.7 Proof Engine for ML Workflow Verification
+
+The proof engine verifies ML training workflows by:
+
+1. **Extracting DAG semantics** from the training specification
+2. **Checking orchestration correctness** (no handle misuse, proper ordering)
+3. **Verifying distributed protocols** (checkpointing, collective ordering)
+4. **Gating deployment** on successful verification
+
+The spec layers (Spec 0 and Spec 1) feed directly into the Extract phase for formal artifact generation. See [proof_engine.md](proof_engine.md) for the complete proof engine architecture.
+
 ______________________________________________________________________
 
 ## 7. Anti-Pattern Proofs (Avoid These)
@@ -940,7 +951,8 @@ ______________________________________________________________________
 ## Cross-References
 
 - [intro.md](intro.md) — Effectful language overview and consolidated references
+- [proof_engine.md](proof_engine.md) — Effectful Proof Engine architecture
 - [jit.md](jit.md) — JIT compilation from Haskell to Rust
 - [proof_boundary.md](proof_boundary.md) — Philosophical foundation for verification limits
 
-> **Note**: For formal methods references (TLA+, model checking, temporal logic), see [intro.md#7-references](intro.md#7-references).
+> **Note**: For formal methods references (TLA+, model checking, temporal logic), see [intro.md#8-references](intro.md#8-references).

@@ -13,6 +13,7 @@ ______________________________________________________________________
 | Need                     | Link                                                                                    |
 | ------------------------ | --------------------------------------------------------------------------------------- |
 | Effectful overview       | [Effectful DSL Hub](intro.md)                                                           |
+| Proof engine             | [Proof Engine](proof_engine.md)                                                         |
 | Boundary model           | [Proof Boundary and Purity Boundary](intro.md#2-the-proof-boundary-and-purity-boundary) |
 | Assumption documentation | [Assumption Documentation](intro.md#5-assumption-documentation)                         |
 | ML training JIT          | [ML Training](ml_training.md)                                                           |
@@ -217,9 +218,20 @@ TLA+ Properties depending on assumptions:
   1. GeneratedCodeSemantics (depends on 1)
   2. TimeoutEnforcement (depends on 2, 4)
   3. QueryResultConsistency (depends on 3)
-```python
+```
 
----
+### 5.4 Proof Engine Integration
+
+JIT-generated code must pass proof engine verification before deployment. The workflow:
+
+1. Haskell compute graph → JIT Rust code
+2. Extract phase generates verification obligations from the graph
+3. Check phase verifies generated code preserves semantics
+4. Verify phase confirms all TLA+ properties hold
+
+This ensures JIT compilation does not introduce correctness regressions. See [proof_engine.md](proof_engine.md) for the complete proof engine architecture.
+
+______________________________________________________________________
 
 ## 6. Communicating with Drivers and APIs
 
@@ -448,6 +460,7 @@ ______________________________________________________________________
 ## Cross-References
 
 - [intro.md](intro.md) — Effectful language overview and boundary model
+- [proof_engine.md](proof_engine.md) — Effectful Proof Engine architecture
 - [proof_boundary.md](proof_boundary.md) — Philosophical foundation for verification limits
 - [ml_training.md](ml_training.md) — JIT for ML workloads
 - [engineering/verification_contract.md](../engineering/verification_contract.md) — TLA+ verification workflow
