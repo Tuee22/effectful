@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delegation Without Proof &mdash; Conversation Analysis</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="layout">
+
+    <nav class="sidebar">
+      <div class="sidebar-title">Conversation Analysis</div>
+      <div class="sidebar-subtitle">Keith &amp; Matt &mdash; March 3, 2026</div>
+
+      <div class="sidebar-group-title">Overview</div>
+      <a href="index.html" class="sidebar-link">Overview</a>
+
+      <div class="sidebar-group-title">Core Tensions</div>
+      <a href="definition-paradox.html" class="sidebar-link">The Definition Paradox</a>
+      <a href="valid-vs-sound.html" class="sidebar-link">Valid vs Sound</a>
+      <a href="moving-the-boundary.html" class="sidebar-link">Moving the Boundary</a>
+
+      <div class="sidebar-group-title">Case Studies</div>
+      <a href="therac-case-study.html" class="sidebar-link">Therac-25 Deep Dive</a>
+      <a href="delegation-without-proof.html" class="sidebar-link active">Delegation Without Proof</a>
+
+      <div class="sidebar-group-title">Foundations</div>
+      <a href="science-vs-math.html" class="sidebar-link">Science vs Math vs LLMs</a>
+      <a href="glossary.html" class="sidebar-link">Key Definitions</a>
+    </nav>
+
+    <main class="main">
+
+      <h1>Delegation Without Proof</h1>
+      <p class="page-description">Matt's central moral claim: moving the proof boundary without doing the proofs is a moral error. Keith's world says otherwise.</p>
+
+      <div class="factor-tags">
+        <span class="factor-tag ethical">Ethical</span>
+        <span class="factor-tag psychological">Psychological</span>
+        <span class="factor-tag conceptual">Conceptual</span>
+        <span class="factor-tag cs">Computer Science</span>
+        <span class="factor-tag cross-cutting">Cross-cutting</span>
+      </div>
+
+      <!-- ============================================ -->
+      <h2>Matt's Moral Claim</h2>
+
+      <div class="callout callout-danger">
+        <div class="callout-title">The Normative Heart</div>
+        <p>&ldquo;When you move the proof boundary but don't do the proofs the costs can be extremely high.&rdquo; &mdash; Matt</p>
+      </div>
+
+      <p>This is the normative heart of the entire thesis. Not just that proofs exist, or that verification is possible, but that <strong>failing to verify when you automate is a moral error</strong>.</p>
+
+      <p>Matt is not merely making a technical observation about what formal verification can do. He is making an ethical claim: that the act of delegating human decisions to machines without establishing their correctness creates moral culpability. The costs are not hypothetical &mdash; they are measured in human lives, systemic failures, and eroded trust. The Therac-25 killed people. The Boeing 737 MAX MCAS killed people. These were not accidents of fate; they were consequences of moving the proof boundary without doing the proofs.</p>
+
+      <!-- ============================================ -->
+      <h2>Keith's Practical Reality</h2>
+
+      <p>Keith's feedback document reveals the world he actually inhabits:</p>
+
+      <blockquote>
+        <p><span class="speaker-keith">Keith:</span> &ldquo;My clients would say: 'I don't want you to charge me three times more for formally proven software. I want good enough software.'&rdquo;</p>
+      </blockquote>
+
+      <blockquote>
+        <p><span class="speaker-keith">Keith:</span> &ldquo;I've spent my life not worrying about formal proofs because: A) the cost is too high, B) I didn't understand how, C) delegating to staff who don't produce proven work works well enough, D) the risk in my domain is relatively low.&rdquo;</p>
+      </blockquote>
+
+      <p>This is the tension: <strong>Matt is describing an ideal. Keith lives in the market.</strong></p>
+
+      <p>Keith is not dismissing formal verification out of ignorance or malice. He is reporting on the economic reality of software development: clients pay for features, not for mathematical guarantees. Deadlines reward shipping, not proving. And in many domains &mdash; content management systems, social media integrations, business dashboards &mdash; the consequences of a bug are an annoyed user, not a dead patient.</p>
+
+      <p>Keith's four reasons form a coherent worldview: formal verification is expensive (A), inaccessible (B), unnecessary given existing practices (C), and disproportionate to actual risk (D). Matt would challenge every one of these, but he cannot deny that they reflect how the vast majority of the software industry operates.</p>
+
+      <!-- ============================================ -->
+      <h2>The Risk Scale Question</h2>
+
+      <p>Keith identifies something the paper doesn't make explicit &mdash; a <strong>scale of risk</strong>:</p>
+
+      <ul>
+        <li>PDF converter slightly wrong &rarr; who cares</li>
+        <li>LLM reading medical diagnostics &rarr; catastrophic</li>
+        <li>LLM finding grant eligibility &rarr; low risk</li>
+        <li>LLM submitting grants &rarr; higher risk</li>
+      </ul>
+
+      <p>This intuition points toward a graduated proof obligation rather than a binary one. Not everything requires the same level of verification. The question is: where on the spectrum does "good enough" stop being good enough?</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Scenario</th>
+            <th>Risk if Wrong</th>
+            <th>Proof Obligation</th>
+            <th>Current Practice</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>PDF converter</td>
+            <td>Trivial</td>
+            <td>None needed</td>
+            <td>No verification</td>
+          </tr>
+          <tr>
+            <td>Social media feed</td>
+            <td>Low (individual)</td>
+            <td>Minimal</td>
+            <td>A/B testing</td>
+          </tr>
+          <tr>
+            <td>Navigation software</td>
+            <td>Moderate</td>
+            <td>Recommended</td>
+            <td>Extensive testing</td>
+          </tr>
+          <tr>
+            <td>Medical diagnostics</td>
+            <td>High</td>
+            <td>Required</td>
+            <td>FDA approval (incomplete)</td>
+          </tr>
+          <tr>
+            <td>Radiation dosing</td>
+            <td>Lethal</td>
+            <td>Mandatory</td>
+            <td>Formal verification (post-Therac)</td>
+          </tr>
+          <tr>
+            <td>Autonomous weapons</td>
+            <td>Existential</td>
+            <td>?</td>
+            <td>No consensus</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>Matt might argue that even the low-risk cases deserve more scrutiny than they get. But the table reveals Keith's deeper point: if you demand the same rigor for a PDF converter as for radiation dosing, you have made formal verification impractical by definition. The question is not whether proofs matter, but <em>how much</em> they matter in each context.</p>
+
+      <!-- ============================================ -->
+      <h2>The Lawyer Analogy</h2>
+
+      <p>Keith's most incisive contribution to the conversation:</p>
+
+      <blockquote>
+        <p><span class="speaker-keith">Keith:</span> &ldquo;A lawyer delegates to a clerk to find legal precedent, but not to make the legal argument. A judge delegates to lawyers to bring evidence, but not to make moral decisions.&rdquo;</p>
+      </blockquote>
+
+      <p>This is actually an excellent model for the proof boundary:</p>
+
+      <ul>
+        <li><strong>The clerk is like an LLM:</strong> can search and retrieve, but shouldn't be trusted to make arguments. The clerk finds cases; the lawyer decides which ones matter and how they apply.</li>
+        <li><strong>The lawyer is like formally verified code:</strong> operates within defined rules, can be checked against precedent, produces work product that is auditable and challengeable.</li>
+        <li><strong>The judge is like human judgment:</strong> makes decisions that cannot be formalized &mdash; weighing competing values, interpreting ambiguity, exercising discretion in ways no algorithm captures.</li>
+      </ul>
+
+      <p>The legal system has spent centuries developing this layered architecture of delegation. Each layer has clear boundaries about what it can and cannot decide. The proof boundary concept is attempting to do for software what the legal system has done for justice: establish who is authorized to make which decisions, and what verification is required at each handoff.</p>
+
+      <!-- ============================================ -->
+      <h2>The Cost Argument</h2>
+
+      <p>The real-world pushback against formal verification:</p>
+
+      <ol>
+        <li><strong>Formal verification is expensive</strong> &mdash; 10-100x development cost for critical systems</li>
+        <li><strong>Most software is not safety-critical</strong> &mdash; the vast majority of code runs CRUD apps and web forms</li>
+        <li><strong>Market incentives reward shipping fast</strong> over shipping correct &mdash; first-mover advantage dominates</li>
+        <li><strong>Insurance and liability frameworks substitute for correctness</strong> &mdash; it is often cheaper to pay for failure than to prevent it</li>
+      </ol>
+
+      <p>Matt's counter (from the conversation): the cost argument worked when software was simple. As complexity increases, the cost of <strong>not</strong> doing proofs increases faster than the cost of doing them.</p>
+
+      <div class="callout callout-insight">
+        <div class="callout-title">The Therac-25 Cost Calculus</div>
+        <p>The cost of formal verification for the Therac-25 software would have been a fraction of the lawsuits, recalls, regulatory sanctions, and &mdash; most importantly &mdash; the human lives lost. When you account for the full cost of failure, formal verification is almost always cheaper for safety-critical systems. The question is whether anyone does this accounting <em>before</em> the failure.</p>
+      </div>
+
+      <p>This is the crux of the cost argument: it is only persuasive if you exclude the cost of catastrophe. Insurance creates a moral hazard &mdash; it makes the expected cost of failure bearable for the decision-maker while leaving the actual cost with the victim. Matt's thesis is that this moral hazard is precisely the problem the proof boundary concept is designed to expose.</p>
+
+      <!-- ============================================ -->
+      <h2>The LLM Inflection Point</h2>
+
+      <p>Matt and Keith agree on one thing: <strong>LLMs change the equation</strong>.</p>
+
+      <ul>
+        <li>LLMs can potentially <strong>write the proofs</strong> (lowering cost)</li>
+        <li>LLMs can also be <strong>checked by proofs</strong> (increasing reliability)</li>
+        <li>But LLMs can also <strong>move the proof boundary faster</strong> than proofs can keep up</li>
+      </ul>
+
+      <blockquote>
+        <p><span class="speaker-keith">Keith:</span> &ldquo;I understand that LLMs are not truth machines but they have the capacity to write proofs which is kind of cool and they also have the capacity to be checked by proofs which is kind of cool.&rdquo;</p>
+      </blockquote>
+
+      <p>This points to a future where the cost argument may dissolve &mdash; if LLMs make formal verification cheap enough, the only remaining excuse is ignorance.</p>
+
+      <p>Consider the trajectory: AlphaProof (DeepMind, 2024) demonstrated that AI systems can generate mathematical proofs verified by Lean. If that capability extends to software verification, the cost barrier drops by orders of magnitude. Keith's objection A (cost is too high) evaporates. Objection B (didn't understand how) becomes irrelevant &mdash; the LLM understands for you. Objection C (existing practices work well enough) is challenged by the new standard. Only objection D (risk is low) survives, and even that is undermined as LLMs push automation into higher-risk domains.</p>
+
+      <p>The irony is sharp: the same technology that makes formal verification cheaper also makes the need for formal verification more urgent, because it simultaneously expands what gets automated.</p>
+
+      <!-- ============================================ -->
+      <h2>Cross-Cutting: Matt's WhatsApp Insight</h2>
+
+      <blockquote>
+        <p><span class="speaker-matt">Matt:</span> &ldquo;AI does NOT give us any shelter or immunity from these moral problems. And by claiming that it's humans who will always control the proof boundary, I'm arguing that it never will.&rdquo;</p>
+      </blockquote>
+
+      <p>Matt isn't anti-technology. He's arguing that <strong>humans bear permanent responsibility</strong> for where the boundary sits. Technology doesn't save us from ourselves.</p>
+
+      <p>This is the deepest layer of his thesis. It's not about whether AI is good or bad, useful or dangerous. It's about accountability. Every time a human delegates a decision to a machine, that human remains morally responsible for the delegation &mdash; including the decision of whether to verify the machine's behavior. No amount of AI sophistication transfers this responsibility. The proof boundary is always controlled by humans, and that control carries an obligation.</p>
+
+      <p>The WhatsApp message reveals Matt at his most philosophical: he is not trying to stop progress. He is trying to ensure that progress does not become an excuse for abdicating responsibility. The proof boundary is his way of saying: <em>you can automate the work, but you cannot automate the accountability</em>.</p>
+
+      <div class="page-nav">
+        <a href="therac-case-study.html">&larr; Previous: Therac-25 Deep Dive</a>
+        <a href="science-vs-math.html">Next: Science vs Math vs LLMs &rarr;</a>
+      </div>
+
+    </main>
+  </div>
+</body>
+</html>

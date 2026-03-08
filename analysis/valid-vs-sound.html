@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Valid vs Sound: The Gap Proofs Can't Close</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="layout">
+
+    <nav class="sidebar">
+      <div class="sidebar-title">Conversation Analysis</div>
+      <div class="sidebar-subtitle">Keith &amp; Matt &mdash; March 3, 2026</div>
+
+      <div class="sidebar-group-title">Overview</div>
+      <a href="index.html" class="sidebar-link">Overview</a>
+
+      <div class="sidebar-group-title">Core Tensions</div>
+      <a href="definition-paradox.html" class="sidebar-link">The Definition Paradox</a>
+      <a href="valid-vs-sound.html" class="sidebar-link active">Valid vs Sound</a>
+      <a href="moving-the-boundary.html" class="sidebar-link">Moving the Boundary</a>
+
+      <div class="sidebar-group-title">Case Studies</div>
+      <a href="therac-case-study.html" class="sidebar-link">Therac-25 Deep Dive</a>
+      <a href="delegation-without-proof.html" class="sidebar-link">Delegation Without Proof</a>
+
+      <div class="sidebar-group-title">Foundations</div>
+      <a href="science-vs-math.html" class="sidebar-link">Science vs Math vs LLMs</a>
+      <a href="glossary.html" class="sidebar-link">Key Definitions</a>
+    </nav>
+
+    <main class="main">
+
+      <h1>Valid vs Sound: The Gap Proofs Can't Close</h1>
+      <p class="page-description">A technical distinction from formal logic that is central to understanding the limits of the proof boundary &mdash; and why Keith keeps needing to be reminded.</p>
+
+      <div class="factor-tags">
+        <span class="factor-tag mathematical">Mathematical</span>
+        <span class="factor-tag conceptual">Conceptual</span>
+        <span class="factor-tag cs">Computer Science</span>
+        <span class="factor-tag psychological">Psychological</span>
+      </div>
+
+      <h2>The Distinction</h2>
+
+      <div class="callout callout-definition">
+        <div class="callout-title">Valid Proof</div>
+        <p>Given these input assumptions (axioms/premises), we can logically deduce this output statement. A proof checker verifies validity. &ldquo;If A then B&rdquo; &mdash; the logic is correct.</p>
+      </div>
+
+      <div class="callout callout-definition">
+        <div class="callout-title">Sound Proof</div>
+        <p>A valid proof where the input assumptions are <strong>also true in the real world</strong>. Soundness requires correspondence between the formal model and reality.</p>
+      </div>
+
+      <blockquote>
+        <span class="speaker-matt">Matt:</span> &ldquo;A valid proof is like a proven theorem, right? It&rsquo;s saying given these input assumptions we can logically deduce this output statement. That&rsquo;s a valid proof, and a proof checker checks that the proof is valid&hellip; what it can&rsquo;t do is verify that a valid proof is sound, which is to say that the input assumptions actually are correct in the real world. Because the proof checker and software in general has no way of comparing the data it&rsquo;s been given about the real world to the actual real world. It just has to believe it. So garbage in, garbage out.&rdquo;
+      </blockquote>
+
+      <h2>Why This Matters for the Proof Boundary</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>Valid Proof</th>
+            <th>Sound Proof</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>What it checks</strong></td>
+            <td>Internal logical consistency</td>
+            <td>Correspondence to reality</td>
+          </tr>
+          <tr>
+            <td><strong>Who/what can verify</strong></td>
+            <td>Machine (proof checker)</td>
+            <td>Humans (judgment)</td>
+          </tr>
+          <tr>
+            <td><strong>Decidable?</strong></td>
+            <td>Yes (for well-formed proofs)</td>
+            <td>No (requires real-world knowledge)</td>
+          </tr>
+          <tr>
+            <td><strong>Example</strong></td>
+            <td>&ldquo;If max_dose=100, then dose&lt;=100&rdquo;</td>
+            <td>&ldquo;Is 100 the right max dose for this patient?&rdquo;</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>The proof boundary sits <strong>exactly</strong> at the gap between valid and sound. On one side: what machines can verify (validity). On the other: what requires human judgment (soundness &mdash; are the assumptions correct?).</p>
+
+      <p>This is arguably the most precise way to define the proof boundary: it is the line between validity-checkable and soundness-requiring claims.</p>
+
+      <h2>The Garbage-In-Garbage-Out Principle</h2>
+
+      <p>Matt reduces it to: &ldquo;garbage in, garbage out.&rdquo; A valid proof with wrong premises is perfectly logical nonsense.</p>
+
+      <ul>
+        <li><strong>Premise:</strong> &ldquo;Patients can safely receive up to 10,000 units.&rdquo; <strong>Conclusion:</strong> &ldquo;5,000 units is safe.&rdquo; Valid? Yes. Sound? Deadly wrong.</li>
+        <li><strong>Premise:</strong> &ldquo;This LLM output is a correct legal citation.&rdquo; <strong>Conclusion:</strong> &ldquo;We can submit this to court.&rdquo; Valid? Yes. Sound? See <em>Mata v. Avianca</em>.</li>
+      </ul>
+
+      <h2>Psychological Dimension: Why Keith Forgets</h2>
+
+      <blockquote>
+        <span class="speaker-keith">Keith:</span> &ldquo;Two words again &mdash; I know you explained them before but remind me.&rdquo;
+      </blockquote>
+
+      <p>This forgetting pattern reveals something important:</p>
+
+      <ol>
+        <li><strong>The terms are counterintuitive.</strong> In everyday English, &ldquo;valid&rdquo; and &ldquo;sound&rdquo; are near-synonyms. The technical distinction overloads familiar words with precise meanings that fight everyday intuition.</li>
+        <li><strong>The distinction is uncomfortable.</strong> It means that even perfect formal verification has a gap &mdash; the premises might be wrong. For someone building systems, this is anxiety-inducing. It is easier to forget the gap than to live with it.</li>
+        <li><strong>Keith&rsquo;s practical orientation.</strong> As a software developer, Keith thinks in terms of &ldquo;does it work?&rdquo; &mdash; a question that conflates validity and soundness. Separating them requires shifting from pragmatic to philosophical thinking.</li>
+      </ol>
+
+      <h2>Mathematical Dimension: Godel's Shadow</h2>
+
+      <p>This gap between valid and sound is related to (but distinct from) Godel&rsquo;s incompleteness theorems. Godel showed that any sufficiently powerful formal system contains true statements that cannot be proven within the system. The valid/sound gap shows that even provable statements might not correspond to reality.</p>
+
+      <p>Together, these results establish permanent limits:</p>
+
+      <ul>
+        <li><strong>Godel:</strong> Not everything true can be proven.</li>
+        <li><strong>Valid/Sound gap:</strong> Not everything proven is true (about the real world).</li>
+        <li><strong>Turing&rsquo;s Halting Problem:</strong> Not everything can be decided algorithmically.</li>
+      </ul>
+
+      <p>These three limits form the mathematical foundation for why the proof boundary can never be fully eliminated &mdash; there will always be a domain that requires human judgment.</p>
+
+      <p>For deeper treatment, see the <a href="/foundations">Godel, Russell, and Turing chapters</a> in the book.</p>
+
+      <h2>Computer Science Dimension</h2>
+
+      <p>In software engineering, this distinction manifests as:</p>
+
+      <ul>
+        <li><strong>Type systems</strong> check validity: &ldquo;this function returns an integer&rdquo; &mdash; but not whether it returns the <em>right</em> integer.</li>
+        <li><strong>Unit tests</strong> check specific cases of validity: &ldquo;<code>f(2)</code> returns <code>4</code>&rdquo; &mdash; but not whether <code>f</code> should return <code>x&sup2;</code> or <code>2x</code> for all inputs.</li>
+        <li><strong>Formal verification</strong> (TLA+, Lean, Coq) checks validity against a specification &mdash; but the specification itself could be wrong.</li>
+        <li><strong>The specification</strong> is where soundness lives &mdash; and specifications are written by humans.</li>
+      </ul>
+
+      <p>Each layer adds confidence, but none closes the valid/sound gap completely.</p>
+
+      <h2>Ethical Dimension</h2>
+
+      <p>The valid/sound gap has moral implications: who is responsible when a valid-but-unsound system causes harm?</p>
+
+      <ul>
+        <li>The Therac-25 software could have been formally verified (validity) &mdash; but the <strong>specification</strong> of safe dose ranges is a human judgment (soundness).</li>
+        <li>If the specification was wrong, the proof would have been valid but the patients would still die.</li>
+        <li>This means formal proofs do <strong>not</strong> absolve humans of moral responsibility &mdash; they just change <em>where</em> the responsibility lies (from code correctness to specification correctness).</li>
+      </ul>
+
+      <h2>Keith's Key Insight (Even If He Doesn't Know It Yet)</h2>
+
+      <div class="callout callout-insight">
+        <div class="callout-title">The Deepest Implication</div>
+        <p>When Keith says &ldquo;no proof can validate that its input assumptions are correct&rdquo; &mdash; he has actually grasped the deepest implication of the proof boundary. The boundary exists precisely <strong>because</strong> there will always be assumptions that require human judgment.</p>
+        <p>This is not a bug in the concept. It is the entire point.</p>
+      </div>
+
+      <div class="page-nav">
+        <a href="definition-paradox.html">&larr; Previous: The Definition Paradox</a>
+        <a href="moving-the-boundary.html">Next: Moving the Boundary &rarr;</a>
+      </div>
+
+    </main>
+  </div>
+</body>
+</html>

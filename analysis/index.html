@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Untangling the Proof Boundary — Conversation Analysis</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="layout">
+
+    <nav class="sidebar">
+      <div class="sidebar-title">Conversation Analysis</div>
+      <div class="sidebar-subtitle">Keith &amp; Matt &mdash; March 3, 2026</div>
+
+      <div class="sidebar-group-title">Overview</div>
+      <a href="index.html" class="sidebar-link active">Overview</a>
+
+      <div class="sidebar-group-title">Core Tensions</div>
+      <a href="definition-paradox.html" class="sidebar-link">The Definition Paradox</a>
+      <a href="valid-vs-sound.html" class="sidebar-link">Valid vs Sound</a>
+      <a href="moving-the-boundary.html" class="sidebar-link">Moving the Boundary</a>
+
+      <div class="sidebar-group-title">Case Studies</div>
+      <a href="therac-case-study.html" class="sidebar-link">Therac-25 Deep Dive</a>
+      <a href="delegation-without-proof.html" class="sidebar-link">Delegation Without Proof</a>
+
+      <div class="sidebar-group-title">Foundations</div>
+      <a href="science-vs-math.html" class="sidebar-link">Science vs Math vs LLMs</a>
+      <a href="glossary.html" class="sidebar-link">Key Definitions</a>
+    </nav>
+
+    <main class="main">
+
+      <h1>Untangling the Proof Boundary</h1>
+      <p class="page-description">An analysis of the March 3, 2026 conversation between Keith Seim and Matt Nowak, identifying key tensions, misunderstandings, and deep questions about the nature of the proof boundary.</p>
+
+      <h2>Context</h2>
+      <p>This conversation is one in a series between Keith (a software development leader exploring formal methods) and Matt Nowak (author of <em>The Proof Boundary: Where Verification and Judgment Meet</em>). Keith is trying to understand Matt's central concept &mdash; the "proof boundary" &mdash; and keeps running into a specific conceptual knot: the definition of the term doesn't seem to require proofs, yet the entire thesis is about why proofs matter. This analysis maps every point of friction and explores each from multiple angles.</p>
+
+      <p class="meta">Source material: 1h 15m Zoom conversation, WhatsApp thread, Keith's written feedback on the paper, and the book manuscript.</p>
+
+      <div class="callout callout-confusion">
+        <div class="callout-title">The Central Tension</div>
+        <p>Matt defines the "proof boundary" without mentioning proofs, then spends the entire paper arguing proofs are essential. Keith can't reconcile the definition with the argument.</p>
+      </div>
+
+      <h2>Key Questions Identified</h2>
+      <ol>
+        <li><a href="definition-paradox.html">Why is it called the "proof boundary" if the definition doesn't mention proofs?</a></li>
+        <li><a href="valid-vs-sound.html">What's the difference between a valid proof and a sound proof, and why does Keith keep forgetting?</a></li>
+        <li><a href="moving-the-boundary.html">Who actually moves the proof boundary &mdash; the inventor or the deployer?</a></li>
+        <li><a href="therac-case-study.html">How does the Therac-25 case illuminate the concept?</a></li>
+        <li><a href="delegation-without-proof.html">Is it ever acceptable to move the boundary without doing the proofs?</a></li>
+        <li><a href="science-vs-math.html">How do science, math, and LLM outputs differ epistemically?</a></li>
+      </ol>
+
+      <h2>The Conversation Arc</h2>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="timeline-label">0:00 &ndash; 8:00</div>
+          <p>Pleasantries, setup</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-label">8:00 &ndash; 15:00</div>
+          <p>Objective verifiability and Richard Sutton's external world concept</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-label">15:00 &ndash; 25:00</div>
+          <p>Detour into physics: event horizons, scientific methodology limits</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-label">25:00 &ndash; 35:00</div>
+          <p>Matt connects external verifiability to the proof boundary via Lamport</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-label">35:00 &ndash; 45:00</div>
+          <p>Keith's "three buckets" framework; Matt pushes back</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-label">45:00 &ndash; 55:00</div>
+          <p><strong>THE CORE:</strong> Keith asks for the definition repeatedly; "you didn't say the word proof"</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-label">55:00 &ndash; 1:05:00</div>
+          <p>Matt tries to bridge via the Therac-25 story</p>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-label">1:05:00 &ndash; 1:15:00</div>
+          <p>Narrowing in: who moves the boundary, accountability, wrap-up</p>
+        </div>
+      </div>
+
+      <div class="callout callout-insight">
+        <div class="callout-title">Matt's Layered Argument</div>
+        <p>What Keith is missing is that Matt is making a <strong>three-layer</strong> argument:</p>
+        <ul>
+          <li><strong>Layer 1 (Definitional):</strong> The proof boundary is the line between human judgment and machine automation. It's a descriptive concept &mdash; it just <em>is</em>.</li>
+          <li><strong>Layer 2 (Technical):</strong> When you move this line (automate something), formal proofs become the only reliable way to ensure safety. This is a technical claim about the nature of software.</li>
+          <li><strong>Layer 3 (Moral):</strong> Choosing to move the boundary <em>without</em> doing the proofs is a moral error with potentially catastrophic consequences.</li>
+        </ul>
+        <p>Keith keeps trying to find proofs IN Layer 1, when they live in Layers 2 and 3.</p>
+      </div>
+
+      <h2>Multi-Factor Analysis Framework</h2>
+      <p>Each analysis page examines its topic through multiple lenses, ensuring that no single perspective dominates and that the full complexity of each tension is visible:</p>
+
+      <div class="factor-tags">
+        <span class="factor-tag psychological">Psychological</span>
+        <span class="factor-tag conceptual">Conceptual</span>
+        <span class="factor-tag mathematical">Mathematical</span>
+        <span class="factor-tag ethical">Ethical</span>
+        <span class="factor-tag historical">Historical</span>
+        <span class="factor-tag cs">Computer Science</span>
+        <span class="factor-tag linguistic">Linguistic</span>
+        <span class="factor-tag cross-cutting">Cross-cutting</span>
+      </div>
+
+      <ul>
+        <li><strong>Psychological:</strong> Cognitive biases, communication patterns, learning styles</li>
+        <li><strong>Conceptual:</strong> Definitional precision, category errors, levels of abstraction</li>
+        <li><strong>Mathematical:</strong> Formal logic, proof theory, decidability</li>
+        <li><strong>Ethical:</strong> Responsibility, liability, moral frameworks</li>
+        <li><strong>Historical:</strong> Precedent, evolution of ideas</li>
+        <li><strong>Computer Science:</strong> Type systems, formal verification, software engineering</li>
+        <li><strong>Linguistic:</strong> Semantics, naming, the power of labels</li>
+        <li><strong>Cross-cutting:</strong> Where factors interact and compound</li>
+      </ul>
+
+      <div class="page-nav">
+        <span></span>
+        <a href="definition-paradox.html">Next: The Definition Paradox &rarr;</a>
+      </div>
+
+    </main>
+  </div>
+</body>
+</html>
