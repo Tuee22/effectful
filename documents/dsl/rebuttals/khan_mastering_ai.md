@@ -108,8 +108,6 @@ That is why singularity mythology is politically useful. It redirects attention 
 
 ## Bubble Dynamics, Moat Anxiety, and Narrative Pressure
 
-This market-structure analysis is broader context rather than a direct claim about Kahn's own argumentation.
-
 AI hype is not only an epistemic issue; it is also a market-structure issue. A large share of AI discourse now sits inside a valuation regime where expectations are being capitalized faster than broad, durable productivity gains are proven. Stanford's 2025 AI Index reports record private AI investment in 2024, while reported enterprise gains in many settings remain modest and uneven. Labor-market research in highly exposed contexts has shown heavy tool adoption without correspondingly large short-run gains in earnings or hours. That spread between expectation and realized system-level payoff is a classic bubble condition.
 
 Calling this bubble-like does not mean the technology is fake. Bubbles often form around real and consequential technologies. The internet was real and transformative; that did not prevent overpricing and speculative excess. The same can be true here.
@@ -127,8 +125,6 @@ This is where journalism can become a market function without intending to. Conf
 A short reader checklist helps: what was measured, who chose the test, what error profile remains, who is accountable, and what economic assumptions are being smuggled into the claim. Without those answers, confident forecasts should be treated as scenarios, not settled conclusions.
 
 ## Labor Fragility Is an Automation Story First
-
-This labor analysis similarly extends beyond Kahn's specific claims and places the book within a longer automation trajectory.
 
 A major correction is needed in public debate: labor fragility did not begin with generative AI. The long arc of automation has already thinned many kinds of routine work through robotics, software workflows, logistics optimization, self-service systems, and algorithmic coordination. Generative AI extends this trend into language-heavy and analysis-heavy tasks, but it is not the origin of the dynamic.
 
