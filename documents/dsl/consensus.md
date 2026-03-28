@@ -5,7 +5,7 @@
 **Referenced by**: intro.md
 
 > **Purpose**: Apply the proof boundary and purity boundary framework to distributed consensus protocols, covering Paxos, PBFT, hybrid trust models, and DAG-based systems.
-> **Authoritative Reference**: [Effectful DSL Hub](intro.md#7-references)
+> **📖 Authoritative Reference**: [Effectful DSL Hub](intro.md#7-references)
 
 ______________________________________________________________________
 
@@ -21,14 +21,20 @@ This document applies Effectful's boundary model to distributed consensus:
 
 The key insight is that consensus protocols are ideal candidates for formal verification—their safety and liveness properties can be precisely specified and model-checked. See [intro.md](intro.md) for the full boundary model.
 
+As in the canonical DSL intro, these boundaries are **nested rather than disjoint**: the purity
+boundary sits inside the proof boundary. Pure state-machine and quorum logic can therefore be both
+inside the purity boundary and inside the larger proof boundary, while runtimes and adapters at the
+edge of execution may be outside the purity boundary but still inside the proof boundary when their
+contracts are modeled and verified.
+
 ### Proof Engine Integration
 
 The proof engine is responsible for verifying these consensus properties. The formal verification workflow is:
 
 1. Express consensus protocol in the Protocol layer
-2. The Extract phase generates TLA+ specifications
-3. The Check phase verifies safety/liveness properties
-4. The Verify phase gates deployment on proof success
+1. The Extract phase generates TLA+ specifications
+1. The Check phase verifies safety/liveness properties
+1. The Verify phase gates deployment on proof success
 
 See [proof_engine.md](proof_engine.md) for the complete verification architecture.
 

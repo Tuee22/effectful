@@ -10,13 +10,13 @@ ______________________________________________________________________
 
 ## SSoT Link Map
 
-| Need                      | Link                                        |
-| ------------------------- | ------------------------------------------- |
-| Effectful overview        | [Effectful DSL Hub](intro.md)               |
-| Proof boundary philosophy | [Proof Boundary](proof_boundary.md)         |
-| Consensus formal methods  | [Consensus](consensus.md)                   |
-| JIT compilation           | [JIT Compilation](jit.md)                   |
-| ML training verification  | [ML Training](ml_training.md)               |
+| Need                      | Link                                           |
+| ------------------------- | ---------------------------------------------- |
+| Effectful overview        | [Effectful DSL Hub](intro.md)                  |
+| Proof boundary philosophy | [Proof Boundary](proof_boundary.md)            |
+| Consensus formal methods  | [Consensus](consensus.md)                      |
+| JIT compilation           | [JIT Compilation](jit.md)                      |
+| ML training verification  | [ML Training](ml_training.md)                  |
 | Infrastructure deployment | [Infrastructure](infrastructure_deployment.md) |
 
 ______________________________________________________________________
@@ -26,18 +26,23 @@ ______________________________________________________________________
 The Effectful Proof Engine is designed to satisfy the following goals simultaneously:
 
 1. **Arbitrary expressiveness at the surface**
+
    - Users write rich application logic using Haskell types, monads, effects, and composition in Effectful
 
-2. **Strong formal guarantees for distributed correctness**
+1. **Strong formal guarantees for distributed correctness**
+
    - Consensus, replication, and fault-tolerance logic is formally validated using a TLA+-style toolchain
 
-3. **High-performance execution**
+1. **High-performance execution**
+
    - Local computation can be compiled into optimized compute graphs and JIT-compiled Rust/CUDA code
 
-4. **Small trusted core**
+1. **Small trusted core**
+
    - The amount of code that must be trusted without proof is minimized and clearly identified
 
-5. **Proof-carrying deployment**
+1. **Proof-carrying deployment**
+
    - It is impossible to deploy a consensus-critical application unless it has been formally checked
 
 ______________________________________________________________________
@@ -53,6 +58,11 @@ The proof engine's 7 layers map to Effectful's nested boundary architecture:
 | **Outside Proof Boundary** | External TLA+/SMT tools, drivers, hardware |
 
 See [intro.md](intro.md#2-the-proof-boundary-and-purity-boundary) for the boundary model overview.
+
+These boundaries are nested rather than disjoint. The App, Protocol, and Model layers live inside
+the purity boundary and therefore also inside the larger proof boundary. Extract, Check, Verify,
+and Runtime extend that proof boundary outward into imperative or tool-facing territory without
+making those layers part of the purity boundary.
 
 ______________________________________________________________________
 
@@ -229,10 +239,10 @@ This enables:
 ### Optimization Pipeline
 
 1. Graph construction (Haskell)
-2. Rewrite passes (fusion, CSE, layout)
-3. Scheduling and memory planning
-4. Lowering to a stable IR
-5. Rust JIT execution (CPU + CUDA)
+1. Rewrite passes (fusion, CSE, layout)
+1. Scheduling and memory planning
+1. Lowering to a stable IR
+1. Rust JIT execution (CPU + CUDA)
 
 ______________________________________________________________________
 

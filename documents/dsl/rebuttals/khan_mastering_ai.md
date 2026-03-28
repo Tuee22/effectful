@@ -1,5 +1,12 @@
 # Against AI Messianism: Notes on Jeremy Kahn's *Mastering AI*
 
+**Status**: Reference only
+**Supersedes**: none
+**Referenced by**: none
+
+> **Purpose**: Offer a proof-boundary-informed rebuttal to AI-messianic readings of Jeremy Kahn's *Mastering AI*, with emphasis on mechanism-level evidence, formal limits, and the political economy of AI hype.
+> **📖 Authoritative Reference**: [Proof Boundary](../proof_boundary.md)
+
 Jeremy Kahn wrote a timely and useful book. *Mastering AI* does something difficult: it gives non-specialists a map of a fast-moving technical field without pretending that the stakes are small. It takes AI seriously as a political and economic force, not merely a software feature. It also captures a mood that many experts understate in public: institutions are already reorganizing around model capabilities, and they are doing so faster than law, education, and labor policy can comfortably absorb.
 
 That is why the book deserves a serious response instead of a dismissive one. The problem is not that Kahn lacks urgency, and it is not that he ignores risk. The problem is methodological. In a field where the strongest claims are mechanism claims, interview-led synthesis cannot carry the whole burden of truth. When coverage depends too heavily on elite narratives and too lightly on primary technical constraints, it will drift toward hype, even if the author is careful and sincere.

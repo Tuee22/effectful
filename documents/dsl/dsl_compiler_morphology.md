@@ -4,19 +4,20 @@
 **Supersedes**: none
 **Referenced by**: none
 
-> **Purpose**: Survey the compiler-stack design space for a formally informed DSL that compiles distributed effect topologies to optimized Rust, with emphasis on IR shape, proof boundaries, optimization strategy, and backend realization.
-> **Authoritative Reference**: [DSL Intro](intro.md), [JIT Compilation](jit.md), and [Proof Engine](proof_engine.md)
+> **Purpose**: Survey the compiler-stack design space for a formally informed DSL that compiles distributed effect topologies to optimized Rust and other target-native realizations, with emphasis on IR shape, purity-boundary and proof-boundary placement, optimization strategy, and backend realization.
+> **📖 Authoritative Reference**: [DSL Intro](intro.md), [JIT Compilation](jit.md), and [Proof Engine](proof_engine.md)
 
 ______________________________________________________________________
 
 ## SSoT Link Map
 
-| Need                      | Link                                |
-| ------------------------- | ----------------------------------- |
-| DSL overview              | [DSL Intro](intro.md)               |
-| Compilation strategy      | [JIT Compilation](jit.md)           |
-| Verification workflow     | [Proof Engine](proof_engine.md)     |
-| Proof boundary philosophy | [Proof Boundary](proof_boundary.md) |
+| Need                       | Link                                                            |
+| -------------------------- | --------------------------------------------------------------- |
+| DSL overview               | [DSL Intro](intro.md)                                           |
+| Compilation strategy       | [JIT Compilation](jit.md)                                       |
+| Pure compute DAG semantics | [Pure Compute DAGs in Haskell](pure_compute_dags_in_haskell.md) |
+| Verification workflow      | [Proof Engine](proof_engine.md)                                 |
+| Proof boundary philosophy  | [Proof Boundary](proof_boundary.md)                             |
 
 ______________________________________________________________________
 
@@ -28,19 +29,20 @@ We want to design a compiler stack for a domain-specific language whose purpose 
 - **typed and law-aware**
 - amenable to **global optimization at transpile time**
 - suitable for **formal reasoning**
-- compilable to **small, high-performance Rust binaries**
+- compilable to **small, high-performance binaries or target-native artifacts**
 - extensible enough to support:
   - portable abstractions
   - opinionated domain abstractions
   - runtime-native escape hatches
-  - future runtimes not yet known at design time, so long as they are realizable through Rust
+  - future runtimes not yet known at design time, whether they are best reached through Rust or
+    through target-native backends
 
 The goal is not absolute universality in the sense of perfectly abstracting every possible runtime behind one clean effect theory. The goal is instead a **universal topology**:
 
 - generic when helpful
 - opinionated when productive
 - runtime-specific when necessary
-- optimizable all the way down to target-native Rust
+- optimizable all the way down to target-native realization
 
 That means the central problem is not simply “which language should we use?” The real problem is:
 
@@ -71,7 +73,8 @@ The system should:
    - correctness of transformations
    - distributed consistency properties
    - refinement from source semantics to lowered implementations
-1. Generate **highly optimized Rust**
+1. Generate **highly optimized Rust where Rust can target the runtime, and target-native code where
+   it cannot**
 1. Allow both:
    - portable effects
    - runtime-native effects
@@ -79,7 +82,7 @@ The system should:
    - effect signatures
    - laws
    - lowering rules
-   - interpreter/runtime support in Rust
+   - interpreter/runtime support in Rust or the required target-native substrate
 
 ### 2.2 Secondary Objectives
 
@@ -95,7 +98,7 @@ The system should ideally also:
 
 The system does **not** need to guarantee:
 
-- complete proof of every emitted Rust program
+- complete proof of every emitted backend artifact
 - a single universal abstraction that hides all runtime detail
 - total portability of all programs across all targets
 - zero escape hatches into runtime-native semantics
@@ -114,6 +117,17 @@ A useful reformulation is:
 
 This shifts the focus from “can one language do everything?” to “how should the compiler stack be decomposed?”
 
+### 3.1 Boundary Alignment
+
+In the canonical boundary model from [intro.md](intro.md#2-the-proof-boundary-and-purity-boundary):
+
+- the surface DSL, pure effect descriptions, and inspectable workflow representations live inside the **purity boundary**
+- generated Rust, JS, Swift, Kotlin, C++, CUDA, and other imperative interpreters live outside the **purity boundary**
+- those imperative runtimes may still remain inside the **proof boundary** when their lowering rules, memory contracts, and runtime behavior are modeled and verified
+- drivers, operating-system services, vendor SDKs, firmware, and undocumented hardware behavior remain outside the **proof boundary**
+
+This distinction matters for morphology. IR choices closest to the source side are often purity-boundary questions. Backend selection, runtime contracts, and assumption management are usually proof-boundary questions.
+
 ______________________________________________________________________
 
 ## 4. Architectural Shape
@@ -124,11 +138,11 @@ flowchart TD
     B --> C[Normalization]
     C --> D[Optimization]
     D --> E[Lowering]
-    E --> F[Rust Codegen]
+    E --> F[Backend Codegen]
     F --> G[Portable Runtime Support]
     F --> H[Domain Runtime Support]
     F --> I[Native Runtime Bindings]
-    G --> J[Optimized Rust Binary]
+    G --> J[Optimized Artifact]
     H --> J
     I --> J
 
@@ -145,7 +159,8 @@ This diagram captures the intended shape:
 - the **IR** is central
 - the **optimizer** is semantically constrained
 - **Lean** and **TLA+** can both be consumers of the semantic core
-- **Rust** remains the realization substrate
+- **Rust** remains a preferred realization substrate where it can target the runtime, but it is not
+  the only relevant backend
 
 ______________________________________________________________________
 
@@ -194,7 +209,12 @@ mindmap
       OCaml
       Rust
     Core IR
-      Free Monadic
+      Free Modeling Spectrum
+        Functor
+        Applicative
+        Selective
+        Monad
+        Traversable
       ANF
       SSA-like
       Effect Graph
@@ -211,6 +231,13 @@ mindmap
       Minimal Formal Methods
     Backend
       Rust
+      WASM
+      JS or TS
+      Swift
+      Kotlin
+      C++ or CUDA
+      FPGA or HDL
+      Vendor Native Toolchain
     Runtime Strategy
       Interpreted
       Hybrid
@@ -274,6 +301,11 @@ flowchart LR
 ### 7.2 Class II: Rewrite and Optimization Correctness
 
 Questions:
+
+Here, **fusion** means combining adjacent operations or graph regions into one larger computation
+without changing observable behavior. It matters because successful fusion can eliminate
+intermediate materializations, reduce launch or scheduling overhead, and expose larger optimization
+regions to the backend.
 
 - Is fusion valid?
 - Is batching valid?
@@ -369,7 +401,7 @@ Questions:
 
 - Does lowering from portable effects to domain effects preserve the intended semantics?
 - Does lowering from domain effects to native effects preserve required observables?
-- Does the Rust state-machine representation refine the source graph semantics?
+- Does the target-language state-machine representation refine the source graph semantics?
 - Which guarantees are retained when escape hatches are used?
 
 This class is tricky because it sits at the boundary between proof and engineering.
@@ -392,7 +424,7 @@ TLA+ is useful when the relevant observable semantics are temporal or distribute
 flowchart TD
     A[Portable Effect Semantics] --> B[Domain Lowering]
     B --> C[Native Lowering]
-    C --> D[Rust Runtime Behavior]
+    C --> D[Target Runtime Behavior]
     A --> E[Lean Refinement Proof]
     B --> F[TLA+ Temporal Model]
     C --> F
@@ -739,30 +771,48 @@ ______________________________________________________________________
 
 ```mermaid
 graph TD
-    A[Free Monadic IR] --> B[ANF]
+    A[Free Modeling Spectrum] --> B[ANF]
     B --> C[SSA-like IR]
     C --> D[Effect Graph IR]
     D --> E[E-graph or Equality Saturation Hybrid]
     D --> F[Region and Capability Graph]
 ```
 
-#### Free Monadic IR
+#### Free Modeling Spectrum
 
 **Pros**
 
-- simple
-- easy to define
-- intuitive for sequencing
+- pure and highly compositional
+- keeps workflow structure as data near the purity boundary
+- supports multiple interpreters and late binding of execution strategy
+- strong basis for analyzable syntax trees
+- can express a useful hierarchy:
+  - functorial structure for uniform transformation
+  - applicative structure for statically known independent composition
+  - selective structure for visible conditionals
+  - monadic structure for genuinely dependent sequencing
+- traversable structure for batch and collection-parallel regions
+- applicative and traversable fragments can preserve visible parallel structure and are often a
+  strong fit for batch, workflow, and DAG-like computation
+- monadic fragments remain available for barriers, conditionals, and data-dependent continuation
 
 **Cons**
 
-- often too sequential
-- poor substrate for global graph optimization
-- obscures parallel structure
+- if collapsed entirely into free monads, it often becomes too sequential
+- monadic continuations can hide future structure and therefore obscure parallelism
+- global graph optimization is often easier after lowering to more explicit graph or SSA-like forms
+- mixed free layers require discipline about where dependency boundaries are introduced
 
 **Assessment**
 
-Probably too weak for the ultimate objective.
+As described in [Pure Compute DAGs in Haskell](pure_compute_dags_in_haskell.md), free modeling
+should not be identified only with free monads. As a hierarchy of functor, applicative, selective,
+traversable, and monadic structure, it is extremely robust and flexible, and can express many
+compute graphs, including highly parallelizable ones. The real limitation is narrower: a uniformly
+free-monadic IR is often too sequential to serve as the whole semantic center. A staged
+architecture that preserves applicative or traversable structure where independence exists, uses
+selective structure where conditional visibility matters, and introduces monadic structure only
+where dependencies are real, is much stronger.
 
 #### ANF or SSA-like IR
 
@@ -1084,6 +1134,73 @@ Best match, provided the semantic interfaces are disciplined.
 
 ______________________________________________________________________
 
+### 9.8 Axis H: Backend Language and Realization Strategy
+
+```mermaid
+graph LR
+    A[Rust-first Realization] --- B[Hybrid Rust plus Native Adapters] --- C[Full Target-Native Lowering]
+```
+
+#### Rust-first Realization
+
+**Pros**
+
+- strongest shared implementation substrate
+- excellent systems tooling and runtime integration
+- can still reach many targets, including WASM, from one backend center
+- keeps more of the proof and optimization story concentrated in one place
+
+**Cons**
+
+- cannot cover every forced-native surface cleanly
+- may leave optimization opportunities unrealized in proprietary or hardware-specific domains
+- some runtimes still require foreign-language adapters or fully native toolchains
+
+**Assessment**
+
+Preferred default where Rust can credibly target the runtime.
+
+#### Hybrid Rust plus Native Adapters
+
+**Pros**
+
+- pragmatic when the host surface is forced into another language
+- supports thin bridges in JS, Swift, Kotlin, C++, CUDA bindings, or vendor SDK layers
+- lets Rust remain the semantic and runtime center while still exposing required native effects
+
+**Cons**
+
+- cross-language boundaries create boilerplate and trust surfaces
+- optimization across the boundary is weaker
+- proof and observability claims must account for the foreign layer explicitly
+
+**Assessment**
+
+Likely to be common in real systems and should be treated as first-class, not as an afterthought.
+
+#### Full Target-Native Lowering
+
+**Pros**
+
+- necessary for some domains: CUDA, FPGA or HDL flows, bespoke ML inference hardware, mobile
+  runtimes, browser-hosted environments, or proprietary vendor stacks
+- can unlock backend-specific optimization, fusion, and dead-node removal across a whole region
+- avoids pretending that a forced-native substrate is merely an implementation detail
+
+**Cons**
+
+- highest backend engineering burden
+- highest risk of semantic drift across targets
+- expands the proof and validation problem substantially
+
+**Assessment**
+
+Must remain an available option. Rust may still be preferred where it fits, but the morphology
+should explicitly allow both thin native bindings and full native realization when the domain
+requires it.
+
+______________________________________________________________________
+
 ## 10. Option Clusters Revisited
 
 The earlier “options” are best reinterpreted as clusters within the morphology.
@@ -1095,7 +1212,7 @@ flowchart TD
     A[Lean Surface Language] --> B[Lean Core]
     B --> C[Proofs]
     B --> D[Code Generation]
-    D --> E[Rust]
+    D --> E[Rust or Native Target]
 ```
 
 **Strengths**
@@ -1114,7 +1231,7 @@ flowchart TD
 
 Weak overall fit unless the main goal is the formalization itself.
 
-### 10.2 Cluster B: Haskell-Hosted DSL plus Lean and TLA+ plus Rust
+### 10.2 Cluster B: Haskell-Hosted DSL plus Lean and TLA+ plus Rust-First Backend
 
 ```mermaid
 flowchart TD
@@ -1122,7 +1239,7 @@ flowchart TD
     B --> C[Optimizer]
     C --> D[Lean]
     C --> E[TLA+]
-    C --> F[Rust Backend]
+    C --> F[Rust-first or Native Backend]
 ```
 
 **Strengths**
@@ -1150,7 +1267,7 @@ flowchart TD
     C --> D[Optimizer]
     D --> E[Lean]
     D --> F[TLA+]
-    D --> G[Rust Backend]
+    D --> G[Rust-first or Native Backend]
 ```
 
 **Strengths**
@@ -1168,7 +1285,7 @@ flowchart TD
 
 Arguably the strongest long-term product stack.
 
-### 10.4 Cluster C2: OCaml Compiler Core plus Lean and TLA+ plus Rust
+### 10.4 Cluster C2: OCaml Compiler Core plus Lean and TLA+ plus Rust-First Backend
 
 ```mermaid
 flowchart TD
@@ -1177,7 +1294,7 @@ flowchart TD
     C --> D[Optimizer]
     D --> E[Lean]
     D --> F[TLA+]
-    D --> G[Rust Backend]
+    D --> G[Rust-first or Native Backend]
 ```
 
 **Strengths**
@@ -1202,7 +1319,7 @@ flowchart LR
     A[Surface DSL] --> B[Practical Compiler Core]
     B --> C[Verified Kernel]
     C --> D[Checked Lowerings]
-    D --> E[Rust]
+    D --> E[Rust or Native Target]
 ```
 
 **Strengths**
@@ -1234,7 +1351,7 @@ flowchart TD
     D[Layered Portable Domain Native Effects]
     E[Lean for Metatheory and Rewrite Correctness]
     F[TLA+ for Distributed and Temporal Properties]
-    G[Rust Backend]
+    G[Rust-first plus Native Backends]
     H[Hybrid Runtime evolving toward Mostly Compiled Native]
 
     A --> B
@@ -1254,7 +1371,8 @@ It says:
 - prefer an IR-first design
 - prefer an effect graph with law-bearing capabilities
 - use Lean and TLA+ together where they have distinct comparative advantages
-- keep Rust as the target and likely eventual implementation center of gravity
+- keep Rust as the preferred target and likely eventual implementation center of gravity where it
+  fits the runtime, while allowing target-native backends where it does not
 - accept a layered proof story rather than a fantasy of proving the entire world at once
 
 ______________________________________________________________________
@@ -1276,11 +1394,12 @@ ______________________________________________________________________
 - implement graph analyses
 - introduce cost-guided optimization
 
-### Phase 3: Rust Realization
+### Phase 3: Backend Realization
 
-- emit Rust for a restricted fragment
-- implement a compact hybrid runtime
-- measure binary size and performance
+- emit Rust for a restricted fragment where Rust can target the runtime
+- introduce thin native adapter layers for forced languages such as JS, Swift, Kotlin, or C++/CUDA
+- identify domains that require full target-native lowering
+- measure artifact size and performance
 
 ### Phase 4: Formalization
 
@@ -1293,6 +1412,7 @@ ______________________________________________________________________
 
 - add platform-specific effect families
 - formalize their contracts where feasible
+- introduce full-native backends when boilerplate bridges are insufficient
 - weaken proof claims explicitly where escape hatches are used
 
 ______________________________________________________________________
@@ -1338,7 +1458,9 @@ The problem to solve is not merely:
 
 It is:
 
-> What compiler-stack morphology best supports a pure, typed, law-aware topology for distributed compute systems, with meaningful formal methods support and a credible path to highly optimized Rust binaries?
+> What compiler-stack morphology best supports a pure, typed, law-aware topology for distributed
+> compute systems, with meaningful formal methods support and a credible path to highly optimized
+> Rust binaries and other target-native artifacts?
 
 The answer is not a single tool.
 
@@ -1348,7 +1470,8 @@ The strongest current answer is a morphology centered on:
 - a **layered capability topology**
 - **Lean for metatheory, rewrite correctness, and refinement of core fragments**
 - **TLA+ for distributed execution, temporal properties, and protocol sanity**
-- **Rust as the realization substrate**
+- **Rust as the preferred realization substrate where it fits, with explicit room for target-native
+  backends where it does not**
 - a practical willingness to combine proof, model checking, and engineering evidence
 
 In that view, the system is best understood not as a universal effect language, but as:

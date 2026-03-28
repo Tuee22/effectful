@@ -1,958 +1,550 @@
-# Formal Methods Playbook for Reproducible Distributed ML Workflows
+# Distributed ML Workflows Under the Compiler Morphology
 
 **Status**: Reference only
 **Supersedes**: none
-**Referenced by**: intro.md
+**Referenced by**: intro.md, jit.md, proof_engine.md, consensus.md
 
-> **Purpose**: Apply the proof boundary and purity boundary framework to distributed ML training on GPUs, defining proof boundaries for reproducibility and hardware execution.
-> **Authoritative Reference**: [Effectful DSL Hub](intro.md#7-references)
-
-______________________________________________________________________
-
-## ML Training in the Boundary Model
-
-This document applies Effectful's boundary model to distributed ML training:
-
-| Boundary                   | ML Training Components                                                   |
-| -------------------------- | ------------------------------------------------------------------------ |
-| **Purity Boundary**        | DAG construction, scheduler logic, determinism contracts (Haskell)       |
-| **Proof Boundary**         | Runtime protocols, checkpoint protocols, resource management (Rust/TLA+) |
-| **Outside Proof Boundary** | CUDA kernels, GPU drivers, vendor libraries (assumptions)                |
-
-The key insight is that we can prove **orchestration correctness** rigorously while treating GPU execution as assumptions with explicit contracts. See [intro.md](intro.md) for the full boundary model.
+> **Purpose**: Map distributed ML training onto the compiler-stack morphology, with emphasis on IR shape, purity-boundary and proof-boundary placement, reproducibility targets, and backend assumptions. The document leans on the pure-compute-DAG view of workflows as pure data with explicit independence and dependency structure.
+> **📖 Authoritative Reference**: [DSL Intro](intro.md), [DSL Compiler Morphology](dsl_compiler_morphology.md), [Pure Compute DAGs in Haskell](pure_compute_dags_in_haskell.md), [Proof Boundary](proof_boundary.md), and [Proof Engine](proof_engine.md)
 
 ______________________________________________________________________
 
-> **Audience**: You already understand ML training loops, distributed systems (RPC/collectives/consensus), NVIDIA GPU execution models (streams, events, kernels, DMA), and compute-graph optimization.
->
-> **Goal**: Maximize what is *provable* with **TLA+** (and related model-checking/spec techniques) for **general, distributed, effectful DAG workflows** used for ML training—while being explicit about the proof boundary created by proprietary drivers, kernels, and opaque vendor libraries.
+## SSoT Link Map
+
+| Need                           | Link                                                            |
+| ------------------------------ | --------------------------------------------------------------- |
+| DSL overview                   | [DSL Intro](intro.md)                                           |
+| Morphology of compiler choices | [DSL Compiler Morphology](dsl_compiler_morphology.md)           |
+| Pure compute DAG semantics     | [Pure Compute DAGs in Haskell](pure_compute_dags_in_haskell.md) |
+| Proof-boundary philosophy      | [Proof Boundary](proof_boundary.md)                             |
+| Formal verification pipeline   | [Proof Engine](proof_engine.md)                                 |
+| JIT and lowering context       | [JIT Compilation](jit.md)                                       |
 
 ______________________________________________________________________
 
-## 0. Operating Principles
+## 1. Why ML Is a Useful Stress Case
 
-1. **Prove everything you can—stop exactly at the black box boundary.**\
-   Your aim is not “prove the GPU is correct.” It is:
+Distributed ML training is a demanding workload because it combines:
 
-   - prove your *workflow semantics* are precise;
-   - prove your *runtime protocol* cannot enter illegal states;
-   - prove your *distributed control plane* cannot violate safety/liveness properties (under stated assumptions);
-   - and **treat opaque components as assumptions** with minimal, explicit contracts.
+- repeated numeric computation
+- long-lived resource lifetimes
+- distributed coordination
+- checkpoint and recovery protocols
+- stochastic data generation
+- backend-specific performance constraints
 
-1. **Separate computation from orchestration.**\
-   Prove orchestration aggressively. Treat GPU kernels and vendor libs as *uninterpreted* compute steps with declared footprints and contracts.
+That makes ML a useful stress case for the compiler morphology, but it does **not** force a single
+architectural answer. Different ML workloads can justify different points in the morphology:
 
-1. **Prefer deterministic, synchronous training protocols** when byte-for-byte reproducibility is a requirement.
+- different source languages
+- different compiler implementation languages
+- different IR families
+- different proof tools
+- different runtime and backend strategies
 
-1. **Make illegal states unrepresentable in the workflow IR** (types) **and** unenterable at runtime (state-machine invariants + runtime checks).
-
-1. **Use TLA+ for protocol correctness, not code-level correctness.**\
-   TLA+ proves properties of *state machines* and their transitions. It does **not** prove that your Rust/C++ code is correct—unless you establish and validate a refinement relation (see §6).
-
-______________________________________________________________________
-
-## 1. Scope, Threat Model, and Proof Boundary
-
-### 1.1 What you can reasonably prove with TLA+ for ML workflows
-
-You can prove properties about:
-
-- **Workflow execution protocols**:
-
-  - effect ordering
-  - dependency enforcement
-  - idempotency and exactly-once semantics (at the protocol level)
-  - error propagation and cleanup
-  - checkpoint commit protocols
-
-- **Resource safety protocols** (host/runtime level):
-
-  - no double free / use-after-free (UAF) of runtime handles
-  - no free-while-in-flight
-  - no missing synchronization edges in the *planned* execution
-  - bounded resource use (e.g., never exceed memory budget if the planner is correct)
-
-- **Distributed coordination correctness**:
-
-  - membership/epoch management
-  - barrier correctness
-  - all-reduce orchestration correctness (ordering, membership, failure modes)
-  - checkpoint consensus and recovery semantics
-  - job determinism rules (who decides what, when)
-
-- **Reproducibility contracts**:
-
-  - deterministic configuration selection
-  - deterministic schedule selection
-  - deterministic seed derivation
-  - deterministic dataset partitioning and iteration order
-
-### 1.2 What you cannot prove with TLA+ (and should not try)
-
-You cannot prove:
-
-- **Kernel internal correctness**:
-
-  - “this kernel computes the right gradients”
-  - “no out-of-bounds memory access inside kernel”
-  - “no race inside kernel”
-
-- **Correctness of proprietary GPU stacks**:
-
-  - NVIDIA driver correctness
-  - CUDA/cuDNN/cuBLAS correctness
-  - firmware behavior
-
-- **Correctness of the Linux kernel** (or its memory model)\
-  You can *assume* the OS provides the primitives you model; you cannot prove the kernel is correct with TLA+ in your project scope.
-
-- **Performance** (“fast”, “optimal”)\
-  You can prove *absence of deadlock* or *bounded queue growth* under assumptions, not throughput.
-
-### 1.3 The honest contract you can claim
-
-A credible, strong statement looks like:
-
-> We model the runtime and distributed control plane as a state machine. We prove in TLA+ that no legal workflow can drive the system into illegal protocol states (leaks, handle misuse, missing ordering edges, inconsistent checkpoint commits) **assuming**: (1) the vendor GPU stack implements its documented/assumed semantics, (2) kernels respect their declared read/write footprints, and (3) network primitives satisfy specified delivery/failure assumptions.
-
-This is the right “maximal provability” boundary.
-
-### 1.4 Assumption inventory and versioning
-
-Maintain an explicit assumption inventory with pinned versions. At minimum:
-
-- GPU driver version and release channel
-- CUDA/cuDNN/cuBLAS/NCCL versions
-- GPU model + stepping
-- OS kernel version + configuration relevant to memory model or scheduling
-- network stack assumptions (ordering, retry, timeouts)
-
-For each assumption, record:
-
-- the contract relied on (doc/spec reference)
-- the proof artifacts that depend on it
-- the change triggers that require re-validation
-
-### 1.4.1 Assumption inventory template
-
-```text
-assumption_id: gpu-driver
-component: nvidia-driver
-version: 550.54.14
-channel: production
-contract: https://docs.nvidia.com/cuda/cuda-driver-api/index.html
-scope: device execution + memory model
-depends_on_proofs: [spec-1-runtime, spec-1-collectives]
-change_triggers: [driver upgrade, kernel upgrade, firmware update]
-assumption_owner: runtime-team
-reviewer: verification-lead
-review_cadence: quarterly
-next_review_due: 2025-04-15
-evidence_links: [tla-run-2025-01-15-01, tla-run-2025-01-15-02]
-boundary_scope: [determinism, resource-safety, failure-cleanup]
-escalation_policy: block-release-until-revalidated
-last_reviewed: 2025-01-15
-```
-
-### 1.5 Proof boundary maintenance policy
-
-Treat any change to the assumption inventory as a proof-boundary invalidation event.
-Minimum policy:
-
-- update the inventory first
-- re-run model checking for affected specs
-- re-evaluate any manual or automated evidence tied to the old versions
+This document therefore treats ML as a design space, not as evidence that one fixed stack is
+already correct.
 
 ______________________________________________________________________
 
-## 2. The “Effectful DAG + Railway” Execution Model
+## 2. Boundary Model for ML Workflows
 
-### 2.1 Core abstraction: a workflow is an effect DAG
+ML workflows still fit the boundary model, but the exact placement of the boundaries depends on the
+guarantees being sought.
 
-Represent *training* as a **DAG** whose nodes are effects:
+| Boundary                         | Typical ML Content                                                                                                          |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **Purity Boundary**              | training-step structure, dataflow, manifests, replay policy, declared dependencies, selected optimizer rewrites             |
+| **Possible Proof Boundary**      | scheduler protocol, buffer and region discipline, checkpoint protocol, collective coordination, retry and cleanup semantics |
+| **Often Outside Proof Boundary** | vendor kernels, GPU drivers, firmware, undocumented runtime behavior, hardware-specific performance claims                  |
 
-- **Pure compute** (matmul/conv/etc) – represented as *kernel invocations* (opaque compute)
-- **Stateful effects**:
-  - allocate/free buffers
-  - host↔device memcpy
-  - collectives (all-reduce, broadcast)
-  - checkpoint save/restore
-  - logging/metrics
-  - barriers/epochs/membership changes
+The important point is that these are **not** fixed categories. A project may choose to:
 
-Edges encode:
+- prove only orchestration and recovery properties
+- prove selected rewrite families
+- model-check distributed coordination
+- formalize only a minimal semantic kernel
+- rely on tests and runtime assertions for the rest
 
-- data dependencies
-- required synchronization
-- ordering constraints for determinism
+The proof boundary should therefore be described as an explicit engineering choice tied to the
+required guarantee level.
 
-### 2.2 Railway semantics: `Result[Ok, Err]` is part of the DAG meaning
+In Effectful's canonical terminology, the **purity boundary** is the inner boundary around pure
+Haskell workflow descriptions, pure effect descriptions, and analyzable compute-DAG structure.
+Generated Rust, C++, CUDA, JS, Swift, Kotlin, or other imperative interpreters live outside the
+purity boundary even when parts of them remain inside the **proof boundary** because their
+lowerings and runtime contracts are modeled and verified. Drivers, firmware, and undocumented
+vendor behavior usually remain outside the proof boundary.
 
-Your execution semantics must specify:
+### 2.1 Guarantee Levels
 
-- On `Err`, what happens to:
-  - in-flight work
-  - allocated buffers
-  - partially written checkpoints
-  - distributed state (epochs, membership)
-- Whether error triggers:
-  - immediate stop (absorbing failure), or
-  - transition to a cleanup/recovery mode
+ML workflows often mix several kinds of guarantees. They should not be collapsed into one word such
+as "correctness".
 
-**Rule of thumb**: Make failure semantics explicit and deterministic.
+| Guarantee                       | Typical Meaning                                                             |
+| ------------------------------- | --------------------------------------------------------------------------- |
+| **Protocol safety**             | no illegal scheduler, buffer, checkpoint, or coordination state             |
+| **Replay determinism**          | the same manifest and failure history produce the same observable execution |
+| **Bit-for-bit reproducibility** | the same pinned environment yields byte-identical checkpoints or parameters |
+| **Numerical equivalence**       | outputs match within stated tolerances                                      |
+| **Statistical reproducibility** | distributions or metrics remain stable under a stochastic workflow          |
 
-### 2.3 Deterministic scheduling requirement (if you want byte-for-byte)
-
-A DAG admits many valid topological orders. To get strict reproducibility:
-
-- Define a *canonical topological order* (e.g., lexicographic node IDs)
-- Or define a scheduler that is deterministic given:
-  - DAG structure
-  - fixed device/cluster description
-  - fixed configuration and seeds
-
-If you allow concurrency, you must still fix:
-
-- which nodes are submitted first
-- how streams are assigned
-- how collective membership ordering is chosen
+Different morphology choices may be appropriate for different targets. Bit-for-bit reproducibility
+is one possible requirement, not the only legitimate one.
 
 ______________________________________________________________________
 
-## 3. Language & IR Design for Provable Workflows
+## 3. Morphology Axes That Matter Most for ML
 
-### 3.1 Termination (avoid the halting problem by construction)
+The general compiler morphology becomes more concrete when applied to training systems.
 
-To ensure workflow compilation ends and produces a finite DAG:
+| Axis                      | ML Pressure                                                                                                          |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Surface language**      | how naturally one can express training steps, stochastic programs, and reproducibility metadata                      |
+| **Compiler core**         | how well the implementation supports rapid semantic iteration versus production integration                          |
+| **Core IR**               | whether the system can represent step bodies, distributed effects, resource lifetimes, and stochastic state together |
+| **Proof tooling**         | whether the focus is metatheory, rewrite correctness, protocol correctness, or mixed evidence                        |
+| **Runtime strategy**      | interpreted, staged, or mostly compiled execution of training workflows                                              |
+| **Verification boundary** | which parts are modeled, proved, assumed, or merely tested                                                           |
 
-- Disallow general recursion in the workflow DSL.
-- Allow only:
-  - `map`/`fold` over finite collections
-  - bounded loops (`repeatN`)
-  - structural recursion over finite shapes
+### 3.1 Source and Implementation Language
 
-**Output** is always a finite IR: `Graph` or `Plan`.
+ML does not uniquely determine the source or implementation language.
 
-### 3.2 Make illegal states unrepresentable (where it matters)
+- A proof-oriented language may be attractive when intrinsically typed representations or verified
+  fragments are the priority.
+- A language optimized for compiler engineering may be attractive when IR exploration and optimizer
+  iteration are the priority.
+- A systems language may be attractive when runtime integration, backend control, or deployment
+  constraints dominate.
+- A custom DSL may still be desirable once the user-facing model stabilizes.
 
-**Host-side protocol safety** is where ADTs/types shine:
+The right choice depends less on "ML" as a category and more on which part of the stack is meant to
+be the center of gravity.
 
-- **Handles are unforgeable** (newtypes / opaque IDs).
-- **Lifetimes are explicit**:
-  - buffers belong to a region/epoch
-  - buffers cannot be referenced outside their scope
-- **Linearity/affinity** (in spirit, even if you can’t use linear types everywhere):
-  - a buffer must be freed exactly once (unless declared persistent)
-  - “free” consumes the capability to use it
+### 3.2 IR Shape
 
-Typical technique:
+ML workflows are unlikely to be well served by a single IR form used uniformly for every concern.
+Several IR families can be useful together.
 
-- typed IR + a verifier pass that rejects IR violating constraints (liveness, aliasing, footprint rules).
+| IR shape                                 | Likely role in ML workflows                                                                                                              | Main limitation                                                                  |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| **Free modeling spectrum**               | pure workflow description, analyzable syntax, applicative and traversable parallel regions, selective visible branches, monadic barriers | becomes overly sequential only if everything is forced into the monadic end      |
+| **ANF / SSA-like**                       | local step bodies, lowering, code generation, scalarized scheduling details                                                              | weak as the sole representation of long-range effect topology                    |
+| **Effect graph**                         | training DAGs, data movement, collectives, checkpoint dependencies, host/device orchestration                                            | rewrite legality depends on explicit law tracking                                |
+| **Region / capability graph**            | buffer lifetimes, device placement, RNG streams, trust zones, native escape hatches                                                      | more semantic overhead and design complexity                                     |
+| **E-graph / equality saturation hybrid** | rewrite-dense pure subregions, algebraic optimization, local loop-body normalization                                                     | saturation and cost control become difficult outside carefully bounded fragments |
 
-### 3.3 Declare read/write footprints for opaque compute steps
+Here "free" should be understood in the sense used by
+[Pure Compute DAGs in Haskell](pure_compute_dags_in_haskell.md): a hierarchy rather than shorthand
+for "free monad only." That hierarchy matters:
 
-Every kernel/library call should declare a conservative footprint:
+- functorial structure preserves uniform transformation over a described computation
+- applicative structure preserves statically known independent composition
+- selective structure preserves visible conditional branches better than a fully monadic encoding
+- monadic structure introduces genuinely data-dependent continuation
+- traversable structure captures collection-parallel regions such as batch shards, path families,
+  and parameter sweeps
 
-- Buffers read: `R = {h1, h2, ...}`
-- Buffers written: `W = {h3, ...}`
+This makes free modeling a robust front-end or staging technique for ML workflows. Applicative
+or traversable regions can encode highly parallelizable fan-out, while selective or monadic regions
+can mark true barriers such as adaptive control flow, checkpoint decisions, or data-dependent
+coordination. The important practical benefit is that the workflow remains **data** that planners,
+memoizers, and interpreters can inspect before execution.
 
-These footprints power:
+For ML, the most plausible pattern is usually **compositional**:
 
-- race-freedom proofs (ordering constraints)
-- safe deallocation proofs (free not allowed while in-flight)
-- deterministic ordering constraints for collectives
+- an outer IR that keeps effects, coordination, and resource boundaries explicit
+- a free-modeling layer that preserves which parts are independent versus dependent
+- one or more local IRs for numeric or rewrite-heavy fragments
+- staged lowering between them
 
-If you can’t know precise regions, over-approximate at the buffer level.
+### 3.3 Competing IR Choices in ML Practice
+
+The important question is usually not "which IR wins globally?" but "which IR should own which part
+of the workflow?"
+
+#### Free Modeling Spectrum
+
+Best fit:
+
+- keeping workflow structure as data for planning, dry runs, and memo analysis
+- describing workflow structure before committing to execution
+- preserving independent fan-out via applicative or traversable composition
+- representing visible conditional refinements with selective structure
+- marking genuinely dependent barriers with monadic structure
+- supporting multiple interpreters for planning, simulation, testing, and execution
+
+Less ideal when used alone for:
+
+- low-level placement and memory layout
+- whole-graph optimization across many backend-specific constraints
+- final code generation for numeric hot paths
+
+#### ANF / SSA-like IR
+
+Best fit:
+
+- step-local tensor computation
+- explicit data dependencies
+- classic compiler analyses such as liveness, CSE, dead-code elimination, and register or buffer
+  planning
+- lowering toward LLVM, Rust, C++, CUDA, or other target-specific codegen paths
+
+Less ideal when used alone for:
+
+- distributed coordination semantics
+- checkpoint and replay policy
+- rich effect topology across devices, stores, and control planes
+
+#### Effect Graph IR
+
+Best fit:
+
+- host-device transfers
+- collectives and synchronization
+- checkpoint dependencies
+- orchestration across workers, services, and storage
+- making concurrency and hazard edges explicit
+
+Less ideal when used alone for:
+
+- expressing the full richness of local algebraic simplification
+- serving as the only representation for low-level kernel codegen
+
+#### Region / Capability Graph
+
+Best fit:
+
+- buffer and handle lifetime discipline
+- device placement and memory region tracking
+- RNG stream ownership
+- trust boundaries between portable, domain, and native zones
+
+Less ideal when used alone for:
+
+- front-end workflow ergonomics
+- pure algebraic optimization
+
+#### E-Graph / Equality Saturation Hybrid
+
+Best fit:
+
+- pure tensor algebra
+- optimizer update equations
+- discretization identities for SDE kernels
+- Monte Carlo estimator rewrites
+- dead-node removal after algebraic simplification exposes unreachable or unused subgraphs
+
+Less ideal when used alone for:
+
+- checkpoint protocols
+- retry semantics
+- distributed coordination
+- effectful or stochastic regions whose legality depends on more than equality
+
+#### Working Decomposition
+
+For many ML systems, the strongest arrangement is layered:
+
+- a free-modeling surface for pure description and independence structure
+- an effect graph for orchestration and distributed dependencies
+- region or capability structure for resources, devices, and trust boundaries
+- ANF, SSA-like, or backend-specific IRs for numeric kernels
+- optional e-graph passes over pure extracted subregions
+
+That decomposition keeps the competing IRs in productive tension rather than forcing one of them to
+over-explain the whole system.
 
 ______________________________________________________________________
 
-## 4. Reproducibility: Byte-for-Byte as a First-Class Constraint
+## 4. Representing Training Loops and Stochastic Workloads
 
-Byte-for-byte reproducibility is *hard* on GPUs. The rule is:
+Training is repetitive, but the repetition itself can be modeled in several ways.
 
-> You only get bitwise reproducibility if you eliminate or fully control every source of nondeterminism.
+Possible representations include:
 
-### 4.1 Define a “Reproducibility Contract” (write it down)
+- a finite staged plan produced from bounded loop constructs
+- a loop skeleton with explicit state-transition semantics
+- a recurrent subgraph whose iteration policy is handled by the runtime
+- a free applicative region for independent work inside a larger monadic or graph-oriented shell
+- partial unrolling for optimization or verification of hot fragments
 
-A good contract includes:
+No single choice should be treated as mandatory across all ML workloads.
 
-1. **Pinned hardware**:
+### 4.1 Training Loops
 
-   - GPU model and stepping
-   - number of GPUs
-   - interconnect topology (PCIe/NVLink)
-   - CPU model and count (can affect host-side ordering)
+Specific training loops often have a stable per-step shape:
 
-1. **Pinned software**:
+- read batch or shard
+- run forward computation
+- run backward computation
+- communicate gradients or activations
+- update parameters and optimizer state
+- checkpoint or emit metrics at selected boundaries
 
-   - OS version, kernel version
-   - GPU driver version
-   - CUDA/Vulkan stack versions (whichever you use)
-   - vendor libraries (cuBLAS/cuDNN/NCCL) versions if in the stack
-   - compiler versions (Rust, LLVM, etc.)
-   - container image digest
+This structure argues for an IR that can express both:
 
-1. **Pinned runtime configuration**:
+- a repeated local kernel pattern
+- an outer effectful protocol for coordination and recovery
 
-   - math modes (TF32 on/off, flush-to-zero behavior if applicable)
-   - deterministic algorithm selections in vendor libs (when available)
-   - fixed workspace sizes and algorithm choice policies
-   - fixed stream scheduling policy
+One useful way to characterize that split is category-theoretic:
 
-1. **Pinned dataset and data order**:
+- applicative or traversable structure for independent shard-local, device-local, or batch-local work
+- selective structure for visible conditional refinements that should remain analyzable before execution
+- monadic structure for step-to-step dependence, adaptive branching, or failure-driven control flow
 
-   - dataset artifact hash
-   - shard mapping to workers
-   - per-worker file order
-   - augmentation seeds and deterministic augmentation code paths
+On that view, free modeling is not opposed to parallel training. It is often one of the cleanest
+ways to preserve parallelizable structure in the representation while still allowing genuine
+dependency barriers where they are needed.
 
-1. **Pinned randomness**:
+That does **not** require the whole system to collapse into a single finite DAG early. Some
+workflows may benefit from early graph materialization; others may keep loop structure explicit
+until later lowering.
 
-   - a single global seed recorded in the manifest
-   - deterministic derivation of per-step/per-worker/per-op seeds
+### 4.2 Monte Carlo and SDE-Based Data Generation
 
-1. **Pinned distributed membership and ordering**:
+ML workflows sometimes generate training data or supervisory signals through Monte Carlo procedures,
+simulators, or SDE rollouts. Those workloads add requirements that should be explicit in the IR:
 
-   - fixed worker IDs ordering
-   - fixed ring order for all-reduce
-   - fixed collective chunking strategy
+- RNG streams and seed derivation
+- discretization scheme and step size policy
+- path batching and worker partitioning
+- checkpoint and replay semantics for stochastic state
+- aggregation rules for sampled outputs
 
-### 4.1.1 Bit-for-bit reproducibility requirement (explicit)
+These are not merely numerical details. They affect determinism, replay, and sometimes the meaning
+of the workflow itself.
 
-When required, training **must be bit-for-bit reproducible** under the pinned environment
-described in the reproducibility contract. This means: for the same manifest (hardware, software,
-config, dataset, seeds, topology), the final model parameters and all checkpointed state are
-identical at the byte level across runs.
-
-### 4.2 Accept the hard truth: reproducibility does not generalize across hardware
-
-Bitwise reproducibility usually requires:
-
-- identical GPU model (and often same driver + library versions)
-
-If you need cross-hardware determinism, you must:
-
-- avoid GPU-specific nondeterminism (often impossible at scale), or
-- accept weaker guarantees (numerical equivalence within tolerance).
-
-### 4.3 Deterministic collectives are not optional
-
-To get deterministic distributed updates:
-
-- prefer **synchronous SGD** with deterministic all-reduce ordering
-- avoid asynchronous parameter servers if bitwise reproducibility is required
-- fix the reduction order (ring order, tree structure) and keep it stable
+They also fit naturally into the same hierarchy. Many sampled paths or shard-local simulations are
+good candidates for applicative or traversable composition because they are independent once
+parameters and seeds are fixed. Monadic structure can then be reserved for adaptive resampling,
+stopping criteria, checkpoint-driven replay, or other places where later work genuinely depends on
+earlier outcomes.
 
 ______________________________________________________________________
 
-## 5. GPU Backends: How to “Step Past” Parts of the CUDA Barrier (Realistically)
+## 5. Is an E-Graph Hybrid Worth Including for ML?
 
-You cannot fully escape opaque NVIDIA components on NVIDIA hardware, but you can choose where your proof boundary lies.
+Probably yes, but only as a **bounded subset** of the IR stack rather than as the sole semantic
+center.
 
-### Option A — **Treat CUDA/cuDNN/cuBLAS/NCCL as trusted black boxes**
+### 5.1 Where It Seems Worthwhile
 
-**What you prove**:
+An e-graph or equality-saturation component is appealing when the ML workflow contains subproblems
+with:
 
-- your DAG semantics and runtime protocol are correct
-- you never misuse handles, streams, or synchronization at the orchestration layer
-- you never violate your own footprint and ordering rules
+- many algebraically equivalent forms
+- rich local rewrite opportunities
+- clear law sets
+- expensive search spaces that are hard to explore with hand-written greedy passes
 
-**What you assume**:
+That can happen in:
 
-- CUDA + libraries implement their contracts
+Here, **fusion** means combining adjacent tensor operations into one larger lowered region or one
+larger kernel without changing the intended semantics. It matters in ML because it can remove
+temporary tensors, reduce kernel-launch overhead, reduce memory traffic, and expose larger regions
+for backend-specific optimization.
 
-**Why it’s pragmatic**:
+- training-step algebra before lowering
+- fusion, reassociation, and normalization of tensor expressions
+- optimizer update equations
+- symbolic manipulation of loss or regularization terms
+- Monte Carlo estimators with known algebraic identities
+- SDE simulation kernels with declared discretization laws or transformation identities
 
-- it’s the most realistic way to get performance
-- it maximizes what *you* can prove while accepting vendor opacity
+This is the strongest case for inclusion: not "replace the IR with an e-graph", but "give the
+compiler a way to extract rewrite-heavy regions into an equality-saturation subproblem".
 
-### Option B — **Use Vulkan compute to reduce dependence on CUDA runtime**
+### 5.2 Where It Becomes Risky
 
-You still trust the NVIDIA Vulkan driver, but you benefit from:
+The e-graph story gets weaker when the representation must carry:
 
-- a public spec for command buffers, queues, fences, memory types
-- a more “protocol-like” surface that maps cleanly to state machines
+- distributed protocol state
+- checkpoint commit semantics
+- retry and cleanup behavior
+- resource lifetime and aliasing constraints
+- explicit RNG ordering guarantees
+- backend-specific capability or trust boundaries
 
-**Best use**:
+Those concerns are usually better represented in an effect graph, capability graph, state-machine
+model, or staged lowering artifact. Equality alone is not a sufficient organizing principle for the
+whole ML workflow.
 
-- you want a documented execution model to align with TLA+
-- you can accept driver opacity but want less CUDA-specific complexity
+### 5.3 Practical Position
 
-### Option C — **Direct driver interaction (ioctls)**
+For ML, an e-graph hybrid is worth considering if the compiler can clearly separate:
 
-This is **research-grade** and has a weak proof payoff because:
+- **outer effectful semantics**
+- **inner law-governed rewrite regions**
+- **cost control for saturation**
+- **side conditions for stochastic and stateful operations**
 
-- you still trust the kernel driver and firmware
-- interfaces are undocumented/unstable
-- you expand the surface area for mistakes massively
+That separation matters especially for Monte Carlo and SDE workflows. A compiler may reasonably use
+equality saturation inside a pure transition kernel or estimator algebra while still keeping RNG
+streams, sample ordering, checkpointability, and distributed partitioning in the outer IR.
 
-If your primary goal is “maximal formal provability,” Option C is usually a trap:
+So the answer is:
 
-- you can prove *your* protocol, but you now have far more low-level behaviors to assume or reverse-engineer
-- your proof boundary becomes harder to state, not easier
-
-**Sweet spot recommendation**: Option A or B for anything beyond a research prototype.
-
-### 5.1 Backend change control
-
-Backend changes expand or shift the modeled surface. Use a simple rule:
-
-- any change in GPU backend, driver, or library version invalidates prior proofs
-- re-run the spec suite against the new inventory before relying on guarantees
-
-______________________________________________________________________
-
-## 6. TLA+ Methodology for Effectful DAG Runtimes
-
-### 6.1 Your spec stack: multi-level specifications
-
-Use at least two levels:
-
-- **Spec 0: Semantic DAG spec (high-level)**
-
-  - what effects mean
-  - railway error behavior
-  - “correctness” at the workflow level
-
-- **Spec 1: Operational runtime spec (state machine)**
-
-  - queues, allocations, in-flight commands, fences/events
-  - ordering rules and resource rules
-  - failure/cleanup rules
-
-Then prove:
-
-- Spec 1 **refines** Spec 0 (or is consistent with it)
-- Spec 1 satisfies safety/liveness invariants
-
-### 6.1.1 Spec adequacy checklist
-
-Protocol correctness only applies to the constraints you encode. Require the spec to include:
-
-- determinism constraints (scheduler, collective ordering)
-- resource bounds (memory, handles, in-flight limits)
-- failure behavior (cleanup mode, rollback or abort rules)
-- external dependencies (network delivery assumptions, device semantics)
-
-### 6.2 What you model (and what you abstract)
-
-Model explicitly:
-
-- handle allocation/free protocol
-- in-flight tracking
-- read/write footprints and dependency edges
-- deterministic scheduling rules
-- error propagation and cleanup mode
-- distributed membership and barriers
-
-### 6.3 Proof boundary selection and validation (explicit steps)
-
-1. **Enumerate components** (runtime, schedulers, storage, network, GPU stack, kernels).
-1. For each component, decide: **model** vs **assume** based on stability of semantics, spec
-   availability, and controllability.
-1. **Place the boundary at the smallest opaque interface** that still preserves the required
-   guarantees.
-1. **Write the assumptions** in the inventory, pin versions, and link to the TLA+ specs that
-   depend on them.
-1. **Define a refinement mapping** from runtime state → TLA+ state and embed runtime assertions
-   for invariants.
-1. **Validate** by:
-   - model checking the protocol invariants and liveness in TLA+,
-   - model-based tests comparing interpreter vs runtime observable outcomes,
-   - asserting invariants in production (fail-fast).
-
-See the §13 “Proof boundary validation” checklist for the operational verification steps.
-
-### 6.4 Proof envelope artifacts
-
-Bundle proofs with a machine-readable environment manifest:
-
-- spec versions
-- assumption inventory (from §1.4)
-- model-checking parameters and limits
-  This makes proofs reproducible and links them to the exact boundary they depend on.
-
-### 6.5 Additional formal methods principles to prioritize
-
-- **Refinement mapping**: define explicit mappings between spec levels and keep them versioned with code changes.
-- **Compositional specs**: specify allocator/scheduler/collectives separately, then prove composition preserves invariants.
-- **Assumption minimization**: prefer conservative, explicit assumptions and model nondeterminism rather than optimistic guarantees.
-- **Invariant-driven design**: identify safety invariants early; wire them into specs and runtime checks.
-- **Counterexample-first workflow**: keep a log of model checker counterexamples and the design responses.
-- **Bounded checking clarity**: document bounds and what behaviors they cover.
-- **Fairness precision**: state fairness assumptions explicitly and keep them minimal; note which liveness results depend on them.
-- **Property coverage**: separate safety, liveness, determinism; ensure each is exercised by dedicated checks.
-- **Runtime–spec alignment**: add lightweight runtime checks for invariants that are expensive to model or easy to violate in code.
+> Include an e-graph or equality-saturation subset if the aim is to optimize rewrite-heavy ML
+> fragments, including specific training-loop bodies and Monte Carlo or SDE generation kernels. Do
+> not make it the only semantic center unless the project is willing to encode much richer effect,
+> stochastic, and protocol constraints than equality saturation usually carries on its own.
 
 ______________________________________________________________________
 
-## Appendix A: Proof Boundary Decision Tree
+## 6. Backend Languages and Native Realization for ML
 
-This decision tree is a technical workflow for placing a proof boundary in a system that combines model-checked protocols with opaque components. It encodes a repeatable sequence: define the intended guarantees first, enumerate assumptions, test whether those assumptions are minimal and explicit, and then decide what to model versus what to treat as an interface boundary. The goal is not to remove judgment, but to ensure the judgment is applied at a fixed set of gates and is recorded alongside the assumption inventory. Each branch is tied to a specific engineering action: reduce assumptions by formalizing or re-scoping, model components with stable, spec-defined semantics, or place a boundary at opaque interfaces and pin versions to evidence.
+Rust remains attractive for ML workflows wherever it can credibly target the runtime. That includes
+more situations than a narrow server-side view might suggest, especially when Rust can target WASM
+or sit as the control-plane language around specialized compute regions.
 
-The structure also enforces change control. Any modification to the assumption inventory loops back to re-validation, making proof drift visible. This matters because the boundary is not a one-time declaration; it is maintained through explicit inventory updates, model-checking reruns, and versioned evidence. The flow distinguishes between technical feasibility (whether a component can be specified and modeled) and proof scope (whether a component should be trusted as an external contract). That separation keeps performance-driven choices, vendor dependencies, and architectural constraints from silently expanding the proof boundary without an explicit review.
+These backend choices occur **after** the purity-boundary crossing. They may still remain inside
+the proof boundary when their lowerings, runtime contracts, and memory disciplines are modeled and
+verified. Vendor kernels, drivers, firmware, and undocumented backend behavior usually remain
+outside the proof boundary and must be handled as explicit assumptions.
 
-```mermaid
-flowchart TB
-  Start[Start: new subsystem or workflow]
-  Scope[Define target guarantees]
-  Assumptions[Draft assumption inventory]
-  Q1{Are assumptions small and explicit?}
-  Reduce[Reduce or formalize assumptions]
-  Q2{Is the component spec-defined and stable?}
-  Model[Model in TLA+ spec]
-  Q3{Is the behavior opaque or proprietary?}
-  Boundary[Place proof boundary at interface]
-  Evidence[Collect evidence and pin versions]
-  Q4{Do changes invalidate assumptions?}
-  Revalidate[Re-run model checking and update inventory]
-  Approve[Accept boundary and proceed]
+But ML also encounters many environments where some other language or toolchain is effectively
+forced:
 
-  Start --> Scope
-  Scope --> Assumptions
-  Assumptions --> Q1
-  Q1 -->|no| Reduce
-  Reduce --> Assumptions
-  Q1 -->|yes| Q2
-  Q2 -->|yes| Model
-  Q2 -->|no| Q3
-  Q3 -->|yes| Boundary
-  Q3 -->|no| Model
-  Model --> Evidence
-  Boundary --> Evidence
-  Evidence --> Q4
-  Q4 -->|yes| Revalidate
-  Revalidate --> Evidence
-  Q4 -->|no| Approve
-```
+- JS or TS for browser or host-environment integration
+- Swift or Kotlin for mobile surfaces
+- C++ or CUDA for GPU runtimes
+- FPGA or HDL toolchains for reconfigurable hardware
+- bespoke vendor languages, SDKs, or inference toolchains for proprietary accelerators
 
-Abstract away:
+### 6.1 Rust-First with Native Adapters
 
-- the math inside kernels
-- byte contents of tensors (unless you are modeling RNG determinism at a symbolic level)
-- DMA mechanics (treat memcpy as atomic effect with completion)
+One strategy is to keep the main runtime and effect machinery in Rust, and generate only enough
+native code to expose required effect surfaces:
 
-### 6.3 Core invariants for a single-node GPU executor
+- JS bindings for browser-hosted effects
+- Swift or Kotlin wrappers for mobile integration
+- C++ or CUDA interpreters that expose compute effects to a Rust orchestration layer
+- vendor SDK shims for proprietary devices
 
-Define variables such as:
+This is often the right answer when the foreign layer is mainly an access boundary rather than the
+main optimization domain.
 
-- `Allocated`: set of live handles
-- `InFlight`: set of submitted commands not completed
-- `Uses(cmd)`: handles read/written by cmd
-- `Completed`: set of completed commands
-- `Err`: optional error state
-- `Mode`: `Running | Cleanup | Done | Failed`
+### 6.2 Full Native Lowering
 
-Then prove invariants like:
+A second strategy is to lower selected regions, or even an entire compute subworkflow, into the
+target-native language itself.
 
-1. **Handle validity**\
-   Any command references only allocated handles:
+For ML that can mean:
 
-   - `∀ cmd ∈ InFlight : Uses(cmd) ⊆ Allocated`
+- emitting an effect interpreter in C++ or CUDA
+- emitting the full compute region in CUDA rather than calling opaque kernels indirectly
+- targeting a vendor accelerator toolchain directly
+- generating mobile-native compute or orchestration paths when the platform demands it
 
-1. **No double free**\
-   `Free(h)` only if `h ∈ Allocated`, and after free `h ∉ Allocated`.
+This can matter because full native lowering may expose optimizations that a thinner bridge cannot,
+including:
 
-1. **No free-while-in-flight**\
-   If `h` is used by any in-flight command, it cannot be freed:
+- deeper fusion across a larger compute region
+- more aggressive dead-node removal
+- backend-specific scheduling and placement
+- tighter control over memory movement and launch structure
 
-   - `∀ h : (∃ cmd ∈ InFlight : h ∈ Uses(cmd)) ⇒ h ∈ Allocated ∧ ¬CanFree(h)`
+The tradeoff is that proof, validation, and maintenance burdens all rise with the number of fully
+native backends.
 
-1. **Ordering for hazards**\
-   If cmd2 reads/writes a handle written by cmd1, cmd2 is ordered after cmd1 by:
+### 6.3 Working Backend Posture for ML
 
-   - stream FIFO, or
-   - explicit dependency edge
+The most defensible posture is therefore layered:
 
-1. **Deterministic scheduling**\
-   If two schedules are possible, the runtime chooses the canonical one.
+- prefer Rust where Rust can target the runtime well
+- allow thin native layers where the foreign language is mostly an interface requirement
+- allow full native realization where the backend is forced or where the optimization payoff is real
 
-1. **Railway semantics**\
-   If `Err` is set, no further “normal” effects occur; only cleanup/recovery actions may occur.
-
-1. **Cleanup completeness** (if you promise it)\
-   From Cleanup mode, eventually `Allocated` becomes empty (or only persistent handles remain).
-
-### 6.4 Distributed training: what you model
-
-Your distributed ML workflow has at least:
-
-- **Workers** (GPU executors)
-- **Coordinator / Control plane** (job state, membership, epochs)
-- **Communication substrate** (collectives or point-to-point)
-- **Storage** (checkpoint store, possibly object store)
-
-Model in TLA+:
-
-- membership changes
-- barrier protocols
-- collective group formation and ordering
-- checkpoint commit protocol
-- restart semantics and replay semantics
-- idempotency keys for effects that may be retried
-
-### 6.5 Liveness: always state your assumptions
-
-Liveness proofs depend on assumptions like:
-
-- messages are eventually delivered (or fail)
-- submitted GPU work eventually completes (or errors)
-- storage writes eventually complete (or error)
-
-In TLA+, encode these as fairness assumptions, and **write them down** in your reproducibility/safety contract.
-
-### 6.6 Refinement: the correct way to connect specs to code
-
-TLA+ does **not** prove your Rust is correct directly. What you do:
-
-1. Treat your Rust runtime as *intended to implement* Spec 1.
-1. Establish a **refinement mapping**:
-   - a function from concrete runtime state → abstract TLA+ state
-1. Validate refinement through:
-   - design alignment (one-to-one mapping of operations)
-   - runtime assertions that enforce TLA+ invariants
-   - model-based testing (generate traces from the spec and compare)
-
-This is the pragmatic, standard route in systems verification.
-
-### 6.7 Proof Engine for ML Workflow Verification
-
-The proof engine verifies ML training workflows by:
-
-1. **Extracting DAG semantics** from the training specification
-2. **Checking orchestration correctness** (no handle misuse, proper ordering)
-3. **Verifying distributed protocols** (checkpointing, collective ordering)
-4. **Gating deployment** on successful verification
-
-The spec layers (Spec 0 and Spec 1) feed directly into the Extract phase for formal artifact generation. See [proof_engine.md](proof_engine.md) for the complete proof engine architecture.
+That keeps Rust preferred without pretending that CUDA, JS, Swift, Kotlin, FPGA flows, or
+proprietary accelerator toolchains are secondary concerns in every ML deployment.
 
 ______________________________________________________________________
 
-## 7. Anti-Pattern Proofs (Avoid These)
+## 7. Formal Methods Options for ML
 
-1. **Modeling GPU internals in TLA+**\
-   You’ll either explode the state space or accidentally assume what you need to prove.
+The morphology document distinguishes several proof classes. ML workloads can touch more than one of
+them.
 
-1. **Proving numeric equivalence of floating point computations in TLA+**\
-   TLA+ is not designed for bit-level floating-point arithmetic proofs.
+| Proof concern                | Plausible tool posture                                                           |
+| ---------------------------- | -------------------------------------------------------------------------------- |
+| **Core IR soundness**        | theorem-prover-style formalization or a smaller typed kernel                     |
+| **Rewrite correctness**      | theorem proving, law-checked rewrites, or tightly constrained local validation   |
+| **Distributed coordination** | temporal or state-machine modeling, possibly with model checking                 |
+| **Lowering correctness**     | refinement arguments for selected fragments plus testing or assertions elsewhere |
+| **Runtime contracts**        | mixed evidence: tests, assertions, differential checks, fuzzing, selected models |
 
-1. **“Verifying the CUDA stack” by modeling it as correct**\
-   That proves nothing. Instead, model CUDA as an *assumption* with a minimal interface contract.
+This suggests several reasonable strategies:
 
-1. **Single huge spec** for everything\
-   Use layers and refinement; otherwise TLC becomes useless.
+- a proof-oriented core with lighter-weight runtime evidence
+- a model-checking-heavy approach for checkpoint and collective protocols
+- a hybrid proof stack
+- a minimal formal core with explicit assumption management
 
-1. **Ignoring fairness and failure models**\
-   If you don’t specify your liveness assumptions explicitly, your “proof” will not match reality.
-
-______________________________________________________________________
-
-## 8. Distributed Training Algorithms Under Formal Methods
-
-This section focuses on **protocol correctness** and **reproducibility**.
-
-### 8.1 Synchronous data parallel (recommended baseline)
-
-**Workflow** per step:
-
-1. Each worker computes gradients locally.
-1. All-reduce gradients across workers in a deterministic order.
-1. Apply update deterministically.
-1. Barrier or epoch increment.
-
-**What to prove**
-
-- Membership agreement: all workers participate in the same step with the same group.
-- Deterministic all-reduce structure (fixed ring/tree).
-- Exactly-once step commit: either the step is committed everywhere or retried safely.
-- Restart semantics: after failure, workers resume at the same global step with the same RNG states.
-
-**Reproducibility keys**
-
-- fixed batch assignment per worker
-- fixed all-reduce order
-- fixed floating point algorithm choices (reductions are sensitive to order)
-
-### 8.2 Model parallel / pipeline parallel
-
-Adds complexity:
-
-- microbatch scheduling
-- pipeline bubbles
-- activation checkpointing
-- cross-stage communication
-
-**What to prove**
-
-- no deadlock in pipeline scheduling
-- no reordering that violates determinism
-- correct “credit” or flow-control protocol (bounded in-flight microbatches)
-- correct restart semantics: no duplicate microbatch application
-
-### 8.3 Parameter server (asynchronous) — avoid if bitwise reproducibility is required
-
-Asynchronous updates are inherently order-dependent:
-
-- message delays reorder updates
-- resulting floating point sums differ
-
-You can still use formal methods here, but reproducibility is weaker unless you impose strict ordering.
-
-**If you must use it**, enforce:
-
-- logical clocks
-- deterministic update ordering at the server
-- idempotency keys per update
-
-Then prove:
-
-- exactly-once application of each update
-- bounded staleness if that’s the algorithm requirement
+Again, ML does not force one answer. The right posture depends on whether the main risk is semantic
+drift in rewrites, distributed failure handling, opaque backend contracts, or something else.
 
 ______________________________________________________________________
 
-## 9. Consensus and Coordination: “Only if Proven Correct”
+## 8. Reproducibility Choices Should Stay Explicit
 
-Your constraint is strict:
+The earlier version of this document leaned toward the strongest reproducibility target. That target
+remains important, but it should be presented as a choice in the morphology rather than as the only
+valid outcome.
 
-> We can use existing consensus mechanisms only if they’ve been proven correct by TLA+ or equivalent.
+### 8.1 Common Reproducibility Postures
 
-### 9.1 Reality check: code-level proofs are rare
+- **Pinned-environment bit-for-bit reproducibility**:
+  useful when exact replay, auditability, or scientific traceability are central
+- **Deterministic control-plane behavior with backend assumptions**:
+  useful when orchestration must be reproducible even if numeric kernels are trusted black boxes
+- **Tolerance-based numerical reproducibility**:
+  useful when hardware variation or backend diversity is expected
+- **Statistical reproducibility**:
+  useful when the workflow is inherently stochastic and the claim is about distributions or metrics
 
-Many systems use TLA+ to validate *designs*, not to produce machine-checked proofs of shipping code. If you require implementation-level proofs, your choices will be limited and may be research-grade.
+Each posture carries different implications for:
 
-### 9.2 Pragmatic interpretation that still honors the principle
+- scheduler design
+- RNG modeling
+- collective ordering
+- checkpoint contents
+- backend pinning
+- acceptable optimization freedom
 
-You can maintain the “prove everything provable” ethos by:
+### 8.2 Backend Assumptions
 
-- Using **a formally specified consensus protocol** (Raft/Paxos/whatever) with known proofs/specs
-- Treating the deployed consensus implementation as a **trusted component**
-- Proving your system is safe **assuming** the consensus API satisfies the protocol contract
+GPU backends, vendor libraries, storage layers, and network stacks should be treated as explicit
+assumption surfaces unless they are actually modeled or verified. Which interfaces sit outside the
+proof boundary will vary by project.
 
-If you truly need code-level verification, you may need to:
+That means this document should avoid claiming that one backend strategy is universally the "sweet
+spot". A better standard is:
 
-- adopt a verified implementation from the research world, or
-- build a small verified coordinator yourself (often feasible if your needs are narrow)
-
-### 9.3 What to use consensus for in ML workflows
-
-Use consensus only for:
-
-- cluster membership and epochs
-- step commit decisions
-- checkpoint commit records (two-phase commit / write-ahead log)
-- run manifests and reproducibility metadata
-
-Avoid putting high-rate data plane traffic (tensors) behind consensus.
-
-### 9.4 When you can avoid consensus
-
-If you can tolerate:
-
-- a single coordinator process (with deterministic replay),
-- or append-only logs with deterministic recovery,
-
-you can reduce coordination complexity and keep more of the system in your own provable state machine.
+- state the assumptions
+- state the guarantees that depend on them
+- revalidate when the assumption inventory changes
 
 ______________________________________________________________________
 
-## 10. Checkpointing, Logging, and Deterministic Replay
+## 9. Working Position
 
-### 10.1 Checkpoints must be globally consistent
+The most defensible current position is intentionally narrow:
 
-A “checkpoint” is only meaningful if it captures:
+- ML workflows are a strong argument for a **layered** compiler stack, not for one universal IR or
+  one universal proof tool.
+- An **effect graph** remains a plausible outer semantic center for orchestration, dependency, and
+  distributed protocol structure, but it may need help from ANF/SSA-like forms, capability or
+  region structure, and staged lowerings.
+- An **e-graph / equality-saturation hybrid** is worth including as an optional sub-IR for
+  rewrite-heavy ML fragments, especially training-step bodies and Monte Carlo or SDE generation
+  kernels, provided law boundaries and cost controls are explicit.
+- **Rust-first realization** is attractive where Rust can target the runtime well, but ML systems
+  must also allow thin native bridges and full native lowering in languages such as CUDA, JS,
+  Swift, Kotlin, or vendor-specific accelerator toolchains when the domain requires them.
+- The **outer semantics** of checkpointing, retries, collectives, resource safety, and
+  reproducibility policy are still better captured by effect, capability, or state-machine-oriented
+  representations than by equality saturation alone.
 
-- model parameters
-- optimizer state
-- RNG states (global + per-worker + per-stream/per-op if needed)
-- data loader position / epoch / shuffle state
-- distributed membership/epoch/step metadata
-
-### 10.2 A provable checkpoint commit protocol (typical pattern)
-
-1. **Prepare**: all workers write checkpoint shards to durable storage with a unique checkpoint ID.
-1. **Vote**: workers report success/failure to coordinator.
-1. **Commit**: coordinator publishes a commit record (consensus-backed if needed).
-1. **Finalize**: workers garbage-collect uncommitted shards.
-
-**What to prove**
-
-- no “phantom committed” checkpoint (commit record without all shards)
-- no “lost checkpoint” (all shards written but commit never reachable under assumptions)
-- idempotent retries: re-running prepare/commit does not create ambiguity
-
-### 10.2.1 Reproducibility across arbitrary save/load cycles
-
-The checkpoint protocol must guarantee that **any sequence of save/load cycles**—including
-spurious DAG failures and retries—reconstructs the exact same training state. Concretely: if a run
-resumes from any committed checkpoint, replays any required effects, and continues, the resulting
-model/optimizer/RNG state is **bit-for-bit identical** to a failure-free run at the same logical
-step.
-This requirement is part of the reproducibility contract (§4.1).
-
-### 10.3 Logging as an effect trace (enables debugging + replay)
-
-Maintain an **append-only effect log**:
-
-- node IDs
-- effect types
-- parameters (hashed if large)
-- causal dependencies
-- start/end timestamps (optional, not used for determinism)
-- success/failure and error codes
-
-This supports:
-
-- deterministic replay for debugging
-- auditability
-- postmortem reconstruction of “what happened”
-
-**Warning**: Time-based decisions break reproducibility. Logs should be observational, not control inputs.
-
-______________________________________________________________________
-
-## 11. Implementation Pattern: Verified Runtime + Black-Box Compute
-
-### 11.1 Minimal verified core: the runtime is a state machine
-
-Design the runtime so its transitions map directly to your TLA+ actions:
-
-- `alloc(h)`
-- `free(h)`
-- `submit(cmd)`
-- `poll_complete(cmd)`
-- `wait(cmd)`
-- `begin_cleanup()`
-- `finalize_checkpoint(id)`
-- …
-
-Then:
-
-- enforce all preconditions at runtime
-- keep unsafe code in a tiny “sys” module
-
-### 11.2 Model-based testing and runtime assertions
-
-To bridge “spec ↔ code”:
-
-- generate random legal workflows (within bounds)
-- execute on a reference interpreter (pure)
-- execute on real runtime (GPU)
-- compare *observable protocol outcomes*:
-  - which nodes completed
-  - which checkpoint IDs committed
-  - which handles allocated/freed
-  - error paths behaved correctly
-
-Include runtime assertions mirroring TLA+ invariants.
-
-______________________________________________________________________
-
-## 12. Effort vs Safety: A Practical Ladder
-
-### Tier 0 — Conventional ML stack
-
-- Use PyTorch/JAX/TF
-- Rely on “best effort” determinism flags
-- Minimal guarantees
-
-### Tier 1 — Proven orchestration, trusted CUDA
-
-- Prove your workflow runtime protocol in TLA+
-- Treat CUDA/cuDNN/cuBLAS/NCCL as black boxes
-- Achieve high confidence in orchestration correctness
-- Best ROI for most teams
-
-### Tier 2 — Proven distributed control plane + deterministic workflows
-
-- Add TLA+ proofs for membership, checkpoint commit, replay semantics
-- Strict run manifest and pinning
-- Highest reproducibility and operational reliability
-
-### Tier 3 — Research-grade “driver-level” work
-
-- Direct driver interfaces / custom submission
-- Very high engineering cost
-- Proof payoff is smaller than it looks (still black boxes)
-- Only worth it for research novelty or very narrow controlled environments
-
-______________________________________________________________________
-
-## 13. A Concrete Checklist
-
-### Workflow/IR
-
-- [ ] Workflow always compiles to a finite DAG
-- [ ] Every effect has explicit inputs/outputs and footprints
-- [ ] Error semantics are explicit and deterministic
-- [ ] A canonical schedule is defined (or schedule is a deterministic function)
-
-### Runtime (single node)
-
-- [ ] Handle tables enforce unforgeability
-- [ ] In-flight tracking prevents free-while-in-flight
-- [ ] Stream/dependency semantics are explicit and checked
-- [ ] Cleanup semantics are specified and implemented
-- [ ] Runtime assertions mirror TLA+ invariants
-
-### Distributed
-
-- [ ] Membership/epoch semantics are specified
-- [ ] Collective ordering is deterministic
-- [ ] Checkpoint protocol is provably consistent
-- [ ] Restart/replay semantics are deterministic and documented (see §10.2.1)
-- [ ] Idempotency keys exist for retryable effects
-
-### Reproducibility
-
-- [ ] Run manifest includes pinned hardware/software/config
-- [ ] Bit-for-bit requirement is declared for the pinned environment (see §4.1.1)
-- [ ] Deterministic seed derivation recorded
-- [ ] Dataset artifact and partitioning are hashed and pinned
-- [ ] Deterministic algorithms enforced (with performance tradeoffs understood)
-- [ ] Full effect trace is recorded for audit/replay
-
-### Proof boundary validation
-
-- [ ] Proof boundary decision documented with model/assume split (see §6.3)
-- [ ] Assumption inventory pinned and linked to dependent TLA+ specs
-- [ ] Refinement mapping defined and runtime assertions in place
-- [ ] TLA+ model checking rerun after boundary/assumption changes
-- [ ] Model-based tests compare interpreter vs runtime outcomes
-
-______________________________________________________________________
-
-## 14. Final Notes: What “Maximally Formal” Looks Like in Practice
-
-A maximally formal ML workflow system on NVIDIA hardware looks like:
-
-- **A pure, total workflow language** that produces a finite effect DAG.
-- **A provable operational semantics** (TLA+) for the runtime and control plane.
-- **A small Rust runtime** that implements the state machine with strong runtime checks.
-- **A strict reproducibility contract** with pinned environments and deterministic scheduling.
-- **A thin black-box boundary** for kernels and vendor stacks, captured by explicit assumptions.
-
-You do not eliminate vendor opacity. You **contain it** and prove that everything around it is correct.
-
-______________________________________________________________________
-
-### Appendix A: Minimal black-box assumption template (use in specs/docs)
-
-> **Assumption GPU-Exec**: Submitted commands either complete successfully or return a detectable error; completion notifications are truthful.\
-> **Assumption GPU-Mem**: Memcpy and kernel launches affect only declared buffers, within declared bounds.\
-> **Assumption GPU-Order**: Stream FIFO ordering and explicit fence/event dependencies provide ordering consistent with the backend API contract.\
-> **Assumption Net**: Messages may be delayed/dropped/duplicated as modeled; retries are possible; failures are detectable within time bounds (if used).\
-> **Assumption Store**: Checkpoint object store operations provide read-after-write consistency (or weaker model as specified).
-
-Make these assumptions *explicit* so your proofs mean something.
-
-______________________________________________________________________
-
-## Cross-References
-
-- [intro.md](intro.md) — Effectful language overview and consolidated references
-- [proof_engine.md](proof_engine.md) — Effectful Proof Engine architecture
-- [jit.md](jit.md) — JIT compilation from Haskell to Rust
-- [proof_boundary.md](proof_boundary.md) — Philosophical foundation for verification limits
-
-> **Note**: For formal methods references (TLA+, model checking, temporal logic), see [intro.md#8-references](intro.md#8-references).
+That is a useful design direction, but it is still a direction rather than a final commitment.

@@ -4,21 +4,22 @@
 **Supersedes**: none
 **Referenced by**: intro.md, ml_training.md, engineering/architecture.md
 
-> **Purpose**: Define rules, standards, and verification requirements for JIT compilation from Haskell compute graphs to Rust code. Haskell excels at compute graph optimization and gives Rust its "marching orders" as pure effects. Rust, being imperative, lives outside the purity boundary but inside the proof boundary.
+> **Purpose**: Define rules, standards, and verification requirements for JIT compilation from Haskell compute graphs to Rust code. Haskell excels at building inspectable pure compute DAGs and gives Rust its "marching orders" as lowered pure effects. Rust, being imperative, lives outside the purity boundary but may remain inside the proof boundary when its lowering rules and runtime contracts are modeled and verified.
 
 ______________________________________________________________________
 
 ## SSoT Link Map
 
-| Need                     | Link                                                                                    |
-| ------------------------ | --------------------------------------------------------------------------------------- |
-| Effectful overview       | [Effectful DSL Hub](intro.md)                                                           |
-| Proof engine             | [Proof Engine](proof_engine.md)                                                         |
-| Boundary model           | [Proof Boundary and Purity Boundary](intro.md#2-the-proof-boundary-and-purity-boundary) |
-| Assumption documentation | [Assumption Documentation](intro.md#5-assumption-documentation)                         |
-| ML training JIT          | [ML Training](ml_training.md)                                                           |
-| Verification workflow    | [Verification Contract](../engineering/verification_contract.md)                        |
-| Runner pattern           | [Runner Pattern](../engineering/runner_pattern.md)                                      |
+| Need                       | Link                                                                                    |
+| -------------------------- | --------------------------------------------------------------------------------------- |
+| Effectful overview         | [Effectful DSL Hub](intro.md)                                                           |
+| Proof engine               | [Proof Engine](proof_engine.md)                                                         |
+| Boundary model             | [Proof Boundary and Purity Boundary](intro.md#2-the-proof-boundary-and-purity-boundary) |
+| Pure compute DAG semantics | [Pure Compute DAGs in Haskell](pure_compute_dags_in_haskell.md)                         |
+| Assumption documentation   | [Assumption Documentation](intro.md#5-assumption-documentation)                         |
+| ML training JIT            | [ML Training](ml_training.md)                                                           |
+| Verification workflow      | [Verification Contract](../engineering/verification_contract.md)                        |
+| Runner pattern             | [Runner Pattern](../engineering/runner_pattern.md)                                      |
 
 ______________________________________________________________________
 
@@ -29,6 +30,7 @@ ______________________________________________________________________
 Haskell is ideal for expressing and optimizing computation:
 
 - **Compute graph optimization**: Lazy evaluation and algebraic data types make it natural to build, inspect, and transform computation graphs
+- **Pure compute DAGs as data**: Haskell can preserve workflow structure before execution, including applicative or traversable regions where independence is still visible
 - **Pure effect descriptions**: Effects are values that can be analyzed and optimized before execution
 - **Fusion**: Haskell compilers excel at fusing intermediate data structures
 - **Whole-program optimization**: Pure semantics enable aggressive cross-module optimization
@@ -46,28 +48,34 @@ Haskell is unsuitable for systems-level execution:
 
 Haskell decides WHAT to compute; Rust decides HOW to execute it.
 
-````mermaid
+```mermaid
 flowchart LR
-  subgraph Haskell["HASKELL (Purity Boundary)"]
+  subgraph Haskell["HASKELL (Inside Purity Boundary)"]
     DSL["Pure DSL"] --> Graph["Compute Graph"]
     Graph --> Optimize["Optimization Passes"]
     Optimize --> IR["Effect IR"]
   end
-  subgraph Rust["RUST (Proof Boundary)"]
+  subgraph Rust["RUST (Outside Purity Boundary, Inside Proof Boundary when verified)"]
     IR --> Codegen["Code Generation"]
     Codegen --> Compile["Rust Compilation"]
     Compile --> Execute["Execution"]
   end
   Execute --> Drivers["Drivers/APIs"]
-```mermaid
+```
 
----
+Crossing from Haskell IR to Rust code generation is a **purity-boundary crossing**, not an
+"extension" of purity. Generated Rust can still remain inside the **proof boundary** when its
+lowering rules, memory contracts, and runtime behavior are modeled and verified. Drivers and
+external APIs remain outside the proof boundary.
+
+______________________________________________________________________
 
 ## 2. The Boundary Model in JIT
 
-### 2.1 Purity Boundary: Haskell Compute Graph
+### 2.1 Purity Boundary: Haskell Compute Graph and Lowered Pure IR
 
 Everything inside the purity boundary is:
+
 - **Pure**: No side effects during graph construction
 - **Deterministic**: Same inputs produce same outputs
 - **Inspectable**: Graphs can be analyzed, validated, and transformed
@@ -76,7 +84,9 @@ Everything inside the purity boundary is:
 ### 2.2 Proof Boundary: Generated Rust
 
 Generated Rust code is:
+
 - **Imperative**: May have local mutable state
+- **Outside the purity boundary**: It consumes lowered pure descriptions rather than remaining pure itself
 - **Verified**: Conforms to TLA+ specifications
 - **Bounded**: Has deterministic resource limits (time, memory)
 - **Safe by default**: Uses safe Rust unless explicitly justified
@@ -84,13 +94,14 @@ Generated Rust code is:
 ### 2.3 Outside Proof Boundary: Drivers and APIs
 
 Generated Rust communicates with:
+
 - Device drivers (GPU, network, storage)
 - Operating system services
 - Proprietary APIs
 
 All interactions with this layer require documented assumptions.
 
----
+______________________________________________________________________
 
 ## 3. Haskell Compute Graph Optimization
 
@@ -105,7 +116,7 @@ data ComputeNode
   | Fork [ComputeNode]                  -- Parallel branches
   | Sequence ComputeNode ComputeNode    -- Sequential dependency
   | Cached CacheKey ComputeNode         -- Memoization point
-````
+```
 
 ### 3.2 Optimization Passes
 

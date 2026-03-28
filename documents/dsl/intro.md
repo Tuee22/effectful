@@ -17,6 +17,7 @@ ______________________________________________________________________
 | JIT compilation standards  | [JIT Compilation](jit.md)                                        |
 | Infrastructure deployment  | [Infrastructure Deployment](infrastructure_deployment.md)        |
 | ML training formal methods | [ML Training](ml_training.md)                                    |
+| Pure compute DAG semantics | [Pure Compute DAGs in Haskell](pure_compute_dags_in_haskell.md)  |
 | Consensus formal methods   | [Consensus](consensus.md)                                        |
 | Engineering standards      | [Engineering](../engineering/README.md)                          |
 | Boundary model details     | [Boundary Model](../engineering/boundary_model.md)               |
@@ -26,15 +27,16 @@ ______________________________________________________________________
 
 ## Document Navigation
 
-| Document                                                     | Status        | Purpose                                                              |
-| ------------------------------------------------------------ | ------------- | -------------------------------------------------------------------- |
-| [intro.md](intro.md)                                         | Hub           | Effectful language overview, boundary model, consolidated references |
-| [proof_engine.md](proof_engine.md)                           | Authoritative | Effectful Proof Engine—verifies distributed system correctness       |
-| [jit.md](jit.md)                                             | Authoritative | JIT compilation from Haskell compute graphs to Rust                  |
-| [infrastructure_deployment.md](infrastructure_deployment.md) | Reference     | Unified node model, infrastructure as effects                        |
-| [ml_training.md](ml_training.md)                             | Reference     | Formal methods for distributed ML workflows                          |
-| [consensus.md](consensus.md)                                 | Reference     | Formal methods for distributed consensus protocols                   |
-| [proof_boundary.md](proof_boundary.md)                       | Essay         | Philosophical foundation (self-contained, no external links)         |
+| Document                                                           | Status        | Purpose                                                              |
+| ------------------------------------------------------------------ | ------------- | -------------------------------------------------------------------- |
+| [intro.md](intro.md)                                               | Hub           | Effectful language overview, boundary model, consolidated references |
+| [proof_engine.md](proof_engine.md)                                 | Authoritative | Effectful Proof Engine—verifies distributed system correctness       |
+| [jit.md](jit.md)                                                   | Authoritative | JIT compilation from Haskell compute graphs to Rust                  |
+| [infrastructure_deployment.md](infrastructure_deployment.md)       | Reference     | Unified node model, infrastructure as effects                        |
+| [ml_training.md](ml_training.md)                                   | Reference     | Formal methods for distributed ML workflows                          |
+| [pure_compute_dags_in_haskell.md](pure_compute_dags_in_haskell.md) | Reference     | Gentle Haskell and category-theory guide to pure compute DAGs        |
+| [consensus.md](consensus.md)                                       | Reference     | Formal methods for distributed consensus protocols                   |
+| [proof_boundary.md](proof_boundary.md)                             | Essay         | Philosophical foundation (self-contained, no external links)         |
 
 > **Note**: `proof_boundary.md` is a self-contained philosophical essay. It maintains its own internal references and does not link to other documents. All other DSL documents link TO it for philosophical grounding.
 
@@ -326,12 +328,12 @@ The Effectful Proof Engine verifies distributed systems expressed in Effectful's
 
 ### 7.1 How the Proof Engine Works
 
-| Effectful (Application Language)                | Proof Engine                                        |
-| ----------------------------------------------- | --------------------------------------------------- |
-| Provides topology for distributed systems       | Verifies systems expressed in that topology         |
-| Pure effects, nodes, Paxos messages             | Extracts TLA+ specs from Effectful programs         |
-| Byzantine security model as types               | Model-checks safety and liveness properties         |
-| Compute graphs for optimization                 | Gates deployment on verification success            |
+| Effectful (Application Language)          | Proof Engine                                |
+| ----------------------------------------- | ------------------------------------------- |
+| Provides topology for distributed systems | Verifies systems expressed in that topology |
+| Pure effects, nodes, Paxos messages       | Extracts TLA+ specs from Effectful programs |
+| Byzantine security model as types         | Model-checks safety and liveness properties |
+| Compute graphs for optimization           | Gates deployment on verification success    |
 
 The proof engine exploits Effectful's semantic constraints (purity, explicit effects, typed security) to make verification tractable.
 
@@ -340,9 +342,9 @@ The proof engine exploits Effectful's semantic constraints (purity, explicit eff
 When you write an Effectful program representing a distributed system, the proof engine:
 
 1. **Projects to a finitary model** — Maps Effectful types to bounded, model-checkable domains
-2. **Extracts TLA+ specifications** — Generates formal specs from your consensus-critical code
-3. **Model-checks properties** — Verifies safety and liveness using TLC/Apalache/SMT backends
-4. **Gates deployment** — Only programs passing verification can deploy
+1. **Extracts TLA+ specifications** — Generates formal specs from your consensus-critical code
+1. **Model-checks properties** — Verifies safety and liveness using TLC/Apalache/SMT backends
+1. **Gates deployment** — Only programs passing verification can deploy
 
 ```haskell
 -- Effectful.ProofEngine.Verify deployment gate

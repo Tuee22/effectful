@@ -4,19 +4,20 @@
 **Supersedes**: none
 **Referenced by**: intro.md
 
-> **Purpose**: Define Effectful's unified model for distributed systems where nodes (UI or server) communicate via Paxos messages, with infrastructure deployment as just another effect in the pure language.
-> **Authoritative Reference**: [DSL Intro](intro.md)
+> **Purpose**: Define Effectful's unified model for distributed systems where nodes (UI or server) communicate via Paxos messages, with infrastructure deployment as just another effect description in the pure language and with runtime interpretation handled beyond the purity boundary.
+> **📖 Authoritative Reference**: [DSL Intro](intro.md)
 
 ______________________________________________________________________
 
 ## SSoT Link Map
 
-| Need                | Link                                               |
-| ------------------- | -------------------------------------------------- |
-| Effectful overview  | [Effectful DSL Hub](intro.md)                      |
-| Boundary model      | [Boundary Model](../engineering/boundary_model.md) |
-| Consensus protocols | [Consensus](consensus.md)                          |
-| JIT compilation     | [JIT Compilation](jit.md)                          |
+| Need                | Link                                                            |
+| ------------------- | --------------------------------------------------------------- |
+| Effectful overview  | [Effectful DSL Hub](intro.md)                                   |
+| Boundary model      | [Boundary Model](../engineering/boundary_model.md)              |
+| Consensus protocols | [Consensus](consensus.md)                                       |
+| JIT compilation     | [JIT Compilation](jit.md)                                       |
+| Pure compute DAGs   | [Pure Compute DAGs in Haskell](pure_compute_dags_in_haskell.md) |
 
 ______________________________________________________________________
 
@@ -30,7 +31,9 @@ This single unifying idea drives the entire system:
 - **A node is either a user-facing UI or a server**—both are internally safe and trusted
 - **All communication into/out of nodes is modeled as Paxos messages**
 - **One language** for UI, server logic, and infrastructure deployment
-- The **two-stage Haskell→Rust effect interpreter** is the purity boundary
+- The **Haskell core and pure effect descriptions** live inside the purity boundary; interpreters in
+  Rust or other imperative languages live outside the purity boundary and may still sit inside the
+  proof boundary when their contracts are modeled and verified
 
 ### What This Means in Practice
 
@@ -59,7 +62,8 @@ A **node** is an abstract representation of a device in Effectful's distributed 
 
 - **Internally safe and trusted zone**: Within a node, code is verified and trusted
 - **Transport topology differs**: DNS, ingress rules, certificates, session cookies vary by deployment
-- **Behind the purity boundary, all nodes are uniform**: Effectful sees no difference between node types
+- **At the pure DSL level, nodes are uniform**: Effectful sees no difference between node types
+  until lowering crosses the purity boundary and binds to concrete runtimes
 
 ### Requirements to Run an Effectful Node
 
@@ -106,9 +110,10 @@ This ensures security is not an afterthought but is woven into the type system i
 
 ______________________________________________________________________
 
-## 4. Haskell's Role: Thunk Performance Optimizer
+## 4. Haskell's Role: Pure Workflow Assembly and Optimization
 
-**Haskell's main job is thunk performance optimization** according to rules in the Dhall config.
+**Haskell's main job is to assemble and optimize pure workflow descriptions** according to rules in
+the Dhall config, then emit lowered thunks for downstream interpreters.
 
 ### Configuration-Driven Behavior
 
@@ -125,9 +130,12 @@ ______________________________________________________________________
 
 Haskell passes **thunks** that are async bundles of abstract effects.
 
-Monads are heavily utilized for:
+The broader functor, applicative, selective, traversable, and monadic toolkit is heavily utilized
+for:
 
-- Expressing arbitrary pure compute graphs
+- Expressing inspectable pure compute DAGs
+- Preserving visible independence via applicative or traversable structure
+- Representing visible conditional branches and genuine dependency barriers
 - **Security whitelist monad** (compositional security)
 - **Effect timeout wrappers** (explicit timeout behavior, can optionally return `Success(T)`)
 
@@ -135,11 +143,21 @@ Monads are heavily utilized for:
 
 ______________________________________________________________________
 
-## 5. The Purity Boundary: Memory Semantics and Foreign Call Contract
+## 5. Crossing the Purity Boundary: Memory Semantics and Foreign Call Contract
 
-### Purity Extends Through Generated Rust
+### Lowered IR Crosses; Purity Does Not Extend Through Rust
 
-Because Rust code is **Haskell-generated using a TLA+-verified transpiler**, the purity boundary continues through the shared immutable memory contract. This is not a "break" in purity—it's a **verified extension** of it.
+In Effectful's canonical boundary model, the purity boundary contains the pure Haskell workflow,
+pure effect descriptions, and analyzable compute-DAG structure. Generated Rust or other imperative
+interpreters do **not** become part of the purity boundary merely because they are generated from a
+pure source.
+
+What can happen instead is narrower and more useful:
+
+- the lowered IR crosses the purity boundary as a pure description
+- the interpreter consuming that IR lives outside the purity boundary
+- that interpreter may still remain inside the proof boundary when its lowering rules, shared-memory
+  contract, and runtime behavior are modeled and verified
 
 ### The Foreign Call Interface
 
@@ -162,8 +180,9 @@ An explicit call function in Rust is invoked via Haskell foreign call:
 | Static `Result[T,E]` shapes   | Haskell preallocates; Rust's borrowing manages |
 
 - TLA+ formally proves this representation is sufficient for our class of Haskell types
-- **Completely clean purity chain** runs through Haskell and Rust EI, up until side effects run
-- **Purity means correctness is self-verifying**: a Haskell binary created via GHC is a self-verified effect system
+- A verified shared-memory contract can help keep this handoff inside the proof boundary
+- Purity ends at the Haskell-side pure representation; correctness of generated runtimes still
+  depends on lowering proofs and explicit assumptions
 
 ### The Cancel Effect Monad
 
@@ -204,7 +223,9 @@ The two-stage EI can be built inside other binaries:
 - Edge devices with limited resources
 - Server containers with full JIT capability
 
-**The thunk pipeline flowing out of Haskell is Effectful's formal purity boundary.** The thunk pipeline is safe and trusted.
+The thunk pipeline flowing out of Haskell is one concrete **crossing of the purity boundary**. It
+is the handoff from pure descriptions to imperative interpreters. Whether the receiving interpreter
+remains inside the proof boundary depends on what has been modeled and verified.
 
 ### Effect Interpreters in Other Languages
 
@@ -222,7 +243,8 @@ Effect interpreters can be implemented in **other imperative languages** to leve
 - Specific class of pure types/functions from Haskell represented idiomatically
 - **Isomorphism proven via TLA+**
 - Shared memory model for immutable references tied to thunk lifespan
-- EI must behave purely up to the purity boundary
+- EI must preserve the semantics of the pure effect IR after the purity-boundary crossing, and any
+  unmodeled behavior must be treated as an assumption outside the proof boundary
 
 ### Concurrent Thunks and Interpreters
 
@@ -243,8 +265,9 @@ ______________________________________________________________________
 
 The transport layer is **not explicitly modeled** in Effectful. Instead:
 
-- Network interface is at the **proof boundary**
-- Rust interacts with network driver in the course of interpreting its own effects
+- Rust or another runtime sits at the **proof-boundary edge**
+- Network drivers, operating-system services, and transport implementations remain outside the proof boundary
+- The runtime interacts with those external components in the course of interpreting effects
 - Abstract message types map to real-world transport
 
 ### Message Type Mapping
@@ -263,7 +286,8 @@ Effectful's generalized Paxos handles multiple message types:
 - **Partially synchronous** messages
 - **Synchronous** messages
 
-This allows the appropriate abstractions at the transport layer while maintaining uniform semantics at the purity boundary.
+This allows the appropriate abstractions at the transport layer while maintaining uniform pure
+semantics on the inside of the purity boundary.
 
 ______________________________________________________________________
 
@@ -296,7 +320,9 @@ ______________________________________________________________________
 
 ### Effect Semantics
 
-Effects are the pure language which crosses the purity boundary (but not necessarily the proof boundary).
+Lowered effect descriptions are the pure language that crosses the purity boundary. The imperative
+runtimes that consume them may still remain inside the proof boundary when their contracts are
+modeled and verified, but they are no longer inside the purity boundary.
 
 ### Guaranteed Finish Time
 
@@ -328,7 +354,8 @@ If absolutely necessary, a DOM harness can receive a regular stream of immutable
 
 - Creates an oracle for all JS I/O
 - Models JS I/O as events → effects
-- Maintains purity boundary while interfacing with DOM
+- Maintains a pure model on the inside while DOM and JS integration remain outside the purity
+  boundary and usually outside the proof boundary
 
 ______________________________________________________________________
 
@@ -387,7 +414,9 @@ Effectful is a **full-fledged Infrastructure-as-Code system**:
 
 ### OS Kernels and the Proof Boundary
 
-OS kernels generally fall **outside the proof boundary**. However, software running on them may be behind the purity and proof boundary anyway.
+OS kernels generally fall **outside the proof boundary**. Pure Haskell logic can still live inside
+the purity boundary while running on such systems, and runtimes may remain inside the proof
+boundary only insofar as their contracts are modeled and verified.
 
 **Why?** Unmodeled failures caused by impure/unproven behavior at the OS level can be resolved in the pure, provable distributed system at the **consensus level**. Byzantine Paxos is the sufficient model for handling unknown failure states.
 
