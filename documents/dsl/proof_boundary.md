@@ -730,6 +730,6 @@ ______________________________________________________________________
 
 ## Cross-References
 
-- [intro.md](intro.md) — Effectful DSL overview
+- [intro.md](intro.md) — Effectful compiler morphology overview
 - [verification_contract.md](../engineering/verification_contract.md) — TLA+ verification workflow
 - [boundary_model.md](../engineering/boundary_model.md) — Boundary definitions

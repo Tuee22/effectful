@@ -4,8 +4,8 @@
 **Supersedes**: none
 **Referenced by**: none
 
-> **Purpose**: Survey the compiler-stack design space for a formally informed DSL that compiles distributed effect topologies to optimized Rust and other target-native realizations, with emphasis on IR shape, purity-boundary and proof-boundary placement, optimization strategy, and backend realization.
-> **📖 Authoritative Reference**: [DSL Intro](intro.md), [JIT Compilation](jit.md), and [Proof Engine](proof_engine.md)
+> **Purpose**: Survey the compiler-stack design space that the current docs call Effectful: a compiler morphology for distributed effect topologies, with emphasis on IR shape, purity-boundary and proof-boundary placement, optimization strategy, and backend realization.
+> **📖 Authoritative Reference**: [DSL Intro](intro.md), [JIT and Staged Lowering](jit.md), and [Proof Engine](proof_engine.md)
 
 ______________________________________________________________________
 
@@ -14,7 +14,7 @@ ______________________________________________________________________
 | Need                       | Link                                                            |
 | -------------------------- | --------------------------------------------------------------- |
 | DSL overview               | [DSL Intro](intro.md)                                           |
-| Compilation strategy       | [JIT Compilation](jit.md)                                       |
+| Compilation strategy       | [JIT and Staged Lowering](jit.md)                               |
 | Pure compute DAG semantics | [Pure Compute DAGs in Haskell](pure_compute_dags_in_haskell.md) |
 | Verification workflow      | [Proof Engine](proof_engine.md)                                 |
 | Proof boundary philosophy  | [Proof Boundary](proof_boundary.md)                             |
@@ -23,7 +23,9 @@ ______________________________________________________________________
 
 ## 1. Problem Statement
 
-We want to design a compiler stack for a domain-specific language whose purpose is not merely to describe programs, but to describe **arbitrarily complex distributed compute systems** in a form that is:
+We want to design a compiler stack for a domain-specific language whose purpose is not merely to
+describe programs, but to describe **arbitrarily complex distributed compute systems** in a form
+that is:
 
 - **pure at the representation level**
 - **typed and law-aware**
@@ -47,6 +49,9 @@ The goal is not absolute universality in the sense of perfectly abstracting ever
 That means the central problem is not simply “which language should we use?” The real problem is:
 
 > How do we design a compiler stack whose intermediate semantics are rich enough to model distributed systems, constrained enough to optimize aggressively, and structured enough to admit meaningful proof obligations?
+
+In the rest of the DSL docs, when we refer to **Effectful as a system**, this compiler morphology is
+what we mean.
 
 ______________________________________________________________________
 
@@ -121,7 +126,8 @@ This shifts the focus from “can one language do everything?” to “how shoul
 
 In the canonical boundary model from [intro.md](intro.md#2-the-proof-boundary-and-purity-boundary):
 
-- the surface DSL, pure effect descriptions, and inspectable workflow representations live inside the **purity boundary**
+- the surface language or pure representation layer, pure effect descriptions, and inspectable
+  workflow representations live inside the **purity boundary**
 - generated Rust, JS, Swift, Kotlin, C++, CUDA, and other imperative interpreters live outside the **purity boundary**
 - those imperative runtimes may still remain inside the **proof boundary** when their lowering rules, memory contracts, and runtime behavior are modeled and verified
 - drivers, operating-system services, vendor SDKs, firmware, and undocumented hardware behavior remain outside the **proof boundary**
@@ -1484,7 +1490,7 @@ ______________________________________________________________________
 
 ## Cross-References
 
-- [intro.md](intro.md) - Effectful DSL overview and boundary model
+- [intro.md](intro.md) - Effectful compiler morphology overview and boundary model
 - [jit.md](jit.md) - compilation pipeline and Rust realization guidance
 - [proof_engine.md](proof_engine.md) - formal verification and proof workflow
 - [proof_boundary.md](proof_boundary.md) - philosophical and practical proof-boundary framing

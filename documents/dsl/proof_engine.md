@@ -4,20 +4,21 @@
 **Supersedes**: leslie_proof_engine.md
 **Referenced by**: intro.md
 
-> **Purpose**: Define the Effectful Proof Engine, which verifies distributed systems expressed in Effectful's topology. The proof engine extracts TLA+ specifications from Effectful programs, model-checks safety and liveness properties, and gates deployment on verification success.
+> **Purpose**: Define the Effectful Proof Engine, which verifies distributed systems expressed in the Effectful compiler morphology. The proof engine extracts TLA+ specifications from pure workflow and protocol representations, model-checks safety and liveness properties, and gates deployment on verification success.
 
 ______________________________________________________________________
 
 ## SSoT Link Map
 
-| Need                      | Link                                           |
-| ------------------------- | ---------------------------------------------- |
-| Effectful overview        | [Effectful DSL Hub](intro.md)                  |
-| Proof boundary philosophy | [Proof Boundary](proof_boundary.md)            |
-| Consensus formal methods  | [Consensus](consensus.md)                      |
-| JIT compilation           | [JIT Compilation](jit.md)                      |
-| ML training verification  | [ML Training](ml_training.md)                  |
-| Infrastructure deployment | [Infrastructure](infrastructure_deployment.md) |
+| Need                       | Link                                                            |
+| -------------------------- | --------------------------------------------------------------- |
+| Effectful overview         | [DSL Intro](intro.md)                                           |
+| Proof boundary philosophy  | [Proof Boundary](proof_boundary.md)                             |
+| Consensus formal methods   | [Consensus](consensus.md)                                       |
+| JIT and lowering           | [JIT and Staged Lowering](jit.md)                               |
+| ML training verification   | [ML Training](ml_training.md)                                   |
+| Infrastructure deployment  | [Infrastructure](infrastructure_deployment.md)                  |
+| Pure compute DAG semantics | [Pure Compute DAGs in Haskell](pure_compute_dags_in_haskell.md) |
 
 ______________________________________________________________________
 
@@ -25,9 +26,11 @@ ______________________________________________________________________
 
 The Effectful Proof Engine is designed to satisfy the following goals simultaneously:
 
-1. **Arbitrary expressiveness at the surface**
+1. **Arbitrary expressiveness at the source-representation layer**
 
-   - Users write rich application logic using Haskell types, monads, effects, and composition in Effectful
+   - Users describe rich application logic using pure workflow representations, typed effects, and
+     composition. The FP vocabulary for that layer is described in
+     [pure_compute_dags_in_haskell.md](pure_compute_dags_in_haskell.md).
 
 1. **Strong formal guarantees for distributed correctness**
 
@@ -35,7 +38,8 @@ The Effectful Proof Engine is designed to satisfy the following goals simultaneo
 
 1. **High-performance execution**
 
-   - Local computation can be compiled into optimized compute graphs and JIT-compiled Rust/CUDA code
+   - Local computation can be compiled into optimized compute graphs and lowered into Rust, CUDA,
+     or other runtime artifacts as needed
 
 1. **Small trusted core**
 
@@ -72,7 +76,7 @@ The proof engine is structured as a set of layers, each with a clear responsibil
 
 ```mermaid
 flowchart TB
-  App["App<br/>(User EDSL, effects, monads)"]
+  App["App<br/>(Source workflows, effects, pure structure)"]
 
   subgraph Middle["Compute & Protocol Layer"]
     Compute["Compute<br/>(Graphs, ML, JIT)"]
@@ -95,17 +99,21 @@ flowchart TB
 
 ______________________________________________________________________
 
-## 4. App — Surface Application Language
+## 4. App — Source Workflow Layer
 
 ### Purpose
 
-The App layer is the user-facing EDSL where Effectful applications are written.
+The App layer holds source workflows and effect topologies before they are projected into the
+verification core.
 
 ### Characteristics
 
-- Pure, effectful programming style
-- Rich Haskell types and abstractions
+- Pure description layer inside the purity boundary
+- Often hosted in Haskell today, but conceptually a representation layer rather than one mandatory
+  user-facing language
 - Explicit effects (send, receive, storage, crypto, compute, etc.)
+- FP structure such as functorial, applicative, selective, traversable, and monadic composition is
+  referenced from [pure_compute_dags_in_haskell.md](pure_compute_dags_in_haskell.md)
 
 ### Key Principle
 
@@ -211,6 +219,11 @@ Provides a high-performance, optimizable execution path for local computation:
 - ML workflows
 - Data-parallel pipelines
 - Custom CUDA kernels
+
+The compute subsystem typically starts from pure workflow descriptions whose dependency structure is
+still visible. For the Haskell and category-theoretic view of that source layer, see
+[pure_compute_dags_in_haskell.md](pure_compute_dags_in_haskell.md). This document focuses on what
+happens once those descriptions have to interact with verification and lowering.
 
 ### Compute Graph IR
 
@@ -371,7 +384,7 @@ ______________________________________________________________________
 
 The Effectful Proof Engine enables:
 
-- Expressive distributed applications written in Effectful
+- Expressive distributed applications described within the Effectful compiler morphology
 - Formal validation of consensus correctness
 - High-performance local computation
 - Clear trust boundaries
@@ -390,9 +403,9 @@ ______________________________________________________________________
 
 ## Cross-References
 
-- [intro.md](intro.md) — Effectful language overview and boundary model
+- [intro.md](intro.md) — Effectful compiler morphology overview and boundary model
 - [proof_boundary.md](proof_boundary.md) — Philosophical foundation for verification limits
 - [consensus.md](consensus.md) — Formal methods for distributed consensus
-- [jit.md](jit.md) — JIT compilation from Haskell to Rust
+- [jit.md](jit.md) — JIT and staged lowering in the compiler morphology
 - [ml_training.md](ml_training.md) — Formal methods for distributed ML workflows
 - [infrastructure_deployment.md](infrastructure_deployment.md) — Nodes, messages, and pure effects

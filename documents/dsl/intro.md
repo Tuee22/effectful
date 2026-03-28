@@ -1,10 +1,10 @@
-# Effectful: A Formally Verified Language for Distributed Systems
+# Effectful: Compiler Morphology for Distributed Systems
 
 **Status**: Authoritative source
 **Supersedes**: effectual_dsl_and_effectful_compiler_spec_final.md
 **Referenced by**: ml_training.md, consensus.md, jit.md, infrastructure_deployment.md, engineering/architecture.md, engineering/boundary_model.md
 
-> **Purpose**: Define Effectful, a high-level programming language for distributed systems based on formal methods. Effectful makes it possible to express complex distributed systems in a single pure Haskell-derived DSL, using distributed compute graph optimization to make frontend/backend distinctions obsolete, with a Byzantine security model that makes unsafe states unrepresentable.
+> **Purpose**: Define the current meaning of Effectful as a compiler morphology for distributed systems: a design space centered on pure workflow representations, typed effect topologies, staged lowering, explicit purity and proof boundaries, and formal verification of selected distributed properties.
 
 ______________________________________________________________________
 
@@ -14,7 +14,7 @@ ______________________________________________________________________
 | -------------------------- | ---------------------------------------------------------------- |
 | Proof engine               | [Proof Engine](proof_engine.md)                                  |
 | Proof boundary philosophy  | [Proof Boundary](proof_boundary.md)                              |
-| JIT compilation standards  | [JIT Compilation](jit.md)                                        |
+| JIT compilation standards  | [JIT and Staged Lowering](jit.md)                                |
 | Infrastructure deployment  | [Infrastructure Deployment](infrastructure_deployment.md)        |
 | ML training formal methods | [ML Training](ml_training.md)                                    |
 | Pure compute DAG semantics | [Pure Compute DAGs in Haskell](pure_compute_dags_in_haskell.md)  |
@@ -27,16 +27,16 @@ ______________________________________________________________________
 
 ## Document Navigation
 
-| Document                                                           | Status        | Purpose                                                              |
-| ------------------------------------------------------------------ | ------------- | -------------------------------------------------------------------- |
-| [intro.md](intro.md)                                               | Hub           | Effectful language overview, boundary model, consolidated references |
-| [proof_engine.md](proof_engine.md)                                 | Authoritative | Effectful Proof Engine—verifies distributed system correctness       |
-| [jit.md](jit.md)                                                   | Authoritative | JIT compilation from Haskell compute graphs to Rust                  |
-| [infrastructure_deployment.md](infrastructure_deployment.md)       | Reference     | Unified node model, infrastructure as effects                        |
-| [ml_training.md](ml_training.md)                                   | Reference     | Formal methods for distributed ML workflows                          |
-| [pure_compute_dags_in_haskell.md](pure_compute_dags_in_haskell.md) | Reference     | Gentle Haskell and category-theory guide to pure compute DAGs        |
-| [consensus.md](consensus.md)                                       | Reference     | Formal methods for distributed consensus protocols                   |
-| [proof_boundary.md](proof_boundary.md)                             | Essay         | Philosophical foundation (self-contained, no external links)         |
+| Document                                                           | Status        | Purpose                                                            |
+| ------------------------------------------------------------------ | ------------- | ------------------------------------------------------------------ |
+| [intro.md](intro.md)                                               | Hub           | Effectful compiler morphology overview, boundary model, references |
+| [proof_engine.md](proof_engine.md)                                 | Authoritative | Effectful Proof Engine for selected distributed properties         |
+| [jit.md](jit.md)                                                   | Authoritative | JIT and staged lowering within the compiler morphology             |
+| [infrastructure_deployment.md](infrastructure_deployment.md)       | Reference     | Unified node model, infrastructure as effects                      |
+| [ml_training.md](ml_training.md)                                   | Reference     | Formal methods for distributed ML workflows                        |
+| [pure_compute_dags_in_haskell.md](pure_compute_dags_in_haskell.md) | Reference     | Gentle Haskell and category-theory guide to pure compute DAGs      |
+| [consensus.md](consensus.md)                                       | Reference     | Formal methods for distributed consensus protocols                 |
+| [proof_boundary.md](proof_boundary.md)                             | Essay         | Philosophical foundation (self-contained, no external links)       |
 
 > **Note**: `proof_boundary.md` is a self-contained philosophical essay. It maintains its own internal references and does not link to other documents. All other DSL documents link TO it for philosophical grounding.
 
@@ -52,27 +52,46 @@ Consider apps with complex distributed backends: large online retailers, ride-sh
 
 ### 1.2 The Opportunity: Moving the Proof Boundary for the LLM Era
 
-Effectful is built on a core belief: **empowering non-technical people to successfully "vibe code" requires moving the proof boundary.**
+Effectful is built on a core belief: **empowering non-technical people to successfully "vibe
+code" requires moving the proof boundary.**
 
 In the pre-LLM era, formal software methods were a niche concern. But as argued in [proof_boundary.md](proof_boundary.md), shifting to formal methods allows humans to move the proof boundary outward, **unlocking the expressive power of LLMs to create distributed systems with formal guarantees**.
 
-This is why the world needs another high-level programming language: **none have put provably correct distributed systems at their core.**
+This is why the world needs another compiler morphology: most stacks treat source language,
+optimizer, distributed runtime, and proof story as loosely connected concerns. Effectful instead
+tries to make boundary placement, IR choice, lowering strategy, and verification scope part of one
+coherent architecture.
 
 ### 1.3 Effectful's Approach
 
-1. **Single Pure DSL**: All business logic for distributed systems (edge devices and servers) expressed in a single pure Haskell-derived DSL. No traditional frameworks (web backends, secrets stores, ML libraries).
+1. **Pure Workflow Representations**: Distributed logic is first represented as pure data:
+   workflows, effect descriptions, and analyzable compute graphs. Haskell is the preferred
+   representation language for that style today, and the FP vocabulary behind it is defined in
+   [pure_compute_dags_in_haskell.md](pure_compute_dags_in_haskell.md).
 
-1. **Distributed Compute Graph Optimization**: The distinction between frontend and backend becomes obsolete. Logic is freely optimized to execute where it is safe and permissioned to do so.
+1. **Compiler Morphology Rather Than One Fixed Surface**: Source language, IR family, runtime
+   strategy, and backend realization are all design axes. Effectful, as currently used in these
+   docs, names that morphology rather than one frozen DSL.
 
-1. **Pure Security Model**: A rich, purely representable security model makes it impossible to represent insecure states. This is a message-based abstraction layer above transport security (TCP/UDP with SSL). In Effectful's model:
+1. **Distributed Compute Graph Optimization**: Frontend, backend, edge, and accelerator placement
+   become optimization and permission questions rather than hard architectural walls. Logic can be
+   lowered to where it is safe and useful to run.
+
+1. **Boundary-Aware Security Model**: A rich, purely representable security model aims to make
+   insecure states difficult or impossible to represent in the pure core. This is a message-based
+   abstraction layer above transport security (TCP/UDP with SSL). In Effectful's model:
 
    - **Two node types**: Edge devices and servers reachable over public APIs
    - **Byzantine messaging system**: Expressive threat modelling replaces traditional firewalls *within the purity boundary*
    - (This complements—not replaces—industry-standard firewalls, ingress controls, certificates, and web protocols)
 
-1. **Compiler as Proof**: If the Effectful compiler succeeds, you've followed the language's rules. **The proof engine then verifies your distributed system topology is correct**—consensus-critical applications cannot deploy without passing verification. This gives LLMs the signal needed to write **provably correct distributed system code** for specific applications.
+1. **Compiler and Proof Engine as Separate Gates**: A successful compiler pipeline means a program
+   is well-formed for the chosen morphology and lowering path. The proof engine then verifies the
+   selected distributed properties for the portion of the system brought inside the proof boundary.
 
-1. **Impossible to Represent Unsafe States**: Effectful must make it impossible to represent states that are unsafe according to the pure threat model and which TLA+ cannot prove.
+1. **Unsafe States Should Be Explicit**: If a state depends on unmodeled driver behavior,
+   unchecked native code, or unproved distributed assumptions, the system should expose that fact
+   clearly rather than quietly treating it as part of the trusted core.
 
 ______________________________________________________________________
 
@@ -93,13 +112,13 @@ flowchart TB
   end
   subgraph Proof["PROOF BOUNDARY"]
     TLA["TLA+ specifications"]
-    Rust["Rust: imperative, verified"]
-    Runners["Effect runners"]
+    Runtime["Imperative runtimes when modeled and verified"]
+    Runners["Effect interpreters and lowering contracts"]
   end
   subgraph Purity["PURITY BOUNDARY"]
-    Haskell["Haskell DSL: pure logic"]
-    Effects["Effect descriptions"]
-    Byzantine["Byzantine security model"]
+    Workflow["Pure workflow representations"]
+    Effects["Pure effect descriptions"]
+    Byzantine["Security and topology logic"]
   end
   Purity --> Proof
   Proof --> Outside
@@ -118,17 +137,19 @@ flowchart TB
 **Proof Boundary** (TLA+ verifiable):
 
 - TLA+ specifications, invariants, temporal properties
-- Rust code: imperative, inside proof boundary, outside purity boundary
-- Effect runners that communicate with drivers/APIs
-- Receives "marching orders" from Haskell as pure effect descriptions
+- Generated or hand-written imperative runtimes in Rust, JS, Swift, Kotlin, C++, CUDA, or other
+  target-native languages when their contracts are modeled and verified
+- Effect interpreters and lowerings that communicate with drivers/APIs
+- Receives "marching orders" from pure workflow and effect descriptions
 
 **Purity Boundary** (innermost):
 
-- Haskell core logic with distributed compute graph optimization
+- Pure workflow descriptions and effect topologies, often represented in Haskell today
 - Pure functional, deterministic, exhaustively testable
 - Composes with distributed consensus state machines
 - Byzantine security model—threat modelling as types
-- All business logic lives here
+- FP concepts such as functorial, applicative, selective, traversable, and monadic structure are
+  referenced from [pure_compute_dags_in_haskell.md](pure_compute_dags_in_haskell.md)
 
 ### 2.3 Why This Layering Matters
 
@@ -149,7 +170,7 @@ ______________________________________________________________________
 
 ## 3. Effectful's Architecture
 
-### 3.1 Single Pure DSL for All Distributed Logic
+### 3.1 Compiler Morphology for Distributed Logic
 
 Traditional distributed systems separate concerns across:
 
@@ -159,7 +180,10 @@ Traditional distributed systems separate concerns across:
 - Message queues
 - Caching layers
 
-Effectful unifies all of this into a single pure DSL. The compiler decides where logic executes based on:
+Effectful does not currently assume one mandatory user-facing language. It assumes a compiler stack
+whose source descriptions lower into pure workflow and effect representations that remain
+inspectable long enough for analysis, optimization, and verification. The compiler then decides
+where logic executes based on:
 
 - Security permissions (what data can edge devices access?)
 - Performance constraints (where is data locality optimal?)
@@ -167,16 +191,17 @@ Effectful unifies all of this into a single pure DSL. The compiler decides where
 
 ### 3.2 Distributed Compute Graph Optimization
 
-The Haskell compiler builds a compute graph representing the entire distributed system:
+The compiler stack builds a compute graph or effect topology representing the distributed system:
 
 ```mermaid
 flowchart LR
-  Input["User Input"] --> Logic["Pure Logic"]
-  Logic --> Effects["Effect Descriptions"]
-  Effects --> Optimizer["Compute Graph Optimizer"]
+  Input["Source Descriptions"] --> Logic["Pure Workflow Representation"]
+  Logic --> Effects["Effect / Compute IR"]
+  Effects --> Optimizer["Optimizer and Lowering"]
   Optimizer --> Placement["Placement Decisions"]
   Placement --> Edge["Edge Device Code"]
   Placement --> Server["Server Code"]
+  Placement --> Native["Native Target Code"]
 ```
 
 The optimizer can:
@@ -199,53 +224,68 @@ This is inspired by Leslie Lamport's Byzantine Generals problem. Rather than rel
 
 ### 3.4 Compiler and Proof Engine
 
-The Effectful compiler (written in Haskell) validates:
+The Effectful compiler stack validates:
 
 1. **Type checking**: All effects are properly handled
 1. **Permission checking**: Security constraints are satisfied
 1. **Consistency checking**: Distributed operations maintain invariants
 
-**The proof engine verifies distributed system correctness.** After the compiler succeeds, the proof engine extracts formal specifications from your Effectful program and model-checks them against TLA+ properties.
+**The proof engine verifies selected distributed properties.** After the compiler succeeds, the
+proof engine extracts formal specifications from the relevant part of the program and model-checks
+them against TLA+ properties.
 
-- Compiler passes → Program is well-formed Effectful
+- Compiler passes → Program is well-formed for the chosen morphology
 - Proof engine passes → Distributed system topology is provably correct
 
 Both gates must pass for deployment of consensus-critical applications. See [proof_engine.md](proof_engine.md) for complete proof engine architecture.
 
 ______________________________________________________________________
 
-## 4. The Haskell + Rust Story
+## 4. Haskell, Rust, and Other Targets
 
-### 4.1 Why Haskell
+### 4.1 Why Haskell for Pure Representations
 
-Haskell is ideal for the Effectful core because:
+Haskell is ideal for the Effectful pure core because:
 
 - **Compute graph optimization**: Haskell's lazy evaluation and algebraic data types make it natural to build and optimize computation graphs
 - **Pure effect descriptions**: Effects are values, not actions—they can be inspected, optimized, and composed
 - **Strong type system**: Catches errors at compile time that other languages catch at runtime
 - **Formal verification friendly**: Clean semantics make TLA+ conformance checking tractable
 
-Haskell gives Rust its "marching orders" as pure effect descriptions. The Haskell compiler decides WHAT to do; Rust decides HOW to do it.
+The category-theoretic and Haskell vocabulary behind those claims is defined in
+[pure_compute_dags_in_haskell.md](pure_compute_dags_in_haskell.md). In the current morphology,
+Haskell gives downstream runtimes their "marching orders" as pure descriptions. The pure layer
+decides WHAT to do; the runtime layer decides HOW to do it.
 
-### 4.2 Why Rust
+### 4.2 Why Rust, and Why Not Only Rust
 
-Rust is necessary for the systems layer because:
+Rust is preferred for many systems targets because:
 
 - **Driver communication**: Must interface with C APIs, hardware, OS services
 - **Performance**: Tail latency matters for systems-level work; Haskell's GC is unsuitable
 - **Memory safety without GC**: Rust's ownership system provides safety guarantees without runtime overhead
 - **JIT target**: Generated Rust can be compiled and loaded at runtime
 
-Rust lives INSIDE the proof boundary but OUTSIDE the purity boundary. It's imperative code that implements the pure effect descriptions from Haskell.
+But Rust is not the only relevant target language. Some runtimes force JS, Swift, Kotlin, CUDA,
+HDLs, or proprietary toolchains. In those cases, Effectful can either:
 
-### 4.3 JIT Compilation
+- generate thin target-native boilerplate that exposes effects back to Rust, or
+- lower whole compute regions directly into the native target when that unlocks better placement,
+  fusion, dead-node removal, or other backend-specific optimization
 
-Effectful supports JIT compilation from Haskell compute graphs to Rust:
+All such target-native code lives outside the purity boundary. It may still remain inside the
+proof boundary when its lowering rules and runtime contracts are modeled and verified.
+
+### 4.3 JIT and Staged Lowering
+
+Effectful supports staged lowering, including JIT compilation where it is useful:
 
 - **Static Rust**: Hand-written, optimized code for known patterns
-- **JIT Rust**: Generated at runtime for dynamic structures
+- **JIT Rust**: Generated at runtime for dynamic structures on runtimes Rust can reach
+- **Target-native lowering**: JS, Swift, Kotlin, C++, CUDA, FPGA, or vendor-native output where
+  the runtime or performance envelope requires it
 
-See [jit.md](jit.md) for complete JIT compilation standards.
+See [jit.md](jit.md) for the detailed JIT and staged-lowering story.
 
 ______________________________________________________________________
 
@@ -296,7 +336,7 @@ Effectful's formal methods are inspired by Leslie Lamport's work:
 
 ### 6.2 Specification Patterns
 
-TLA+ specifications in Effectful define:
+TLA+ specifications in the Effectful compiler morphology define:
 
 - **State space**: All valid system states
 - **Init**: Initial state predicate
@@ -324,24 +364,30 @@ ______________________________________________________________________
 
 ## 7. The Proof Engine
 
-The Effectful Proof Engine verifies distributed systems expressed in Effectful's topology. While Effectful provides the language for representing distributed systems (pure effects, nodes, Paxos messages, Byzantine security model), the proof engine verifies that these representations are correct.
+The Effectful Proof Engine verifies distributed systems expressed in the Effectful compiler
+morphology. While the compiler morphology provides the pure representations used to describe effect
+topologies,
+message flows, and security constraints, the proof engine verifies that the selected modeled
+fragment is correct.
 
 ### 7.1 How the Proof Engine Works
 
-| Effectful (Application Language)          | Proof Engine                                |
-| ----------------------------------------- | ------------------------------------------- |
-| Provides topology for distributed systems | Verifies systems expressed in that topology |
-| Pure effects, nodes, Paxos messages       | Extracts TLA+ specs from Effectful programs |
-| Byzantine security model as types         | Model-checks safety and liveness properties |
-| Compute graphs for optimization           | Gates deployment on verification success    |
+| Effectful Compiler Morphology                   | Proof Engine                                |
+| ----------------------------------------------- | ------------------------------------------- |
+| Provides topology for distributed systems       | Verifies systems expressed in that topology |
+| Pure workflow and effect representations        | Extracts TLA+ specs from modeled programs   |
+| Byzantine security model as types               | Model-checks safety and liveness properties |
+| Compute graphs and lowering paths for execution | Gates deployment on verification success    |
 
 The proof engine exploits Effectful's semantic constraints (purity, explicit effects, typed security) to make verification tractable.
 
 ### 7.2 What the Proof Engine Verifies
 
-When you write an Effectful program representing a distributed system, the proof engine:
+When you write a program in the Effectful morphology representing a distributed system, the proof
+engine:
 
-1. **Projects to a finitary model** — Maps Effectful types to bounded, model-checkable domains
+1. **Projects to a finitary model** — Maps relevant source and IR types to bounded,
+   model-checkable domains
 1. **Extracts TLA+ specifications** — Generates formal specs from your consensus-critical code
 1. **Model-checks properties** — Verifies safety and liveness using TLC/Apalache/SMT backends
 1. **Gates deployment** — Only programs passing verification can deploy
@@ -420,10 +466,10 @@ ______________________________________________________________________
 
 - [proof_engine.md](proof_engine.md) — Effectful Proof Engine architecture
 - [proof_boundary.md](proof_boundary.md) — Philosophical foundation for verification limits
-- [jit.md](jit.md) — JIT compilation from Haskell to Rust
+- [jit.md](jit.md) — JIT and staged lowering in the compiler morphology
 - [ml_training.md](ml_training.md) — Formal methods for distributed ML
 - [consensus.md](consensus.md) — Formal methods for consensus protocols
-- [infrastructure_deployment.md](infrastructure_deployment.md) — Nodes, messages, and pure effects
+- [infrastructure_deployment.md](infrastructure_deployment.md) — Infrastructure deployment under the compiler morphology
 - [engineering/architecture.md](../engineering/architecture.md) — System architecture
 - [engineering/boundary_model.md](../engineering/boundary_model.md) — Detailed boundary model
 - [engineering/verification_contract.md](../engineering/verification_contract.md) — TLA+ verification workflow

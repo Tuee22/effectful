@@ -4,8 +4,8 @@
 **Supersedes**: none
 **Referenced by**: intro.md
 
-> **Purpose**: Apply the proof boundary and purity boundary framework to distributed consensus protocols, covering Paxos, PBFT, hybrid trust models, and DAG-based systems.
-> **📖 Authoritative Reference**: [Effectful DSL Hub](intro.md#7-references)
+> **Purpose**: Apply the Effectful compiler morphology's proof-boundary and purity-boundary framework to distributed consensus protocols, covering Paxos, PBFT, hybrid trust models, and DAG-based systems.
+> **📖 Authoritative Reference**: [DSL Intro](intro.md)
 
 ______________________________________________________________________
 
@@ -560,9 +560,9 @@ ______________________________________________________________________
 
 ## Cross-References
 
-- [intro.md](intro.md) — Effectful language overview and consolidated references
+- [intro.md](intro.md) — Effectful compiler morphology overview and consolidated references
 - [proof_engine.md](proof_engine.md) — Effectful Proof Engine architecture
-- [jit.md](jit.md) — JIT compilation from Haskell to Rust
+- [jit.md](jit.md) — JIT and staged lowering in the compiler morphology
 - [proof_boundary.md](proof_boundary.md) — Philosophical foundation for verification limits
 - [ml_training.md](ml_training.md) — Formal methods for distributed ML
 

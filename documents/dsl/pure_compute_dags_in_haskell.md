@@ -5,7 +5,7 @@
 **Referenced by**: none
 
 > **Purpose**: Present a Haskell- and Mermaid-centric account of how pure compute DAGs can be described, inspected, optimized, memoized, and distributed using category-theoretic structure. The emphasis is on giving an ML engineer enough Haskell and category theory to talk precisely about workflow shape, parallelism, determinism, caching, and retention policy.
-> **📖 Authoritative Reference**: [Effectful DSL Intro](intro.md), [DSL Compiler Morphology](dsl_compiler_morphology.md), [ML Training](ml_training.md), and [Total Pure Modelling](../engineering/total_pure_modelling.md)
+> **📖 Authoritative Reference**: [DSL Intro](intro.md), [DSL Compiler Morphology](dsl_compiler_morphology.md), [ML Training](ml_training.md), and [Total Pure Modelling](../engineering/total_pure_modelling.md)
 
 ______________________________________________________________________
 
@@ -17,7 +17,7 @@ ______________________________________________________________________
 | Compiler morphology          | [DSL Compiler Morphology](dsl_compiler_morphology.md)          |
 | ML-specific application      | [ML Training](ml_training.md)                                  |
 | Purity discipline            | [Total Pure Modelling](../engineering/total_pure_modelling.md) |
-| Backend and lowering context | [JIT Compilation](jit.md)                                      |
+| Backend and lowering context | [JIT and Staged Lowering](jit.md)                              |
 | Proof-boundary philosophy    | [Proof Boundary](proof_boundary.md)                            |
 
 ______________________________________________________________________

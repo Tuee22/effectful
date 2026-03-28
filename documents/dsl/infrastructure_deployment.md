@@ -1,10 +1,10 @@
-# Infrastructure Deployment: Nodes, Messages, and Pure Effects
+# Infrastructure Deployment Under the Compiler Morphology
 
 **Status**: Reference only
 **Supersedes**: none
 **Referenced by**: intro.md
 
-> **Purpose**: Define Effectful's unified model for distributed systems where nodes (UI or server) communicate via Paxos messages, with infrastructure deployment as just another effect description in the pure language and with runtime interpretation handled beyond the purity boundary.
+> **Purpose**: Explain how infrastructure deployment, node topology, and runtime orchestration fit into the Effectful compiler morphology: infrastructure actions can be represented as pure workflow descriptions and effect families inside the purity boundary, then realized by interpreters and native runtimes beyond it.
 > **📖 Authoritative Reference**: [DSL Intro](intro.md)
 
 ______________________________________________________________________
@@ -13,43 +13,48 @@ ______________________________________________________________________
 
 | Need                | Link                                                            |
 | ------------------- | --------------------------------------------------------------- |
-| Effectful overview  | [Effectful DSL Hub](intro.md)                                   |
+| Effectful overview  | [DSL Intro](intro.md)                                           |
 | Boundary model      | [Boundary Model](../engineering/boundary_model.md)              |
 | Consensus protocols | [Consensus](consensus.md)                                       |
-| JIT compilation     | [JIT Compilation](jit.md)                                       |
+| JIT compilation     | [JIT and Staged Lowering](jit.md)                               |
 | Pure compute DAGs   | [Pure Compute DAGs in Haskell](pure_compute_dags_in_haskell.md) |
 
 ______________________________________________________________________
 
-## 1. The Effectful Model: One Language, One Distributed System
+## 1. Deployment in the Compiler Morphology
 
-**Effectful is a high-level application language for writing high-quality UX and software, where everything is modeled as an abstract distributed system with a global interpreter of pure effects.**
+**In the current docs, infrastructure deployment is not a separate product and not a separate
+language. It is one application of the Effectful compiler morphology, where deployment logic is
+described as pure workflow data and later interpreted by runtime-specific adapters.**
 
 This single unifying idea drives the entire system:
 
 - **Effects are pure types**; effect interpreters run them on "nodes"
-- **A node is either a user-facing UI or a server**—both are internally safe and trusted
-- **All communication into/out of nodes is modeled as Paxos messages**
-- **One language** for UI, server logic, and infrastructure deployment
-- The **Haskell core and pure effect descriptions** live inside the purity boundary; interpreters in
+- **A node is an abstract execution site** such as a UI host, server, worker, or control-plane process
+- **Communication is modeled as typed message flow**; Paxos-style or other consensus protocols enter
+  when the workload requires them, rather than being the only possible transport story
+- **One pure representation layer** can describe UI logic, server logic, and infrastructure
+  orchestration even when their realized runtimes differ
+- The **pure core and pure effect descriptions** live inside the purity boundary; interpreters in
   Rust or other imperative languages live outside the purity boundary and may still sit inside the
   proof boundary when their contracts are modeled and verified
 
 ### What This Means in Practice
 
-Effectful is the same language for:
+The same pure workflow model can describe:
 
 - **User interfaces** (via peripheral I/O effects)
 - **Server logic** (business rules, data processing)
 - **Event-driven infrastructure deployment rules** (provisioning, configuration)
 
-The distinction between "frontend" and "backend" becomes obsolete. Logic is freely optimized to execute where it is safe and permissioned to do so.
+The distinction between "frontend", "backend", and "infrastructure" becomes less about separate
+authoring stacks and more about which runtime realizes which part of the topology.
 
 ______________________________________________________________________
 
 ## 2. Nodes: The Abstract Device Representation
 
-A **node** is an abstract representation of a device in Effectful's distributed system model.
+A **node** is an abstract execution site in the Effectful distributed-system model.
 
 ### Two Node Types
 
@@ -62,15 +67,16 @@ A **node** is an abstract representation of a device in Effectful's distributed 
 
 - **Internally safe and trusted zone**: Within a node, code is verified and trusted
 - **Transport topology differs**: DNS, ingress rules, certificates, session cookies vary by deployment
-- **At the pure DSL level, nodes are uniform**: Effectful sees no difference between node types
-  until lowering crosses the purity boundary and binds to concrete runtimes
+- **At the pure representation level, nodes are uniform**: the compiler morphology sees no
+  difference between node types until lowering crosses the purity boundary and binds to concrete
+  runtimes
 
 ### Requirements to Run an Effectful Node
 
 A device or machine can run one or more Effectful nodes if:
 
-1. **Can deploy a binary built in Haskell/Rust** (native or WASM)
-1. **Rust can talk to device drivers** for hardware and/or platform-native APIs
+1. **It can host a runtime artifact** built in Rust or another supported target language (native or WASM)
+1. **Some interpreter or adapter can talk to the required drivers** for hardware and/or platform-native APIs
 
 This completely decouples the server/client relationship from where code actually runs. There is still a global compute DAG, meaning arbitrary amounts of compute can happen on any node if there is reason to do so:
 
@@ -85,6 +91,10 @@ ______________________________________________________________________
 A robust, expressive **whitelist-based security model** runs compositionally throughout pure logic.
 
 ### The Whitelist Monad
+
+The categorical vocabulary here follows
+[Pure Compute DAGs in Haskell](pure_compute_dags_in_haskell.md). The point is not OOP-style
+inheritance, but compositional structure for pure descriptions.
 
 Each time a pure function returns a pure type, that type must be an instance of a **whitelist monad**:
 
@@ -110,10 +120,15 @@ This ensures security is not an afterthought but is woven into the type system i
 
 ______________________________________________________________________
 
-## 4. Haskell's Role: Pure Workflow Assembly and Optimization
+## 4. Pure Workflow Assembly and Optimization
 
-**Haskell's main job is to assemble and optimize pure workflow descriptions** according to rules in
-the Dhall config, then emit lowered thunks for downstream interpreters.
+**Haskell is the preferred language today for assembling and optimizing pure workflow
+descriptions**, according to rules in the Dhall config, then emitting lowered thunks for downstream
+interpreters.
+
+For the FP concepts that make this possible, especially the functor, applicative, selective,
+traversable, and monadic hierarchy, see
+[pure_compute_dags_in_haskell.md](pure_compute_dags_in_haskell.md).
 
 ### Configuration-Driven Behavior
 
@@ -263,7 +278,7 @@ ______________________________________________________________________
 
 ### Abstract Transport Model
 
-The transport layer is **not explicitly modeled** in Effectful. Instead:
+The transport layer is **not fixed by the morphology**. Instead:
 
 - Rust or another runtime sits at the **proof-boundary edge**
 - Network drivers, operating-system services, and transport implementations remain outside the proof boundary
@@ -280,7 +295,8 @@ The transport layer is **not explicitly modeled** in Effectful. Instead:
 
 ### Generalized Paxos
 
-Effectful's generalized Paxos handles multiple message types:
+Consensus-sensitive deployments may use generalized Paxos or related protocols to handle multiple
+message types:
 
 - **Asynchronous** messages
 - **Partially synchronous** messages
@@ -293,17 +309,20 @@ ______________________________________________________________________
 
 ## 8. JIT and the Filesystem Model
 
-### Server Node Definition
+### JIT-Capable Server Nodes
 
-**A server node is defined exclusively by its JIT capability**: it can do JIT compilations of generated Rust code in order to leverage Haskell's compute graph optimizer as a JIT-time performance operator for implementations of specific Rust effects.
+**One common server posture is a JIT-capable node**: it can compile generated Rust or other
+lowered artifacts in order to leverage the optimizer as a late performance operator for specific
+effects or compute regions.
 
 ### JIT Compilation
 
-On nodes with compilers (servers), Haskell may write Rust implementations of thunks with additional logic:
+On nodes with compilers, the pure workflow layer may emit lowered implementations of thunks with
+additional logic:
 
-- Haskell's compute graph optimizer analyzes the thunk
-- Generates optimized Rust code
-- Rust compiles and caches the result
+- the optimizer analyzes the thunk
+- generates optimized Rust or target-native code
+- the local toolchain compiles and caches the result
 
 ### The Filesystem Model
 
@@ -320,9 +339,9 @@ ______________________________________________________________________
 
 ### Effect Semantics
 
-Lowered effect descriptions are the pure language that crosses the purity boundary. The imperative
-runtimes that consume them may still remain inside the proof boundary when their contracts are
-modeled and verified, but they are no longer inside the purity boundary.
+Lowered effect descriptions are the pure representation that crosses the purity boundary. The
+imperative runtimes that consume them may still remain inside the proof boundary when their
+contracts are modeled and verified, but they are no longer inside the purity boundary.
 
 ### Guaranteed Finish Time
 
@@ -342,11 +361,13 @@ ______________________________________________________________________
 
 ### Browser Runtime
 
-Browser deployments **don't use DOM or JS** except for thin boilerplate to download and install the WASM SPA.
+Browser deployments may be WASM-first with a thin JS harness, or they may rely on more substantial
+JS or TS glue when the platform requires it.
 
-- All rendering occurs in Rust as modeled effects (thunks from Haskell)
-- No framework dependencies (React, Vue, etc.)
-- Pure effect-based rendering model
+- Rendering can occur in Rust, WASM, JS, or a hybrid arrangement
+- Framework use is a backend choice, not something ruled out by the morphology
+- The key boundary question is which parts remain pure descriptions and which browser behaviors are
+  treated as runtime assumptions
 
 ### Optional DOM Harness
 
@@ -363,7 +384,8 @@ ______________________________________________________________________
 
 ### Framework Architecture
 
-Domain-specific frameworks are **Haskell libraries installed optionally**.
+Domain-specific frameworks are often **libraries over the pure representation layer**, commonly in
+Haskell today but not conceptually limited to it.
 
 These pure functional libraries translate higher-level abstractions for domain types:
 
@@ -376,7 +398,7 @@ These pure functional libraries translate higher-level abstractions for domain t
 
 The system behaves collectively as a distributed system based on:
 
-- Paxos consensus
+- typed message protocols, including Paxos-style consensus when agreement semantics require it
 - Well-defined purity and proof boundaries
 
 ### Extension Pattern
@@ -392,7 +414,7 @@ ______________________________________________________________________
 
 ## 12. Infrastructure as Effects
 
-Infrastructure deployment is **just another set of effects** in the pure language.
+Infrastructure deployment can be modeled as **one effect family** in the pure representation layer.
 
 ### Deployment Mechanisms
 
@@ -404,28 +426,32 @@ Infrastructure deployment is **just another set of effects** in the pure languag
 | Secrets management                                  | Pure effects |
 | State tracking systems                              | Pure effects |
 
-### Self-Sufficient IAC
+### IaC Scope
 
-Effectful is a **full-fledged Infrastructure-as-Code system**:
+The morphology can support an Infrastructure-as-Code posture when the relevant provider effects,
+runtime contracts, and deployment assumptions are defined clearly enough.
 
-- No third-party tools (Terraform, Pulumi, Ansible)
-- Leverages the Haskell effect interpreter every Effectful node holds
-- All infrastructure state modeled as pure types
+- It may replace third-party tools for some environments
+- It may also coexist with them when that is the more practical boundary choice
+- The important point is that infrastructure state and deployment intent can still be modeled as
+  pure types before crossing into imperative adapters
 
 ### OS Kernels and the Proof Boundary
 
-OS kernels generally fall **outside the proof boundary**. Pure Haskell logic can still live inside
+OS kernels generally fall **outside the proof boundary**. Pure workflow logic can still live inside
 the purity boundary while running on such systems, and runtimes may remain inside the proof
 boundary only insofar as their contracts are modeled and verified.
 
-**Why?** Unmodeled failures caused by impure/unproven behavior at the OS level can be resolved in the pure, provable distributed system at the **consensus level**. Byzantine Paxos is the sufficient model for handling unknown failure states.
+**Why?** Unmodeled failures caused by impure or unproved behavior at the OS level must be handled
+by the surrounding distributed protocol. In some systems that may mean Byzantine Paxos or another
+fault-tolerant consensus model; in others it may mean a different recovery or containment strategy.
 
 ______________________________________________________________________
 
 ## Cross-References
 
-- [intro.md](intro.md) — Effectful language overview and consolidated references
-- [jit.md](jit.md) — JIT compilation from Haskell to Rust
+- [intro.md](intro.md) — Effectful compiler morphology overview and consolidated references
+- [jit.md](jit.md) — JIT and staged lowering in the compiler morphology
 - [consensus.md](consensus.md) — Formal methods for distributed consensus
 - [proof_boundary.md](proof_boundary.md) — Philosophical foundation for verification limits
 - [boundary_model.md](../engineering/boundary_model.md) — Detailed boundary model architecture

@@ -18,7 +18,7 @@ ______________________________________________________________________
 | Pure compute DAG semantics     | [Pure Compute DAGs in Haskell](pure_compute_dags_in_haskell.md) |
 | Proof-boundary philosophy      | [Proof Boundary](proof_boundary.md)                             |
 | Formal verification pipeline   | [Proof Engine](proof_engine.md)                                 |
-| JIT and lowering context       | [JIT Compilation](jit.md)                                       |
+| JIT and lowering context       | [JIT and Staged Lowering](jit.md)                               |
 
 ______________________________________________________________________
 
